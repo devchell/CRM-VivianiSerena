@@ -207,10 +207,10 @@ export default function Testimonials() {
                 key={DEPOIMENTOS[currIdx].id}
                 custom={direction}
                 className="flex items-center gap-4"
-                initial={{ opacity: 0, x: direction > 0 ? 56 : -56 }}
+                initial={{ opacity: 0, x: direction > 0 ? 36 : -36 }}
                 animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: direction > 0 ? -56 : 56 }}
-                transition={{ duration: 0.42, ease: [0.22, 1, 0.36, 1] }}
+                exit={{ opacity: 0, x: direction > 0 ? -36 : 36 }}
+                transition={{ duration: 0.34, ease: [0.22, 1, 0.36, 1] }}
               >
                 <div className="hidden flex-1 md:block opacity-40 scale-[0.95]">
                   <TestimonialCard depoimento={DEPOIMENTOS[prevIdx]} />
