@@ -207,9 +207,9 @@ export default function Testimonials() {
                 key={DEPOIMENTOS[currIdx].id}
                 custom={direction}
                 className="flex items-center gap-4"
-                initial={{ opacity: 0, x: direction > 0 ? 36 : -36 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: direction > 0 ? -36 : 36 }}
+                initial={{ opacity: 0, x: direction > 0 ? 36 : -36, scale: 0.985, filter: 'blur(4px)' }}
+                animate={{ opacity: 1, x: 0, scale: 1, filter: 'blur(0px)' }}
+                exit={{ opacity: 0, x: direction > 0 ? -36 : 36, scale: 0.985, filter: 'blur(4px)' }}
                 transition={{ duration: 0.34, ease: [0.22, 1, 0.36, 1] }}
               >
                 <div className="hidden flex-1 md:block opacity-40 scale-[0.95]">
