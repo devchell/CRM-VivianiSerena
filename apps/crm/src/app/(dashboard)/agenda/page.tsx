@@ -10,6 +10,7 @@ import timeGridPlugin from '@fullcalendar/timegrid'
 import {
   CalendarDays,
   Clock3,
+  Dot,
   Plus,
   Sparkles,
   UserRound,
@@ -204,6 +205,21 @@ export default function AgendaPage() {
     }
   }, [appointments, leads])
 
+  const upcomingAppointments = useMemo(() => {
+    return appointments
+      .filter((appointment) => appointment.status !== 'cancelled' && new Date(appointment.startTime) >= new Date())
+      .sort((left, right) => new Date(left.startTime).getTime() - new Date(right.startTime).getTime())
+      .slice(0, 5)
+  }, [appointments])
+
+  const totalDuration = useMemo(() => {
+    return appointments.reduce((acc, appointment) => {
+      const start = new Date(appointment.startTime).getTime()
+      const end = new Date(appointment.endTime).getTime()
+      return acc + Math.max(0, Math.round((end - start) / 60000))
+    }, 0)
+  }, [appointments])
+
   const events = useMemo(() => {
     return appointments.map((appointment) => {
       const service = SERVICE_OPTIONS.find((option) => option.value === appointment.serviceType)
@@ -291,43 +307,62 @@ export default function AgendaPage() {
     const statusMeta = info.event.extendedProps.statusMeta as (typeof STATUS_META)[keyof typeof STATUS_META]
 
     return (
-      <div className="min-w-0 rounded-xl border border-white/70 bg-white/90 px-2.5 py-2 shadow-sm backdrop-blur-sm">
-        <div className="mb-1 flex items-center justify-between gap-2">
-          <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.14em] ${serviceBadgeClassName}`}>
-            {serviceShortLabel}
-          </span>
-          <span className={`inline-flex items-center rounded-full border px-1.5 py-0.5 text-[10px] font-medium ${statusMeta.badgeClassName}`}>
-            {statusMeta.label}
-          </span>
+      <div className="min-w-0 overflow-hidden rounded-2xl border border-white/80 bg-[linear-gradient(180deg,rgba(255,255,255,0.98)_0%,rgba(252,247,242,0.96)_100%)] shadow-[0_16px_28px_-24px_rgba(66,46,31,0.55)] backdrop-blur-sm">
+        <div className="h-1.5 w-full bg-[linear-gradient(90deg,rgba(201,150,122,0.98),rgba(232,180,154,0.78))]" />
+        <div className="px-2.5 py-2.5">
+          <div className="mb-1.5 flex items-center justify-between gap-2">
+            <div className="flex items-center gap-1.5">
+              <span className="h-2 w-2 rounded-full bg-rose-gold" />
+              <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.14em] ${serviceBadgeClassName}`}>
+                {serviceShortLabel}
+              </span>
+            </div>
+            <span className={`inline-flex items-center rounded-full border px-1.5 py-0.5 text-[10px] font-medium ${statusMeta.badgeClassName}`}>
+              {statusMeta.label}
+            </span>
+          </div>
+
+          <p className="truncate text-xs font-semibold text-charcoal">{appointment.leadName}</p>
+          <p className="mt-1 truncate text-[11px] text-charcoal-500">
+            {info.timeText || formatDateLabel(appointment.startTime)}
+          </p>
         </div>
-        <p className="truncate text-xs font-semibold text-charcoal">{appointment.leadName}</p>
-        <p className="truncate text-[11px] text-charcoal-500">
-          {info.timeText || formatDateLabel(appointment.startTime)}
-        </p>
       </div>
     )
   }
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-        <div>
-          <h1 className="font-heading text-2xl font-bold text-charcoal dark:text-charcoal-50">Agenda</h1>
-          <p className="mt-1 text-sm text-charcoal-400 dark:text-charcoal-400">
-            Visual suave e operacional para acompanhar consultas, mentorias e workshops com mais clareza.
-          </p>
-        </div>
+      <div className="overflow-hidden rounded-[32px] border border-blush-200 bg-[radial-gradient(circle_at_top_left,_rgba(201,150,122,0.16),_transparent_38%),linear-gradient(135deg,#fffdfb_0%,#fff7f1_52%,#fffdfb_100%)] px-6 py-6 shadow-[0_28px_80px_-42px_rgba(97,73,54,0.35)] dark:border-charcoal-700 dark:bg-[radial-gradient(circle_at_top_left,_rgba(201,150,122,0.18),_transparent_34%),linear-gradient(135deg,#171412_0%,#1e1a17_52%,#161311_100%)]">
+        <div className="flex flex-col gap-5 xl:flex-row xl:items-end xl:justify-between">
+          <div className="max-w-2xl">
+            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-rose-gold">Agenda viva</p>
+            <h1 className="mt-2 font-heading text-3xl font-bold text-charcoal dark:text-charcoal-50">
+              Calendario elegante, leitura imediata e operacao suave.
+            </h1>
+            <p className="mt-3 text-sm leading-6 text-charcoal-500 dark:text-charcoal-400">
+              A agenda agora prioriza contexto visual, contraste suave e leitura rapida por tipo de atendimento, status e janela de horario.
+            </p>
+          </div>
 
-        <button
-          onClick={() => setShowModal(true)}
-          className="inline-flex items-center justify-center gap-2 rounded-xl bg-rose-gold px-4 py-2.5 text-sm font-medium text-white shadow-sm transition-all hover:bg-rose-gold-500 hover:shadow-md"
-        >
-          <Plus size={16} />
-          Novo agendamento
-        </button>
+          <div className="flex flex-col gap-3 sm:flex-row">
+            <div className="rounded-2xl border border-white/70 bg-white/75 px-4 py-3 shadow-sm backdrop-blur dark:border-charcoal-700 dark:bg-charcoal-800/70">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-charcoal-400 dark:text-charcoal-500">Carga atual</p>
+              <p className="mt-1 font-heading text-2xl font-bold text-charcoal dark:text-charcoal-50">{totalDuration} min</p>
+            </div>
+
+            <button
+              onClick={() => setShowModal(true)}
+              className="inline-flex items-center justify-center gap-2 rounded-2xl bg-rose-gold px-5 py-3 text-sm font-medium text-white shadow-sm transition-all hover:bg-rose-gold-500 hover:shadow-md"
+            >
+              <Plus size={16} />
+              Novo agendamento
+            </button>
+          </div>
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 xl:grid-cols-[minmax(0,1fr)_320px]">
+      <div className="grid grid-cols-1 gap-4 xl:grid-cols-[minmax(0,1fr)_360px]">
         <div className="space-y-4">
           <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
             {[
@@ -371,11 +406,11 @@ export default function AgendaPage() {
             })}
           </div>
 
-          <div className="card-dark rounded-[28px] p-4 shadow-sm">
+          <div className="card-dark overflow-hidden rounded-[32px] p-4 shadow-sm">
             {loading ? (
-              <div className="h-[700px] animate-pulse rounded-[24px] bg-blush-100 dark:bg-charcoal-700/40" />
+              <div className="h-[760px] animate-pulse rounded-[26px] bg-blush-100 dark:bg-charcoal-700/40" />
             ) : (
-              <div className="crm-calendar">
+              <div className="crm-calendar rounded-[26px] border border-blush-100 bg-[linear-gradient(180deg,#fffdfa_0%,#fffaf7_100%)] p-3 dark:border-charcoal-700 dark:bg-[linear-gradient(180deg,#181513_0%,#141110_100%)]">
                 <FullCalendarView
                   plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
                   initialView="timeGridWeek"
@@ -392,7 +427,7 @@ export default function AgendaPage() {
                   allDaySlot={false}
                   selectable
                   nowIndicator
-                  height="auto"
+                  height={720}
                   dayMaxEventRows={3}
                   eventTimeFormat={{ hour: '2-digit', minute: '2-digit', meridiem: false }}
                   slotLabelFormat={{ hour: '2-digit', minute: '2-digit', meridiem: false }}
@@ -407,7 +442,7 @@ export default function AgendaPage() {
         </div>
 
         <aside className="space-y-4">
-          <div className="card-dark rounded-[28px] p-5 shadow-sm">
+          <div className="card-dark rounded-[32px] p-5 shadow-sm">
             <div className="mb-4 flex items-center gap-2">
               <Sparkles size={16} className="text-rose-gold" />
               <h2 className="font-heading text-base font-semibold text-charcoal dark:text-charcoal-50">
@@ -430,14 +465,76 @@ export default function AgendaPage() {
             </div>
           </div>
 
-          <div className="card-dark rounded-[28px] p-5 shadow-sm">
+          <div className="card-dark rounded-[32px] p-5 shadow-sm">
+            <div className="mb-4 flex items-center justify-between gap-3">
+              <div>
+                <h2 className="font-heading text-base font-semibold text-charcoal dark:text-charcoal-50">
+                  Proximos atendimentos
+                </h2>
+                <p className="mt-1 text-xs text-charcoal-400 dark:text-charcoal-500">
+                  Janela operacional mais imediata da agenda.
+                </p>
+              </div>
+              <span className="rounded-full bg-rose-gold/10 px-2.5 py-1 text-[11px] font-semibold text-rose-gold">
+                {upcomingAppointments.length}
+              </span>
+            </div>
+
+            {upcomingAppointments.length === 0 ? (
+              <div className="rounded-2xl border border-dashed border-blush-200 px-4 py-8 text-center text-sm text-charcoal-400 dark:border-charcoal-700 dark:text-charcoal-500">
+                Nenhum atendimento futuro por enquanto.
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {upcomingAppointments.map((appointment) => {
+                  const service = SERVICE_OPTIONS.find((option) => option.value === appointment.serviceType)
+                  const status = STATUS_META[appointment.status]
+
+                  return (
+                    <div
+                      key={appointment.id}
+                      className="rounded-2xl border border-blush-200 bg-cream/60 px-4 py-3 shadow-sm dark:border-charcoal-700 dark:bg-charcoal-800/70"
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0">
+                          <p className="truncate text-sm font-semibold text-charcoal dark:text-charcoal-100">
+                            {appointment.leadName}
+                          </p>
+                          <p className="mt-1 text-xs text-charcoal-400 dark:text-charcoal-500">
+                            {formatDateLabel(appointment.startTime)}
+                          </p>
+                        </div>
+                        <span className={`inline-flex rounded-full border px-2 py-0.5 text-[10px] font-semibold ${status.badgeClassName}`}>
+                          {status.label}
+                        </span>
+                      </div>
+
+                      <div className="mt-3 flex flex-wrap items-center gap-2">
+                        <span className={`inline-flex rounded-full border px-2.5 py-1 text-[11px] font-semibold ${service?.badgeClassName ?? 'bg-stone-100 text-stone-700 border-stone-200'}`}>
+                          {service?.label ?? appointment.serviceType}
+                        </span>
+                        {appointment.notes ? (
+                          <span className="inline-flex items-center gap-1 rounded-full bg-white px-2.5 py-1 text-[11px] text-charcoal-500 dark:bg-charcoal-700 dark:text-charcoal-400">
+                            <Dot size={14} className="-mx-1" />
+                            {appointment.notes}
+                          </span>
+                        ) : null}
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            )}
+          </div>
+
+          <div className="card-dark rounded-[32px] p-5 shadow-sm">
             <h2 className="font-heading text-base font-semibold text-charcoal dark:text-charcoal-50">
-              Como usar
+              Ritmo da agenda
             </h2>
             <div className="mt-4 space-y-3 text-sm text-charcoal-500 dark:text-charcoal-400">
-              <p>Selecione um horario diretamente no calendario para abrir o modal de criacao.</p>
-              <p>Clique em um evento para visualizar o resumo do atendimento com status e observacoes.</p>
-              <p>As tags por cor ajudam a distinguir consultas, mentorias, grupos e workshops com leitura imediata.</p>
+              <p>Selecione direto no calendario para abrir um agendamento no horario exato.</p>
+              <p>Clique em qualquer bloco para ler rapidamente cliente, servico, status e observacoes.</p>
+              <p>As cores foram separadas por tipo de atendimento para bater o olho e entender a semana.</p>
             </div>
           </div>
         </aside>

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import { useAuth } from '@/lib/useAuth'
 import {
   useReactTable, getCoreRowModel, getSortedRowModel, getFilteredRowModel,
@@ -70,6 +70,35 @@ export function LeadsTable() {
     if (status === 'loading') return
     fetchLeads()
   }, [fetchLeads, status])
+
+  const leadHighlights = useMemo(() => {
+    const converted = leads.filter((lead) => lead.status === 'converted').length
+    const contacted = leads.filter((lead) => lead.status === 'contacted').length
+    const qualified = leads.filter((lead) => lead.status === 'qualified').length
+
+    return [
+      {
+        label: 'Leads ativos',
+        value: leads.length,
+        tone: 'bg-rose-50 text-rose-700 ring-rose-100',
+      },
+      {
+        label: 'Em contato',
+        value: contacted,
+        tone: 'bg-amber-50 text-amber-700 ring-amber-100',
+      },
+      {
+        label: 'Qualificados',
+        value: qualified,
+        tone: 'bg-violet-50 text-violet-700 ring-violet-100',
+      },
+      {
+        label: 'Convertidos',
+        value: converted,
+        tone: 'bg-emerald-50 text-emerald-700 ring-emerald-100',
+      },
+    ]
+  }, [leads])
 
   const handleStatusChange = async (id: string, status: string) => {
     if (!accessToken) return
@@ -197,44 +226,64 @@ export function LeadsTable() {
   })
 
   return (
-    <div className="space-y-4">
-      {/* Toolbar */}
-      <div className="flex flex-wrap items-center gap-3">
-        <div className="relative flex-1 min-w-[200px]">
+    <div className="space-y-5">
+      <div className="grid grid-cols-2 gap-4 xl:grid-cols-4">
+        {leadHighlights.map((item) => (
+          <div key={item.label} className="card-dark rounded-[28px] p-5 shadow-sm">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-charcoal-400 dark:text-charcoal-500">
+                  {item.label}
+                </p>
+                <p className="mt-2 font-heading text-3xl font-bold text-charcoal dark:text-charcoal-50">
+                  {item.value}
+                </p>
+              </div>
+              <div className={`flex h-11 w-11 items-center justify-center rounded-2xl ring-1 ${item.tone}`}>
+                <span className="text-sm font-semibold">{String(item.value).padStart(2, '0')}</span>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div className="card-dark rounded-[28px] p-4 shadow-sm">
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="relative min-w-[220px] flex-1">
           <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-charcoal-400 pointer-events-none" />
           <input
             value={globalFilter}
             onChange={e => setGlobalFilter(e.target.value)}
             placeholder="Buscar por nome, email..."
-            className="w-full pl-9 pr-4 py-2 text-sm rounded-lg border border-blush-300 dark:border-charcoal-600 bg-white dark:bg-charcoal-800 text-charcoal dark:text-charcoal-100 placeholder-charcoal-400 focus:outline-none focus:ring-2 focus:ring-rose-gold/40"
+            className="w-full rounded-2xl border border-blush-300 bg-white/95 py-3 pl-10 pr-4 text-sm text-charcoal shadow-sm placeholder-charcoal-400 focus:outline-none focus:ring-2 focus:ring-rose-gold/30 dark:border-charcoal-600 dark:bg-charcoal-800 dark:text-charcoal-100"
           />
+          </div>
+          <select
+            value={statusFilter}
+            onChange={e => setStatusFilter(e.target.value)}
+            className="rounded-2xl border border-blush-300 bg-white px-4 py-3 text-sm text-charcoal shadow-sm focus:outline-none focus:ring-2 focus:ring-rose-gold/30 dark:border-charcoal-600 dark:bg-charcoal-800 dark:text-charcoal-100"
+          >
+            <option value="">Todos os status</option>
+            {Object.entries(STATUS_CONFIG).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
+          </select>
+          <button onClick={fetchLeads} className="rounded-2xl border border-blush-300 p-3 text-charcoal-400 transition-colors hover:text-rose-gold dark:border-charcoal-600" title="Atualizar">
+            <RefreshCw size={16} className={loading ? 'animate-spin' : ''} />
+          </button>
+          <button onClick={handleExport} className="inline-flex items-center gap-2 rounded-2xl bg-rose-gold px-4 py-3 text-sm font-medium text-white shadow-sm transition-colors hover:bg-rose-gold-500">
+            <Download size={14} />
+            Exportar CSV
+          </button>
         </div>
-        <select
-          value={statusFilter}
-          onChange={e => setStatusFilter(e.target.value)}
-          className="px-3 py-2 text-sm rounded-lg border border-blush-300 dark:border-charcoal-600 bg-white dark:bg-charcoal-800 text-charcoal dark:text-charcoal-100 focus:outline-none focus:ring-2 focus:ring-rose-gold/40"
-        >
-          <option value="">Todos os status</option>
-          {Object.entries(STATUS_CONFIG).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
-        </select>
-        <button onClick={fetchLeads} className="p-2 rounded-lg border border-blush-300 dark:border-charcoal-600 text-charcoal-400 hover:text-rose-gold transition-colors" title="Atualizar">
-          <RefreshCw size={16} className={loading ? 'animate-spin' : ''} />
-        </button>
-        <button onClick={handleExport} className="flex items-center gap-2 px-4 py-2 text-sm rounded-lg bg-rose-gold text-white hover:bg-rose-gold-500 transition-colors font-medium">
-          <Download size={14} />
-          Exportar CSV
-        </button>
       </div>
 
-      {/* Table */}
-      <div className="card-dark overflow-hidden shadow-sm">
+      <div className="card-dark overflow-hidden rounded-[32px] shadow-sm">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
-            <thead className="border-b border-blush-200 dark:border-charcoal-700">
+            <thead className="border-b border-blush-200/80 bg-blush/40 dark:border-charcoal-700 dark:bg-charcoal-800/70">
               {table.getHeaderGroups().map(hg => (
                 <tr key={hg.id}>
                   {hg.headers.map(h => (
-                    <th key={h.id} className="px-4 py-3 text-left text-xs font-semibold text-charcoal-400 dark:text-charcoal-400 uppercase tracking-wide">
+                    <th key={h.id} className="px-4 py-3.5 text-left text-[11px] font-semibold uppercase tracking-[0.16em] text-charcoal-400 dark:text-charcoal-400">
                       {flexRender(h.column.columnDef.header, h.getContext())}
                     </th>
                   ))}
@@ -256,9 +305,9 @@ export function LeadsTable() {
                 </tr>
               ) : (
                 table.getRowModel().rows.map(row => (
-                  <tr key={row.id} className="hover:bg-blush-50 dark:hover:bg-charcoal-700/30 transition-colors">
+                  <tr key={row.id} className="transition-colors hover:bg-blush-50/70 dark:hover:bg-charcoal-700/30">
                     {row.getVisibleCells().map(cell => (
-                      <td key={cell.id} className="px-4 py-3">
+                      <td key={cell.id} className="px-4 py-3.5 align-middle">
                         {flexRender(cell.column.columnDef.cell, cell.getContext())}
                       </td>
                     ))}
@@ -268,7 +317,7 @@ export function LeadsTable() {
             </tbody>
           </table>
         </div>
-        <div className="px-4 py-3 border-t border-blush-100 dark:border-charcoal-700 flex items-center justify-between text-xs text-charcoal-400 dark:text-charcoal-500">
+        <div className="flex items-center justify-between border-t border-blush-100 bg-white/70 px-4 py-3 text-xs text-charcoal-400 dark:border-charcoal-700 dark:bg-charcoal-800/50 dark:text-charcoal-500">
           <span>{table.getFilteredRowModel().rows.length} leads</span>
           <span>{table.getSelectedRowModel().rows.length} selecionados</span>
         </div>

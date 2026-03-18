@@ -297,39 +297,42 @@ export default function FinanceiroPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="font-heading text-2xl font-bold text-charcoal dark:text-charcoal-50">Financeiro</h1>
-          <p className="mt-1 text-sm text-charcoal-400 dark:text-charcoal-400">
-            Lancamentos e indicadores consolidados a partir da mesma fonte de verdade do dashboard.
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          <button onClick={handleExportCsv} className="flex items-center gap-1.5 rounded-lg border border-blush-300 px-3 py-2 text-sm text-charcoal-400 transition-colors hover:text-rose-gold dark:border-charcoal-600 dark:text-charcoal-400">
-            <Download size={14} />
-            CSV
-          </button>
-          <button onClick={() => void handleExportPdf()} className="flex items-center gap-1.5 rounded-lg border border-blush-300 px-3 py-2 text-sm text-charcoal-400 transition-colors hover:text-rose-gold dark:border-charcoal-600 dark:text-charcoal-400">
-            <FileText size={14} />
-            PDF
-          </button>
-          <button onClick={() => openCreateModal('income')} className="flex items-center gap-2 rounded-lg bg-rose-gold px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-rose-gold-500">
-            <Plus size={16} />
-            Novo lancamento
-          </button>
+      <div className="overflow-hidden rounded-[32px] border border-blush-200 bg-[radial-gradient(circle_at_top_left,_rgba(201,150,122,0.16),_transparent_38%),linear-gradient(135deg,#fffdfb_0%,#fff7f1_52%,#fffdfb_100%)] px-6 py-6 shadow-[0_28px_80px_-42px_rgba(97,73,54,0.35)] dark:border-charcoal-700 dark:bg-[radial-gradient(circle_at_top_left,_rgba(201,150,122,0.18),_transparent_34%),linear-gradient(135deg,#171412_0%,#1e1a17_52%,#161311_100%)]">
+        <div className="flex flex-wrap items-end justify-between gap-4">
+          <div className="max-w-2xl">
+            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-rose-gold">Controle financeiro</p>
+            <h1 className="mt-2 font-heading text-3xl font-bold text-charcoal dark:text-charcoal-50">Fluxo financeiro com leitura rapida, filtros claros e contexto visual melhor.</h1>
+            <p className="mt-3 text-sm leading-6 text-charcoal-500 dark:text-charcoal-400">
+              Receitas, despesas e resumos consolidados na mesma base do dashboard, agora com uma camada visual mais limpa para analise diaria.
+            </p>
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <button onClick={handleExportCsv} className="flex items-center gap-1.5 rounded-2xl border border-blush-300 bg-white/75 px-4 py-3 text-sm text-charcoal-400 shadow-sm transition-colors hover:text-rose-gold dark:border-charcoal-600 dark:bg-charcoal-800/65 dark:text-charcoal-400">
+              <Download size={14} />
+              CSV
+            </button>
+            <button onClick={() => void handleExportPdf()} className="flex items-center gap-1.5 rounded-2xl border border-blush-300 bg-white/75 px-4 py-3 text-sm text-charcoal-400 shadow-sm transition-colors hover:text-rose-gold dark:border-charcoal-600 dark:bg-charcoal-800/65 dark:text-charcoal-400">
+              <FileText size={14} />
+              PDF
+            </button>
+            <button onClick={() => openCreateModal('income')} className="flex items-center gap-2 rounded-2xl bg-rose-gold px-5 py-3 text-sm font-medium text-white shadow-sm transition-colors hover:bg-rose-gold-500">
+              <Plus size={16} />
+              Novo lancamento
+            </button>
+          </div>
         </div>
       </div>
 
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         {kpis.map((kpi) => (
-          <div key={kpi.label} className="card-dark p-5 shadow-sm">
-            <div className="mb-3 flex h-9 w-9 items-center justify-center rounded-xl" style={{ background: kpi.background }}>
+          <div key={kpi.label} className="card-dark rounded-[28px] p-5 shadow-sm">
+            <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-2xl" style={{ background: kpi.background }}>
               <span className="text-sm font-semibold" style={{ color: kpi.color }}>
                 R$
               </span>
             </div>
-            <p className="text-xs font-medium text-charcoal-400 dark:text-charcoal-400">{kpi.label}</p>
-            <p className="mt-1 font-heading text-xl font-bold text-charcoal dark:text-charcoal-50">
+            <p className="text-[11px] font-medium uppercase tracking-[0.16em] text-charcoal-400 dark:text-charcoal-400">{kpi.label}</p>
+            <p className="mt-1 font-heading text-2xl font-bold text-charcoal dark:text-charcoal-50">
               {loading ? '...' : formatCurrency(kpi.value)}
             </p>
           </div>
@@ -337,7 +340,7 @@ export default function FinanceiroPage() {
       </div>
 
       <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
-        <div className="card-dark p-5 shadow-sm">
+        <div className="card-dark rounded-[32px] p-5 shadow-sm">
           <h3 className="mb-4 font-heading text-sm font-semibold text-charcoal dark:text-charcoal-100">
             Evolucao mensal
           </h3>
@@ -358,7 +361,7 @@ export default function FinanceiroPage() {
           )}
         </div>
 
-        <div className="card-dark p-5 shadow-sm">
+        <div className="card-dark rounded-[32px] p-5 shadow-sm">
           <h3 className="mb-4 font-heading text-sm font-semibold text-charcoal dark:text-charcoal-100">
             Despesas por categoria
           </h3>
@@ -380,18 +383,18 @@ export default function FinanceiroPage() {
         </div>
       </div>
 
-      <div className="card-dark overflow-hidden shadow-sm">
-        <div className="flex flex-wrap items-center gap-3 border-b border-blush-200 px-5 py-4 dark:border-charcoal-700">
+      <div className="card-dark overflow-hidden rounded-[32px] shadow-sm">
+        <div className="flex flex-wrap items-center gap-3 border-b border-blush-200 bg-blush/35 px-5 py-4 dark:border-charcoal-700 dark:bg-charcoal-800/60">
           <input
             value={search}
             onChange={(event) => setSearch(event.target.value)}
             placeholder="Buscar descricao ou categoria"
-            className="min-w-[180px] flex-1 rounded-lg border border-blush-300 bg-white px-3 py-2 text-sm text-charcoal placeholder-charcoal-400 focus:outline-none focus:ring-2 focus:ring-rose-gold/40 dark:border-charcoal-600 dark:bg-charcoal-700 dark:text-charcoal-100"
+            className="min-w-[180px] flex-1 rounded-2xl border border-blush-300 bg-white px-4 py-3 text-sm text-charcoal shadow-sm placeholder-charcoal-400 focus:outline-none focus:ring-2 focus:ring-rose-gold/30 dark:border-charcoal-600 dark:bg-charcoal-700 dark:text-charcoal-100"
           />
           <select
             value={typeFilter}
             onChange={(event) => setTypeFilter(event.target.value as 'all' | TransactionType)}
-            className="rounded-lg border border-blush-300 bg-white px-3 py-2 text-sm text-charcoal focus:outline-none dark:border-charcoal-600 dark:bg-charcoal-700 dark:text-charcoal-100"
+            className="rounded-2xl border border-blush-300 bg-white px-4 py-3 text-sm text-charcoal shadow-sm focus:outline-none dark:border-charcoal-600 dark:bg-charcoal-700 dark:text-charcoal-100"
           >
             <option value="all">Todos os tipos</option>
             <option value="income">Receitas</option>
@@ -400,7 +403,7 @@ export default function FinanceiroPage() {
           <select
             value={categoryFilter}
             onChange={(event) => setCategoryFilter(event.target.value)}
-            className="rounded-lg border border-blush-300 bg-white px-3 py-2 text-sm text-charcoal focus:outline-none dark:border-charcoal-600 dark:bg-charcoal-700 dark:text-charcoal-100"
+            className="rounded-2xl border border-blush-300 bg-white px-4 py-3 text-sm text-charcoal shadow-sm focus:outline-none dark:border-charcoal-600 dark:bg-charcoal-700 dark:text-charcoal-100"
           >
             <option value="all">Todas as categorias</option>
             {[...categories.income, ...categories.expense].map((category) => (
@@ -413,10 +416,10 @@ export default function FinanceiroPage() {
 
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
-            <thead className="border-b border-blush-100 dark:border-charcoal-700">
+            <thead className="border-b border-blush-100 bg-blush/30 dark:border-charcoal-700 dark:bg-charcoal-800/40">
               <tr>
                 {['Data', 'Tipo', 'Categoria', 'Descricao', 'Valor', ''].map((header) => (
-                  <th key={header} className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-charcoal-400 dark:text-charcoal-400">
+                  <th key={header} className="px-4 py-3.5 text-left text-[11px] font-semibold uppercase tracking-[0.16em] text-charcoal-400 dark:text-charcoal-400">
                     {header}
                   </th>
                 ))}
@@ -439,7 +442,7 @@ export default function FinanceiroPage() {
                 </tr>
               ) : (
                 pagedTransactions.map((transaction) => (
-                  <tr key={transaction.id} className="group transition-colors hover:bg-blush-50 dark:hover:bg-charcoal-700/20">
+                  <tr key={transaction.id} className="group transition-colors hover:bg-blush-50/70 dark:hover:bg-charcoal-700/20">
                     <td className="px-4 py-3 text-xs text-charcoal-400 dark:text-charcoal-500">
                       {new Date(transaction.date).toLocaleDateString('pt-BR')}
                     </td>
@@ -474,7 +477,7 @@ export default function FinanceiroPage() {
           </table>
         </div>
 
-        <div className="flex items-center justify-between border-t border-blush-100 px-5 py-3 text-xs text-charcoal-400 dark:border-charcoal-700 dark:text-charcoal-500">
+        <div className="flex items-center justify-between border-t border-blush-100 bg-white/70 px-5 py-3 text-xs text-charcoal-400 dark:border-charcoal-700 dark:bg-charcoal-800/50 dark:text-charcoal-500">
           <span>{filteredTransactions.length} lancamentos</span>
           <div className="flex items-center gap-2">
             <button disabled={page === 0} onClick={() => setPage((current) => Math.max(0, current - 1))} className="rounded px-2 py-1 disabled:opacity-30">
