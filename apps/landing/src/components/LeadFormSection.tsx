@@ -417,7 +417,7 @@ export function LeadFormSection() {
                   ***** 
                 </div>
                 <p className="mt-0.5 text-xs text-charcoal/60">
-                  <strong className="text-charcoal">+500 clientes</strong> ja confiaram no processo
+                  <strong className="text-charcoal">0 clientes</strong> registradas neste ambiente
                 </p>
               </div>
             </div>

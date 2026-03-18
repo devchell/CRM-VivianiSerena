@@ -26,7 +26,7 @@ const HIGHLIGHTS = [
 ]
 
 const ACHIEVEMENTS = [
-  'Mais de 500 clientes atendidos com sucesso',
+  'Base operacional reiniciada para novos registros',
   'Especialização em pigmentos de micropigmentação',
   'Protocolos adaptados a todos os fototipos de pele',
   'Atendimento em Santo André e São Paulo',

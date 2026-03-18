@@ -180,8 +180,8 @@ export default function Testimonials() {
                 <Star key={i} className="w-3.5 h-3.5 fill-amber-400 text-amber-400" aria-hidden="true" />
               ))}
             </div>
-            <span className="text-amber-800 text-sm font-semibold">4.9/5</span>
-            <span className="text-amber-700 text-sm">— 127 avaliações verificadas</span>
+            <span className="text-amber-800 text-sm font-semibold">0 avaliacoes</span>
+            <span className="text-amber-700 text-sm">— sem dados publicos consolidados</span>
           </div>
         </motion.div>
 

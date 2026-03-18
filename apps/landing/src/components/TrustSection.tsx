@@ -12,10 +12,10 @@ interface Stat {
 }
 
 const STATS: Stat[] = [
-  { value: 500, suffix: '+', label: 'clientes atendidas' },
-  { value: 98, suffix: '%', label: 'satisfação' },
-  { value: 8, suffix: '', label: 'anos de experiência' },
-  { value: 2, suffix: '', label: 'espaços exclusivos' },
+  { value: 0, suffix: '', label: 'clientes registradas' },
+  { value: 0, suffix: '', label: 'avaliações publicas' },
+  { value: 0, suffix: '', label: 'agendamentos concluidos' },
+  { value: 0, suffix: '', label: 'casos convertidos' },
 ]
 
 const LOGOS = [
