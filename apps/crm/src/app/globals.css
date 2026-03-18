@@ -81,34 +81,166 @@
   }
 }
 
-/* FullCalendar dark mode overrides */
-.dark .fc {
-  color: #F5F5F5;
+.crm-calendar .fc {
+  color: #3f342c;
 }
-.dark .fc-theme-standard td,
-.dark .fc-theme-standard th,
-.dark .fc-theme-standard .fc-scrollgrid {
-  border-color: #3C3C3C;
+
+.crm-calendar .fc-toolbar {
+  gap: 0.75rem;
+  margin-bottom: 1rem !important;
 }
-.dark .fc-col-header-cell-cushion,
-.dark .fc-daygrid-day-number {
-  color: #D0D0D0;
+
+.crm-calendar .fc-toolbar-title {
+  color: #3f342c;
+  font-size: 1.2rem;
+  font-weight: 600;
 }
-.dark .fc-button-primary {
-  background-color: #C9967A;
-  border-color: #C9967A;
+
+.crm-calendar .fc-button-primary {
+  background: #fffaf5;
+  border-color: #eadfd2;
+  color: #7a5b48;
+  box-shadow: none;
 }
-.dark .fc-button-primary:hover {
-  background-color: #B5785A;
-  border-color: #B5785A;
+
+.crm-calendar .fc-button-primary:hover,
+.crm-calendar .fc-button-primary:focus {
+  background: #f7efe6;
+  border-color: #dcc7b4;
+  color: #5f4636;
 }
-.dark .fc-daygrid-day.fc-day-today {
-  background-color: rgba(201, 150, 122, 0.15);
+
+.crm-calendar .fc-button-primary:not(:disabled).fc-button-active,
+.crm-calendar .fc-button-primary:not(:disabled):active {
+  background: #c9967a;
+  border-color: #c9967a;
+  color: #fff;
 }
-.dark .fc-event {
-  background-color: #C9967A;
-  border-color: #B5785A;
+
+.crm-calendar .fc-theme-standard td,
+.crm-calendar .fc-theme-standard th,
+.crm-calendar .fc-theme-standard .fc-scrollgrid {
+  border-color: #efe4d9;
 }
-.dark .fc-toolbar-title {
-  color: #F5F5F5;
+
+.crm-calendar .fc-col-header-cell {
+  background: #fffaf6;
+}
+
+.crm-calendar .fc-col-header-cell-cushion,
+.crm-calendar .fc-daygrid-day-number {
+  color: #7f6a58;
+  font-weight: 600;
+}
+
+.crm-calendar .fc-timegrid-slot-label-cushion,
+.crm-calendar .fc-timegrid-axis-cushion {
+  color: #a28c7b;
+  font-size: 0.75rem;
+}
+
+.crm-calendar .fc-timegrid-now-indicator-line {
+  border-color: #c9967a;
+}
+
+.crm-calendar .fc-timegrid-now-indicator-arrow {
+  border-color: #c9967a;
+}
+
+.crm-calendar .fc-day-today {
+  background: rgba(201, 150, 122, 0.08) !important;
+}
+
+.crm-calendar .fc-highlight {
+  background: rgba(201, 150, 122, 0.16) !important;
+}
+
+.crm-calendar .fc-event {
+  background: transparent;
+  border: 0;
+  padding: 0;
+}
+
+.crm-calendar .fc-event-main {
+  padding: 0;
+}
+
+.crm-calendar .crm-calendar-event-consultation {
+  --calendar-accent: #f59e0b;
+}
+
+.crm-calendar .crm-calendar-event-individual {
+  --calendar-accent: #f43f5e;
+}
+
+.crm-calendar .crm-calendar-event-group {
+  --calendar-accent: #0ea5e9;
+}
+
+.crm-calendar .crm-calendar-event-mentoring {
+  --calendar-accent: #10b981;
+}
+
+.crm-calendar .crm-calendar-event-workshop {
+  --calendar-accent: #8b5cf6;
+}
+
+.crm-calendar .fc-event .rounded-xl {
+  border-left: 3px solid var(--calendar-accent, #c9967a);
+}
+
+.dark .crm-calendar .fc {
+  color: #f5f5f5;
+}
+
+.dark .crm-calendar .fc-toolbar-title {
+  color: #f5f5f5;
+}
+
+.dark .crm-calendar .fc-button-primary {
+  background: #2a2622;
+  border-color: #3a332c;
+  color: #e6d7c6;
+}
+
+.dark .crm-calendar .fc-button-primary:hover,
+.dark .crm-calendar .fc-button-primary:focus {
+  background: #322c26;
+  border-color: #4a4037;
+  color: #fff;
+}
+
+.dark .crm-calendar .fc-button-primary:not(:disabled).fc-button-active,
+.dark .crm-calendar .fc-button-primary:not(:disabled):active {
+  background: #c9967a;
+  border-color: #c9967a;
+  color: #fff;
+}
+
+.dark .crm-calendar .fc-theme-standard td,
+.dark .crm-calendar .fc-theme-standard th,
+.dark .crm-calendar .fc-theme-standard .fc-scrollgrid {
+  border-color: #3c3c3c;
+}
+
+.dark .crm-calendar .fc-col-header-cell {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.dark .crm-calendar .fc-col-header-cell-cushion,
+.dark .crm-calendar .fc-daygrid-day-number {
+  color: #d0d0d0;
+}
+
+.dark .crm-calendar .fc-timegrid-slot-label-cushion,
+.dark .crm-calendar .fc-timegrid-axis-cushion {
+  color: #9b9b9b;
+}
+
+.dark .crm-calendar .fc-day-today {
+  background: rgba(201, 150, 122, 0.14) !important;
+}
+
+.dark .crm-calendar .fc-highlight {
+  background: rgba(201, 150, 122, 0.18) !important;
 }
