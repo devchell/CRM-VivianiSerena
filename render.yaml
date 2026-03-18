@@ -5,7 +5,7 @@ services:
     rootDir: .
     plan: starter
     autoDeploy: true
-    buildCommand: pnpm install --frozen-lockfile && pnpm --filter @viviani/types build && pnpm --filter @viviani/utils build && pnpm --filter @viviani/api db:generate && pnpm --filter @viviani/api build
+    buildCommand: pnpm install --frozen-lockfile --prod=false && pnpm --filter @viviani/types build && pnpm --filter @viviani/utils build && pnpm --filter @viviani/api db:generate && pnpm --filter @viviani/api build
     startCommand: pnpm --filter @viviani/api start
     healthCheckPath: /health/ready
     envVars:
