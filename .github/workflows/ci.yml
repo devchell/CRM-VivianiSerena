@@ -1,0 +1,74 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+      - staging
+  pull_request:
+    branches:
+      - main
+      - staging
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 8.15.4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build shared types
+        run: pnpm --filter @viviani/types build
+
+      - name: Build API
+        env:
+          DATABASE_URL: postgresql://placeholder:placeholder@postgres.example.com:5432/viviani_db?schema=public
+          REDIS_URL: rediss://default:placeholder@redis.example.com:6379
+          API_BASE_URL: https://api.example.com
+          CRM_URL: https://crm.example.com
+          CORS_ORIGIN: https://example.com,https://crm.example.com
+          JWT_PRIVATE_KEY: |
+            -----BEGIN RSA PRIVATE KEY-----
+            replace-me
+            -----END RSA PRIVATE KEY-----
+          JWT_PUBLIC_KEY: |
+            -----BEGIN PUBLIC KEY-----
+            replace-me
+            -----END PUBLIC KEY-----
+          NEXTAUTH_SECRET: placeholder-nextauth-secret
+          ENCRYPTION_KEY: placeholder-encryption-key-123456
+          ANONYMIZATION_SALT: placeholder-anon-salt
+        run: pnpm --filter @viviani/api build
+
+      - name: Build CRM
+        env:
+          NEXTAUTH_SECRET: placeholder-nextauth-secret
+          NEXTAUTH_URL: https://crm.example.com
+          API_BASE_URL: https://api.example.com
+          NEXT_PUBLIC_API_URL: https://api.example.com
+          NEXT_PUBLIC_LANDING_URL: https://example.com
+          NEXT_PUBLIC_APP_VERSION: ci
+        run: pnpm --filter @viviani/crm build
+
+      - name: Build Landing
+        env:
+          API_BASE_URL: https://api.example.com
+          NEXT_PUBLIC_API_URL: https://api.example.com
+          CRM_URL: https://crm.example.com
+          REVALIDATE_SECRET: placeholder-revalidate-secret
+        run: pnpm --filter @viviani/landing build
