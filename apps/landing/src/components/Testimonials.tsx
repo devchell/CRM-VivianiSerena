@@ -201,46 +201,30 @@ export default function Testimonials() {
           </button>
 
           {/* 3 cards */}
-          <div className="flex items-center gap-4 px-8 overflow-hidden">
+          <div className="px-8 overflow-hidden">
+            <AnimatePresence mode="wait" custom={direction}>
+              <motion.div
+                key={DEPOIMENTOS[currIdx].id}
+                custom={direction}
+                className="flex items-center gap-4"
+                initial={{ opacity: 0, x: direction > 0 ? 56 : -56 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: direction > 0 ? -56 : 56 }}
+                transition={{ duration: 0.42, ease: [0.22, 1, 0.36, 1] }}
+              >
+                <div className="hidden flex-1 md:block opacity-40 scale-[0.95]">
+                  <TestimonialCard depoimento={DEPOIMENTOS[prevIdx]} />
+                </div>
 
-            {/* Card anterior — menos foco */}
-            <motion.div
-              key={`prev-${DEPOIMENTOS[prevIdx].id}`}
-              className="hidden flex-1 md:block"
-              initial={{ opacity: 0, x: -24, scale: 0.92 }}
-              animate={{ opacity: 0.4, x: 0, scale: 0.95 }}
-              transition={{ duration: 0.35, ease: 'easeOut' }}
-            >
-              <TestimonialCard depoimento={DEPOIMENTOS[prevIdx]} />
-            </motion.div>
-
-            {/* Card central — destaque */}
-            <div className="flex-1 md:flex-[1.2]">
-              <AnimatePresence mode="wait" custom={direction}>
-                <motion.div
-                  key={DEPOIMENTOS[currIdx].id}
-                  custom={direction}
-                  initial={{ opacity: 0, x: direction > 0 ? 40 : -40, scale: 0.96 }}
-                  animate={{ opacity: 1, x: 0, scale: 1 }}
-                  exit={{ opacity: 0, x: direction > 0 ? -40 : 40, scale: 0.96 }}
-                  transition={{ duration: 0.38, ease: [0.22, 1, 0.36, 1] }}
-                >
+                <div className="flex-1 md:flex-[1.2]">
                   <TestimonialCard depoimento={DEPOIMENTOS[currIdx]} featured />
-                </motion.div>
-              </AnimatePresence>
-            </div>
+                </div>
 
-            {/* Card próximo — menos foco */}
-            <motion.div
-              key={`next-${DEPOIMENTOS[nextIdx].id}`}
-              className="hidden flex-1 md:block"
-              initial={{ opacity: 0, x: 24, scale: 0.92 }}
-              animate={{ opacity: 0.4, x: 0, scale: 0.95 }}
-              transition={{ duration: 0.35, ease: 'easeOut' }}
-            >
-              <TestimonialCard depoimento={DEPOIMENTOS[nextIdx]} />
-            </motion.div>
-
+                <div className="hidden flex-1 md:block opacity-40 scale-[0.95]">
+                  <TestimonialCard depoimento={DEPOIMENTOS[nextIdx]} />
+                </div>
+              </motion.div>
+            </AnimatePresence>
           </div>
 
           {/* Botão próximo */}
@@ -273,3 +257,4 @@ export default function Testimonials() {
     </section>
   )
 }
+
