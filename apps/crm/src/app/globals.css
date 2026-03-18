@@ -1,0 +1,114 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@keyframes fadeIn {
+  from { opacity: 0 }
+  to   { opacity: 1 }
+}
+@keyframes slideInLeft {
+  from { transform: translateX(-240px) }
+  to   { transform: translateX(0) }
+}
+
+/* ── Financial theme variables ───────────────────────────────────────────── */
+:root {
+  --fin-income-bg: #eef9f1;
+  --fin-income-text: #2e7d4c;
+  --fin-income-border: #cdeedf;
+  --fin-income-bar: #7acb8f;
+  --fin-expense-bg: #fff1f1;
+  --fin-expense-text: #d64545;
+  --fin-expense-border: #ffd5d5;
+  --fin-expense-bar: #f28b82;
+  --fin-profit-bg: #e7f4ff;
+  --fin-profit-text: #2f7abf;
+  --fin-profit-border: #cde4fb;
+  --fin-profit-bar: #8ab8f7;
+  --fin-neutral-bg: #fafaf9;
+  --fin-neutral-text: #57534e;
+  --fin-area-income: #7acb8f;
+  --fin-area-expense: #f28b82;
+  --funnel-new: #dfe7f1;
+  --funnel-contacted: #c2cedd;
+  --funnel-qualified: #7acb8f;
+  --funnel-converted: #5fb77a;
+  --funnel-lost: #f28b82;
+}
+
+.dark {
+  --fin-income-bg: rgba(134, 196, 255, 0.18); /* pastel azul */
+  --fin-income-text: #8ecae6;
+  --fin-income-border: rgba(142, 202, 230, 0.25);
+  --fin-income-bar: #8ecae6;
+  --fin-expense-bg: rgba(246, 173, 107, 0.2); /* pastel laranja */
+  --fin-expense-text: #f6ad55;
+  --fin-expense-border: rgba(246, 173, 107, 0.2);
+  --fin-expense-bar: #f6ad55;
+  --fin-profit-bg: rgba(129, 199, 255, 0.22);
+  --fin-profit-text: #a5d8ff;
+  --fin-profit-border: rgba(165, 216, 255, 0.25);
+  --fin-profit-bar: #a5d8ff;
+  --fin-neutral-bg: rgba(60, 60, 60, 0.3);
+  --fin-neutral-text: #c7c7c7;
+  --fin-area-income: #8ecae6;
+  --fin-area-expense: #f6ad55;
+  --funnel-new: #52606d;
+  --funnel-contacted: #6b7280;
+  --funnel-qualified: #8ecae6;
+  --funnel-converted: #a5d8ff;
+  --funnel-lost: #f6ad55;
+}
+
+@layer base {
+  html { scroll-behavior: smooth; }
+  body { @apply bg-cream text-charcoal dark:bg-charcoal-900 dark:text-charcoal-50 transition-colors duration-200; }
+  h1, h2, h3, h4, h5, h6 { @apply font-heading; }
+}
+
+@layer components {
+  .sidebar-link {
+    @apply flex items-center gap-3 px-3 py-2 rounded-lg text-charcoal-400 hover:bg-blush hover:text-charcoal dark:text-charcoal-300 dark:hover:bg-charcoal-700 dark:hover:text-charcoal-50 transition-all duration-150 text-sm font-medium;
+  }
+  .sidebar-link.active {
+    @apply bg-rose-gold/10 text-rose-gold dark:bg-rose-gold/20 dark:text-rose-gold-300;
+  }
+  .card-dark {
+    @apply bg-white dark:bg-charcoal-800 border border-blush-200 dark:border-charcoal-700 rounded-xl;
+  }
+  .input-dark {
+    @apply bg-white dark:bg-charcoal-800 border-blush-300 dark:border-charcoal-600 text-charcoal dark:text-charcoal-50 placeholder-charcoal-400 dark:placeholder-charcoal-500;
+  }
+}
+
+/* FullCalendar dark mode overrides */
+.dark .fc {
+  color: #F5F5F5;
+}
+.dark .fc-theme-standard td,
+.dark .fc-theme-standard th,
+.dark .fc-theme-standard .fc-scrollgrid {
+  border-color: #3C3C3C;
+}
+.dark .fc-col-header-cell-cushion,
+.dark .fc-daygrid-day-number {
+  color: #D0D0D0;
+}
+.dark .fc-button-primary {
+  background-color: #C9967A;
+  border-color: #C9967A;
+}
+.dark .fc-button-primary:hover {
+  background-color: #B5785A;
+  border-color: #B5785A;
+}
+.dark .fc-daygrid-day.fc-day-today {
+  background-color: rgba(201, 150, 122, 0.15);
+}
+.dark .fc-event {
+  background-color: #C9967A;
+  border-color: #B5785A;
+}
+.dark .fc-toolbar-title {
+  color: #F5F5F5;
+}

@@ -1,0 +1,67 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Build outputs
+.next/
+dist/
+build/
+out/
+.turbo/
+coverage/
+*.tsbuildinfo
+
+# Environment and secrets
+.env
+.env.*
+!.env.example
+!.env.test.example
+*.pem
+*.key
+*.cert
+
+# Local runtime state
+logs/
+*.log
+*.pid
+npm-debug.log*
+pnpm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+iniciar.log
+backups/
+tmp/
+temp/
+.cache/
+.eslintcache
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+prisma/migrations/dev.db
+
+# Uploads and generated assets
+uploads/
+apps/api/uploads/
+apps/api/logs/
+
+# App-local env files
+apps/*/.env
+apps/*/.env.*
+packages/*/.env
+packages/*/.env.*
+
+# Deploy platforms
+.vercel/
+.render/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/settings.json
+.idea/
+*.suo
+*.user

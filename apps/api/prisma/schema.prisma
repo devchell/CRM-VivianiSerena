@@ -1,0 +1,246 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  ADMIN
+  MANAGER
+  VIEWER
+}
+
+enum LeadStatus {
+  new
+  contacted
+  qualified
+  converted
+  lost
+}
+
+enum LeadSource {
+  organic
+  instagram
+  facebook
+  google_ads
+  referral
+  whatsapp
+  other
+}
+
+enum ServiceType {
+  coaching_individual
+  coaching_group
+  workshop
+  mentoring
+  consultation
+}
+
+enum AppointmentStatus {
+  scheduled
+  confirmed
+  completed
+  cancelled
+  no_show
+}
+
+enum TransactionType {
+  income
+  expense
+}
+
+enum FinancialCategory {
+  coaching_revenue
+  workshop_revenue
+  mentoring_revenue
+  marketing
+  tools_software
+  education
+  office
+  taxes
+  other
+}
+
+enum ContentSection {
+  hero
+  about
+  services
+  testimonials
+  faq
+  contact
+  footer
+  seo
+}
+
+enum SecurityEventSeverity {
+  low
+  medium
+  high
+  critical
+}
+
+model User {
+  id                 String    @id @default(cuid())
+  email              String    @unique
+  name               String?
+  phone              String?
+  passwordHash       String    @map("password_hash")
+  totpSecret         String?   @map("totp_secret")
+  twoFactorEnabled   Boolean   @default(false) @map("two_factor_enabled")
+  role               UserRole  @default(VIEWER)
+  photoUrl           String?   @map("photo_url")
+  mustChangePassword Boolean   @default(false) @map("must_change_password")
+  allowedModules     String[]  @default([]) @map("allowed_modules")
+  createdAt          DateTime  @default(now()) @map("created_at")
+  lastLogin          DateTime? @map("last_login")
+  failedAttempts     Int       @default(0) @map("failed_attempts")
+  lockedUntil        DateTime? @map("locked_until")
+
+  auditLogs AuditLog[]
+  contents  Content[]
+
+  @@map("users")
+}
+
+model Lead {
+  id          String     @id @default(cuid())
+  name        String
+  email       String
+  phone       String?
+  source      LeadSource
+  utmSource   String?    @map("utm_source")
+  utmMedium   String?    @map("utm_medium")
+  utmCampaign String?    @map("utm_campaign")
+  status      LeadStatus @default(new)
+  notes       String?    @db.Text
+  consentedAt DateTime?  @map("consented_at")  // LGPD consent timestamp
+  anonymized  Boolean    @default(false)         // True after GDPR erasure request
+  createdAt   DateTime   @default(now()) @map("created_at")
+  convertedAt DateTime?  @map("converted_at")
+
+  sessions     Session[]
+  appointments Appointment[]
+
+  @@index([email])
+  @@index([status])
+  @@index([createdAt])
+  @@map("leads")
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  leadId       String   @map("lead_id")
+  ip           String?
+  userAgent    String?  @map("user_agent")
+  referrer     String?
+  pagesVisited Json     @default("[]") @map("pages_visited")
+  duration     Int      @default(0)
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  lead Lead @relation(fields: [leadId], references: [id], onDelete: Cascade)
+
+  @@index([leadId])
+  @@map("sessions")
+}
+
+model Appointment {
+  id            String            @id @default(cuid())
+  leadId        String            @map("lead_id")
+  googleEventId String?           @map("google_event_id")
+  date          DateTime
+  serviceType   ServiceType       @map("service_type")
+  status        AppointmentStatus @default(scheduled)
+  notes         String?           @db.Text
+  createdAt     DateTime          @default(now()) @map("created_at")
+  updatedAt     DateTime          @updatedAt @map("updated_at")
+
+  lead Lead @relation(fields: [leadId], references: [id], onDelete: Cascade)
+
+  @@index([leadId])
+  @@index([date])
+  @@index([status])
+  @@map("appointments")
+}
+
+model Financial {
+  id          String            @id @default(cuid())
+  type        TransactionType
+  category    FinancialCategory
+  amount      Decimal           @db.Decimal(10, 2)
+  description String
+  date        DateTime
+  recurring   Boolean           @default(false)
+  tags        String[]          @default([])
+  createdAt   DateTime          @default(now()) @map("created_at")
+  updatedAt   DateTime          @updatedAt @map("updated_at")
+
+  @@index([type])
+  @@index([category])
+  @@index([date])
+  @@map("financials")
+}
+
+model Content {
+  id        String         @id @default(cuid())
+  section   ContentSection
+  key       String
+  value     Json
+  updatedAt DateTime       @updatedAt @map("updated_at")
+  updatedBy String         @map("updated_by")
+
+  user User @relation(fields: [updatedBy], references: [id])
+
+  @@unique([section, key])
+  @@map("contents")
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  userId    String   @map("user_id")
+  action    String
+  resource  String
+  details   Json     @default("{}")
+  ip        String?
+  timestamp DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([timestamp])
+  @@index([resource])
+  @@map("audit_logs")
+}
+
+model SecurityEvent {
+  id        String                @id @default(cuid())
+  type      String
+  severity  SecurityEventSeverity
+  sourceIp  String?               @map("source_ip")
+  details   Json                  @default("{}")
+  resolved  Boolean               @default(false)
+  timestamp DateTime              @default(now())
+
+  @@index([type])
+  @@index([severity])
+  @@index([timestamp])
+  @@index([resolved])
+  @@map("security_events")
+}
+
+// LGPD — Registro de consentimento de uso de dados
+model ConsentLog {
+  id             String   @id @default(cuid())
+  email          String
+  ipAddress      String?  @map("ip_address")  // Apenas 3 octetos (LGPD)
+  policyVersion  String   @map("policy_version")
+  consentText    String   @db.Text @map("consent_text")
+  consentedAt    DateTime @default(now()) @map("consented_at")
+  channel        String   @default("landing_form") // landing_form | crm | api
+
+  @@index([email])
+  @@index([consentedAt])
+  @@map("consent_logs")
+}

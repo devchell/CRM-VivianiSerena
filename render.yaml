@@ -1,0 +1,45 @@
+services:
+  - type: web
+    name: viviani-api
+    runtime: node
+    rootDir: .
+    plan: starter
+    autoDeploy: true
+    buildCommand: corepack enable && pnpm install --frozen-lockfile && pnpm --filter @viviani/types build && pnpm --filter @viviani/utils build && pnpm --filter @viviani/api db:generate && pnpm --filter @viviani/api build
+    startCommand: corepack enable && pnpm --filter @viviani/api start
+    healthCheckPath: /health/ready
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: API_HOST
+        value: 0.0.0.0
+      - key: API_PORT
+        value: 4000
+      - key: APP_TIMEZONE
+        value: America/Sao_Paulo
+      - key: LOG_LEVEL
+        value: info
+      - key: LOG_TO_FILES
+        value: "false"
+      - key: DATABASE_URL
+        sync: false
+      - key: REDIS_URL
+        sync: false
+      - key: JWT_PRIVATE_KEY
+        sync: false
+      - key: JWT_PUBLIC_KEY
+        sync: false
+      - key: NEXTAUTH_SECRET
+        sync: false
+      - key: ENCRYPTION_KEY
+        sync: false
+      - key: ANONYMIZATION_SALT
+        sync: false
+      - key: CORS_ORIGIN
+        sync: false
+      - key: CRM_URL
+        sync: false
+      - key: LANDING_REVALIDATE_URL
+        sync: false
+      - key: REVALIDATE_SECRET
+        sync: false
