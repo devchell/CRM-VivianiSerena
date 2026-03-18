@@ -1,17 +1,10 @@
 import type { Metadata } from 'next'
-import { Inter, Playfair_Display } from 'next/font/google'
+import { Inter } from 'next/font/google'
 import './globals.css'
 
 const inter = Inter({
   subsets: ['latin'],
   variable: '--font-inter',
-  display: 'swap',
-  preload: true,
-})
-
-const playfair = Playfair_Display({
-  subsets: ['latin'],
-  variable: '--font-playfair',
   display: 'swap',
   preload: true,
 })
@@ -112,7 +105,7 @@ const jsonLd = {
   priceRange: '$$',
   openingHours: ['Mo-Fr 09:00-18:00', 'Sa 09:00-14:00'],
   image: 'https://static.wixstatic.com/media/be8b61_9dfb57055aea4d4f9f4c8b5bfdbbea28~mv2.jpg',
-  sameAs: ['https://www.instagram.com/viviani.serena/', 'https://wa.link/e2g7ii'],
+  sameAs: ['https://www.instagram.com/vivini.serena/', 'https://wa.link/e2g7ii'],
   hasOfferCatalog: {
     '@type': 'OfferCatalog',
     name: 'Serviços de Remoção a Laser',
@@ -155,7 +148,7 @@ const jsonLd = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="pt-BR" className={`${inter.variable} ${playfair.variable}`}>
+    <html lang="pt-BR" className={inter.variable}>
       <head>
         <script
           type="application/ld+json"

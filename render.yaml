@@ -3,7 +3,7 @@ services:
     name: viviani-api
     runtime: node
     rootDir: .
-    plan: starter
+    plan: free
     autoDeploy: true
     buildCommand: pnpm install --frozen-lockfile --prod=false && pnpm --filter @viviani/types build && pnpm --filter @viviani/utils build && pnpm --filter @viviani/api db:generate && pnpm --filter @viviani/api build
     startCommand: pnpm --filter @viviani/api start

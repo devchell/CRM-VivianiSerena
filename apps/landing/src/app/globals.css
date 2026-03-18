@@ -11,7 +11,7 @@
     --blush: #f2e8e4;
     --sage: #8b9e8a;
     --white: #ffffff;
-    --font-heading: var(--font-playfair);
+    --font-heading: var(--font-inter);
     --font-body: var(--font-inter);
   }
 

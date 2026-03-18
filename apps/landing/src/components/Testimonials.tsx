@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { motion } from 'framer-motion'
+import { AnimatePresence, motion } from 'framer-motion'
 import { Star, ChevronLeft, ChevronRight, Quote } from 'lucide-react'
 import { useInView } from '@/lib/hooks'
 
@@ -117,15 +117,30 @@ function TestimonialCard({ depoimento, featured }: { depoimento: Depoimento; fea
 
 export default function Testimonials() {
   const [current, setCurrent] = useState(0)
+  const [direction, setDirection] = useState<1 | -1>(1)
   const { ref: headerRef, isInView } = useInView()
   const total = DEPOIMENTOS.length
 
-  const prev = () => setCurrent(c => (c - 1 + total) % total)
-  const next = () => setCurrent(c => (c + 1) % total)
+  const goTo = (index: number) => {
+    if (index === current) return
+    setDirection(index > current ? 1 : -1)
+    setCurrent(index)
+  }
+
+  const prev = () => {
+    setDirection(-1)
+    setCurrent(c => (c - 1 + total) % total)
+  }
+
+  const next = () => {
+    setDirection(1)
+    setCurrent(c => (c + 1) % total)
+  }
 
   // Autoplay a cada 5s
   useEffect(() => {
     const timer = setInterval(() => {
+      setDirection(1)
       setCurrent(c => (c + 1) % total)
     }, 5000)
     return () => clearInterval(timer)
@@ -189,19 +204,42 @@ export default function Testimonials() {
           <div className="flex items-center gap-4 px-8 overflow-hidden">
 
             {/* Card anterior — menos foco */}
-            <div className="flex-1 opacity-40 scale-95 transition-all duration-300 hidden md:block">
+            <motion.div
+              key={`prev-${DEPOIMENTOS[prevIdx].id}`}
+              className="hidden flex-1 md:block"
+              initial={{ opacity: 0, x: -24, scale: 0.92 }}
+              animate={{ opacity: 0.4, x: 0, scale: 0.95 }}
+              transition={{ duration: 0.35, ease: 'easeOut' }}
+            >
               <TestimonialCard depoimento={DEPOIMENTOS[prevIdx]} />
-            </div>
+            </motion.div>
 
             {/* Card central — destaque */}
-            <div className="flex-1 md:flex-[1.2] transition-all duration-300">
-              <TestimonialCard depoimento={DEPOIMENTOS[currIdx]} featured />
+            <div className="flex-1 md:flex-[1.2]">
+              <AnimatePresence mode="wait" custom={direction}>
+                <motion.div
+                  key={DEPOIMENTOS[currIdx].id}
+                  custom={direction}
+                  initial={{ opacity: 0, x: direction > 0 ? 40 : -40, scale: 0.96 }}
+                  animate={{ opacity: 1, x: 0, scale: 1 }}
+                  exit={{ opacity: 0, x: direction > 0 ? -40 : 40, scale: 0.96 }}
+                  transition={{ duration: 0.38, ease: [0.22, 1, 0.36, 1] }}
+                >
+                  <TestimonialCard depoimento={DEPOIMENTOS[currIdx]} featured />
+                </motion.div>
+              </AnimatePresence>
             </div>
 
             {/* Card próximo — menos foco */}
-            <div className="flex-1 opacity-40 scale-95 transition-all duration-300 hidden md:block">
+            <motion.div
+              key={`next-${DEPOIMENTOS[nextIdx].id}`}
+              className="hidden flex-1 md:block"
+              initial={{ opacity: 0, x: 24, scale: 0.92 }}
+              animate={{ opacity: 0.4, x: 0, scale: 0.95 }}
+              transition={{ duration: 0.35, ease: 'easeOut' }}
+            >
               <TestimonialCard depoimento={DEPOIMENTOS[nextIdx]} />
-            </div>
+            </motion.div>
 
           </div>
 
@@ -219,7 +257,7 @@ export default function Testimonials() {
             {DEPOIMENTOS.map((_, i) => (
               <button
                 key={i}
-                onClick={() => setCurrent(i)}
+                onClick={() => goTo(i)}
                 className={`h-2 rounded-full transition-all duration-300 ${
                   i === current ? 'bg-[#C9967A] w-6' : 'bg-[#C9967A]/30 w-2'
                 }`}

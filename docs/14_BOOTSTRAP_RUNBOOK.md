@@ -1,5 +1,24 @@
 # 14 Bootstrap Runbook
 
+## Estado real em 18/03/2026
+
+Homologacao publicada:
+
+- landing: `https://landing-hml.vercel.app`
+- crm: `https://crm-hml.vercel.app`
+- api: `https://api-hml-sbk3.onrender.com`
+
+Credenciais demo atuais:
+
+- admin: `admin@vivianiserena.com` / `Teste123`
+- colaborador: `colaborador@vivianiserena.com` / `Teste123`
+
+Producao intencionalmente desligada:
+
+- `api-prod` removida da Render
+- `landing-prod` e `crm-prod` sem deploy automatico
+- manter somente `staging` e HML ate a aprovacao da cliente
+
 ## Estado ja aplicado no repositrio local
 
 As seguintes mudancas ja foram feitas localmente:
@@ -23,7 +42,7 @@ Fechar a configuracao inicial de:
 
 - GitHub
 - Render homologacao
-- Render producao
+- Render producao, apenas quando a homologacao for aprovada
 
 Sem quebrar o fluxo de deploy e sem misturar ambientes.
 
@@ -350,9 +369,11 @@ Para qualquer ajuste:
 
 Na pratica, sua sequencia imediata e:
 
-1. subir `main` e `staging`
-2. trocar a default branch no GitHub para `main`
-3. configurar branch protection
-4. criar homologacao completa
-5. validar com a cliente
-6. so depois configurar producao
+1. apresentar a homologacao atual para a cliente
+2. ajustar o sistema apenas em `feature/* -> staging`
+3. continuar usando:
+   - `https://landing-hml.vercel.app`
+   - `https://crm-hml.vercel.app`
+   - `https://api-hml-sbk3.onrender.com`
+4. manter producao desligada ate aprovacao formal
+5. so depois religar a trilha de producao

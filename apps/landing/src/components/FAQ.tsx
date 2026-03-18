@@ -60,7 +60,7 @@ const FAQ_ITEMS: FAQItem[] = [
     id: 'faq-8',
     question: 'Como agendo minha avaliação gratuita?',
     answer:
-      'É simples! Você pode preencher o formulário nesta página, enviar uma mensagem pelo WhatsApp (11) 91575-1770, ou entrar em contato pelo Instagram @vivianiserena. O agendamento é rápido — respondemos em até 24 horas para confirmar data e horário no espaço mais próximo de você.',
+      'É simples! Você pode preencher o formulário nesta página, enviar uma mensagem pelo WhatsApp (11) 91575-1770, ou entrar em contato pelo Instagram @vivini.serena. O agendamento é rápido — respondemos em até 24 horas para confirmar data e horário no espaço mais próximo de você.',
   },
 ]
 

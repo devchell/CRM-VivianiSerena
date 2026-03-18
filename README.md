@@ -10,6 +10,15 @@ Monorepo com `landing`, `crm`, `api` e pacotes compartilhados para operacao come
 - Segredos client-side removidos do CRM para publicacao da landing.
 - A pasta [`docs`](D:/VivianeCRM/viviani-serena-platform/docs) continua como base de auditoria e arquitetura.
 
+## Homologacao ativa
+
+- landing: `https://landing-hml.vercel.app`
+- crm: `https://crm-hml.vercel.app`
+- api: `https://api-hml-sbk3.onrender.com`
+- login demo admin: `admin@vivianiserena.com` / `Teste123`
+- login demo colaborador: `colaborador@vivianiserena.com` / `Teste123`
+- producao esta desativada de proposito enquanto a validacao com a cliente nao terminar
+
 ## Apps
 
 - `apps/landing`: site publico em Next.js 14
@@ -130,14 +139,18 @@ Detalhes: [05_SECURITY_BASELINE.md](D:/VivianeCRM/viviani-serena-platform/docs/0
   - `landing-prod`
   - `crm-hml`
   - `crm-prod`
-- `landing-prod` e `crm-prod` ja estao conectados ao GitHub com `main`
-- pushes em `staging` ja geram preview deployments automaticos nesses projetos de producao
-- a homologacao do frontend ja tem workflow preparado em `.github/workflows/deploy-homolog.yml`
-- para ativar o deploy dedicado em `landing-hml` e `crm-hml`, ainda falta cadastrar o segredo `VERCEL_TOKEN` no GitHub
-- as variaveis de ambiente finais ainda dependem da URL publica da API na Render
+- homologacao ativa:
+  - `landing-hml -> https://landing-hml.vercel.app`
+  - `crm-hml -> https://crm-hml.vercel.app`
+- `landing-prod` e `crm-prod` existem, mas ficaram desligados do Git para evitar deploy acidental
+- a homologacao do frontend foi publicada manualmente a partir desta base
+- o workflow `.github/workflows/deploy-homolog.yml` continua pronto caso voce queira ativar deploy automatizado depois com `VERCEL_TOKEN`
 
 ### Backend
 
+- homologacao ativa:
+  - `api-hml -> https://api-hml-sbk3.onrender.com`
+- producao da API esta desligada no momento
 - publicar `apps/api` em plataforma com processo persistente
 - exemplo de blueprint para Render: [render.yaml](D:/VivianeCRM/viviani-serena-platform/render.yaml)
 - health checks disponiveis:
