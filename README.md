@@ -196,6 +196,7 @@ CRM:
 - [05_SECURITY_BASELINE.md](D:/VivianeCRM/viviani-serena-platform/docs/05_SECURITY_BASELINE.md)
 - [08_DEPLOYMENT_ARCHITECTURE.md](D:/VivianeCRM/viviani-serena-platform/docs/08_DEPLOYMENT_ARCHITECTURE.md)
 - [13_ENVIRONMENT_STRATEGY.md](D:/VivianeCRM/viviani-serena-platform/docs/13_ENVIRONMENT_STRATEGY.md)
+- [14_BOOTSTRAP_RUNBOOK.md](D:/VivianeCRM/viviani-serena-platform/docs/14_BOOTSTRAP_RUNBOOK.md)
 - [11_MIGRATION_RUNBOOK.md](D:/VivianeCRM/viviani-serena-platform/docs/11_MIGRATION_RUNBOOK.md)
 - [12_OPERATIONS_AND_MONITORING.md](D:/VivianeCRM/viviani-serena-platform/docs/12_OPERATIONS_AND_MONITORING.md)
 - [DEPLOY_CHECKLIST_FINAL.md](D:/VivianeCRM/viviani-serena-platform/DEPLOY_CHECKLIST_FINAL.md)
