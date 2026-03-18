@@ -6,6 +6,11 @@ As seguintes mudancas ja foram feitas localmente:
 
 - branch atual renomeada de `master` para `main`
 - branch `staging` criada
+- projetos `landing-hml`, `landing-prod`, `crm-hml` e `crm-prod` criados na Vercel
+- `landing-prod` e `crm-prod` conectados ao repositrio GitHub
+- `landing-hml` e `crm-hml` isolados para deploy controlado por workflow
+- workflow de homologacao criado em `.github/workflows/deploy-homolog.yml`
+- variaveis do GitHub criadas para IDs dos projetos Vercel
 
 Estado atual esperado:
 
@@ -17,8 +22,6 @@ Estado atual esperado:
 Fechar a configuracao inicial de:
 
 - GitHub
-- Vercel homologacao
-- Vercel producao
 - Render homologacao
 - Render producao
 
@@ -65,7 +68,7 @@ Em `Settings > Branches > Add rule`:
 
 ## 3. Criar os projetos da landing na Vercel
 
-Voce vai criar dois projetos separados usando o mesmo repositorio.
+Esses projetos ja foram criados. Nesta etapa, voce so precisa revisar variaveis e dominios.
 
 ### Projeto 1: landing homologacao
 
@@ -113,6 +116,8 @@ Dominio sugerido:
 
 ## 4. Criar os projetos do CRM na Vercel
 
+Esses projetos ja foram criados. Nesta etapa, voce so precisa revisar variaveis e dominios.
+
 ### Projeto 1: CRM homologacao
 
 1. `Add New Project`
@@ -156,6 +161,21 @@ Variaveis:
 Dominio sugerido:
 
 - `crm.seudominio.com`
+
+## 4.1. Automacao atual do frontend
+
+Estado atual:
+
+- `landing-prod` e `crm-prod` publicam a partir da branch `main`
+- pushes em `staging` ja geram preview deployments automaticos nesses projetos
+- `landing-hml` e `crm-hml` ficaram preparados para deploy por GitHub Actions
+- o workflow de homologacao esta em `.github/workflows/deploy-homolog.yml`
+- os IDs de projeto e org da Vercel ja foram salvos como GitHub Variables
+
+O que ainda falta:
+
+- cadastrar `VERCEL_TOKEN` em `GitHub > Settings > Secrets and variables > Actions`
+- preencher as variaveis finais dos projetos na Vercel depois que a API da Render tiver URL publica
 
 ## 5. Criar os bancos e Redis
 

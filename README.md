@@ -125,10 +125,16 @@ Detalhes: [05_SECURITY_BASELINE.md](D:/VivianeCRM/viviani-serena-platform/docs/0
 
 ### Frontend
 
-- publicar `apps/landing` na Vercel
-- publicar `apps/crm` na Vercel
-- configurar o root directory de cada projeto no app correto
-- definir as variaveis de ambiente do app no painel da Vercel
+- projetos ja criados na Vercel:
+  - `landing-hml`
+  - `landing-prod`
+  - `crm-hml`
+  - `crm-prod`
+- `landing-prod` e `crm-prod` ja estao conectados ao GitHub com `main`
+- pushes em `staging` ja geram preview deployments automaticos nesses projetos de producao
+- a homologacao do frontend ja tem workflow preparado em `.github/workflows/deploy-homolog.yml`
+- para ativar o deploy dedicado em `landing-hml` e `crm-hml`, ainda falta cadastrar o segredo `VERCEL_TOKEN` no GitHub
+- as variaveis de ambiente finais ainda dependem da URL publica da API na Render
 
 ### Backend
 
