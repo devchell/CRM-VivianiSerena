@@ -2,6 +2,7 @@ import { PrismaClient, UserRole, ContentSection } from '@prisma/client'
 import bcrypt from 'bcryptjs'
 
 const prisma = new PrismaClient()
+const WHATSAPP_NUMBER = '5511915751770'
 
 async function main() {
   console.log('🌱 Starting baseline database seed (clean operational reset)...')
@@ -43,7 +44,7 @@ async function main() {
   const contentEntries = [
     { section: ContentSection.hero, key: 'title', value: { pt: 'Viviani Serena - Estética Avançada' } },
     { section: ContentSection.hero, key: 'subtitle', value: { pt: 'Resultados premium com tecnologia e acolhimento.' } },
-    { section: ContentSection.contact, key: 'whatsapp', value: { number: '5511999999999', message: 'Olá! Gostaria de saber mais.' } },
+    { section: ContentSection.contact, key: 'whatsapp', value: { number: WHATSAPP_NUMBER, message: 'Olá! Gostaria de saber mais.' } },
   ]
   for (const entry of contentEntries) {
     await prisma.content.upsert({

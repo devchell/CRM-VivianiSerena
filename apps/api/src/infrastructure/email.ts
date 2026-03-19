@@ -13,6 +13,7 @@ const transporter = nodemailer.createTransport({
 
 const FROM = `"${process.env.EMAIL_FROM_NAME || 'Viviani Serena'}" <${process.env.EMAIL_FROM || 'noreply@vivianicoaching.com'}>`
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'admin@vivianiserena.com'
+const WHATSAPP_NUMBER = '5511915751770'
 
 function baseTemplate(title: string, content: string): string {
   return `<!DOCTYPE html>
@@ -100,7 +101,7 @@ export const emailService = {
         <p><strong>Data:</strong> ${dateStr}</p>
       </div>
       <p>Se precisar reagendar, entre em contato conosco com antecedência de 24 horas.</p>
-      <a href="https://wa.me/5511999999999" class="btn">Falar no WhatsApp</a>
+      <a href="https://wa.me/${WHATSAPP_NUMBER}" class="btn">Falar no WhatsApp</a>
     `
     return send(params.clientEmail, 'Seu agendamento foi confirmado ✨', baseTemplate('Agendamento Confirmado', content))
   },
