@@ -90,7 +90,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   useEffect(() => {
     if (status === 'unauthenticated') router.push('/login')
     if (status === 'authenticated' && typedSession?.error === 'RefreshAccessTokenError') router.push('/login')
-    if (status === 'authenticated' && typedSession?.user?.mustChangePassword) router.push('/definir-senha')
+    if (status === 'authenticated' && typedSession?.user?.mustChangePassword) router.replace('/definir-senha')
   }, [status, router, typedSession])
 
   useEffect(() => {
@@ -100,6 +100,14 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   }, [fallbackRoute, hasRouteAccess, router, status])
 
   if (status === 'loading') {
+    return (
+      <div className="flex h-screen items-center justify-center bg-cream dark:bg-charcoal-900">
+        <div className="w-8 h-8 border-2 border-rose-gold border-t-transparent rounded-full animate-spin" />
+      </div>
+    )
+  }
+
+  if (mustChangePassword) {
     return (
       <div className="flex h-screen items-center justify-center bg-cream dark:bg-charcoal-900">
         <div className="w-8 h-8 border-2 border-rose-gold border-t-transparent rounded-full animate-spin" />

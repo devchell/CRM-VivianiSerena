@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
-import { signIn } from 'next-auth/react'
+import { getSession, signIn } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { AnimatePresence, motion } from 'framer-motion'
 import {
@@ -91,7 +91,10 @@ export default function LoginPage() {
       throw new Error('Erro ao criar sessao. Tente novamente.')
     }
 
-    router.push('/dashboard')
+    const session = await getSession()
+    const mustChangePassword = Boolean(session?.user?.mustChangePassword)
+
+    router.replace(mustChangePassword ? '/definir-senha' : '/dashboard')
   }
 
   const applyTwoFactorResult = async (data: TwoFactorResponseData) => {
