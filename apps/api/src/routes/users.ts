@@ -498,7 +498,29 @@ usersRouter.delete('/:id', authenticate, authorizePermission('users.manage'), as
       throw new AppError(400, 'Voce nao pode remover o proprio usuario')
     }
 
-    await prisma.user.delete({ where: { id: userId } })
+    const existing = await prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        id: true,
+        contents: { select: { id: true }, take: 1 },
+        contentVersions: { select: { id: true }, take: 1 },
+      },
+    })
+
+    if (!existing) {
+      throw new AppError(404, 'Usuario nao encontrado')
+    }
+
+    if (existing.contents.length > 0 || existing.contentVersions.length > 0) {
+      throw new AppError(400, 'Nao e possivel excluir este usuario porque ele possui historico de edicao de conteudo')
+    }
+
+    await prisma.$transaction([
+      prisma.notificationRead.deleteMany({ where: { userId } }),
+      prisma.auditLog.deleteMany({ where: { userId } }),
+      prisma.user.delete({ where: { id: userId } }),
+    ])
+
     res.json({ success: true })
   } catch (error) {
     next(error)

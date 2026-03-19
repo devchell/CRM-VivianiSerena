@@ -57,6 +57,7 @@ type ConfirmDeleteState = {
   id: string
   name: string | null
   email: string
+  accountStatus: CollaboratorTab
 } | null
 
 type CollaboratorApiResponse = {
@@ -150,7 +151,11 @@ function ConfirmDeleteModal(props: {
 
         <div className="flex items-start gap-2 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700/40 rounded-lg px-3 py-2.5 mb-5">
           <AlertTriangle size={16} className="text-amber-500 flex-shrink-0 mt-0.5" />
-          <p className="text-xs text-amber-700 dark:text-amber-400">O acesso ao sistema sera removido imediatamente.</p>
+          <p className="text-xs text-amber-700 dark:text-amber-400">
+            {props.state.accountStatus === 'ACTIVE'
+              ? 'Este colaborador ja acessou o sistema. A conta sera removida do banco imediatamente.'
+              : 'Esta conta ainda nao foi ativada. O convite pendente e o cadastro serao removidos imediatamente.'}
+          </p>
         </div>
 
         <div className="flex gap-3">
@@ -545,7 +550,12 @@ export default function ColaboradoresPage() {
                           ) : null}
                           {canDeleteUser ? (
                             <button
-                              onClick={() => setConfirmDelete({ id: user.id, name: user.name, email: user.email })}
+                              onClick={() => setConfirmDelete({
+                                id: user.id,
+                                name: user.name,
+                                email: user.email,
+                                accountStatus: user.accountStatus,
+                              })}
                               disabled={Boolean(actionKey)}
                               className="p-1.5 rounded-lg text-charcoal-400 hover:text-red-400 hover:bg-red-400/10 transition-colors disabled:opacity-50"
                               title="Excluir colaborador"
