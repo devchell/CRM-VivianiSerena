@@ -5,6 +5,11 @@ import { Suspense } from 'react'
 import './globals.css'
 import { PageTracker } from '@/components/PageTracker'
 
+const SITE_URL = 'https://vivianicoaching.com'
+const WHATSAPP_NUMBER = '5511915751770'
+const INSTAGRAM_URL = 'https://www.instagram.com/vivini.serena/'
+const googleSiteVerification = process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION?.trim()
+
 const inter = Inter({
   subsets: ['latin'],
   variable: '--font-inter',
@@ -13,7 +18,7 @@ const inter = Inter({
 })
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://vivianicoaching.com'),
+  metadataBase: new URL(SITE_URL),
   title: {
     default: 'Viviani Serena | Remoção a Laser de Micropigmentação em Santo André e SP',
     template: '%s | Viviani Serena',
@@ -47,7 +52,7 @@ export const metadata: Metadata = {
   openGraph: {
     type: 'website',
     locale: 'pt_BR',
-    url: 'https://vivianicoaching.com',
+    url: SITE_URL,
     siteName: 'Viviani Serena',
     title: 'Remoção a Laser de Micropigmentação | Viviani Serena',
     description:
@@ -68,26 +73,24 @@ export const metadata: Metadata = {
     images: ['/og-image.jpg'],
   },
   alternates: {
-    canonical: 'https://vivianicoaching.com',
+    canonical: SITE_URL,
     languages: {
-      'pt-BR': 'https://vivianicoaching.com',
+      'pt-BR': SITE_URL,
     },
   },
   manifest: '/manifest.json',
-  verification: {
-    google: 'google-site-verification-placeholder',
-  },
+  verification: googleSiteVerification ? { google: googleSiteVerification } : undefined,
 }
 
 const jsonLd = {
   '@context': 'https://schema.org',
   '@type': 'LocalBusiness',
-  '@id': 'https://vivianicoaching.com',
+  '@id': SITE_URL,
   name: 'Viviani Serena — Remoção a Laser',
   description:
     'Especialista em remoção a laser de micropigmentação de sobrancelhas, lábios, eyeliner, capilar e tatuagens em Santo André e São Paulo.',
-  url: 'https://vivianicoaching.com',
-  telephone: '+5511999999999',
+  url: SITE_URL,
+  telephone: `+${WHATSAPP_NUMBER}`,
   address: {
     '@type': 'PostalAddress',
     addressLocality: 'Santo André',
@@ -108,7 +111,7 @@ const jsonLd = {
   priceRange: '$$',
   openingHours: ['Mo-Fr 09:00-18:00', 'Sa 09:00-14:00'],
   image: 'https://static.wixstatic.com/media/be8b61_9dfb57055aea4d4f9f4c8b5bfdbbea28~mv2.jpg',
-  sameAs: ['https://www.instagram.com/vivini.serena/', 'https://wa.link/e2g7ii'],
+  sameAs: [INSTAGRAM_URL, 'https://wa.link/e2g7ii'],
   hasOfferCatalog: {
     '@type': 'OfferCatalog',
     name: 'Serviços de Remoção a Laser',

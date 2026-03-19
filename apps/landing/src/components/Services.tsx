@@ -4,7 +4,7 @@ import { useRef, useCallback } from 'react'
 import { motion, useInView } from 'framer-motion'
 import { trackCTAClick, trackWhatsAppClick } from '@/lib/analytics'
 
-const WA_BASE = 'https://wa.me/5511999999999?text='
+const WA_BASE = 'https://wa.me/5511915751770?text='
 
 const SERVICES = [
   {

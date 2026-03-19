@@ -56,7 +56,7 @@ export default async function HomePage() {
   const ctaRaw = content.hero?.cta_primary as { text?: string; url?: string } | undefined
   const heroCta = ctaRaw ? { text: ctaRaw.text, url: ctaRaw.url } : undefined
 
-  // WhatsApp (número puro: 5511999999999)
+  // WhatsApp (número puro: 5511915751770)
   const waRaw = content.contact?.whatsapp as { number?: string; message?: string } | undefined
   const whatsappNumber = waRaw?.number
   const whatsappMessage = waRaw?.message
