@@ -187,7 +187,7 @@ export async function fetchGoogleBusinessReviews(locations: GoogleBusinessLocati
           ...(payload.reviews ?? []).map((review) => ({
             id: review.reviewId ?? `${location.locationId}-${review.updateTime ?? Math.random().toString(36).slice(2)}`,
             rating: STAR_RATING_MAP[review.starRating ?? 'FIVE'] ?? 5,
-            comment: review.comment?.trim() || 'Avaliacao publicada no Google.',
+            comment: review.comment?.trim() || 'Avaliação publicada no Google.',
             reviewerName: review.reviewer?.displayName?.trim() || 'Cliente Google',
             reviewerPhotoUrl: review.reviewer?.profilePhotoUrl?.trim() || null,
             updateTime: review.updateTime ?? null,

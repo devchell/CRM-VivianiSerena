@@ -302,8 +302,8 @@ export default function ConfiguracoesPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="font-heading text-2xl font-bold text-charcoal dark:text-charcoal-50">Configuracoes</h1>
-        <p className="text-charcoal-400 dark:text-charcoal-400 mt-1 text-sm">Gerencie sua conta e preferencias</p>
+        <h1 className="font-heading text-2xl font-bold text-charcoal dark:text-charcoal-50">Configurações</h1>
+        <p className="text-charcoal-400 dark:text-charcoal-400 mt-1 text-sm">Gerencie sua conta e preferências</p>
       </div>
 
       <div className="flex flex-col lg:flex-row gap-6">
@@ -444,7 +444,7 @@ export default function ConfiguracoesPage() {
                       {twoFaDraft.enabled ? '2FA ativo' : '2FA desativado'}
                     </p>
                     <p className="text-xs text-charcoal-400 dark:text-charcoal-500 mt-0.5">
-                      O 2FA sempre comeca desligado. Ao ativar, o celular fica marcado por padrao e voce pode manter celular, e-mail ou ambos.
+                      O 2FA sempre começa desligado. Ao ativar, o celular fica marcado por padrão e você pode manter celular, e-mail ou ambos.
                     </p>
                     {!profileForm.phone.trim() && (
                       <p className="text-xs text-amber-500 mt-1">

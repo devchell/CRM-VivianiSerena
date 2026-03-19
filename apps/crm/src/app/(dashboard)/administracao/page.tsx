@@ -212,7 +212,7 @@ export default function AdministracaoPage() {
       void loadOverview('refresh')
     }
     if (googleStatus === 'error') {
-      toast.error('Nao foi possivel concluir a conexao com o Google Calendar')
+      toast.error('Não foi possível concluir a conexão com o Google Calendar')
       void loadOverview('refresh')
     }
   }, [loadOverview, searchParams])
@@ -245,7 +245,7 @@ export default function AdministracaoPage() {
   }
 
   function maskValue(value: string | null | undefined, visible: boolean) {
-    if (!value) return 'Nao configurado'
+    if (!value) return 'Não configurado'
     if (visible) return value
     if (value.length <= 8) return '********'
     return `${value.slice(0, 3)}******${value.slice(-3)}`
@@ -256,7 +256,7 @@ export default function AdministracaoPage() {
     try {
       const response = await fetch(`${API_URL}/auth/google`, { headers: { Authorization: `Bearer ${accessToken}` } })
       const payload = await response.json() as { success: boolean; data?: { authUrl: string }; message?: string }
-      if (!response.ok || !payload.success || !payload.data?.authUrl) throw new Error(payload.message ?? 'Nao foi possivel iniciar a conexao com o Google')
+      if (!response.ok || !payload.success || !payload.data?.authUrl) throw new Error(payload.message ?? 'Não foi possível iniciar a conexão com o Google')
       window.location.href = payload.data.authUrl
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Erro ao conectar Google Calendar')
@@ -319,7 +319,7 @@ export default function AdministracaoPage() {
   if (!overview) {
     return (
       <div className="rounded-3xl border border-red-200 bg-red-50 px-5 py-4 text-sm text-red-700 dark:border-red-900/40 dark:bg-red-950/20 dark:text-red-200">
-        <p className="font-semibold">Nao foi possivel carregar o painel.</p>
+        <p className="font-semibold">Não foi possível carregar o painel.</p>
         <p className="mt-1">{loadError ?? 'Erro inesperado.'}</p>
       </div>
     )
@@ -332,7 +332,7 @@ export default function AdministracaoPage() {
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.24em] text-rose-gold">Administracao</p>
             <h1 className="mt-2 font-heading text-3xl font-bold text-charcoal dark:text-charcoal-50">Integracoes, credenciais e ambiente sob controle.</h1>
-            <p className="mt-3 max-w-3xl text-sm leading-6 text-charcoal-500 dark:text-charcoal-400">Refinei a hierarquia visual do painel para separar melhor os dados sensiveis e deixar cada bloco mais facil de operar.</p>
+            <p className="mt-3 max-w-3xl text-sm leading-6 text-charcoal-500 dark:text-charcoal-400">Refinei a hierarquia visual do painel para separar melhor os dados sensíveis e deixar cada bloco mais fácil de operar.</p>
           </div>
           <div className="flex flex-wrap gap-3">
             <button type="button" onClick={toggleAll} className="inline-flex items-center justify-center gap-2 rounded-2xl border border-blush-300 bg-white px-4 py-3 text-sm font-medium text-charcoal shadow-sm transition-colors hover:bg-blush dark:border-charcoal-600 dark:bg-charcoal-800 dark:text-charcoal-100 dark:hover:bg-charcoal-700">
@@ -360,7 +360,7 @@ export default function AdministracaoPage() {
         <SummaryCard label="Redis" value={overview.infrastructure.redis ? 'OK' : 'Falha'} note="Cache e filas auxiliares." icon={<Server size={18} />} />
         <SummaryCard label="Uploads" value={overview.infrastructure.uploads ? 'OK' : 'Falha'} note={`Driver atual: ${overview.infrastructure.storageDriver}.`} icon={<ExternalLink size={18} />} />
         <SummaryCard label="Google" value={overview.integrations.googleCalendar.connected ? 'Conectado' : 'Pendente'} note={overview.integrations.googleCalendar.configured ? 'OAuth configurado.' : 'Credenciais OAuth pendentes.'} icon={<Globe2 size={18} />} />
-        <SummaryCard label="Visibilidade" value={`${visibleCount}/3`} note="Blocos com dados visiveis." icon={<Layers3 size={18} />} />
+        <SummaryCard label="Visibilidade" value={`${visibleCount}/3`} note="Blocos com dados visíveis." icon={<Layers3 size={18} />} />
       </div>
 
       <section className="rounded-[32px] border border-blush-200 bg-white/90 p-6 shadow-sm dark:border-charcoal-700 dark:bg-charcoal-900/70">
@@ -368,9 +368,9 @@ export default function AdministracaoPage() {
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-rose-gold">Visibilidade</p>
             <h2 className="mt-2 font-heading text-xl font-semibold text-charcoal dark:text-charcoal-50">Controle rapido por area</h2>
-            <p className="mt-2 max-w-2xl text-sm leading-6 text-charcoal-500 dark:text-charcoal-400">Cada secao agora tem um controle mais claro para exibicao pontual. O botao global continua no topo para abrir ou fechar tudo.</p>
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-charcoal-500 dark:text-charcoal-400">Cada seção agora tem um controle mais claro para exibição pontual. O botão global continua no topo para abrir ou fechar tudo.</p>
           </div>
-          <div className="rounded-2xl border border-blush-200 bg-cream/80 px-4 py-3 text-sm text-charcoal-600 dark:border-charcoal-700 dark:bg-charcoal-800/70 dark:text-charcoal-300">{visibleCount} de 3 blocos visiveis.</div>
+          <div className="rounded-2xl border border-blush-200 bg-cream/80 px-4 py-3 text-sm text-charcoal-600 dark:border-charcoal-700 dark:bg-charcoal-800/70 dark:text-charcoal-300">{visibleCount} de 3 blocos visíveis.</div>
         </div>
         <div className="mt-5 flex flex-wrap gap-2">
           <VisibilityToggle label={visibility.google ? 'Google visivel' : 'Google oculto'} active={visibility.google} onClick={() => toggleSection('google')} />
@@ -381,11 +381,11 @@ export default function AdministracaoPage() {
 
       <div className="grid gap-4 xl:grid-cols-[minmax(0,1.12fr)_minmax(0,0.88fr)]">
         <div className="space-y-4">
-          <SectionCard eyebrow="Google Calendar" title="Sincronizacao da agenda externa" description={overview.integrations.googleCalendar.connected ? (overview.integrations.googleCalendar.expiresAt ? `Conta conectada. Expiracao atual: ${new Date(overview.integrations.googleCalendar.expiresAt).toLocaleString('pt-BR')}.` : 'Conta conectada. O token atual nao expoe expiracao neste retorno.') : 'Use o acesso abaixo para autorizar sua conta Google e preparar a sincronizacao do calendario.'} visible={visibility.google} onToggle={() => toggleSection('google')} status={<><StatusPill ok={overview.integrations.googleCalendar.configured} label={overview.integrations.googleCalendar.configured ? 'OAuth configurado' : 'OAuth pendente'} /><StatusPill ok={overview.integrations.googleCalendar.connected} label={overview.integrations.googleCalendar.connected ? 'Conta conectada' : 'Sem conexao'} /></>}>
-            {!overview.integrations.googleCalendar.configured ? <div className="mb-5 rounded-3xl border border-amber-200 bg-amber-50 px-4 py-4 text-sm text-amber-800 dark:border-amber-900/40 dark:bg-amber-950/20 dark:text-amber-100">O botao de conexao so habilita quando a API tiver client id, secret e redirect URI validos.</div> : null}
+          <SectionCard eyebrow="Google Calendar" title="Sincronização da agenda externa" description={overview.integrations.googleCalendar.connected ? (overview.integrations.googleCalendar.expiresAt ? `Conta conectada. Expiração atual: ${new Date(overview.integrations.googleCalendar.expiresAt).toLocaleString('pt-BR')}.` : 'Conta conectada. O token atual não expõe expiração neste retorno.') : 'Use o acesso abaixo para autorizar sua conta Google e preparar a sincronização do calendário.'} visible={visibility.google} onToggle={() => toggleSection('google')} status={<><StatusPill ok={overview.integrations.googleCalendar.configured} label={overview.integrations.googleCalendar.configured ? 'OAuth configurado' : 'OAuth pendente'} /><StatusPill ok={overview.integrations.googleCalendar.connected} label={overview.integrations.googleCalendar.connected ? 'Conta conectada' : 'Sem conexão'} /></>}>
+            {!overview.integrations.googleCalendar.configured ? <div className="mb-5 rounded-3xl border border-amber-200 bg-amber-50 px-4 py-4 text-sm text-amber-800 dark:border-amber-900/40 dark:bg-amber-950/20 dark:text-amber-100">O botão de conexão só habilita quando a API tiver client id, secret e redirect URI válidos.</div> : null}
             <div className="grid gap-3 md:grid-cols-2">
               <InfoCard label="Calendar ID" value={maskValue(overview.integrations.googleCalendar.calendarId, visibility.google)} note="Identificador usado para sincronizar eventos." />
-              <InfoCard label="Refresh token" value={overview.integrations.googleCalendar.hasRefreshToken ? 'Disponivel' : 'Nao disponivel'} note="Indica se o ambiente consegue renovar a autorizacao." />
+              <InfoCard label="Refresh token" value={overview.integrations.googleCalendar.hasRefreshToken ? 'Disponível' : 'Não disponível'} note="Indica se o ambiente consegue renovar a autorização." />
               <div className="md:col-span-2">
                 <InfoCard label="Redirect URI" value={maskValue(overview.environment.googleRedirectUri, visibility.google)} breakAll note="URL usada no retorno do OAuth do Google." />
               </div>
@@ -407,7 +407,7 @@ export default function AdministracaoPage() {
             <div className="grid gap-3 md:grid-cols-3">
               <InfoCard label="Provider" value={overview.integrations.email.provider} />
               <InfoCard label="Origem" value={overview.integrations.email.source === 'database' ? 'Banco de dados' : 'Variaveis de ambiente'} />
-              <InfoCard label="Senha SMTP" value={overview.integrations.email.passwordConfigured ? 'Configurada' : 'Nao configurada'} />
+              <InfoCard label="Senha SMTP" value={overview.integrations.email.passwordConfigured ? 'Configurada' : 'Não configurada'} />
             </div>
             <div className="mt-5 grid gap-3">
               <div className="grid gap-3 md:grid-cols-2">
@@ -415,7 +415,7 @@ export default function AdministracaoPage() {
                 <label className="space-y-2 text-sm"><span className="font-medium text-charcoal dark:text-charcoal-100">Porta SMTP</span><input value={emailForm.port} onChange={(event) => updateEmailField('port', event.target.value)} className="w-full rounded-2xl border border-blush-200 bg-white px-4 py-3 text-sm text-charcoal outline-none transition focus:border-rose-gold dark:border-charcoal-700 dark:bg-charcoal-800 dark:text-charcoal-100" placeholder="587" /></label>
               </div>
               <div className="grid gap-3 md:grid-cols-2">
-                <label className="space-y-2 text-sm"><span className="font-medium text-charcoal dark:text-charcoal-100">Usuario SMTP</span><input value={emailForm.user} onChange={(event) => updateEmailField('user', event.target.value)} className="w-full rounded-2xl border border-blush-200 bg-white px-4 py-3 text-sm text-charcoal outline-none transition focus:border-rose-gold dark:border-charcoal-700 dark:bg-charcoal-800 dark:text-charcoal-100" placeholder={maskValue(overview.integrations.email.user, visibility.email)} /></label>
+                <label className="space-y-2 text-sm"><span className="font-medium text-charcoal dark:text-charcoal-100">Usuário SMTP</span><input value={emailForm.user} onChange={(event) => updateEmailField('user', event.target.value)} className="w-full rounded-2xl border border-blush-200 bg-white px-4 py-3 text-sm text-charcoal outline-none transition focus:border-rose-gold dark:border-charcoal-700 dark:bg-charcoal-800 dark:text-charcoal-100" placeholder={maskValue(overview.integrations.email.user, visibility.email)} /></label>
                 <label className="space-y-2 text-sm"><span className="font-medium text-charcoal dark:text-charcoal-100">Seguranca</span><select value={emailForm.secure ? 'true' : 'false'} onChange={(event) => updateEmailField('secure', event.target.value === 'true')} className="w-full rounded-2xl border border-blush-200 bg-white px-4 py-3 text-sm text-charcoal outline-none transition focus:border-rose-gold dark:border-charcoal-700 dark:bg-charcoal-800 dark:text-charcoal-100"><option value="false">STARTTLS / porta 587</option><option value="true">SSL/TLS / porta 465</option></select></label>
               </div>
               <label className="space-y-2 text-sm"><span className="font-medium text-charcoal dark:text-charcoal-100">Senha SMTP</span><input type="password" value={emailForm.password} onChange={(event) => updateEmailField('password', event.target.value)} className="w-full rounded-2xl border border-blush-200 bg-white px-4 py-3 text-sm text-charcoal outline-none transition focus:border-rose-gold dark:border-charcoal-700 dark:bg-charcoal-800 dark:text-charcoal-100" placeholder={overview.integrations.email.passwordConfigured ? (visibility.email ? 'Deixe em branco para manter a atual' : '****** senha configurada') : 'Digite a senha SMTP'} /></label>
@@ -436,7 +436,7 @@ export default function AdministracaoPage() {
         </div>
 
         <div className="space-y-4">
-          <SectionCard eyebrow="Ambiente" title="Configuracoes sensiveis" description="URLs, CORS e storage ficam concentrados em um resumo tecnico mais direto." visible={visibility.environment} onToggle={() => toggleSection('environment')} status={<StatusPill ok={overview.environment.googleClientConfigured} label={overview.environment.googleClientConfigured ? 'Google client ativo' : 'Google client pendente'} />}>
+          <SectionCard eyebrow="Ambiente" title="Configurações sensíveis" description="URLs, CORS e storage ficam concentrados em um resumo técnico mais direto." visible={visibility.environment} onToggle={() => toggleSection('environment')} status={<StatusPill ok={overview.environment.googleClientConfigured} label={overview.environment.googleClientConfigured ? 'Google client ativo' : 'Google client pendente'} />}>
             <div className="grid gap-3">
               <InfoCard label="API" value={maskValue(overview.environment.apiBaseUrl, visibility.environment)} breakAll />
               <InfoCard label="CRM" value={maskValue(overview.environment.crmUrl, visibility.environment)} breakAll />
@@ -455,7 +455,7 @@ export default function AdministracaoPage() {
                 {visibility.environment ? overview.environment.corsOrigins.map((origin) => (
                   <div key={origin} className="rounded-2xl border border-blush-200 bg-white px-4 py-3 text-sm font-medium text-charcoal break-all dark:border-charcoal-700 dark:bg-charcoal-900 dark:text-charcoal-100">{origin}</div>
                 )) : (
-                  <div className="rounded-2xl border border-dashed border-blush-300 bg-white px-4 py-3 text-sm text-charcoal-500 dark:border-charcoal-700 dark:bg-charcoal-900 dark:text-charcoal-400">A lista de origens esta oculta. Abra a secao para exibir os valores completos.</div>
+                  <div className="rounded-2xl border border-dashed border-blush-300 bg-white px-4 py-3 text-sm text-charcoal-500 dark:border-charcoal-700 dark:bg-charcoal-900 dark:text-charcoal-400">A lista de origens está oculta. Abra a seção para exibir os valores completos.</div>
                 )}
               </div>
             </div>

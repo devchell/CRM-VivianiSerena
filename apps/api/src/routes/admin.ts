@@ -12,14 +12,14 @@ import { fetchGoogleBusinessReviews, listGoogleBusinessLocations } from '../infr
 export const adminRouter: Router = Router()
 
 const emailSettingsSchema = z.object({
-  host: z.string().trim().min(1, 'Host SMTP e obrigatorio'),
+  host: z.string().trim().min(1, 'Host SMTP é obrigatório'),
   port: z.coerce.number().int().min(1).max(65535),
   secure: z.boolean(),
-  user: z.string().trim().min(1, 'Usuario SMTP e obrigatorio'),
+  user: z.string().trim().min(1, 'Usuário SMTP é obrigatório'),
   password: z.string().optional(),
-  from: z.string().trim().email('E-mail remetente invalido'),
-  fromName: z.string().trim().min(1, 'Nome do remetente e obrigatorio'),
-  adminEmail: z.string().trim().email('E-mail administrativo invalido'),
+  from: z.string().trim().email('E-mail remetente inválido'),
+  fromName: z.string().trim().min(1, 'Nome do remetente é obrigatório'),
+  adminEmail: z.string().trim().email('E-mail administrativo inválido'),
 })
 
 const linkedGoogleLocationSchema = z.object({

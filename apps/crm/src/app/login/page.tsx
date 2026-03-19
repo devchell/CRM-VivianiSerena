@@ -158,7 +158,7 @@ export default function LoginPage() {
 
       await completeSignIn()
     } catch (responseError) {
-      setError(responseError instanceof Error ? responseError.message : 'Erro de conexao. Verifique se a API esta rodando.')
+      setError(responseError instanceof Error ? responseError.message : 'Erro de conexão. Verifique se a API está rodando.')
     } finally {
       setIsLoading(false)
     }
@@ -187,13 +187,13 @@ export default function LoginPage() {
       }
 
       if (!res.ok || !data.success || !data.data) {
-        setError(data.message ?? 'Codigo invalido ou expirado.')
+        setError(data.message ?? 'Código inválido ou expirado.')
         return
       }
 
       await applyTwoFactorResult(data.data)
     } catch (responseError) {
-      setError(responseError instanceof Error ? responseError.message : 'Erro de conexao.')
+      setError(responseError instanceof Error ? responseError.message : 'Erro de conexão.')
     } finally {
       setIsLoading(false)
     }
@@ -222,13 +222,13 @@ export default function LoginPage() {
       }
 
       if (!res.ok || !data.success || !data.data) {
-        setError(data.message ?? 'Codigo invalido ou expirado.')
+        setError(data.message ?? 'Código inválido ou expirado.')
         return
       }
 
       await applyTwoFactorResult(data.data)
     } catch (responseError) {
-      setError(responseError instanceof Error ? responseError.message : 'Erro de conexao.')
+      setError(responseError instanceof Error ? responseError.message : 'Erro de conexão.')
     } finally {
       setIsLoading(false)
     }
@@ -250,13 +250,13 @@ export default function LoginPage() {
     },
     'email-otp': {
       icon: Mail,
-      title: 'Verificacao por E-mail',
-      subtitle: `Codigo enviado para ${twoFa?.maskedEmail ?? ''}`,
+      title: 'Verificação por E-mail',
+      subtitle: `Código enviado para ${twoFa?.maskedEmail ?? ''}`,
     },
     'sms-otp': {
       icon: Smartphone,
-      title: 'Verificacao por Celular',
-      subtitle: `Codigo enviado para ${twoFa?.maskedPhone ?? 'seu celular'}`,
+      title: 'Verificação por Celular',
+      subtitle: `Código enviado para ${twoFa?.maskedPhone ?? 'seu celular'}`,
     },
   } satisfies Record<Step, { icon: typeof Lock; title: string; subtitle: string }>
 
@@ -281,7 +281,7 @@ export default function LoginPage() {
           <h1 className="font-heading text-2xl font-bold text-charcoal">
             Viviani <span className="text-rose-gold-600">Serena</span>
           </h1>
-          <p className="text-charcoal-500 text-sm mt-1">Sistema de Gestao</p>
+          <p className="text-charcoal-500 text-sm mt-1">Sistema de Gestão</p>
         </div>
 
         {step !== 'credentials' && (
@@ -369,7 +369,7 @@ export default function LoginPage() {
 
             {step === 'email-otp' && (
               <form onSubmit={handleEmailOtp} className="space-y-4">
-                <p className="text-xs text-charcoal-400">Digite o codigo de 6 digitos enviado para o e-mail acima.</p>
+                <p className="text-xs text-charcoal-400">Digite o código de 6 dígitos enviado para o e-mail acima.</p>
                 <input
                   type="text"
                   inputMode="numeric"
@@ -387,7 +387,7 @@ export default function LoginPage() {
                   className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-rose-gold text-white font-medium text-sm hover:bg-rose-gold/90 disabled:opacity-60 transition-colors"
                 >
                   {isLoading ? <Loader2 size={16} className="animate-spin" /> : <Mail size={16} />}
-                  {isLoading ? 'Verificando...' : 'Confirmar Codigo'}
+                  {isLoading ? 'Verificando...' : 'Confirmar Código'}
                 </button>
                 <button
                   type="button"
@@ -401,7 +401,7 @@ export default function LoginPage() {
 
             {step === 'sms-otp' && (
               <form onSubmit={handleSmsOtp} className="space-y-4">
-                <p className="text-xs text-charcoal-400">Digite o codigo de 6 digitos enviado para o celular acima.</p>
+                <p className="text-xs text-charcoal-400">Digite o código de 6 dígitos enviado para o celular acima.</p>
                 <input
                   type="text"
                   inputMode="numeric"
@@ -419,7 +419,7 @@ export default function LoginPage() {
                   className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-rose-gold text-white font-medium text-sm hover:bg-rose-gold/90 disabled:opacity-60 transition-colors"
                 >
                   {isLoading ? <Loader2 size={16} className="animate-spin" /> : <Smartphone size={16} />}
-                  {isLoading ? 'Verificando...' : 'Confirmar Codigo'}
+                  {isLoading ? 'Verificando...' : 'Confirmar Código'}
                 </button>
                 <button
                   type="button"

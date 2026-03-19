@@ -301,7 +301,7 @@ export default function EditarSitePage() {
 
       const payload = await response.json() as { success: boolean; data?: GoogleBusinessLocation[]; message?: string }
       if (!response.ok || !payload.success || !payload.data) {
-        throw new Error(payload.message ?? 'Nao foi possivel carregar os perfis do Google Empresa')
+        throw new Error(payload.message ?? 'Não foi possível carregar os perfis do Google Empresa')
       }
 
       setGoogleLocations(payload.data)
@@ -325,7 +325,7 @@ export default function EditarSitePage() {
       toast.success('Conta Google conectada com sucesso')
       fetchGoogleBusinessLocations()
     } else if (googleStatus === 'error') {
-      toast.error('Nao foi possivel concluir a conexao com o Google')
+      toast.error('Não foi possível concluir a conexão com o Google')
     }
 
     url.searchParams.delete('google')
@@ -393,7 +393,7 @@ export default function EditarSitePage() {
   }
 
   const uploadStandaloneImage = async (file: File) => {
-    if (!accessToken) throw new Error('Sessao expirada')
+    if (!accessToken) throw new Error('Sessão expirada')
 
     const formData = new FormData()
     formData.append('file', file)
@@ -421,7 +421,7 @@ export default function EditarSitePage() {
       })
       const payload = await response.json() as { success: boolean; data?: { authUrl: string }; message?: string }
       if (!response.ok || !payload.success || !payload.data?.authUrl) {
-        throw new Error(payload.message ?? 'Nao foi possivel iniciar a conexao com o Google')
+        throw new Error(payload.message ?? 'Não foi possível iniciar a conexão com o Google')
       }
 
       window.location.href = payload.data.authUrl
@@ -445,7 +445,7 @@ export default function EditarSitePage() {
   // Image dropzone ─────────────────────────────────────────────────────────
   const fetchHistory = async () => {
     if (!accessToken) {
-      toast.error('Sessao expirada - faca login novamente')
+      toast.error('Sessão expirada - faça login novamente')
       return
     }
 
@@ -463,7 +463,7 @@ export default function EditarSitePage() {
       setHistory(payload.data ?? [])
       setShowHistory(true)
     } catch {
-      toast.error('Erro ao carregar historico de versoes')
+      toast.error('Erro ao carregar histórico de versões')
     } finally {
       setLoadingHistory(false)
     }
@@ -471,7 +471,7 @@ export default function EditarSitePage() {
 
   const handleRestoreHistory = async (entry: HistoryEntry) => {
     if (!accessToken) {
-      toast.error('Sessao expirada - faca login novamente')
+      toast.error('Sessão expirada - faça login novamente')
       return
     }
 
@@ -601,7 +601,7 @@ export default function EditarSitePage() {
               enabled={getBool('contact', 'social_proof', 'enabled') || !get('contact', 'social_proof')}
               onToggle={() => setSubVal('contact', 'social_proof', 'enabled', !(getBool('contact', 'social_proof', 'enabled') || !get('contact', 'social_proof')))}
               label="Box lateral de prova social"
-              description="Controla o card cinza com Clientes registrados e Avaliacoes publicas ao lado do formulario."
+              description="Controla o card cinza com Clientes registrados e Avaliações públicas ao lado do formulário."
             />
             <div className="grid grid-cols-2 gap-3">
               <TextField
@@ -674,7 +674,7 @@ export default function EditarSitePage() {
                     updated[idx] = { ...item, title: v }
                     setVal('services', 'results_items', updated)
                   }}
-                  label="Titulo"
+                  label="Título"
                 />
                 <TextField
                   value={item.text}
@@ -803,7 +803,7 @@ export default function EditarSitePage() {
               enabled={artificialEnabled}
               onToggle={() => setSubVal('testimonials', 'display_options', 'artificialEnabled', !artificialEnabled)}
               label="Gerar depoimentos artificiais"
-              description="Preenche a secao com alguns depoimentos fixos de exemplo para deixar a vitrine mais completa."
+              description="Preenche a seção com alguns depoimentos fixos de exemplo para deixar a vitrine mais completa."
             />
 
             <ToggleField
@@ -837,7 +837,7 @@ export default function EditarSitePage() {
                 </div>
 
                 <p className="text-xs text-charcoal-400 dark:text-charcoal-500">
-                  Voce pode vincular varias contas e selecionar mais de um perfil empresarial para alimentar a secao de depoimentos.
+                  Você pode vincular várias contas e selecionar mais de um perfil empresarial para alimentar a seção de depoimentos.
                 </p>
 
                 {linkedLocations.length > 0 && (
@@ -1178,7 +1178,7 @@ export default function EditarSitePage() {
             </div>
             <div className="divide-y divide-blush-100 dark:divide-charcoal-700">
               {loadingHistory && (
-                <p className="px-6 py-8 text-center text-sm text-charcoal-400 dark:text-charcoal-500">Carregando historico...</p>
+                <p className="px-6 py-8 text-center text-sm text-charcoal-400 dark:text-charcoal-500">Carregando histórico...</p>
               )}
               {!loadingHistory && history.map((h) => (
                 <div key={h.id} className="px-6 py-4 flex items-center justify-between gap-4">

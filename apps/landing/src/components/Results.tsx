@@ -161,7 +161,7 @@ export default function Results({ items }: { items: ResultItem[] }) {
               <div className="relative h-72 min-h-[280px] md:h-auto">
                 <Image
                   src="https://static.wixstatic.com/media/be8b61_97f4d7a9d8ea4a59a06b26cb11a5d22d~mv2.jpg/v1/fill/w_600,h_900,al_c,q_80,usm_0.66_1.00_0.01,enc_avif,quality_auto/be8b61_97f4d7a9d8ea4a59a06b26cb11a5d22d~mv2.jpg"
-                  alt="Viviani Serena - Especialista em remocao a laser"
+                  alt="Viviani Serena - Especialista em remoção a laser"
                   fill
                   className="object-cover object-top"
                   sizes="(max-width: 768px) 100vw, 50vw"
@@ -170,14 +170,14 @@ export default function Results({ items }: { items: ResultItem[] }) {
 
               <div className="flex flex-col justify-center p-8 md:p-12">
                 <span className="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-rose-gold">
-                  Avaliacao gratuita
+                  Avaliação gratuita
                 </span>
                 <h3 className="font-heading text-2xl font-bold leading-snug text-charcoal md:text-3xl">
-                  Cada resultado e unico
+                  Cada resultado é único
                 </h3>
                 <p className="mt-4 leading-relaxed text-charcoal-500">
-                  Cada pele e diferente e merece um cuidado personalizado. Na avaliacao gratuita, analiso seu caso
-                  especifico e apresento um plano de tratamento transparente.
+                  Cada pele é diferente e merece um cuidado personalizado. Na avaliação gratuita, analiso seu caso
+                  específico e apresento um plano de tratamento transparente.
                 </p>
 
                 <a
@@ -187,7 +187,7 @@ export default function Results({ items }: { items: ResultItem[] }) {
                   onClick={() => trackCTAClick('results_cta_viviani', 'results')}
                   className="mt-8 inline-flex items-center gap-2.5 self-start rounded-xl bg-rose-gold px-8 py-3.5 font-semibold text-white shadow-md transition-all hover:bg-rose-gold-500 hover:shadow-lg"
                 >
-                  Agendar Avaliacao Gratuita
+                  Agendar Avaliação Gratuita
                 </a>
               </div>
             </div>

@@ -337,9 +337,9 @@ export function Hero({ urgencyBadge, title, subtitle, cta, whatsappNumber, whats
           >
             <div className="glass rounded-2xl px-5 py-4 border border-white/30 shadow-xl shadow-black/20">
               <div className="flex items-center gap-4 divide-x divide-white/20">
-                <AnimatedCounter target={0} suffix="" label="Clientes registradas" />
+                <AnimatedCounter target={0} suffix="" label="Clientes registrados" />
                 <div className="pl-4">
-                  <AnimatedCounter target={0} suffix="" label="Avaliações publicas" />
+                  <AnimatedCounter target={0} suffix="" label="Avaliações públicas" />
                 </div>
               </div>
             </div>

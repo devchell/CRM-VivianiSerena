@@ -108,7 +108,7 @@ export default function FinanceiroPage() {
       })
       .catch((error) => {
         if (!active) return
-        toast.error(error instanceof Error ? error.message : 'Nao foi possivel carregar o financeiro.')
+        toast.error(error instanceof Error ? error.message : 'Não foi possível carregar o financeiro.')
       })
       .finally(() => {
         if (active) setLoading(false)
@@ -203,7 +203,7 @@ export default function FinanceiroPage() {
       }
 
       if (!payload.amount || Number.isNaN(payload.amount)) {
-        throw new Error('Informe um valor valido.')
+        throw new Error('Informe um valor válido.')
       }
 
       await apiFetchJson(editing ? `/api/v1/financials/${editing.id}` : '/api/v1/financials', {
@@ -214,9 +214,9 @@ export default function FinanceiroPage() {
 
       await refreshFinancialData()
       setShowModal(false)
-      toast.success(editing ? 'Lancamento atualizado.' : 'Lancamento criado.')
+      toast.success(editing ? 'Lançamento atualizado.' : 'Lançamento criado.')
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Erro ao salvar lancamento.')
+      toast.error(error instanceof Error ? error.message : 'Erro ao salvar lançamento.')
     } finally {
       setSubmitting(false)
     }
@@ -231,9 +231,9 @@ export default function FinanceiroPage() {
         headers: buildAuthHeaders(accessToken),
       })
       await refreshFinancialData()
-      toast.success('Lancamento removido.')
+      toast.success('Lançamento removido.')
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Erro ao remover lancamento.')
+      toast.error(error instanceof Error ? error.message : 'Erro ao remover lançamento.')
     }
   }
 
@@ -247,7 +247,7 @@ export default function FinanceiroPage() {
         FINANCIAL_CATEGORY_LABELS[transaction.category],
         `"${transaction.description.replace(/"/g, '""')}"`,
         transaction.amount.toFixed(2),
-        transaction.recurring ? 'Sim' : 'Nao',
+        transaction.recurring ? 'Sim' : 'Não',
       ].join(',')
     })
     const blob = new Blob(['\ufeff' + header + rows.join('\n')], { type: 'text/csv;charset=utf-8' })
@@ -266,13 +266,13 @@ export default function FinanceiroPage() {
     const doc = new jsPDF()
 
     doc.setFontSize(16)
-    doc.text('Relatorio financeiro', 14, 18)
+    doc.text('Relatório financeiro', 14, 18)
     doc.setFontSize(10)
     doc.text(`Gerado em ${new Date().toLocaleDateString('pt-BR')}`, 14, 25)
 
     autoTable(doc, {
       startY: 32,
-      head: [['Receita', 'Despesas', 'Lucro', 'Ticket medio']],
+      head: [['Receita', 'Despesas', 'Lucro', 'Ticket médio']],
       body: [[
         formatCurrency(summary?.income ?? 0),
         formatCurrency(summary?.expenses ?? 0),

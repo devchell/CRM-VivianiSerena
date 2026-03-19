@@ -19,27 +19,27 @@ const ARTIFICIAL_TESTIMONIALS: TestimonialItem[] = [
   {
     id: 'artificial-1',
     name: 'Cliente satisfeita',
-    city: 'Santo Andre, SP',
-    service: 'Remocao de micropigmentacao',
-    text: 'Atendimento acolhedor, explicacao clara do processo e muito cuidado em cada sessao.',
+    city: 'Santo André, SP',
+    service: 'Remoção de micropigmentação',
+    text: 'Atendimento acolhedor, explicação clara do processo e muito cuidado em cada sessão.',
     stars: 5,
     source: 'artificial',
   },
   {
     id: 'artificial-2',
     name: 'Paciente em acompanhamento',
-    city: 'Sao Paulo, SP',
+    city: 'São Paulo, SP',
     service: 'Despigmentacao labial',
-    text: 'A experiencia foi segura e transparente. As expectativas foram alinhadas desde a primeira avaliacao.',
+    text: 'A experiência foi segura e transparente. As expectativas foram alinhadas desde a primeira avaliação.',
     stars: 5,
     source: 'artificial',
   },
   {
     id: 'artificial-3',
     name: 'Caso de remocao',
-    city: 'Sao Bernardo do Campo, SP',
-    service: 'Remocao de tatuagem',
-    text: 'O plano de tratamento ficou objetivo e o ambiente transmite bastante confianca durante todo o processo.',
+    city: 'São Bernardo do Campo, SP',
+    service: 'Remoção de tatuagem',
+    text: 'O plano de tratamento ficou objetivo e o ambiente transmite bastante confiança durante todo o processo.',
     stars: 5,
     source: 'artificial',
   },
@@ -193,10 +193,10 @@ export default function Testimonials(props: {
               ))}
             </div>
             <span className="text-sm font-semibold text-amber-800">
-              {props.publicReviewCount} avaliacoes publicas
+              {props.publicReviewCount} avaliações públicas
             </span>
             <span className="text-sm text-amber-700">
-              {props.averageRating ? `- nota media ${props.averageRating.toFixed(1)}` : '- depoimentos configurados no painel'}
+              {props.averageRating ? `- nota média ${props.averageRating.toFixed(1)}` : '- depoimentos configurados no painel'}
             </span>
           </div>
         </motion.div>
@@ -246,14 +246,14 @@ export default function Testimonials(props: {
             <button
               onClick={next}
               className="absolute right-0 top-1/2 z-10 flex h-10 w-10 translate-x-4 -translate-y-1/2 items-center justify-center rounded-full bg-white shadow-md transition-colors hover:bg-[#FAF7F2]"
-              aria-label="Proximo depoimento"
+              aria-label="Próximo depoimento"
             >
               <ChevronRight size={20} className="text-[#C9967A]" />
             </button>
           ) : null}
 
           {total > 1 ? (
-            <div className="mt-6 flex justify-center gap-2" role="tablist" aria-label="Navegacao do carrossel">
+            <div className="mt-6 flex justify-center gap-2" role="tablist" aria-label="Navegação do carrossel">
               {items.map((item, index) => (
                 <button
                   key={item.id}

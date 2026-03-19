@@ -58,7 +58,7 @@ export function DefinirSenhaClient() {
     }
 
     if (!accessToken) {
-      toast.error('Sessao expirada. Faca login novamente.')
+      toast.error('Sessão expirada. Faça login novamente.')
       return
     }
 

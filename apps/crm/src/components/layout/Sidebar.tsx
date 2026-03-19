@@ -121,7 +121,7 @@ function Sidebar() {
       <div className="border-t border-[#e7e1d9] dark:border-charcoal-800 bg-white dark:bg-[#0f0f0f] flex-shrink-0">
         {collapsed ? (
           <div className="flex flex-col items-center gap-2 p-3">
-            <Link href="/configuracoes" title={`${userName} - ${roleLabel} - Configuracoes`}>
+            <Link href="/configuracoes" title={`${userName} - ${roleLabel} - Configurações`}>
               <div className="w-9 h-9 rounded-lg bg-[#f7efe6] hover:bg-[#f1e3d6] border border-[#eadfd2] dark:bg-[#2a2622] dark:hover:bg-[#322c26] dark:border-[#3a332c] flex items-center justify-center transition-colors group">
                 <Settings size={16} className="text-[#9c8c7a] dark:text-[#d8b898] group-hover:text-[#c58b62] transition-colors" />
               </div>
@@ -136,13 +136,13 @@ function Sidebar() {
           </div>
         ) : (
           <div className="flex items-center gap-2 p-3">
-            <Link href="/configuracoes" className="flex-shrink-0" title="Configuracoes">
+            <Link href="/configuracoes" className="flex-shrink-0" title="Configurações">
               <div className="w-9 h-9 rounded-lg bg-[#f7efe6] hover:bg-[#f1e3d6] border border-[#eadfd2] dark:bg-[#2a2622] dark:hover:bg-[#322c26] dark:border-[#3a332c] flex items-center justify-center transition-colors group">
                 <Settings size={16} className="text-[#9c8c7a] dark:text-[#d8b898] group-hover:text-[#c58b62] transition-colors" />
               </div>
             </Link>
             <div className="flex-1 min-w-0">
-              <p className="text-[#56493d] dark:text-[#e6d7c6] text-sm font-semibold truncate leading-tight">{userName || 'Usuario'}</p>
+              <p className="text-[#56493d] dark:text-[#e6d7c6] text-sm font-semibold truncate leading-tight">{userName || 'Usuário'}</p>
               <p className="text-[#9c8c7a] dark:text-[#c6b29b] text-[11px] truncate leading-tight">{roleLabel}</p>
             </div>
             <button

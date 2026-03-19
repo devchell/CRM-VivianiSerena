@@ -43,7 +43,7 @@ type PersistedEmailSettingsInput = {
 const SETTINGS_ID = 'default'
 
 function inferEmailProvider(host?: string | null) {
-  if (!host) return 'Nao configurado'
+  if (!host) return 'Não configurado'
   const normalized = host.toLowerCase()
 
   if (normalized.includes('resend')) return 'Resend'

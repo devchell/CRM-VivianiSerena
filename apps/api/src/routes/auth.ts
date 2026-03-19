@@ -123,7 +123,7 @@ function getCurrentTwoFactorChannel(state: TwoFactorState): TwoFactorChannel {
   const channel = state.pendingChannels[0]
 
   if (!channel) {
-    throw new AppError(400, 'Fluxo 2FA invalido')
+    throw new AppError(400, 'Fluxo 2FA inválido')
   }
 
   return channel
@@ -179,7 +179,7 @@ async function sendTwoFactorChallenge(
     const sent = await emailService.sendOtp({ to: user.email, code, type: 'login' })
 
     if (!sent) {
-      throw new AppError(503, 'Nao foi possivel enviar o codigo por e-mail')
+      throw new AppError(503, 'Não foi possível enviar o código por e-mail')
     }
 
     return {
@@ -189,14 +189,14 @@ async function sendTwoFactorChallenge(
   }
 
   if (!user.phone) {
-    throw new AppError(400, 'Telefone nao cadastrado. Atualize seu perfil antes de usar 2FA por celular.')
+    throw new AppError(400, 'Telefone não cadastrado. Atualize seu perfil antes de usar 2FA por celular.')
   }
 
   await redis.setex(`2fa_sms:${twoFactorToken}`, 300, code)
   const sent = await smsService.sendOtp(user.phone, code)
 
   if (!sent) {
-    throw new AppError(503, 'Nao foi possivel enviar o codigo por SMS')
+    throw new AppError(503, 'Não foi possível enviar o código por SMS')
   }
 
   return {
@@ -209,7 +209,7 @@ async function loadTwoFactorState(twoFactorToken: string) {
   const raw = await redis.get(`2fa_login:${twoFactorToken}`)
 
   if (!raw) {
-    throw new AppError(401, 'Sessao expirada. Faca login novamente.')
+    throw new AppError(401, 'Sessão expirada. Faça login novamente.')
   }
 
   return JSON.parse(raw) as TwoFactorState
@@ -219,7 +219,7 @@ async function advanceTwoFactorFlow(twoFactorToken: string, state: TwoFactorStat
   const completedChannel = state.pendingChannels.shift()
 
   if (!completedChannel) {
-    throw new AppError(400, 'Fluxo 2FA invalido')
+    throw new AppError(400, 'Fluxo 2FA inválido')
   }
 
   state.verifiedChannels.push(completedChannel)
@@ -259,7 +259,7 @@ async function advanceTwoFactorFlow(twoFactorToken: string, state: TwoFactorStat
   })
 
   if (!user) {
-    throw new AppError(401, 'Usuario nao encontrado')
+    throw new AppError(401, 'Usuário não encontrado')
   }
 
   const nextChannel = getCurrentTwoFactorChannel(state)
@@ -288,7 +288,7 @@ const profileUpdateSchema = z.object({
 
 const passwordUpdateSchema = z.object({
   currentPassword: z.string().min(8),
-  newPassword: z.string().min(8, 'Nova senha deve ter no minimo 8 caracteres'),
+      newPassword: z.string().min(8, 'Nova senha deve ter no mínimo 8 caracteres'),
 })
 
 const twoFactorPreferencesSchema = z.object({
@@ -311,7 +311,7 @@ async function updateTwoFactorPreferences(params: {
   })
 
   if (!user) {
-    throw new AppError(404, 'Usuario nao encontrado')
+    throw new AppError(404, 'Usuário não encontrado')
   }
 
   const isValid = await bcrypt.compare(params.password, user.passwordHash)
@@ -384,7 +384,7 @@ authRouter.post('/login', authRateLimiter, bruteForceCheck, async (req, res, nex
       const raw = await redis.get(`2fa_session:${body.twoFactorSessionToken}`)
 
       if (!raw) {
-        throw new AppError(401, 'Sessao 2FA expirada ou invalida')
+        throw new AppError(401, 'Sessão 2FA expirada ou inválida')
       }
 
       await redis.del(`2fa_session:${body.twoFactorSessionToken}`)
@@ -394,7 +394,7 @@ authRouter.post('/login', authRateLimiter, bruteForceCheck, async (req, res, nex
       })
 
       if (!user) {
-        throw new AppError(401, 'Usuario nao encontrado')
+        throw new AppError(401, 'Usuário não encontrado')
       }
 
       return completeAuthenticatedLogin(res, user, ip, 'LOGIN_2FA')
@@ -480,12 +480,12 @@ authRouter.post('/2fa/verify-email-otp', authRateLimiter, async (req, res, next)
     const state = await loadTwoFactorState(twoFactorToken)
 
     if (getCurrentTwoFactorChannel(state) !== 'email') {
-      throw new AppError(400, 'Etapa 2FA incorreta para este codigo')
+      throw new AppError(400, 'Etapa 2FA incorreta para este código')
     }
 
     const storedCode = await redis.get(`2fa_email:${twoFactorToken}`)
     if (!storedCode || storedCode !== code) {
-      throw new AppError(401, 'Codigo de e-mail invalido ou expirado.')
+      throw new AppError(401, 'Código de e-mail inválido ou expirado.')
     }
 
     await redis.del(`2fa_email:${twoFactorToken}`)
@@ -507,12 +507,12 @@ authRouter.post('/2fa/verify-sms-otp', authRateLimiter, async (req, res, next) =
     const state = await loadTwoFactorState(twoFactorToken)
 
     if (getCurrentTwoFactorChannel(state) !== 'sms') {
-      throw new AppError(400, 'Etapa 2FA incorreta para este codigo')
+      throw new AppError(400, 'Etapa 2FA incorreta para este código')
     }
 
     const storedCode = await redis.get(`2fa_sms:${twoFactorToken}`)
     if (!storedCode || storedCode !== code) {
-      throw new AppError(401, 'Codigo SMS invalido ou expirado.')
+      throw new AppError(401, 'Código SMS inválido ou expirado.')
     }
 
     await redis.del(`2fa_sms:${twoFactorToken}`)
@@ -676,7 +676,7 @@ authRouter.put('/password', authenticate, async (req, res, next) => {
 
     const user = await prisma.user.findUnique({ where: { id: req.user!.sub } })
     if (!user) {
-      throw new AppError(404, 'Usuario nao encontrado')
+      throw new AppError(404, 'Usuário não encontrado')
     }
 
     const isValid = await bcrypt.compare(currentPassword, user.passwordHash)
@@ -769,12 +769,12 @@ authRouter.post('/2fa/toggle', authenticate, async (req, res, next) => {
 authRouter.post('/set-password', authenticate, async (req, res, next) => {
   try {
     const { newPassword } = z.object({
-      newPassword: z.string().min(8, 'A senha deve ter no minimo 8 caracteres'),
+      newPassword: z.string().min(8, 'A senha deve ter no mínimo 8 caracteres'),
     }).parse(req.body)
 
     const user = await prisma.user.findUnique({ where: { id: req.user!.sub } })
     if (!user) {
-      throw new AppError(404, 'Usuario nao encontrado')
+      throw new AppError(404, 'Usuário não encontrado')
     }
 
     if (!user.mustChangePassword) {
@@ -797,7 +797,7 @@ authRouter.post('/set-password', authenticate, async (req, res, next) => {
     })
 
     logger.info('Initial password set', { userId: req.user!.sub })
-    res.json({ success: true, message: 'Senha definida com sucesso. Faca login com a nova senha.' })
+    res.json({ success: true, message: 'Senha definida com sucesso. Faça login com a nova senha.' })
   } catch (error) {
     next(error)
   }
@@ -806,7 +806,7 @@ authRouter.post('/set-password', authenticate, async (req, res, next) => {
 authRouter.get('/google', authenticate, authorize('ADMIN'), async (req, res, next) => {
   try {
     if (!isGoogleCalendarConfigured()) {
-      throw new AppError(400, 'Google Calendar nao esta configurado no ambiente')
+      throw new AppError(400, 'Google Calendar não está configurado no ambiente')
     }
 
     const { googleCalendar } = require('../infrastructure/googleCalendar') as {
@@ -852,7 +852,7 @@ authRouter.get('/google/callback', async (req, res, next) => {
     const authState = await redis.get(stateKey)
 
     if (!authState) {
-      throw new AppError(401, 'Google OAuth state invalido ou expirado')
+      throw new AppError(401, 'Google OAuth state inválido ou expirado')
     }
 
     const parsedState = JSON.parse(authState) as { redirect?: string }

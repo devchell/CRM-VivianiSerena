@@ -46,14 +46,14 @@ const SERVICE_OPTIONS: Array<{
   },
   {
     value: 'coaching_individual',
-    label: 'Sessao individual',
+    label: 'Sessão individual',
     shortLabel: 'Individual',
     badgeClassName: 'bg-rose-50 text-rose-700 border-rose-200',
     eventClassName: 'crm-calendar-event crm-calendar-event-individual',
   },
   {
     value: 'coaching_group',
-    label: 'Sessao em grupo',
+    label: 'Sessão em grupo',
     shortLabel: 'Grupo',
     badgeClassName: 'bg-sky-50 text-sky-700 border-sky-200',
     eventClassName: 'crm-calendar-event crm-calendar-event-group',
@@ -84,7 +84,7 @@ const STATUS_META = {
     badgeClassName: 'bg-indigo-50 text-indigo-700 border-indigo-200',
   },
   completed: {
-    label: 'Concluido',
+    label: 'Concluído',
     badgeClassName: 'bg-emerald-50 text-emerald-700 border-emerald-200',
   },
   cancelled: {
@@ -92,7 +92,7 @@ const STATUS_META = {
     badgeClassName: 'bg-stone-100 text-stone-600 border-stone-200',
   },
   no_show: {
-    label: 'Nao compareceu',
+    label: 'Não compareceu',
     badgeClassName: 'bg-orange-50 text-orange-700 border-orange-200',
   },
 } as const
@@ -179,7 +179,7 @@ export default function AgendaPage() {
       })
       .catch((error) => {
         if (!active) return
-        toast.error(error instanceof Error ? error.message : 'Nao foi possivel carregar a agenda.')
+        toast.error(error instanceof Error ? error.message : 'Não foi possível carregar a agenda.')
       })
       .finally(() => {
         if (active) setLoading(false)
@@ -343,10 +343,10 @@ export default function AgendaPage() {
           <div className="max-w-2xl">
             <p className="text-xs font-semibold uppercase tracking-[0.24em] text-rose-gold">Agenda viva</p>
             <h1 className="mt-2 font-heading text-3xl font-bold text-charcoal dark:text-charcoal-50">
-              Calendario elegante, leitura imediata e operacao suave.
+              Calendário elegante, leitura imediata e operação suave.
             </h1>
             <p className="mt-3 text-sm leading-6 text-charcoal-500 dark:text-charcoal-400">
-              A agenda agora prioriza contexto visual, contraste suave e leitura rapida por tipo de atendimento, status e janela de horario.
+              A agenda agora prioriza contexto visual, contraste suave e leitura rápida por tipo de atendimento, status e janela de horário.
             </p>
           </div>
 
@@ -538,8 +538,8 @@ export default function AgendaPage() {
               Ritmo da agenda
             </h2>
             <div className="mt-4 space-y-3 text-sm text-charcoal-500 dark:text-charcoal-400">
-              <p>Selecione direto no calendario para abrir um agendamento no horario exato.</p>
-              <p>Clique em qualquer bloco para ler rapidamente cliente, servico, status e observacoes.</p>
+              <p>Selecione direto no calendário para abrir um agendamento no horário exato.</p>
+              <p>Clique em qualquer bloco para ler rapidamente cliente, serviço, status e observações.</p>
               <p>As cores foram separadas por tipo de atendimento para bater o olho e entender a semana.</p>
             </div>
           </div>
@@ -560,7 +560,7 @@ export default function AgendaPage() {
                     Novo agendamento
                   </h2>
                   <p className="mt-1 text-sm text-charcoal-400 dark:text-charcoal-400">
-                    Preencha os detalhes do atendimento e mantenha o calendario consistente com o CRM.
+                    Preencha os detalhes do atendimento e mantenha o calendário consistente com o CRM.
                   </p>
                 </div>
 
@@ -614,20 +614,20 @@ export default function AgendaPage() {
 
                 <div>
                   <label className="mb-1.5 block text-xs font-medium uppercase tracking-[0.12em] text-charcoal-400 dark:text-charcoal-400">
-                    Duracao
+                    Duração
                   </label>
                   <div className="flex h-[50px] items-center rounded-2xl border border-blush-300 bg-blush-50 px-4 text-sm font-medium text-charcoal-500 shadow-sm dark:border-charcoal-600 dark:bg-charcoal-700/60 dark:text-charcoal-300">
-                    60 min padrao
+                    60 min padrão
                   </div>
                   <p className="mt-1 text-[11px] text-charcoal-400 dark:text-charcoal-500">
-                    A duracao operacional atual do CRM e fixa em 1 hora por agendamento.
+                    A duração operacional atual do CRM é fixa em 1 hora por agendamento.
                   </p>
                 </div>
               </div>
 
               <div>
                 <label className="mb-1.5 block text-xs font-medium uppercase tracking-[0.12em] text-charcoal-400 dark:text-charcoal-400">
-                  Servico
+                  Serviço
                 </label>
                 <div className="grid grid-cols-2 gap-2">
                   {SERVICE_OPTIONS.map((service) => {
@@ -662,7 +662,7 @@ export default function AgendaPage() {
                   onChange={(event) => setForm((current) => ({ ...current, notes: event.target.value }))}
                   rows={4}
                   className="w-full resize-none rounded-2xl border border-blush-300 bg-white px-4 py-3 text-sm text-charcoal shadow-sm focus:outline-none focus:ring-2 focus:ring-rose-gold/30 dark:border-charcoal-600 dark:bg-charcoal-700 dark:text-charcoal-100"
-                  placeholder="Ex.: primeira avaliacao, retorno, observacoes clinicas..."
+                  placeholder="Ex.: primeira avaliação, retorno, observações clínicas..."
                 />
               </div>
 

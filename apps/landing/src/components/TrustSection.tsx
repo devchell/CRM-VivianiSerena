@@ -40,8 +40,8 @@ export default function TrustSection({ stats }: { stats?: TrustStats | null }) {
 
   const statList: Stat[] = [
     { value: stats?.clientsRegistered ?? 0, suffix: '', label: 'Clientes registrados' },
-    { value: stats?.publicReviews ?? 0, suffix: '', label: 'Avaliacoes publicas' },
-    { value: stats?.completedAppointments ?? 0, suffix: '', label: 'Agendamentos concluidos' },
+    { value: stats?.publicReviews ?? 0, suffix: '', label: 'Avaliações públicas' },
+    { value: stats?.completedAppointments ?? 0, suffix: '', label: 'Agendamentos concluídos' },
     { value: stats?.convertedCases ?? 0, suffix: '', label: 'Casos convertidos' },
   ]
 
@@ -59,17 +59,17 @@ export default function TrustSection({ stats }: { stats?: TrustStats | null }) {
           transition={{ duration: 0.6 }}
         >
           <span className="text-sm font-semibold uppercase tracking-[0.2em] text-rose-gold">
-            Confianca &amp; Autoridade
+            Confiança &amp; Autoridade
           </span>
           <h2 id="trust-heading" className="heading-lg mt-2 mb-6 text-white">
-            Ciencia, seguranca e resultados
+            Ciência, segurança e resultados
           </h2>
         </motion.div>
 
         <div
           ref={sectionRef as React.RefObject<HTMLDivElement>}
           className="mb-20 grid grid-cols-2 gap-8 md:grid-cols-4"
-          aria-label="Estatisticas"
+          aria-label="Estatísticas"
         >
           {statList.map((stat, index) => (
             <motion.div
@@ -91,10 +91,10 @@ export default function TrustSection({ stats }: { stats?: TrustStats | null }) {
         >
           <div className="mx-auto mb-6 h-0.5 w-12 bg-rose-gold" />
           <blockquote className="font-heading text-xl italic leading-relaxed text-cream-100 md:text-2xl">
-            &ldquo;A pele guarda historias. O meu trabalho e devolver a ela a liberdade de contar a historia que voce escolheu.&rdquo;
+            &ldquo;A pele guarda histórias. O meu trabalho é devolver a ela a liberdade de contar a história que você escolheu.&rdquo;
           </blockquote>
           <cite className="mt-4 block text-sm font-semibold not-italic text-rose-gold">
-            - Viviani Serena, Especialista em Despigmentacao a Laser
+            - Viviani Serena, Especialista em Despigmentação a Laser
           </cite>
           <div className="mx-auto mt-6 h-0.5 w-12 bg-rose-gold" />
         </motion.div>
@@ -104,7 +104,7 @@ export default function TrustSection({ stats }: { stats?: TrustStats | null }) {
           initial={{ opacity: 0 }}
           animate={headerInView ? { opacity: 1 } : {}}
           transition={{ duration: 0.6, delay: 0.4 }}
-          aria-label="Certificacoes e regulamentacoes"
+          aria-label="Certificações e regulamentações"
         >
           <div className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-5 py-3">
             <div className="flex h-8 w-8 items-center justify-center rounded-full bg-green-500" aria-hidden="true">
@@ -126,7 +126,7 @@ export default function TrustSection({ stats }: { stats?: TrustStats | null }) {
             </div>
             <div>
               <p className="text-sm font-bold leading-none text-white">INMETRO</p>
-              <p className="text-xs text-white/60">Certificacao tecnica</p>
+              <p className="text-xs text-white/60">Certificação técnica</p>
             </div>
           </div>
 
@@ -143,7 +143,7 @@ export default function TrustSection({ stats }: { stats?: TrustStats | null }) {
             </div>
             <div>
               <p className="text-sm font-bold leading-none text-white">Europan</p>
-              <p className="text-xs text-white/60">Certificacao internacional</p>
+              <p className="text-xs text-white/60">Certificação internacional</p>
             </div>
           </div>
         </motion.div>

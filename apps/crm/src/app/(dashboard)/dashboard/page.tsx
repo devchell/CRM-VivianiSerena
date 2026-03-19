@@ -31,7 +31,7 @@ export default function DashboardPage() {
       })
       .catch((fetchError) => {
         if (!active) return
-        setError(fetchError instanceof Error ? fetchError.message : 'Nao foi possivel carregar o dashboard.')
+        setError(fetchError instanceof Error ? fetchError.message : 'Não foi possível carregar o dashboard.')
       })
       .finally(() => {
         if (active) setLoading(false)
@@ -47,7 +47,7 @@ export default function DashboardPage() {
       <div>
         <h1 className="font-heading text-2xl font-bold text-charcoal dark:text-charcoal-50">Dashboard</h1>
         <p className="mt-1 text-sm text-charcoal-400 dark:text-charcoal-400">
-          Visao operacional consolidada a partir da API canonica de metricas.
+          Visão operacional consolidada a partir da API canônica de métricas.
         </p>
       </div>
 

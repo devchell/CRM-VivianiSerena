@@ -225,7 +225,7 @@ async function rotateTemporaryPassword(
   })
 
   if (!existing) {
-    throw new AppError(404, 'Usuario nao encontrado')
+    throw new AppError(404, 'Usuário não encontrado')
   }
 
   const tempPassword = generateTempPassword()
@@ -372,7 +372,7 @@ usersRouter.patch('/:id', authenticate, authorizePermission('users.manage'), asy
     })
 
     if (!existing) {
-      throw new AppError(404, 'Usuario nao encontrado')
+      throw new AppError(404, 'Usuário não encontrado')
     }
 
     if (body.email !== undefined && body.email !== existing.email) {
@@ -441,7 +441,7 @@ usersRouter.post('/:id/resend-invite', authenticate, authorizePermission('users.
     })
 
     if (!existing) {
-      throw new AppError(404, 'Usuario nao encontrado')
+      throw new AppError(404, 'Usuário não encontrado')
     }
 
     if (existing.lastLogin) {
@@ -508,11 +508,11 @@ usersRouter.delete('/:id', authenticate, authorizePermission('users.manage'), as
     })
 
     if (!existing) {
-      throw new AppError(404, 'Usuario nao encontrado')
+      throw new AppError(404, 'Usuário não encontrado')
     }
 
     if (existing.contents.length > 0 || existing.contentVersions.length > 0) {
-      throw new AppError(400, 'Nao e possivel excluir este usuario porque ele possui historico de edicao de conteudo')
+      throw new AppError(400, 'Não é possível excluir este usuário porque ele possui histórico de edição de conteúdo')
     }
 
     await prisma.$transaction([

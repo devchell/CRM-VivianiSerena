@@ -21,19 +21,19 @@ const API_BASE_URL = landingPublicEnv.apiBaseUrl
 
 const step1Schema = z.object({
   name: z.string().min(2, 'Nome deve ter pelo menos 2 caracteres').max(80),
-  email: z.string().email('Informe um e-mail valido').max(120),
-  phone: z.string().min(10, 'Telefone invalido').max(20).regex(/^[\d\s()+-]+$/, 'Formato invalido'),
+  email: z.string().email('Informe um e-mail válido').max(120),
+  phone: z.string().min(10, 'Telefone inválido').max(20).regex(/^[\d\s()+-]+$/, 'Formato inválido'),
 })
 
 const step2Schema = z.object({
   service: z.enum(['sobrancelhas', 'labios_eyeliner', 'capilar', 'tatuagens', 'nao_sei'], {
-    required_error: 'Selecione um servico',
+    required_error: 'Selecione um serviço',
   }),
 })
 
 const step3Schema = z.object({
   period: z.enum(['manha', 'tarde', 'qualquer'], {
-    required_error: 'Selecione um periodo',
+    required_error: 'Selecione um período',
   }),
 })
 
@@ -49,16 +49,16 @@ type SocialProofSummary = {
 
 const SERVICE_OPTIONS = [
   { value: 'sobrancelhas', label: 'Sobrancelhas micropigmentadas', emoji: 'S' },
-  { value: 'labios_eyeliner', label: 'Labios / Eyeliner', emoji: 'L' },
-  { value: 'capilar', label: 'Micropigmentacao capilar', emoji: 'C' },
+  { value: 'labios_eyeliner', label: 'Lábios / Eyeliner', emoji: 'L' },
+  { value: 'capilar', label: 'Micropigmentação capilar', emoji: 'C' },
   { value: 'tatuagens', label: 'Tatuagens', emoji: 'T' },
-  { value: 'nao_sei', label: 'Nao sei ao certo', emoji: '?' },
+  { value: 'nao_sei', label: 'Não sei ao certo', emoji: '?' },
 ] as const
 
 const PERIOD_OPTIONS = [
-  { value: 'manha', label: 'Manha', sub: '9h as 12h' },
+  { value: 'manha', label: 'Manhã', sub: '9h às 12h' },
   { value: 'tarde', label: 'Tarde', sub: '13h as 18h' },
-  { value: 'qualquer', label: 'Qualquer horario', sub: 'Sem preferencia' },
+  { value: 'qualquer', label: 'Qualquer horário', sub: 'Sem preferência' },
 ] as const
 
 function mapUtmSourceToLeadSource(utmSource?: string) {
@@ -87,7 +87,7 @@ function ProgressBar({ step }: { step: number }) {
     <div className="mb-8" role="progressbar" aria-valuenow={step} aria-valuemin={1} aria-valuemax={3}>
       <div className="mb-2 flex justify-between text-xs text-charcoal/50">
         <span>Passo {step} de 3</span>
-        <span>{Math.round(percent)}% concluido</span>
+        <span>{Math.round(percent)}% concluído</span>
       </div>
       <div className="h-1.5 overflow-hidden rounded-full bg-blush">
         <motion.div
@@ -125,7 +125,7 @@ function Step1({ onNext }: { onNext: (data: Step1Data) => void }) {
         <h3 className="font-heading text-xl font-bold text-charcoal">Vamos nos conhecer?</h3>
       </div>
       <p className="mb-6 pl-[3.25rem] text-sm text-charcoal/60">
-        Preencha seus dados para eu entrar em contato e organizar sua avaliacao gratuita.
+        Preencha seus dados para eu entrar em contato e organizar sua avaliação gratuita.
       </p>
 
       <form onSubmit={handleSubmit((data) => {
@@ -184,9 +184,9 @@ function Step2({ onNext, onBack }: { onNext: (data: Step2Data) => void; onBack: 
         <div className="step-circle h-10 w-10 border-rose-gold bg-rose-gold text-base text-white">
           <span className="text-sm font-bold">2</span>
         </div>
-        <h3 className="font-heading text-xl font-bold text-charcoal">Qual regiao deseja tratar?</h3>
+        <h3 className="font-heading text-xl font-bold text-charcoal">Qual região deseja tratar?</h3>
       </div>
-      <p className="mb-6 pl-[3.25rem] text-sm text-charcoal/60">Selecione a opcao que melhor descreve seu caso.</p>
+      <p className="mb-6 pl-[3.25rem] text-sm text-charcoal/60">Selecione a opção que melhor descreve seu caso.</p>
 
       <form onSubmit={handleSubmit((data) => {
         trackLeadFormStep(2, data.service)
@@ -253,10 +253,10 @@ function Step3({
         <div className="step-circle h-10 w-10 border-rose-gold bg-rose-gold text-base text-white">
           <Clock size={18} />
         </div>
-        <h3 className="font-heading text-xl font-bold text-charcoal">Qual o melhor horario?</h3>
+        <h3 className="font-heading text-xl font-bold text-charcoal">Qual é o melhor horário?</h3>
       </div>
       <p className="mb-6 pl-[3.25rem] text-sm text-charcoal/60">
-        Vou entrar em contato para confirmar um horario que funcione para voce.
+        Vou entrar em contato para confirmar um horário que funcione para você.
       </p>
 
       <form onSubmit={handleSubmit(onSubmit)} noValidate>
@@ -285,7 +285,7 @@ function Step3({
             <ArrowLeft size={18} />
           </button>
           <button type="submit" disabled={isLoading} className="btn-primary flex-1">
-            {isLoading ? 'Enviando...' : 'Solicitar Avaliacao Gratuita'}
+            {isLoading ? 'Enviando...' : 'Solicitar Avaliação Gratuita'}
             {!isLoading ? <CheckCircle size={18} /> : null}
           </button>
         </div>
@@ -309,7 +309,7 @@ function SuccessScreen({ name }: { name: string }) {
       </div>
       <h3 className="mb-3 font-heading text-2xl font-bold text-charcoal">Recebido, {firstName}!</h3>
       <p className="mx-auto mb-6 max-w-xs text-sm leading-relaxed text-charcoal/65">
-        Vou analisar seu caso e entrar em contato em ate <strong className="text-charcoal">24 horas</strong>.
+        Vou analisar seu caso e entrar em contato em até <strong className="text-charcoal">24 horas</strong>.
       </p>
       <button onClick={handleWhatsApp} className="btn-primary mx-auto" aria-label="Falar pelo WhatsApp">
         Falar no WhatsApp agora
@@ -365,13 +365,13 @@ export function LeadFormSection({ socialProof }: { socialProof?: SocialProofSumm
           utmSource: utm.utm_source,
           utmMedium: utm.utm_medium,
           utmCampaign: utm.utm_campaign,
-          notes: `Servico: ${finalData.service ?? 'nao_informado'} | Periodo: ${finalData.period ?? 'nao_informado'}`,
+          notes: `Serviço: ${finalData.service ?? 'nao_informado'} | Período: ${finalData.period ?? 'nao_informado'}`,
           website: '',
         }),
       }).then(async (response) => {
         if (!response.ok) {
           const payload = await response.json().catch(() => ({}))
-          throw new Error(payload?.error ?? 'Nao foi possivel enviar seus dados.')
+          throw new Error(payload?.error ?? 'Não foi possível enviar seus dados.')
         }
       })
 
@@ -391,21 +391,21 @@ export function LeadFormSection({ socialProof }: { socialProof?: SocialProofSumm
           <motion.div initial={{ opacity: 0, x: -24 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true, margin: '-80px' }} transition={{ duration: 0.6 }}>
             <span className="section-label">
               <span className="h-px w-6 bg-rose-gold" aria-hidden="true" />
-              Avaliacao Gratuita
+              Avaliação Gratuita
             </span>
             <h2 id="contact-heading" className="heading-lg mb-6 text-balance text-charcoal">
               De o primeiro passo para <span className="text-rose-gold">renovar sua pele</span>
             </h2>
             <p className="mb-8 text-lg leading-relaxed text-charcoal/65">
-              A avaliacao e gratuita, sem compromisso e pode ser feita presencialmente em Santo Andre ou por videochamada.
+              A avaliação é gratuita, sem compromisso, e pode ser feita presencialmente em Santo André ou por videochamada.
             </p>
 
             <ul className="mb-8 space-y-4">
               {[
-                'Diagnostico do seu pigmento e fototipo de pele',
-                'Estimativa de sessoes e investimento necessario',
+                'Diagnóstico do seu pigmento e fototipo de pele',
+                'Estimativa de sessões e investimento necessário',
                 'Protocolo personalizado para o seu caso',
-                'Possibilidade de seguir pelo WhatsApp apos a avaliacao',
+                'Possibilidade de seguir pelo WhatsApp após a avaliação',
               ].map((item) => (
                 <li key={item} className="flex items-start gap-3">
                   <CheckCircle className="mt-0.5 flex-shrink-0 text-rose-gold" size={18} />
@@ -441,7 +441,7 @@ export function LeadFormSection({ socialProof }: { socialProof?: SocialProofSumm
                   </div>
                   <div className="rounded-lg bg-cream px-3 py-3">
                     <p className="text-lg font-bold text-charcoal">{publicReviews}</p>
-                    <p className="mt-1 text-xs text-charcoal/60">Avaliacoes publicas</p>
+                    <p className="mt-1 text-xs text-charcoal/60">Avaliações públicas</p>
                   </div>
                 </div>
               </div>
@@ -452,7 +452,7 @@ export function LeadFormSection({ socialProof }: { socialProof?: SocialProofSumm
             <div className="card p-8 shadow-xl shadow-charcoal/6">
               <div className="mb-6 flex items-center justify-between">
                 <h3 className="font-heading text-lg font-bold text-charcoal">
-                  {isSuccess ? 'Solicitacao enviada!' : 'Solicitar Avaliacao Gratuita'}
+                  {isSuccess ? 'Solicitação enviada!' : 'Solicitar Avaliação Gratuita'}
                 </h3>
                 {!isSuccess ? (
                   <span className="badge border border-rose-gold/20 bg-rose-gold/10 text-xs text-rose-gold">
@@ -477,7 +477,7 @@ export function LeadFormSection({ socialProof }: { socialProof?: SocialProofSumm
 
               {!isSuccess ? (
                 <p className="mt-6 text-center text-xs text-charcoal/40">
-                  Seus dados sao confidenciais e usados apenas para contato.
+                  Seus dados são confidenciais e usados apenas para contato.
                 </p>
               ) : null}
             </div>
