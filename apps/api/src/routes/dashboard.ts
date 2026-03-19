@@ -1,10 +1,11 @@
 import { Router } from 'express'
-import { authenticate } from '../middleware/authenticate'
+import { authenticate, authorizeModule } from '../middleware/authenticate'
 import { getCache, setCache, CACHE_TTL } from '../lib/redis'
 import { getMetricsOverview } from '../domain/metrics/service'
 
 export const dashboardRouter: Router = Router()
 dashboardRouter.use(authenticate)
+dashboardRouter.use(authorizeModule('dashboard'))
 
 dashboardRouter.get('/stats', async (_req, res, next) => {
   try {

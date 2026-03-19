@@ -2,7 +2,7 @@
 
 import { useRef, useEffect, useCallback, useState } from 'react'
 import Image from 'next/image'
-import { motion, useScroll, useTransform, LazyMotion, domAnimation, m } from 'framer-motion'
+import { useScroll, useTransform, LazyMotion, domAnimation, m } from 'framer-motion'
 import { ChevronDown, Shield, Award, CheckCircle, Star, Zap } from 'lucide-react'
 import { useCountUp, useInView } from '@/lib/hooks'
 import { trackCTAClick, trackWhatsAppClick } from '@/lib/analytics'

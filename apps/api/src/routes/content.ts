@@ -1,14 +1,19 @@
 import { Router } from 'express'
 import { z } from 'zod'
 import path from 'path'
-import fs from 'fs'
 import multer from 'multer'
 import sharp from 'sharp'
 import { Prisma, type ContentSection } from '@prisma/client'
 import { prisma } from '../lib/prisma'
 import { apiEnv } from '../lib/env'
-import { authenticate, authorize } from '../middleware/authenticate'
+import { authenticate, authorize, authorizeModule } from '../middleware/authenticate'
 import { AppError } from '../middleware/errorHandler'
+import {
+  buildUploadUrl,
+  deleteFile,
+  ensureUploadStorageReady,
+  uploadFile,
+} from '../infrastructure/storage'
 import { UPLOAD } from '../shared/constants'
 
 export const contentRouter: Router = Router()
@@ -17,11 +22,6 @@ const updateSchema = z.object({ value: z.unknown() })
 const historyQuerySchema = z.object({
   limit: z.coerce.number().int().min(1).max(100).optional(),
 })
-
-const uploadDir = path.resolve(UPLOAD.DIR)
-if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir, { recursive: true })
-}
 
 const storage = multer.memoryStorage()
 const upload = multer({
@@ -132,7 +132,7 @@ contentRouter.get('/', async (_req, res, next) => {
   }
 })
 
-contentRouter.get('/history', authenticate, authorize('ADMIN', 'MANAGER'), async (req, res, next) => {
+contentRouter.get('/history', authenticate, authorizeModule('editar-site', 'MANAGER', 'VIEWER'), authorize('ADMIN', 'MANAGER'), async (req, res, next) => {
   try {
     const query = historyQuerySchema.parse(req.query)
     const limit = query.limit ?? 25
@@ -160,7 +160,7 @@ contentRouter.get('/history', authenticate, authorize('ADMIN', 'MANAGER'), async
   }
 })
 
-contentRouter.post('/history/:id/restore', authenticate, authorize('ADMIN', 'MANAGER'), async (req, res, next) => {
+contentRouter.post('/history/:id/restore', authenticate, authorizeModule('editar-site', 'MANAGER'), authorize('ADMIN', 'MANAGER'), async (req, res, next) => {
   try {
     const versionId = String(req.params.id)
     const restoredBy = req.user!.sub
@@ -226,30 +226,46 @@ contentRouter.post('/history/:id/restore', authenticate, authorize('ADMIN', 'MAN
   }
 })
 
-contentRouter.post('/upload', authenticate, authorize('ADMIN', 'MANAGER'), upload.single('file'), async (req, res, next) => {
+contentRouter.post('/upload', authenticate, authorizeModule('editar-site', 'MANAGER'), authorize('ADMIN', 'MANAGER'), upload.single('file'), async (req, res, next) => {
   try {
     if (!req.file) {
       res.status(400).json({ success: false, error: 'No file provided' })
       return
     }
 
+    await ensureUploadStorageReady()
+
     const id = Date.now().toString(36) + Math.random().toString(36).slice(2)
-    const fullPath = path.join(uploadDir, `${id}.webp`)
-    const thumbPath = path.join(uploadDir, `${id}-thumb.webp`)
-    const blurPath = path.join(uploadDir, `${id}-blur.webp`)
+    const fullBuffer = await sharp(req.file.buffer)
+      .resize(UPLOAD.FULL_WIDTH, undefined, { withoutEnlargement: true })
+      .webp({ quality: 85 })
+      .toBuffer()
+    const thumbBuffer = await sharp(req.file.buffer)
+      .resize(UPLOAD.THUMB_WIDTH, undefined, { withoutEnlargement: true })
+      .webp({ quality: 80 })
+      .toBuffer()
+    const blurBuffer = await sharp(req.file.buffer)
+      .resize(UPLOAD.BLUR_SIZE, undefined, { withoutEnlargement: true })
+      .webp({ quality: 10 })
+      .toBuffer()
 
-    await sharp(req.file.buffer).resize(UPLOAD.FULL_WIDTH, undefined, { withoutEnlargement: true }).webp({ quality: 85 }).toFile(fullPath)
-    await sharp(req.file.buffer).resize(UPLOAD.THUMB_WIDTH, undefined, { withoutEnlargement: true }).webp({ quality: 80 }).toFile(thumbPath)
-    await sharp(req.file.buffer).resize(UPLOAD.BLUR_SIZE, undefined, { withoutEnlargement: true }).webp({ quality: 10 }).toFile(blurPath)
+    const filename = `${id}.webp`
+    const thumbnail = `${id}-thumb.webp`
+    const blur = `${id}-blur.webp`
 
-    const baseUrl = `${apiEnv.apiBaseUrl}/uploads/`
+    await Promise.all([
+      uploadFile({ filename, buffer: fullBuffer, contentType: 'image/webp' }),
+      uploadFile({ filename: thumbnail, buffer: thumbBuffer, contentType: 'image/webp' }),
+      uploadFile({ filename: blur, buffer: blurBuffer, contentType: 'image/webp' }),
+    ])
+
     res.json({
       success: true,
       data: {
-        url: `${baseUrl}${id}.webp`,
-        thumbnail: `${baseUrl}${id}-thumb.webp`,
-        blur: `${baseUrl}${id}-blur.webp`,
-        filename: `${id}.webp`,
+        url: buildUploadUrl(filename),
+        thumbnail: buildUploadUrl(thumbnail),
+        blur: buildUploadUrl(blur),
+        filename,
       },
     })
   } catch (error) {
@@ -257,7 +273,7 @@ contentRouter.post('/upload', authenticate, authorize('ADMIN', 'MANAGER'), uploa
   }
 })
 
-contentRouter.post('/publish', authenticate, authorize('ADMIN', 'MANAGER'), async (_req, res, next) => {
+contentRouter.post('/publish', authenticate, authorizeModule('editar-site', 'MANAGER'), authorize('ADMIN', 'MANAGER'), async (_req, res, next) => {
   try {
     const landingRevalidateUrl = apiEnv.landingRevalidateUrl
     const secret = apiEnv.revalidateSecret
@@ -284,17 +300,12 @@ contentRouter.post('/publish', authenticate, authorize('ADMIN', 'MANAGER'), asyn
   }
 })
 
-contentRouter.delete('/upload/:filename', authenticate, authorize('ADMIN', 'MANAGER'), (req, res, next) => {
+contentRouter.delete('/upload/:filename', authenticate, authorizeModule('editar-site', 'MANAGER'), authorize('ADMIN', 'MANAGER'), async (req, res, next) => {
   try {
     const baseName = path.basename(String(req.params.filename)).replace(/(-thumb|-blur)?\.(webp|jpg|png)$/, '')
     const files = [`${baseName}.webp`, `${baseName}-thumb.webp`, `${baseName}-blur.webp`]
 
-    files.forEach((file) => {
-      const filePath = path.join(uploadDir, file)
-      if (fs.existsSync(filePath)) {
-        fs.unlinkSync(filePath)
-      }
-    })
+    await Promise.all(files.map((file) => deleteFile(file)))
 
     res.json({ success: true, message: 'File deleted' })
   } catch (error) {
@@ -302,7 +313,7 @@ contentRouter.delete('/upload/:filename', authenticate, authorize('ADMIN', 'MANA
   }
 })
 
-contentRouter.get('/:section/:key/history', authenticate, authorize('ADMIN', 'MANAGER'), async (req, res, next) => {
+contentRouter.get('/:section/:key/history', authenticate, authorizeModule('editar-site', 'MANAGER', 'VIEWER'), authorize('ADMIN', 'MANAGER'), async (req, res, next) => {
   try {
     const section = String(req.params.section) as ContentSection
     const key = String(req.params.key)
@@ -358,7 +369,7 @@ contentRouter.get('/:section/:key', async (req, res, next) => {
   }
 })
 
-contentRouter.put('/:section/:key', authenticate, authorize('ADMIN', 'MANAGER'), async (req, res, next) => {
+contentRouter.put('/:section/:key', authenticate, authorizeModule('editar-site', 'MANAGER'), authorize('ADMIN', 'MANAGER'), async (req, res, next) => {
   try {
     const { value } = updateSchema.parse(req.body)
     const section = String(req.params.section) as ContentSection
@@ -400,7 +411,7 @@ contentRouter.put('/:section/:key', authenticate, authorize('ADMIN', 'MANAGER'),
   }
 })
 
-contentRouter.delete('/:section/:key', authenticate, authorize('ADMIN', 'MANAGER'), async (req, res, next) => {
+contentRouter.delete('/:section/:key', authenticate, authorizeModule('editar-site', 'MANAGER'), authorize('ADMIN', 'MANAGER'), async (req, res, next) => {
   try {
     const section = String(req.params.section) as ContentSection
     const key = String(req.params.key)

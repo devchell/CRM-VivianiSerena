@@ -1,5 +1,3 @@
-import fs from 'fs/promises'
-import path from 'path'
 import express, { type Express } from 'express'
 import helmet from 'helmet'
 import cors from 'cors'
@@ -17,6 +15,7 @@ import { apiEnv } from './lib/env'
 import { logger } from './lib/logger'
 import { prisma } from './lib/prisma'
 import { redis } from './lib/redis'
+import { getUploadStorageMode, healthcheckUploadStorage } from './infrastructure/storage'
 
 async function getDependencyChecks() {
   const checks: Record<string, boolean> = {}
@@ -35,12 +34,7 @@ async function getDependencyChecks() {
     checks.redis = false
   }
 
-  try {
-    await fs.access(path.resolve(apiEnv.uploadDir))
-    checks.uploads = true
-  } catch {
-    checks.uploads = false
-  }
+  checks.uploads = await healthcheckUploadStorage()
 
   return checks
 }
@@ -100,8 +94,9 @@ export function createApp(): Express {
   app.use(sqlInjectionDetection)
   app.use(requestLogger)
 
-  const uploadsDir = path.resolve(apiEnv.uploadDir)
-  app.use('/uploads', express.static(uploadsDir))
+  if (getUploadStorageMode() === 'local') {
+    app.use('/uploads', express.static(apiEnv.uploadDir))
+  }
 
   app.get('/health/live', (_req, res) => {
     res.status(200).json({

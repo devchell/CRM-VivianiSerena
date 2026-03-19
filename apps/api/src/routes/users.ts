@@ -1,11 +1,11 @@
-import { Router, type NextFunction, type Request, type Response } from 'express'
+import { Router } from 'express'
 import { z } from 'zod'
 import bcrypt from 'bcryptjs'
 import crypto from 'crypto'
 import { CRM_MODULES, type CrmModule } from '@viviani/types'
 import { prisma } from '../lib/prisma'
 import { apiEnv } from '../lib/env'
-import { authenticate } from '../middleware/authenticate'
+import { authenticate, authorize } from '../middleware/authenticate'
 import { AppError } from '../middleware/errorHandler'
 import { emailService } from '../infrastructure/email'
 import { logger } from '../lib/logger'
@@ -43,21 +43,7 @@ function normalizeAllowedModules(role: 'ADMIN' | 'MANAGER' | 'VIEWER', modules?:
   return Array.isArray(modules) ? [...new Set(modules)] : []
 }
 
-function adminOnly(req: Request, _res: Response, next: NextFunction) {
-  if (!req.user) {
-    next(new AppError(401, 'Authentication required'))
-    return
-  }
-
-  if (!['ADMIN', 'MANAGER'].includes(req.user.role)) {
-    next(new AppError(403, 'Administrative access required'))
-    return
-  }
-
-  next()
-}
-
-usersRouter.get('/', authenticate, adminOnly, async (_req, res, next) => {
+usersRouter.get('/', authenticate, authorize('ADMIN'), async (_req, res, next) => {
   try {
     const users = await prisma.user.findMany({
       select: {
@@ -81,7 +67,7 @@ usersRouter.get('/', authenticate, adminOnly, async (_req, res, next) => {
   }
 })
 
-usersRouter.post('/', authenticate, adminOnly, async (req, res, next) => {
+usersRouter.post('/', authenticate, authorize('ADMIN'), async (req, res, next) => {
   try {
     const body = createUserSchema.parse(req.body)
     const exists = await prisma.user.findUnique({ where: { email: body.email } })
@@ -130,7 +116,7 @@ usersRouter.post('/', authenticate, adminOnly, async (req, res, next) => {
   }
 })
 
-usersRouter.patch('/:id', authenticate, adminOnly, async (req, res, next) => {
+usersRouter.patch('/:id', authenticate, authorize('ADMIN'), async (req, res, next) => {
   try {
     const body = updateUserSchema.parse(req.body)
     const userId = String(req.params.id)
@@ -162,7 +148,7 @@ usersRouter.patch('/:id', authenticate, adminOnly, async (req, res, next) => {
   }
 })
 
-usersRouter.delete('/:id', authenticate, adminOnly, async (req, res, next) => {
+usersRouter.delete('/:id', authenticate, authorize('ADMIN'), async (req, res, next) => {
   try {
     const userId = String(req.params.id)
 

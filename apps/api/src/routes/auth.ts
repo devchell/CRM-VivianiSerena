@@ -5,7 +5,7 @@ import crypto from "crypto"
 import { prisma } from "../lib/prisma"
 import { redis } from "../lib/redis"
 import { signAccessToken, signRefreshToken, verifyRefreshToken } from "../lib/jwt"
-import { authenticate } from "../middleware/authenticate"
+import { authenticate, authorize } from "../middleware/authenticate"
 import { authRateLimiter } from "../middleware/rateLimiter"
 import { AppError } from "../middleware/errorHandler"
 import { logger } from "../lib/logger"
@@ -402,18 +402,30 @@ authRouter.post("/set-password", authenticate, async (req, res, next) => {
 
 // ─── Google Calendar (mantido) ────────────────────────────────────────────────
 
-authRouter.get("/google", authenticate, (_req, res, next) => {
+authRouter.get("/google", authenticate, authorize('ADMIN'), async (req, res, next) => {
   try {
     // eslint-disable-next-line @typescript-eslint/no-var-requires
     const { googleCalendar } = require("../infrastructure/googleCalendar") as { googleCalendar: import("../infrastructure/googleCalendar").GoogleCalendarService }
-    const url = googleCalendar.getAuthUrl()
+    const state = crypto.randomUUID()
+    await redis.setex(`google:oauth:state:${state}`, 600, JSON.stringify({
+      userId: req.user!.sub,
+      role: req.user!.role,
+    }))
+    const url = googleCalendar.getAuthUrl(state)
     res.json({ success: true, data: { authUrl: url } })
   } catch (error) { next(error) }
 })
 
 authRouter.get("/google/callback", async (req, res, next) => {
   try {
-    const { code } = z.object({ code: z.string() }).parse(req.query)
+    const { code, state } = z.object({ code: z.string(), state: z.string() }).parse(req.query)
+    const stateKey = `google:oauth:state:${state}`
+    const authState = await redis.get(stateKey)
+    if (!authState) {
+      throw new AppError(401, "Google OAuth state invalido ou expirado")
+    }
+
+    await redis.del(stateKey)
     const { googleCalendar } = await import("../infrastructure/googleCalendar")
     await googleCalendar.handleCallback(code)
     res.json({ success: true, message: "Google Calendar connected successfully" })

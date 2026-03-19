@@ -2,7 +2,7 @@ import { Router } from 'express'
 import { z } from 'zod'
 import type { Server as SocketServer } from 'socket.io'
 import { prisma } from '../lib/prisma'
-import { authenticate } from '../middleware/authenticate'
+import { authenticate, authorizeModule } from '../middleware/authenticate'
 import { AppError } from '../middleware/errorHandler'
 import { deletePattern } from '../lib/redis'
 import { anonymizeIp } from '../middleware/security'
@@ -60,6 +60,7 @@ leadsRouter.post('/', async (req, res, next) => {
 
 // All routes below require authentication
 leadsRouter.use(authenticate)
+leadsRouter.use(authorizeModule('leads'))
 
 leadsRouter.get('/', async (req, res, next) => {
   try {

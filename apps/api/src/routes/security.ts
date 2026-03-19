@@ -3,7 +3,7 @@ import { z } from 'zod'
 import type { Prisma } from '@prisma/client'
 import { prisma } from '../lib/prisma'
 import { redis } from '../lib/redis'
-import { authenticate } from '../middleware/authenticate'
+import { authenticate, authorize, authorizeModule } from '../middleware/authenticate'
 import { getCache, setCache, CACHE_TTL } from '../lib/redis'
 import { IpBlocklist } from '../infrastructure/security/IpBlocklist'
 import { logger } from '../lib/logger'
@@ -52,7 +52,7 @@ function emitSecurityAlert(
 // ─── Events ─────────────────────────────────────────────────────────────────
 
 // GET /security/events — últimas 48h ou 7d
-securityRouter.get('/events', async (req, res, next) => {
+securityRouter.get('/events', authorizeModule('seguranca'), async (req, res, next) => {
   try {
     const { severity, resolved, limit = 100, hours = 48 } = req.query
     const since = new Date(Date.now() - Number(hours) * 60 * 60 * 1000)
@@ -70,7 +70,7 @@ securityRouter.get('/events', async (req, res, next) => {
 })
 
 // POST /security/events — registrar evento
-securityRouter.post('/events', async (req, res, next) => {
+securityRouter.post('/events', authorize('ADMIN'), async (req, res, next) => {
   try {
     const schema = z.object({
       type: z.string(),
@@ -94,10 +94,10 @@ securityRouter.post('/events', async (req, res, next) => {
 })
 
 // PATCH /security/events/:id/resolve
-securityRouter.patch('/events/:id/resolve', async (req, res, next) => {
+securityRouter.patch('/events/:id/resolve', authorize('ADMIN'), async (req, res, next) => {
   try {
     const event = await prisma.securityEvent.update({
-      where: { id: req.params.id },
+      where: { id: String(req.params.id) },
       data: { resolved: true },
     })
     await invalidateSecurityCaches()
@@ -108,7 +108,7 @@ securityRouter.patch('/events/:id/resolve', async (req, res, next) => {
 
 // ─── Stats ───────────────────────────────────────────────────────────────────
 
-securityRouter.get('/stats', async (_req, res, next) => {
+securityRouter.get('/stats', authorizeModule('seguranca'), async (_req, res, next) => {
   try {
     const cached = await getCache(SECURITY_STATS_CACHE_KEY)
     if (cached) { res.json({ success: true, data: cached }); return }
@@ -140,7 +140,7 @@ securityRouter.get('/stats', async (_req, res, next) => {
 
 // ─── 24h Activity (hourly breakdown) ────────────────────────────────────────
 
-securityRouter.get('/activity', async (_req, res, next) => {
+securityRouter.get('/activity', authorizeModule('seguranca'), async (_req, res, next) => {
   try {
     const cached = await getCache(SECURITY_ACTIVITY_CACHE_KEY)
     if (cached) { res.json({ success: true, data: cached }); return }
@@ -172,14 +172,14 @@ securityRouter.get('/activity', async (_req, res, next) => {
 
 // ─── IP Blocklist ────────────────────────────────────────────────────────────
 
-securityRouter.get('/blocked-ips', async (_req, res, next) => {
+securityRouter.get('/blocked-ips', authorizeModule('seguranca'), async (_req, res, next) => {
   try {
     const ips = await IpBlocklist.getAll()
     res.json({ success: true, data: ips })
   } catch (err) { next(err) }
 })
 
-securityRouter.post('/block-ip', async (req, res, next) => {
+securityRouter.post('/block-ip', authorize('ADMIN'), async (req, res, next) => {
   try {
     const { ip, ttlMinutes = 60, reason = 'manual' } = z.object({
       ip: z.string().ip(),
@@ -205,16 +205,17 @@ securityRouter.post('/block-ip', async (req, res, next) => {
   } catch (err) { next(err) }
 })
 
-securityRouter.delete('/block-ip/:ip', async (req, res, next) => {
+securityRouter.delete('/block-ip/:ip', authorize('ADMIN'), async (req, res, next) => {
   try {
-    await IpBlocklist.unblock(req.params.ip)
-    res.json({ success: true, message: `IP ${req.params.ip} desbloqueado` })
+    const ip = String(req.params.ip)
+    await IpBlocklist.unblock(ip)
+    res.json({ success: true, message: `IP ${ip} desbloqueado` })
   } catch (err) { next(err) }
 })
 
 // ─── Test Alert ──────────────────────────────────────────────────────────────
 
-securityRouter.post('/test-alert', async (req, res, next) => {
+securityRouter.post('/test-alert', authorize('ADMIN'), async (req, res, next) => {
   try {
     const event = await prisma.securityEvent.create({
       data: {
@@ -234,7 +235,7 @@ securityRouter.post('/test-alert', async (req, res, next) => {
 
 // ─── Checklist Status ────────────────────────────────────────────────────────
 
-securityRouter.get('/checklist', async (_req, res, next) => {
+securityRouter.get('/checklist', authorizeModule('seguranca'), async (_req, res, next) => {
   try {
     const redisOk = await redis.ping().then(() => true).catch(() => false)
     const sslExpiry = process.env.SSL_CERT_EXPIRY_DAYS ? parseInt(process.env.SSL_CERT_EXPIRY_DAYS, 10) : 90

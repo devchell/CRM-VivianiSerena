@@ -1,7 +1,7 @@
 import { Router } from 'express'
 import { z } from 'zod'
 import { prisma } from '../lib/prisma'
-import { authenticate } from '../middleware/authenticate'
+import { authenticate, authorizeModule } from '../middleware/authenticate'
 import { getCache, setCache, CACHE_TTL, deleteCache } from '../lib/redis'
 import { FINANCIAL_CATEGORIES_BY_TYPE } from '@viviani/types'
 import { getFinancialCharts, getFinancialSummary } from '../domain/metrics/service'
@@ -9,6 +9,7 @@ import { invalidateOperationalMetricCaches } from '../domain/metrics/cache'
 
 export const financialsRouter: Router = Router()
 financialsRouter.use(authenticate)
+financialsRouter.use(authorizeModule('financeiro'))
 
 const schema = z.object({
   type: z.enum(['income', 'expense']),

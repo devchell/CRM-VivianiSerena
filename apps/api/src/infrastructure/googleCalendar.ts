@@ -159,12 +159,13 @@ export class GoogleCalendarService {
     return available
   }
 
-  getAuthUrl(): string {
+  getAuthUrl(state: string): string {
     const oauth2Client = createOAuth2Client()
     return oauth2Client.generateAuthUrl({
       access_type: 'offline',
       scope: ['https://www.googleapis.com/auth/calendar'],
       prompt: 'consent',
+      state,
     })
   }
 

@@ -1,7 +1,7 @@
 import { Router } from 'express'
 import { z } from 'zod'
 import { prisma } from '../lib/prisma'
-import { authenticate } from '../middleware/authenticate'
+import { authenticate, authorizeModule } from '../middleware/authenticate'
 import { AppError } from '../middleware/errorHandler'
 import { googleCalendar } from '../infrastructure/googleCalendar'
 import { emailService } from '../infrastructure/email'
@@ -9,6 +9,7 @@ import { invalidateOperationalMetricCaches } from '../domain/metrics/cache'
 
 export const appointmentsRouter: Router = Router()
 appointmentsRouter.use(authenticate)
+appointmentsRouter.use(authorizeModule('agenda'))
 
 const DEFAULT_APPOINTMENT_DURATION_MINUTES = 60
 

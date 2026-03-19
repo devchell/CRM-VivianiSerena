@@ -1,6 +1,5 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
 import { motion } from 'framer-motion'
 import Image from 'next/image'
 import { useInView, useCountUp } from '@/lib/hooks'
@@ -26,6 +25,8 @@ const LOGOS = [
     height: 48,
   },
 ]
+
+void LOGOS
 
 function AnimatedStat({ stat, start }: { stat: Stat; start: boolean }) {
   const { count } = useCountUp(stat.value, 2000, start)

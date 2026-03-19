@@ -1,7 +1,7 @@
 import { Router } from 'express'
 import { z } from 'zod'
 import { prisma } from '../lib/prisma'
-import { authenticate } from '../middleware/authenticate'
+import { authenticate, authorizeModule } from '../middleware/authenticate'
 import { getCache, setCache, CACHE_TTL } from '../lib/redis'
 import { anonymizeIp } from '../middleware/security'
 import { getAnalyticsMetrics } from '../domain/metrics/service'
@@ -144,7 +144,7 @@ analyticsRouter.post('/vitals', async (req, res, next) => {
   }
 })
 
-analyticsRouter.get('/dashboard', authenticate, async (_req, res, next) => {
+analyticsRouter.get('/dashboard', authenticate, authorizeModule('dashboard'), async (_req, res, next) => {
   try {
     const cacheKey = 'analytics:dashboard'
     const cached = await getCache(cacheKey)
