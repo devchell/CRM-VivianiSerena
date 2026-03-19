@@ -21,7 +21,6 @@ import { apiEnv } from '../lib/env'
 import { authenticate, authorizePermission } from '../middleware/authenticate'
 import { AppError } from '../middleware/errorHandler'
 import { emailService } from '../infrastructure/email'
-import { logger } from '../lib/logger'
 
 export const usersRouter: Router = Router()
 
@@ -32,6 +31,7 @@ const PROFILES = [...USER_PROFILES] as [UserProfile, ...UserProfile[]]
 
 function generateTempPassword(): string {
   const chars = 'ABCDEFGHJKMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789!@#$'
+
   return Array.from(crypto.randomBytes(12))
     .map((byte) => chars[byte % chars.length])
     .join('')
@@ -57,11 +57,16 @@ const createUserSchema = z.object({
 
 const updateUserSchema = z.object({
   name: z.string().min(2).optional(),
+  email: z.string().email().optional(),
   phone: z.string().optional(),
   role: z.enum(LEGACY_ROLES).optional(),
   profile: z.enum(PROFILES).optional(),
   allowedModules: z.array(z.enum(MODULES)).optional(),
   permissions: z.array(z.enum(PERMISSIONS)).optional(),
+})
+
+const resetTempPasswordSchema = z.object({
+  sendEmail: z.boolean().optional().default(false),
 })
 
 function unique<T extends string>(values: readonly T[]): T[] {
@@ -84,6 +89,8 @@ function serializeUser(user: {
   lastLogin?: Date | null
   mustChangePassword?: boolean
 }) {
+  const isInactive = !user.lastLogin
+
   return {
     id: user.id,
     name: user.name,
@@ -97,6 +104,7 @@ function serializeUser(user: {
     createdAt: user.createdAt,
     lastLogin: user.lastLogin ?? null,
     mustChangePassword: user.mustChangePassword ?? false,
+    accountStatus: isInactive ? 'INACTIVE' : 'ACTIVE',
   }
 }
 
@@ -151,11 +159,9 @@ function resolveAccessAssignment(
       return { role: 'ADMIN' as const, storedGrants: [], profile: 'ADMIN' as const }
     }
 
-    const profile = fallback.profile === 'MANAGER'
-      ? 'MANAGER'
-      : fallback.profile === 'READONLY'
-        ? 'READONLY'
-        : 'OPERATOR'
+    const profile: UserProfile = fallback.role === 'MANAGER'
+      ? 'COLLABORATOR'
+      : 'VIEWER'
 
     return {
       role: getPersistedRoleForProfile(profile),
@@ -168,6 +174,97 @@ function resolveAccessAssignment(
     role: fallback.role,
     storedGrants: undefined,
     profile: fallback.profile,
+  }
+}
+
+async function sendCollaboratorInvite(
+  user: {
+    id: string
+    name: string | null
+    email: string
+    phone: string | null
+    role: UserRole
+    allowedModules: string[]
+    mustChangePassword: boolean
+  },
+  tempPassword: string
+) {
+  const serialized = serializeUser(user)
+  const inviteEmailSent = await emailService.sendCollaboratorInvite({
+    to: user.email,
+    name: user.name ?? user.email,
+    tempPassword,
+    crmUrl: apiEnv.crmUrl,
+    role: user.role,
+    profile: serialized.profile,
+    modules: serialized.allowedModules,
+  })
+
+  return {
+    serialized,
+    inviteEmailSent,
+  }
+}
+
+async function rotateTemporaryPassword(
+  userId: string,
+  options: { sendEmail: boolean }
+) {
+  const existing = await prisma.user.findUnique({
+    where: { id: userId },
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      phone: true,
+      role: true,
+      allowedModules: true,
+      mustChangePassword: true,
+      lastLogin: true,
+    },
+  })
+
+  if (!existing) {
+    throw new AppError(404, 'Usuario nao encontrado')
+  }
+
+  const tempPassword = generateTempPassword()
+  const passwordHash = await bcrypt.hash(tempPassword, 12)
+  const updated = await prisma.user.update({
+    where: { id: userId },
+    data: {
+      passwordHash,
+      mustChangePassword: true,
+    },
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      phone: true,
+      role: true,
+      allowedModules: true,
+      mustChangePassword: true,
+      lastLogin: true,
+    },
+  })
+
+  let inviteEmailSent: boolean | undefined
+
+  if (options.sendEmail) {
+    const inviteResult = await sendCollaboratorInvite(updated, tempPassword)
+    inviteEmailSent = inviteResult.inviteEmailSent
+
+    return {
+      serialized: inviteResult.serialized,
+      tempPassword,
+      inviteEmailSent,
+    }
+  }
+
+  return {
+    serialized: serializeUser(updated),
+    tempPassword,
+    inviteEmailSent,
   }
 }
 
@@ -218,11 +315,14 @@ usersRouter.post('/', authenticate, authorizePermission('users.manage'), async (
       data: {
         name: body.name,
         email: body.email,
-        phone: body.phone,
+        phone: body.phone || null,
         passwordHash,
         role: access.role,
         allowedModules: access.storedGrants ?? [],
         mustChangePassword: true,
+        twoFactorEnabled: false,
+        twoFactorEmailEnabled: false,
+        twoFactorSmsEnabled: false,
       },
       select: {
         id: true,
@@ -232,24 +332,22 @@ usersRouter.post('/', authenticate, authorizePermission('users.manage'), async (
         role: true,
         allowedModules: true,
         mustChangePassword: true,
+        lastLogin: true,
       },
     })
 
-    const serialized = serializeUser(user)
-
-    emailService.sendCollaboratorInvite({
-      to: body.email,
-      name: body.name,
-      tempPassword,
-      crmUrl: apiEnv.crmUrl,
-      role: access.role,
-      profile: serialized.profile,
-      modules: serialized.allowedModules,
-    }).catch((error) => logger.warn('Invite email failed', error))
+    const inviteResult = await sendCollaboratorInvite(user, tempPassword)
 
     res.status(201).json({
       success: true,
-      data: serialized,
+      message: inviteResult.inviteEmailSent
+        ? 'Convite enviado por e-mail'
+        : 'Colaborador criado, mas o e-mail de convite falhou.',
+      data: inviteResult.serialized,
+      meta: {
+        inviteEmailSent: inviteResult.inviteEmailSent,
+        ...(inviteResult.inviteEmailSent ? {} : { tempPassword }),
+      },
     })
   } catch (error) {
     next(error)
@@ -267,6 +365,7 @@ usersRouter.patch('/:id', authenticate, authorizePermission('users.manage'), asy
         name: true,
         email: true,
         phone: true,
+        lastLogin: true,
         role: true,
         allowedModules: true,
       },
@@ -274,6 +373,21 @@ usersRouter.patch('/:id', authenticate, authorizePermission('users.manage'), asy
 
     if (!existing) {
       throw new AppError(404, 'Usuario nao encontrado')
+    }
+
+    if (body.email !== undefined && body.email !== existing.email) {
+      if (existing.lastLogin) {
+        throw new AppError(400, 'O e-mail so pode ser alterado para colaboradores inativos')
+      }
+
+      const emailExists = await prisma.user.findUnique({
+        where: { email: body.email },
+        select: { id: true },
+      })
+
+      if (emailExists && emailExists.id !== userId) {
+        throw new AppError(409, 'E-mail ja cadastrado')
+      }
     }
 
     const existingProfile = inferUserProfile(existing.role, existing.allowedModules)
@@ -296,7 +410,8 @@ usersRouter.patch('/:id', authenticate, authorizePermission('users.manage'), asy
       where: { id: userId },
       data: {
         ...(body.name !== undefined ? { name: body.name } : {}),
-        ...(body.phone !== undefined ? { phone: body.phone } : {}),
+        ...(body.email !== undefined ? { email: body.email } : {}),
+        ...(body.phone !== undefined ? { phone: body.phone || null } : {}),
         ...(access ? { role: access.role, allowedModules: access.storedGrants ?? [] } : {}),
       },
       select: {
@@ -307,10 +422,69 @@ usersRouter.patch('/:id', authenticate, authorizePermission('users.manage'), asy
         role: true,
         allowedModules: true,
         mustChangePassword: true,
+        lastLogin: true,
       },
     })
 
     res.json({ success: true, data: serializeUser(user) })
+  } catch (error) {
+    next(error)
+  }
+})
+
+usersRouter.post('/:id/resend-invite', authenticate, authorizePermission('users.manage'), async (req, res, next) => {
+  try {
+    const userId = String(req.params.id)
+    const existing = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { lastLogin: true },
+    })
+
+    if (!existing) {
+      throw new AppError(404, 'Usuario nao encontrado')
+    }
+
+    if (existing.lastLogin) {
+      throw new AppError(400, 'Reenvio de convite disponivel apenas para colaboradores inativos')
+    }
+
+    const result = await rotateTemporaryPassword(userId, { sendEmail: true })
+
+    res.json({
+      success: true,
+      message: result.inviteEmailSent
+        ? 'Convite reenviado por e-mail'
+        : 'Senha temporaria redefinida, mas o e-mail de convite falhou.',
+      data: result.serialized,
+      meta: {
+        inviteEmailSent: result.inviteEmailSent ?? false,
+        ...(result.inviteEmailSent ? {} : { tempPassword: result.tempPassword }),
+      },
+    })
+  } catch (error) {
+    next(error)
+  }
+})
+
+usersRouter.post('/:id/reset-temp-password', authenticate, authorizePermission('users.manage'), async (req, res, next) => {
+  try {
+    const userId = String(req.params.id)
+    const body = resetTempPasswordSchema.parse(req.body ?? {})
+    const result = await rotateTemporaryPassword(userId, { sendEmail: body.sendEmail })
+
+    res.json({
+      success: true,
+      message: body.sendEmail
+        ? result.inviteEmailSent
+          ? 'Senha temporaria redefinida e enviada por e-mail'
+          : 'Senha temporaria redefinida, mas o e-mail falhou.'
+        : 'Senha temporaria redefinida com sucesso',
+      data: result.serialized,
+      meta: {
+        tempPassword: result.tempPassword,
+        ...(result.inviteEmailSent !== undefined ? { inviteEmailSent: result.inviteEmailSent } : {}),
+      },
+    })
   } catch (error) {
     next(error)
   }

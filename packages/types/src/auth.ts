@@ -1,9 +1,9 @@
 import { CRM_MODULES, type CrmModule } from './crm'
 
 export type UserRole = 'ADMIN' | 'MANAGER' | 'VIEWER'
-export type UserProfile = 'ADMIN' | 'MANAGER' | 'OPERATOR' | 'READONLY'
+export type UserProfile = 'ADMIN' | 'COLLABORATOR' | 'VIEWER'
 
-export const USER_PROFILES = ['ADMIN', 'MANAGER', 'OPERATOR', 'READONLY'] as const
+export const USER_PROFILES = ['ADMIN', 'COLLABORATOR', 'VIEWER'] as const
 
 const MODULE_PERMISSION_ACTIONS = {
   dashboard: ['view'],
@@ -59,35 +59,24 @@ const VIEW_ONLY_PERMISSIONS = new Set<AppPermission>([
   'leads.view',
   'agenda.view',
   'financeiro.view',
-  'editar-site.view',
-  'seguranca.view',
 ])
 
-const MANAGER_PERMISSION_PRESETS: Record<CrmModule, AppPermission[]> = {
+const COLLABORATOR_PERMISSION_PRESETS: Record<CrmModule, AppPermission[]> = {
   dashboard: ['dashboard.view'],
   leads: ['leads.view', 'leads.update', 'leads.delete', 'leads.export', 'leads.gdpr'],
   agenda: ['agenda.view', 'agenda.create', 'agenda.update', 'agenda.delete'],
   financeiro: ['financeiro.view', 'financeiro.create', 'financeiro.update', 'financeiro.delete', 'financeiro.export'],
-  'editar-site': ['editar-site.view', 'editar-site.update', 'editar-site.delete', 'editar-site.publish', 'editar-site.history', 'editar-site.restore', 'editar-site.upload'],
-  seguranca: ['seguranca.view'],
-}
-
-const OPERATOR_PERMISSION_PRESETS: Record<CrmModule, AppPermission[]> = {
-  dashboard: ['dashboard.view'],
-  leads: ['leads.view', 'leads.update', 'leads.export'],
-  agenda: ['agenda.view', 'agenda.create', 'agenda.update'],
-  financeiro: ['financeiro.view', 'financeiro.create', 'financeiro.update', 'financeiro.export'],
   'editar-site': [],
-  seguranca: ['seguranca.view'],
+  seguranca: [],
 }
 
-const READONLY_PERMISSION_PRESETS: Record<CrmModule, AppPermission[]> = {
+const VIEWER_PERMISSION_PRESETS: Record<CrmModule, AppPermission[]> = {
   dashboard: ['dashboard.view'],
   leads: ['leads.view'],
   agenda: ['agenda.view'],
   financeiro: ['financeiro.view'],
   'editar-site': [],
-  seguranca: ['seguranca.view'],
+  seguranca: [],
 }
 
 function dedupe<T extends string>(values: readonly T[]): T[] {
@@ -110,20 +99,17 @@ export function getPersistedRoleForProfile(profile: UserProfile): UserRole {
   switch (profile) {
     case 'ADMIN':
       return 'ADMIN'
-    case 'MANAGER':
+    case 'COLLABORATOR':
       return 'MANAGER'
-    case 'OPERATOR':
-    case 'READONLY':
+    case 'VIEWER':
       return 'VIEWER'
   }
 }
 
 export function getPermissionsForProfile(profile: Exclude<UserProfile, 'ADMIN'>, modules: readonly CrmModule[]): AppPermission[] {
-  const source = profile === 'MANAGER'
-    ? MANAGER_PERMISSION_PRESETS
-    : profile === 'OPERATOR'
-      ? OPERATOR_PERMISSION_PRESETS
-      : READONLY_PERMISSION_PRESETS
+  const source = profile === 'COLLABORATOR'
+    ? COLLABORATOR_PERMISSION_PRESETS
+    : VIEWER_PERMISSION_PRESETS
 
   return dedupe(modules.flatMap((module) => source[module] ?? []))
 }
@@ -134,23 +120,10 @@ function getLegacyPermissions(role: UserRole, module: CrmModule): AppPermission[
   }
 
   if (role === 'MANAGER') {
-    return MANAGER_PERMISSION_PRESETS[module] ?? []
+    return COLLABORATOR_PERMISSION_PRESETS[module] ?? []
   }
 
-  switch (module) {
-    case 'dashboard':
-      return ['dashboard.view']
-    case 'leads':
-      return ['leads.view', 'leads.update', 'leads.delete', 'leads.export', 'leads.gdpr']
-    case 'agenda':
-      return ['agenda.view', 'agenda.create', 'agenda.update', 'agenda.delete']
-    case 'financeiro':
-      return ['financeiro.view', 'financeiro.create', 'financeiro.update', 'financeiro.delete', 'financeiro.export']
-    case 'editar-site':
-      return ['editar-site.view']
-    case 'seguranca':
-      return ['seguranca.view']
-  }
+  return VIEWER_PERMISSION_PRESETS[module] ?? []
 }
 
 export function resolvePermissions(role: UserRole, grants?: readonly string[]): AppPermission[] {
@@ -188,17 +161,17 @@ export function inferUserProfile(role: UserRole, grants?: readonly string[]): Us
   }
 
   if (role === 'MANAGER') {
-    return 'MANAGER'
+    return 'COLLABORATOR'
   }
 
   const explicitPermissions = (Array.isArray(grants) ? grants : []).filter(isAppPermission)
   if (explicitPermissions.length === 0) {
-    return 'OPERATOR'
+    return 'VIEWER'
   }
 
   return explicitPermissions.every((permission) => VIEW_ONLY_PERMISSIONS.has(permission))
-    ? 'READONLY'
-    : 'OPERATOR'
+    ? 'VIEWER'
+    : 'COLLABORATOR'
 }
 
 export function hasPermission(

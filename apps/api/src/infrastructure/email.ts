@@ -124,11 +124,9 @@ export const emailService = {
       : 'Acesso completo (Admin)'
     const profileLabel = (params.profile ?? params.role) === 'ADMIN'
       ? 'Administrador'
-      : params.profile === 'MANAGER'
-        ? 'Gestor'
-        : params.profile === 'READONLY'
-          ? 'Somente leitura'
-          : 'Operador'
+      : params.profile === 'COLLABORATOR'
+        ? 'Colaborador'
+        : 'Viewer'
     const content = `
       <span class="badge">👋 Convite para o CRM</span>
       <p>Olá, <strong>${params.name}</strong>!</p>

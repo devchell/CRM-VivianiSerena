@@ -1,41 +1,30 @@
-import { Router } from "express"
-import { z } from "zod"
-import bcrypt from "bcryptjs"
-import crypto from "crypto"
-import { prisma } from "../lib/prisma"
-import { redis } from "../lib/redis"
-import { signAccessToken, signRefreshToken, verifyRefreshToken } from "../lib/jwt"
-import { authenticate, authorize } from "../middleware/authenticate"
-import { authRateLimiter } from "../middleware/rateLimiter"
-import { AppError } from "../middleware/errorHandler"
-import { logger } from "../lib/logger"
-import { recordLoginFailure, resetLoginFailures, bruteForceCheck } from "../middleware/security"
-import { emailService } from "../infrastructure/email"
-import { smsService } from "../infrastructure/sms"
+import { type Response, Router } from 'express'
+import { z } from 'zod'
+import bcrypt from 'bcryptjs'
+import crypto from 'crypto'
+import { prisma } from '../lib/prisma'
+import { redis } from '../lib/redis'
+import { signAccessToken, signRefreshToken, verifyRefreshToken } from '../lib/jwt'
+import { authenticate, authorize } from '../middleware/authenticate'
+import { authRateLimiter } from '../middleware/rateLimiter'
+import { AppError } from '../middleware/errorHandler'
+import { logger } from '../lib/logger'
+import { recordLoginFailure, resetLoginFailures, bruteForceCheck } from '../middleware/security'
+import { emailService } from '../infrastructure/email'
+import { smsService } from '../infrastructure/sms'
 import {
   inferUserProfile,
   resolveAllowedModules,
   resolvePermissions,
   type AuthTokenPayload,
   type UserRole,
-} from "@viviani/types"
+} from '@viviani/types'
 
 export const authRouter: Router = Router()
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
+type TwoFactorChannel = 'email' | 'sms'
 
-function generateOtp(): string {
-  return String(crypto.randomInt(100000, 999999))
-}
-
-const COOKIE_OPTS = {
-  httpOnly: true,
-  secure: process.env.NODE_ENV === "production",
-  sameSite: "lax" as const,
-  path: "/",
-}
-
-function buildAccessContext(user: {
+type AccessUser = {
   id: string
   email: string
   name?: string | null
@@ -43,7 +32,35 @@ function buildAccessContext(user: {
   allowedModules?: string[]
   mustChangePassword?: boolean
   photoUrl?: string | null
-}) {
+}
+
+type TwoFactorPreferencesInput = {
+  twoFactorEnabled: boolean
+  twoFactorEmailEnabled?: boolean | null
+  twoFactorSmsEnabled?: boolean | null
+  phone?: string | null
+}
+
+type TwoFactorState = {
+  userId: string
+  email: string
+  role: string
+  pendingChannels: TwoFactorChannel[]
+  verifiedChannels: TwoFactorChannel[]
+}
+
+function generateOtp(): string {
+  return String(crypto.randomInt(100000, 999999))
+}
+
+const COOKIE_OPTS = {
+  httpOnly: true,
+  secure: process.env.NODE_ENV === 'production',
+  sameSite: 'lax' as const,
+  path: '/',
+}
+
+function buildAccessContext(user: AccessUser) {
   const permissions = resolvePermissions(user.role, user.allowedModules)
   const allowedModules = resolveAllowedModules(user.role, user.allowedModules)
   const profile = inferUserProfile(user.role, user.allowedModules)
@@ -59,7 +76,7 @@ function buildAccessContext(user: {
       allowedModules,
       mustChangePassword: user.mustChangePassword,
       photoUrl: user.photoUrl,
-    } satisfies Omit<AuthTokenPayload, "iat" | "exp">,
+    } satisfies Omit<AuthTokenPayload, 'iat' | 'exp'>,
     userPayload: {
       id: user.id,
       name: user.name,
@@ -74,213 +91,505 @@ function buildAccessContext(user: {
   }
 }
 
-// ─── Schemas ──────────────────────────────────────────────────────────────────
+function resolveTwoFactorSettings(user: TwoFactorPreferencesInput) {
+  const emailEnabled = Boolean(user.twoFactorEnabled && user.twoFactorEmailEnabled)
+  const smsEnabled = Boolean(user.twoFactorEnabled && user.twoFactorSmsEnabled && user.phone)
+
+  return {
+    enabled: emailEnabled || smsEnabled,
+    emailEnabled,
+    smsEnabled,
+  }
+}
+
+function getTwoFactorChannels(user: TwoFactorPreferencesInput): TwoFactorChannel[] {
+  const settings = resolveTwoFactorSettings(user)
+  const channels: TwoFactorChannel[] = []
+
+  if (settings.smsEnabled) {
+    channels.push('sms')
+  }
+
+  if (settings.emailEnabled) {
+    channels.push('email')
+  }
+
+  return channels
+}
+
+function getCurrentTwoFactorChannel(state: TwoFactorState): TwoFactorChannel {
+  const channel = state.pendingChannels[0]
+
+  if (!channel) {
+    throw new AppError(400, 'Fluxo 2FA invalido')
+  }
+
+  return channel
+}
+
+async function completeAuthenticatedLogin(
+  res: Response,
+  user: AccessUser,
+  ip: string,
+  auditAction: 'LOGIN' | 'LOGIN_2FA'
+) {
+  const access = buildAccessContext(user)
+  const accessToken = signAccessToken(access.accessTokenPayload)
+  const refreshToken = signRefreshToken(user.id)
+
+  await redis.setex(`refresh:${user.id}`, 7 * 24 * 60 * 60, refreshToken)
+  await prisma.user.update({
+    where: { id: user.id },
+    data: { lastLogin: new Date() },
+  })
+  await prisma.auditLog.create({
+    data: {
+      userId: user.id,
+      action: auditAction,
+      resource: 'auth',
+      ip,
+      details: {},
+    },
+  })
+
+  return res
+    .cookie('access_token', accessToken, { ...COOKIE_OPTS, maxAge: 15 * 60 * 1000 })
+    .cookie('refresh_token', refreshToken, { ...COOKIE_OPTS, maxAge: 7 * 24 * 60 * 60 * 1000 })
+    .json({
+      success: true,
+      data: {
+        accessToken,
+        refreshToken,
+        user: access.userPayload,
+      },
+    })
+}
+
+async function sendTwoFactorChallenge(
+  user: { email: string; phone?: string | null },
+  twoFactorToken: string,
+  channel: TwoFactorChannel
+) {
+  const code = generateOtp()
+
+  if (channel === 'email') {
+    await redis.setex(`2fa_email:${twoFactorToken}`, 300, code)
+    const sent = await emailService.sendOtp({ to: user.email, code, type: 'login' })
+
+    if (!sent) {
+      throw new AppError(503, 'Nao foi possivel enviar o codigo por e-mail')
+    }
+
+    return {
+      nextStep: 'email' as const,
+      maskedEmail: maskEmail(user.email),
+    }
+  }
+
+  if (!user.phone) {
+    throw new AppError(400, 'Telefone nao cadastrado. Atualize seu perfil antes de usar 2FA por celular.')
+  }
+
+  await redis.setex(`2fa_sms:${twoFactorToken}`, 300, code)
+  const sent = await smsService.sendOtp(user.phone, code)
+
+  if (!sent) {
+    throw new AppError(503, 'Nao foi possivel enviar o codigo por SMS')
+  }
+
+  return {
+    nextStep: 'sms' as const,
+    maskedPhone: maskPhone(user.phone),
+  }
+}
+
+async function loadTwoFactorState(twoFactorToken: string) {
+  const raw = await redis.get(`2fa_login:${twoFactorToken}`)
+
+  if (!raw) {
+    throw new AppError(401, 'Sessao expirada. Faca login novamente.')
+  }
+
+  return JSON.parse(raw) as TwoFactorState
+}
+
+async function advanceTwoFactorFlow(twoFactorToken: string, state: TwoFactorState) {
+  const completedChannel = state.pendingChannels.shift()
+
+  if (!completedChannel) {
+    throw new AppError(400, 'Fluxo 2FA invalido')
+  }
+
+  state.verifiedChannels.push(completedChannel)
+
+  if (state.pendingChannels.length === 0) {
+    await redis.del(`2fa_login:${twoFactorToken}`)
+    const sessionToken = crypto.randomUUID()
+
+    await redis.setex(
+      `2fa_session:${sessionToken}`,
+      120,
+      JSON.stringify({
+        userId: state.userId,
+        email: state.email,
+        role: state.role,
+      })
+    )
+
+    logger.info('2FA fully verified', {
+      userId: state.userId,
+      channels: state.verifiedChannels,
+    })
+
+    return {
+      sessionToken,
+    }
+  }
+
+  await redis.setex(`2fa_login:${twoFactorToken}`, 600, JSON.stringify(state))
+
+  const user = await prisma.user.findUnique({
+    where: { id: state.userId },
+    select: {
+      email: true,
+      phone: true,
+    },
+  })
+
+  if (!user) {
+    throw new AppError(401, 'Usuario nao encontrado')
+  }
+
+  const nextChannel = getCurrentTwoFactorChannel(state)
+  const nextChallenge = await sendTwoFactorChallenge(user, twoFactorToken, nextChannel)
+
+  logger.info('2FA challenge advanced', {
+    userId: state.userId,
+    nextChannel,
+  })
+
+  return nextChallenge
+}
 
 const loginSchema = z.object({
   email: z.string().email(),
   password: z.string().min(8),
-  // Usado pelo NextAuth para completar o fluxo 2FA
   twoFactorSessionToken: z.string().optional(),
 })
 
-// ─── POST /login ──────────────────────────────────────────────────────────────
+const profileUpdateSchema = z.object({
+  name: z.string().min(2).optional(),
+  email: z.string().email().optional(),
+  phone: z.string().min(10).max(20).optional(),
+  photoUrl: z.string().url().nullable().optional(),
+})
 
-authRouter.post("/login", authRateLimiter, bruteForceCheck, async (req, res, next) => {
+const passwordUpdateSchema = z.object({
+  currentPassword: z.string().min(8),
+  newPassword: z.string().min(8, 'Nova senha deve ter no minimo 8 caracteres'),
+})
+
+const twoFactorPreferencesSchema = z.object({
+  enabled: z.boolean(),
+  emailEnabled: z.boolean().optional(),
+  smsEnabled: z.boolean().optional(),
+  password: z.string().min(1),
+})
+
+async function updateTwoFactorPreferences(params: {
+  userId: string
+  password: string
+  enabled: boolean
+  emailEnabled?: boolean
+  smsEnabled?: boolean
+  ip?: string | null
+}) {
+  const user = await prisma.user.findUnique({
+    where: { id: params.userId },
+  })
+
+  if (!user) {
+    throw new AppError(404, 'Usuario nao encontrado')
+  }
+
+  const isValid = await bcrypt.compare(params.password, user.passwordHash)
+  if (!isValid) {
+    throw new AppError(401, 'Senha incorreta')
+  }
+
+  let emailEnabled = params.enabled ? Boolean(params.emailEnabled) : false
+  let smsEnabled = params.enabled ? Boolean(params.smsEnabled ?? !emailEnabled) : false
+
+  if (smsEnabled && !user.phone) {
+    throw new AppError(400, 'Cadastre um telefone antes de ativar o 2FA por celular')
+  }
+
+  if (!emailEnabled && !smsEnabled) {
+    emailEnabled = false
+    smsEnabled = false
+  }
+
+  const twoFactorEnabled = emailEnabled || smsEnabled
+
+  const updated = await prisma.user.update({
+    where: { id: params.userId },
+    data: {
+      twoFactorEnabled,
+      twoFactorEmailEnabled: emailEnabled,
+      twoFactorSmsEnabled: smsEnabled,
+    },
+    select: {
+      twoFactorEnabled: true,
+      twoFactorEmailEnabled: true,
+      twoFactorSmsEnabled: true,
+    },
+  })
+
+  await prisma.auditLog.create({
+    data: {
+      userId: params.userId,
+      action: '2FA_UPDATED',
+      resource: 'auth',
+      ip: params.ip ?? null,
+      details: {
+        enabled: updated.twoFactorEnabled,
+        emailEnabled: updated.twoFactorEmailEnabled,
+        smsEnabled: updated.twoFactorSmsEnabled,
+      },
+    },
+  })
+
+  const message = !updated.twoFactorEnabled
+    ? '2FA desativado com sucesso'
+    : updated.twoFactorEmailEnabled && updated.twoFactorSmsEnabled
+      ? '2FA ativado por celular e e-mail'
+      : updated.twoFactorSmsEnabled
+        ? '2FA ativado por celular'
+        : '2FA ativado por e-mail'
+
+  return {
+    ...updated,
+    message,
+  }
+}
+
+authRouter.post('/login', authRateLimiter, bruteForceCheck, async (req, res, next) => {
   try {
     const body = loginSchema.parse(req.body)
-    const ip = req.ip ?? "unknown"
+    const ip = req.ip ?? 'unknown'
 
-    // ── Fluxo de conclusão 2FA (NextAuth chama com twoFactorSessionToken) ──
     if (body.twoFactorSessionToken) {
       const raw = await redis.get(`2fa_session:${body.twoFactorSessionToken}`)
-      if (!raw) throw new AppError(401, "Sessão 2FA expirada ou inválida")
+
+      if (!raw) {
+        throw new AppError(401, 'Sessao 2FA expirada ou invalida')
+      }
+
       await redis.del(`2fa_session:${body.twoFactorSessionToken}`)
-      const session = JSON.parse(raw) as { userId: string; email: string; role: string }
-      const user = await prisma.user.findUnique({ where: { id: session.userId } })
-      if (!user) throw new AppError(401, "Usuário não encontrado")
-      const access = buildAccessContext(user)
-      const accessToken = signAccessToken(access.accessTokenPayload)
-      const refreshToken = signRefreshToken(user.id)
-      await redis.setex(`refresh:${user.id}`, 7 * 24 * 60 * 60, refreshToken)
-      await prisma.auditLog.create({ data: { userId: user.id, action: "LOGIN_2FA", resource: "auth", ip, details: {} } })
-      return res
-        .cookie("access_token", accessToken, { ...COOKIE_OPTS, maxAge: 15 * 60 * 1000 })
-        .cookie("refresh_token", refreshToken, { ...COOKIE_OPTS, maxAge: 7 * 24 * 60 * 60 * 1000 })
-        .json({
-          success: true,
-          data: {
-            accessToken,
-            refreshToken,
-            user: access.userPayload,
-          },
-        })
+      const session = JSON.parse(raw) as { userId: string }
+      const user = await prisma.user.findUnique({
+        where: { id: session.userId },
+      })
+
+      if (!user) {
+        throw new AppError(401, 'Usuario nao encontrado')
+      }
+
+      return completeAuthenticatedLogin(res, user, ip, 'LOGIN_2FA')
     }
 
-    // ── Fluxo normal de login ──
     const user = await prisma.user.findUnique({ where: { email: body.email } })
-    if (!user) { recordLoginFailure(ip); throw new AppError(401, "Credenciais inválidas") }
-    if (user.lockedUntil && user.lockedUntil > new Date()) throw new AppError(423, "Conta temporariamente bloqueada. Tente novamente mais tarde.")
+
+    if (!user) {
+      recordLoginFailure(ip)
+      throw new AppError(401, 'Credenciais invalidas')
+    }
+
+    if (user.lockedUntil && user.lockedUntil > new Date()) {
+      throw new AppError(423, 'Conta temporariamente bloqueada. Tente novamente mais tarde.')
+    }
 
     const isValidPassword = await bcrypt.compare(body.password, user.passwordHash)
     if (!isValidPassword) {
       recordLoginFailure(ip)
       await prisma.user.update({
         where: { id: user.id },
-        data: { failedAttempts: { increment: 1 }, lockedUntil: user.failedAttempts >= 4 ? new Date(Date.now() + 15 * 60 * 1000) : null },
+        data: {
+          failedAttempts: { increment: 1 },
+          lockedUntil: user.failedAttempts >= 4 ? new Date(Date.now() + 15 * 60 * 1000) : null,
+        },
       })
-      throw new AppError(401, "Credenciais inválidas")
+      throw new AppError(401, 'Credenciais invalidas')
     }
 
     resetLoginFailures(ip)
-    await prisma.user.update({ where: { id: user.id }, data: { failedAttempts: 0, lockedUntil: null, lastLogin: new Date() } })
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { failedAttempts: 0, lockedUntil: null },
+    })
 
-    // ── 2FA habilitado: iniciar fluxo OTP ──
-    if (user.twoFactorEnabled) {
-      if (!user.phone) throw new AppError(400, "2FA ativo mas sem telefone cadastrado. Contate o administrador.")
+    const requiredChannels = getTwoFactorChannels(user)
 
+    if (requiredChannels.length > 0) {
       const twoFactorToken = crypto.randomUUID()
-      const emailCode = generateOtp()
+      const state: TwoFactorState = {
+        userId: user.id,
+        email: user.email,
+        role: user.role,
+        pendingChannels: [...requiredChannels],
+        verifiedChannels: [],
+      }
 
-      // Armazena estado do fluxo 2FA (10 min)
-      await redis.setex(`2fa_login:${twoFactorToken}`, 600, JSON.stringify({
-        userId: user.id, email: user.email, role: user.role, emailVerified: false,
-      }))
-      // Armazena código de email (5 min)
-      await redis.setex(`2fa_email:${twoFactorToken}`, 300, emailCode)
+      await redis.setex(`2fa_login:${twoFactorToken}`, 600, JSON.stringify(state))
 
-      await emailService.sendOtp({ to: user.email, code: emailCode, type: "login" })
-      logger.info("2FA OTP sent to email", { userId: user.id })
+      const firstChannel = getCurrentTwoFactorChannel(state)
+      const challenge = await sendTwoFactorChallenge(user, twoFactorToken, firstChannel)
 
-      return res.json({ success: true, data: { requiresTwoFactor: true, twoFactorToken, maskedEmail: maskEmail(user.email) } })
-    }
+      logger.info('2FA challenge sent', {
+        userId: user.id,
+        channels: requiredChannels,
+      })
 
-    // ── Login direto (sem 2FA) ──
-    const access = buildAccessContext(user)
-    const accessToken = signAccessToken(access.accessTokenPayload)
-    const refreshToken = signRefreshToken(user.id)
-    await redis.setex(`refresh:${user.id}`, 7 * 24 * 60 * 60, refreshToken)
-    await prisma.auditLog.create({ data: { userId: user.id, action: "LOGIN", resource: "auth", ip, details: {} } })
-    logger.info("User logged in", { userId: user.id, email: user.email, ip })
-
-    return res
-      .cookie("access_token", accessToken, { ...COOKIE_OPTS, maxAge: 15 * 60 * 1000 })
-      .cookie("refresh_token", refreshToken, { ...COOKIE_OPTS, maxAge: 7 * 24 * 60 * 60 * 1000 })
-      .json({
+      return res.json({
         success: true,
         data: {
-          accessToken,
-          refreshToken,
-          user: access.userPayload,
+          requiresTwoFactor: true,
+          twoFactorToken,
+          requiredChannels,
+          ...challenge,
         },
       })
-  } catch (error) { next(error) }
+    }
+
+    logger.info('User logged in', { userId: user.id, email: user.email, ip })
+    return completeAuthenticatedLogin(res, user, ip, 'LOGIN')
+  } catch (error) {
+    next(error)
+  }
 })
 
-// ─── POST /2fa/verify-email-otp ───────────────────────────────────────────────
-
-authRouter.post("/2fa/verify-email-otp", authRateLimiter, async (req, res, next) => {
+authRouter.post('/2fa/verify-email-otp', authRateLimiter, async (req, res, next) => {
   try {
     const { twoFactorToken, code } = z.object({
       twoFactorToken: z.string(),
       code: z.string().length(6),
     }).parse(req.body)
 
-    const raw = await redis.get(`2fa_login:${twoFactorToken}`)
-    if (!raw) throw new AppError(401, "Sessão expirada. Faça login novamente.")
-    const state = JSON.parse(raw) as { userId: string; email: string; role: string; emailVerified: boolean }
+    const state = await loadTwoFactorState(twoFactorToken)
+
+    if (getCurrentTwoFactorChannel(state) !== 'email') {
+      throw new AppError(400, 'Etapa 2FA incorreta para este codigo')
+    }
 
     const storedCode = await redis.get(`2fa_email:${twoFactorToken}`)
-    if (!storedCode || storedCode !== code) throw new AppError(401, "Código de e-mail inválido ou expirado.")
+    if (!storedCode || storedCode !== code) {
+      throw new AppError(401, 'Codigo de e-mail invalido ou expirado.')
+    }
 
-    // Marca email como verificado
-    state.emailVerified = true
-    await redis.setex(`2fa_login:${twoFactorToken}`, 600, JSON.stringify(state))
     await redis.del(`2fa_email:${twoFactorToken}`)
+    const result = await advanceTwoFactorFlow(twoFactorToken, state)
 
-    // Envia código SMS
-    const user = await prisma.user.findUnique({ where: { id: state.userId }, select: { phone: true } })
-    if (!user?.phone) throw new AppError(400, "Telefone não cadastrado.")
-
-    const smsCode = generateOtp()
-    await redis.setex(`2fa_sms:${twoFactorToken}`, 300, smsCode)
-    await smsService.sendOtp(user.phone, smsCode)
-
-    logger.info("2FA email OTP verified, SMS sent", { userId: state.userId })
-    res.json({ success: true, data: { step: "sms", maskedPhone: maskPhone(user.phone) } })
-  } catch (error) { next(error) }
+    res.json({ success: true, data: result })
+  } catch (error) {
+    next(error)
+  }
 })
 
-// ─── POST /2fa/verify-sms-otp ─────────────────────────────────────────────────
-
-authRouter.post("/2fa/verify-sms-otp", authRateLimiter, async (req, res, next) => {
+authRouter.post('/2fa/verify-sms-otp', authRateLimiter, async (req, res, next) => {
   try {
     const { twoFactorToken, code } = z.object({
       twoFactorToken: z.string(),
       code: z.string().length(6),
     }).parse(req.body)
 
-    const raw = await redis.get(`2fa_login:${twoFactorToken}`)
-    if (!raw) throw new AppError(401, "Sessão expirada. Faça login novamente.")
-    const state = JSON.parse(raw) as { userId: string; email: string; role: string; emailVerified: boolean }
+    const state = await loadTwoFactorState(twoFactorToken)
 
-    if (!state.emailVerified) throw new AppError(400, "E-mail ainda não verificado.")
+    if (getCurrentTwoFactorChannel(state) !== 'sms') {
+      throw new AppError(400, 'Etapa 2FA incorreta para este codigo')
+    }
 
     const storedCode = await redis.get(`2fa_sms:${twoFactorToken}`)
-    if (!storedCode || storedCode !== code) throw new AppError(401, "Código SMS inválido ou expirado.")
+    if (!storedCode || storedCode !== code) {
+      throw new AppError(401, 'Codigo SMS invalido ou expirado.')
+    }
 
-    await redis.del(`2fa_login:${twoFactorToken}`)
     await redis.del(`2fa_sms:${twoFactorToken}`)
+    const result = await advanceTwoFactorFlow(twoFactorToken, state)
 
-    // Cria sessionToken para o NextAuth completar o login
-    const sessionToken = crypto.randomUUID()
-    await redis.setex(`2fa_session:${sessionToken}`, 120, JSON.stringify({
-      userId: state.userId, email: state.email, role: state.role,
-    }))
-
-    logger.info("2FA fully verified", { userId: state.userId })
-    res.json({ success: true, data: { sessionToken } })
-  } catch (error) { next(error) }
+    res.json({ success: true, data: result })
+  } catch (error) {
+    next(error)
+  }
 })
 
-// ─── POST /refresh ────────────────────────────────────────────────────────────
-
-authRouter.post("/refresh", async (req, res, next) => {
+authRouter.post('/refresh', async (req, res, next) => {
   try {
     const cookieToken = req.cookies?.refresh_token as string | undefined
     const bodyResult = z.object({ refreshToken: z.string() }).safeParse(req.body)
     const token = cookieToken ?? (bodyResult.success ? bodyResult.data.refreshToken : undefined)
-    if (!token) throw new AppError(401, "Refresh token required")
+
+    if (!token) {
+      throw new AppError(401, 'Refresh token required')
+    }
+
     const payload = verifyRefreshToken(token)
     const stored = await redis.get(`refresh:${payload.sub}`)
-    if (!stored || stored !== token) throw new AppError(401, "Invalid refresh token")
+
+    if (!stored || stored !== token) {
+      throw new AppError(401, 'Invalid refresh token')
+    }
+
     const user = await prisma.user.findUnique({ where: { id: payload.sub } })
-    if (!user) throw new AppError(401, "User not found")
+    if (!user) {
+      throw new AppError(401, 'User not found')
+    }
+
     const access = buildAccessContext(user)
     const newAccessToken = signAccessToken(access.accessTokenPayload)
     const newRefreshToken = signRefreshToken(user.id)
+
     await redis.setex(`refresh:${user.id}`, 7 * 24 * 60 * 60, newRefreshToken)
+
     res
-      .cookie("access_token", newAccessToken, { ...COOKIE_OPTS, maxAge: 15 * 60 * 1000 })
-      .cookie("refresh_token", newRefreshToken, { ...COOKIE_OPTS, maxAge: 7 * 24 * 60 * 60 * 1000 })
-      .json({ success: true, data: { accessToken: newAccessToken, refreshToken: newRefreshToken } })
-  } catch (error) { next(error) }
+      .cookie('access_token', newAccessToken, { ...COOKIE_OPTS, maxAge: 15 * 60 * 1000 })
+      .cookie('refresh_token', newRefreshToken, { ...COOKIE_OPTS, maxAge: 7 * 24 * 60 * 60 * 1000 })
+      .json({
+        success: true,
+        data: {
+          accessToken: newAccessToken,
+          refreshToken: newRefreshToken,
+        },
+      })
+  } catch (error) {
+    next(error)
+  }
 })
 
-// ─── POST /logout ─────────────────────────────────────────────────────────────
-
-authRouter.post("/logout", authenticate, async (req, res, next) => {
+authRouter.post('/logout', authenticate, async (req, res, next) => {
   try {
     if (req.user) {
       await redis.del(`refresh:${req.user.sub}`)
-      await prisma.auditLog.create({ data: { userId: req.user.sub, action: "LOGOUT", resource: "auth", ip: req.ip ?? null, details: {} } })
+      await prisma.auditLog.create({
+        data: {
+          userId: req.user.sub,
+          action: 'LOGOUT',
+          resource: 'auth',
+          ip: req.ip ?? null,
+          details: {},
+        },
+      })
     }
-    res.clearCookie("access_token").clearCookie("refresh_token").json({ success: true, message: "Logged out successfully" })
-  } catch (error) { next(error) }
+
+    res
+      .clearCookie('access_token')
+      .clearCookie('refresh_token')
+      .json({ success: true, message: 'Logged out successfully' })
+  } catch (error) {
+    next(error)
+  }
 })
 
-// ─── GET /me ──────────────────────────────────────────────────────────────────
-
-authRouter.get("/me", authenticate, async (req, res, next) => {
+authRouter.get('/me', authenticate, async (req, res, next) => {
   try {
     const user = await prisma.user.findUnique({
       where: { id: req.user!.sub },
@@ -293,109 +602,182 @@ authRouter.get("/me", authenticate, async (req, res, next) => {
         createdAt: true,
         lastLogin: true,
         twoFactorEnabled: true,
+        twoFactorEmailEnabled: true,
+        twoFactorSmsEnabled: true,
         allowedModules: true,
         mustChangePassword: true,
         photoUrl: true,
       },
     })
-    if (!user) throw new AppError(404, "User not found")
+
+    if (!user) {
+      throw new AppError(404, 'User not found')
+    }
+
     const access = buildAccessContext(user)
-    res.json({ success: true, data: { ...user, ...access.userPayload } })
-  } catch (error) { next(error) }
+
+    res.json({
+      success: true,
+      data: {
+        ...user,
+        ...access.userPayload,
+      },
+    })
+  } catch (error) {
+    next(error)
+  }
 })
 
-// ─── PUT /profile ─────────────────────────────────────────────────────────────
-
-authRouter.put("/profile", authenticate, async (req, res, next) => {
+authRouter.put('/profile', authenticate, async (req, res, next) => {
   try {
-    const { name, email, phone, photoUrl } = z.object({
-      name: z.string().min(2).optional(),
-      email: z.string().email().optional(),
-      phone: z.string().min(10).max(20).optional(),
-      photoUrl: z.string().url().nullable().optional(),
-    }).parse(req.body)
-
+    const { name, email, phone, photoUrl } = profileUpdateSchema.parse(req.body)
     const update: { name?: string; email?: string; phone?: string; photoUrl?: string | null } = {}
+
     if (name !== undefined) update.name = name.trim()
     if (email !== undefined) update.email = email.trim().toLowerCase()
-    if (phone !== undefined) update.phone = phone.replace(/\D/g, "")
+    if (phone !== undefined) update.phone = phone.replace(/\D/g, '')
     if (photoUrl !== undefined) update.photoUrl = photoUrl
 
     const user = await prisma.user.update({
       where: { id: req.user!.sub },
       data: update,
-      select: { id: true, email: true, name: true, phone: true, role: true, photoUrl: true },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        phone: true,
+        role: true,
+        photoUrl: true,
+      },
     })
+
     await prisma.auditLog.create({
-      data: { userId: req.user!.sub, action: "UPDATE_PROFILE", resource: "auth", ip: req.ip ?? null, details: update as object },
+      data: {
+        userId: req.user!.sub,
+        action: 'UPDATE_PROFILE',
+        resource: 'auth',
+        ip: req.ip ?? null,
+        details: update as object,
+      },
     })
-    logger.info("Profile updated", { userId: req.user!.sub })
+
+    logger.info('Profile updated', { userId: req.user!.sub })
     res.json({ success: true, data: user })
-  } catch (error) { next(error) }
+  } catch (error) {
+    next(error)
+  }
 })
 
-// ─── PUT /password ────────────────────────────────────────────────────────────
-
-authRouter.put("/password", authenticate, async (req, res, next) => {
+authRouter.put('/password', authenticate, async (req, res, next) => {
   try {
-    const { currentPassword, newPassword } = z.object({
-      currentPassword: z.string().min(8),
-      newPassword: z.string().min(8, "Nova senha deve ter no mínimo 8 caracteres"),
-    }).parse(req.body)
+    const { currentPassword, newPassword } = passwordUpdateSchema.parse(req.body)
 
     const user = await prisma.user.findUnique({ where: { id: req.user!.sub } })
-    if (!user) throw new AppError(404, "Usuário não encontrado")
+    if (!user) {
+      throw new AppError(404, 'Usuario nao encontrado')
+    }
 
     const isValid = await bcrypt.compare(currentPassword, user.passwordHash)
-    if (!isValid) throw new AppError(401, "Senha atual incorreta")
+    if (!isValid) {
+      throw new AppError(401, 'Senha atual incorreta')
+    }
 
     const passwordHash = await bcrypt.hash(newPassword, 12)
     await prisma.user.update({ where: { id: req.user!.sub }, data: { passwordHash } })
     await prisma.auditLog.create({
-      data: { userId: req.user!.sub, action: "CHANGE_PASSWORD", resource: "auth", ip: req.ip ?? null, details: {} },
+      data: {
+        userId: req.user!.sub,
+        action: 'CHANGE_PASSWORD',
+        resource: 'auth',
+        ip: req.ip ?? null,
+        details: {},
+      },
     })
-    logger.info("Password changed", { userId: req.user!.sub })
-    res.json({ success: true, message: "Senha alterada com sucesso" })
-  } catch (error) { next(error) }
+
+    logger.info('Password changed', { userId: req.user!.sub })
+    res.json({ success: true, message: 'Senha alterada com sucesso' })
+  } catch (error) {
+    next(error)
+  }
 })
 
-// ─── POST /2fa/toggle ─────────────────────────────────────────────────────────
+authRouter.put('/2fa/preferences', authenticate, async (req, res, next) => {
+  try {
+    const body = twoFactorPreferencesSchema.parse(req.body)
+    const result = await updateTwoFactorPreferences({
+      userId: req.user!.sub,
+      password: body.password,
+      enabled: body.enabled,
+      emailEnabled: body.emailEnabled,
+      smsEnabled: body.smsEnabled,
+      ip: req.ip ?? null,
+    })
 
-authRouter.post("/2fa/toggle", authenticate, async (req, res, next) => {
+    logger.info('2FA preferences updated', {
+      userId: req.user!.sub,
+      enabled: result.twoFactorEnabled,
+      emailEnabled: result.twoFactorEmailEnabled,
+      smsEnabled: result.twoFactorSmsEnabled,
+    })
+
+    res.json({
+      success: true,
+      message: result.message,
+      data: {
+        twoFactorEnabled: result.twoFactorEnabled,
+        twoFactorEmailEnabled: result.twoFactorEmailEnabled,
+        twoFactorSmsEnabled: result.twoFactorSmsEnabled,
+      },
+    })
+  } catch (error) {
+    next(error)
+  }
+})
+
+authRouter.post('/2fa/toggle', authenticate, async (req, res, next) => {
   try {
     const { enable, password } = z.object({
       enable: z.boolean(),
       password: z.string().min(1),
     }).parse(req.body)
 
-    const user = await prisma.user.findUnique({ where: { id: req.user!.sub } })
-    if (!user) throw new AppError(404, "Usuário não encontrado")
-
-    const isValid = await bcrypt.compare(password, user.passwordHash)
-    if (!isValid) throw new AppError(401, "Senha incorreta")
-
-    if (enable && !user.phone) throw new AppError(400, "Cadastre um telefone antes de ativar o 2FA")
-
-    await prisma.user.update({ where: { id: req.user!.sub }, data: { twoFactorEnabled: enable } })
-    await prisma.auditLog.create({
-      data: { userId: req.user!.sub, action: enable ? "2FA_ENABLED" : "2FA_DISABLED", resource: "auth", ip: req.ip ?? null, details: {} },
+    const result = await updateTwoFactorPreferences({
+      userId: req.user!.sub,
+      password,
+      enabled: enable,
+      smsEnabled: enable,
+      emailEnabled: false,
+      ip: req.ip ?? null,
     })
-    logger.info(`2FA ${enable ? "enabled" : "disabled"}`, { userId: req.user!.sub })
-    res.json({ success: true, message: enable ? "2FA ativado com sucesso" : "2FA desativado com sucesso" })
-  } catch (error) { next(error) }
+
+    res.json({
+      success: true,
+      message: result.message,
+      data: {
+        twoFactorEnabled: result.twoFactorEnabled,
+        twoFactorEmailEnabled: result.twoFactorEmailEnabled,
+        twoFactorSmsEnabled: result.twoFactorSmsEnabled,
+      },
+    })
+  } catch (error) {
+    next(error)
+  }
 })
 
-// ─── POST /set-password (primeiro login) ──────────────────────────────────────
-
-authRouter.post("/set-password", authenticate, async (req, res, next) => {
+authRouter.post('/set-password', authenticate, async (req, res, next) => {
   try {
     const { newPassword } = z.object({
-      newPassword: z.string().min(8, "A senha deve ter no mínimo 8 caracteres"),
+      newPassword: z.string().min(8, 'A senha deve ter no minimo 8 caracteres'),
     }).parse(req.body)
 
     const user = await prisma.user.findUnique({ where: { id: req.user!.sub } })
-    if (!user) throw new AppError(404, "Usuário não encontrado")
-    if (!user.mustChangePassword) throw new AppError(400, "Sem necessidade de troca de senha")
+    if (!user) {
+      throw new AppError(404, 'Usuario nao encontrado')
+    }
+
+    if (!user.mustChangePassword) {
+      throw new AppError(400, 'Sem necessidade de troca de senha')
+    }
 
     const passwordHash = await bcrypt.hash(newPassword, 12)
     await prisma.user.update({
@@ -403,53 +785,73 @@ authRouter.post("/set-password", authenticate, async (req, res, next) => {
       data: { passwordHash, mustChangePassword: false },
     })
     await prisma.auditLog.create({
-      data: { userId: req.user!.sub, action: "SET_INITIAL_PASSWORD", resource: "auth", ip: req.ip ?? null, details: {} },
+      data: {
+        userId: req.user!.sub,
+        action: 'SET_INITIAL_PASSWORD',
+        resource: 'auth',
+        ip: req.ip ?? null,
+        details: {},
+      },
     })
-    logger.info("Initial password set", { userId: req.user!.sub })
-    res.json({ success: true, message: "Senha definida com sucesso. Faça login com a nova senha." })
-  } catch (error) { next(error) }
+
+    logger.info('Initial password set', { userId: req.user!.sub })
+    res.json({ success: true, message: 'Senha definida com sucesso. Faca login com a nova senha.' })
+  } catch (error) {
+    next(error)
+  }
 })
 
-// ─── Google Calendar (mantido) ────────────────────────────────────────────────
-
-authRouter.get("/google", authenticate, authorize('ADMIN'), async (req, res, next) => {
+authRouter.get('/google', authenticate, authorize('ADMIN'), async (req, res, next) => {
   try {
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
-    const { googleCalendar } = require("../infrastructure/googleCalendar") as { googleCalendar: import("../infrastructure/googleCalendar").GoogleCalendarService }
+    const { googleCalendar } = require('../infrastructure/googleCalendar') as {
+      googleCalendar: import('../infrastructure/googleCalendar').GoogleCalendarService
+    }
     const state = crypto.randomUUID()
-    await redis.setex(`google:oauth:state:${state}`, 600, JSON.stringify({
-      userId: req.user!.sub,
-      role: req.user!.role,
-    }))
+
+    await redis.setex(
+      `google:oauth:state:${state}`,
+      600,
+      JSON.stringify({
+        userId: req.user!.sub,
+        role: req.user!.role,
+      })
+    )
+
     const url = googleCalendar.getAuthUrl(state)
     res.json({ success: true, data: { authUrl: url } })
-  } catch (error) { next(error) }
+  } catch (error) {
+    next(error)
+  }
 })
 
-authRouter.get("/google/callback", async (req, res, next) => {
+authRouter.get('/google/callback', async (req, res, next) => {
   try {
     const { code, state } = z.object({ code: z.string(), state: z.string() }).parse(req.query)
     const stateKey = `google:oauth:state:${state}`
     const authState = await redis.get(stateKey)
+
     if (!authState) {
-      throw new AppError(401, "Google OAuth state invalido ou expirado")
+      throw new AppError(401, 'Google OAuth state invalido ou expirado')
     }
 
     await redis.del(stateKey)
-    const { googleCalendar } = await import("../infrastructure/googleCalendar")
+    const { googleCalendar } = await import('../infrastructure/googleCalendar')
     await googleCalendar.handleCallback(code)
-    res.json({ success: true, message: "Google Calendar connected successfully" })
-  } catch (error) { next(error) }
+    res.json({ success: true, message: 'Google Calendar connected successfully' })
+  } catch (error) {
+    next(error)
+  }
 })
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
-
 function maskEmail(email: string): string {
-  const [local, domain] = email.split("@")
-  return `${local.slice(0, 2)}${"*".repeat(local.length - 2)}@${domain}`
+  const [local, domain] = email.split('@')
+  const visible = local.slice(0, Math.min(2, local.length))
+  const hidden = '*'.repeat(Math.max(1, local.length - visible.length))
+
+  return `${visible}${hidden}@${domain}`
 }
 
 function maskPhone(phone: string): string {
-  const digits = phone.replace(/\D/g, "")
-  return `${"*".repeat(digits.length - 4)}${digits.slice(-4)}`
+  const digits = phone.replace(/\D/g, '')
+  return `${'*'.repeat(Math.max(0, digits.length - 4))}${digits.slice(-4)}`
 }

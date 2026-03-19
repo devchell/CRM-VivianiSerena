@@ -12,6 +12,7 @@ import {
   Mail,
   Pencil,
   Phone,
+  Send,
   Shield,
   Square,
   Trash2,
@@ -26,6 +27,7 @@ import { crmPublicEnv } from '@/lib/public-env'
 const API_URL = crmPublicEnv.apiBaseUrl
 
 type ModuleKey = 'dashboard' | 'leads' | 'agenda' | 'financeiro' | 'editar-site' | 'seguranca'
+type CollaboratorTab = 'ACTIVE' | 'INACTIVE'
 
 type Collaborator = {
   id: string
@@ -40,6 +42,7 @@ type Collaborator = {
   createdAt: string
   lastLogin: string | null
   mustChangePassword: boolean
+  accountStatus: CollaboratorTab
 }
 
 type FormState = {
@@ -55,18 +58,27 @@ type ConfirmDeleteState = {
   name: string | null
 } | null
 
+type CollaboratorApiResponse = {
+  success?: boolean
+  message?: string
+  data?: Collaborator
+  meta?: {
+    inviteEmailSent?: boolean
+  }
+}
+
+const NON_ADMIN_MODULES: ModuleKey[] = ['dashboard', 'leads', 'agenda', 'financeiro']
+
 const MODULES: Array<{
   key: ModuleKey
   label: string
   description: string
   profiles: UserProfile[]
 }> = [
-  { key: 'dashboard', label: 'Dashboard', description: 'Indicadores e visao geral', profiles: ['MANAGER', 'OPERATOR', 'READONLY'] },
-  { key: 'leads', label: 'Leads', description: 'Pipeline comercial e acompanhamento', profiles: ['MANAGER', 'OPERATOR', 'READONLY'] },
-  { key: 'agenda', label: 'Agenda', description: 'Agendamentos e calendario', profiles: ['MANAGER', 'OPERATOR', 'READONLY'] },
-  { key: 'financeiro', label: 'Financeiro', description: 'Lancamentos e relatorios', profiles: ['MANAGER', 'OPERATOR', 'READONLY'] },
-  { key: 'editar-site', label: 'Editar Site', description: 'Edicao e publicacao da landing', profiles: ['MANAGER'] },
-  { key: 'seguranca', label: 'Seguranca', description: 'Monitoramento e checklist', profiles: ['MANAGER', 'OPERATOR', 'READONLY'] },
+  { key: 'dashboard', label: 'Dashboard', description: 'Indicadores e visao geral', profiles: ['COLLABORATOR', 'VIEWER'] },
+  { key: 'leads', label: 'Leads', description: 'Pipeline comercial e acompanhamento', profiles: ['COLLABORATOR', 'VIEWER'] },
+  { key: 'agenda', label: 'Agenda', description: 'Agendamentos e calendario', profiles: ['COLLABORATOR', 'VIEWER'] },
+  { key: 'financeiro', label: 'Financeiro', description: 'Lancamentos e relatorios', profiles: ['COLLABORATOR', 'VIEWER'] },
 ]
 
 const PROFILE_META: Record<UserProfile, {
@@ -77,25 +89,19 @@ const PROFILE_META: Record<UserProfile, {
 }> = {
   ADMIN: {
     label: 'Admin',
-    description: 'Controle total do sistema',
+    description: 'Acesso total ao CRM',
     icon: Crown,
     badge: 'text-amber-600 bg-amber-500/10',
   },
-  MANAGER: {
-    label: 'Gestor',
-    description: 'Opera modulos, pode editar site e publicar',
-    icon: Shield,
-    badge: 'text-violet-500 bg-violet-500/10',
-  },
-  OPERATOR: {
-    label: 'Operador',
-    description: 'Trabalha nos modulos liberados',
+  COLLABORATOR: {
+    label: 'Colaborador',
+    description: 'Opera dashboard, leads, agenda e financeiro',
     icon: Users,
     badge: 'text-blue-500 bg-blue-500/10',
   },
-  READONLY: {
-    label: 'Somente leitura',
-    description: 'Consulta os modulos liberados sem alterar dados',
+  VIEWER: {
+    label: 'Viewer',
+    description: 'Consulta dashboard, leads, agenda e financeiro',
     icon: Eye,
     badge: 'text-emerald-500 bg-emerald-500/10',
   },
@@ -105,7 +111,7 @@ const EMPTY_FORM: FormState = {
   name: '',
   email: '',
   phone: '',
-  profile: 'OPERATOR',
+  profile: 'COLLABORATOR',
   allowedModules: ['dashboard'],
 }
 
@@ -114,12 +120,7 @@ function sanitizeModulesForProfile(profile: UserProfile, modules: ModuleKey[]): 
     return []
   }
 
-  const allowed = new Set(
-    MODULES
-      .filter((module) => module.profiles.includes(profile))
-      .map((module) => module.key)
-  )
-
+  const allowed = new Set(NON_ADMIN_MODULES)
   const sanitized = modules.filter((module) => allowed.has(module))
   return sanitized.length > 0 ? [...new Set(sanitized)] : ['dashboard']
 }
@@ -179,9 +180,10 @@ export default function ColaboradoresPage() {
   const [showModal, setShowModal] = useState(false)
   const [editing, setEditing] = useState<Collaborator | null>(null)
   const [saving, setSaving] = useState(false)
-  const [deleting, setDeleting] = useState<string | null>(null)
+  const [actionKey, setActionKey] = useState<string | null>(null)
   const [form, setForm] = useState<FormState>(EMPTY_FORM)
   const [confirmDelete, setConfirmDelete] = useState<ConfirmDeleteState>(null)
+  const [activeTab, setActiveTab] = useState<CollaboratorTab>('ACTIVE')
 
   const canManageUsers = hasPermission('users.manage')
   const headers = { Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json' }
@@ -191,7 +193,9 @@ export default function ColaboradoresPage() {
 
     setLoading(true)
     try {
-      const res = await fetch(`${API_URL}/api/v1/users`, { headers: { Authorization: `Bearer ${accessToken}` } })
+      const res = await fetch(`${API_URL}/api/v1/users`, {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      })
       if (!res.ok) throw new Error()
       const data = await res.json() as { data: Collaborator[] }
       setUsers(data.data ?? [])
@@ -206,15 +210,18 @@ export default function ColaboradoresPage() {
     void fetchUsers()
   }, [fetchUsers])
 
-  const stats = useMemo(() => {
-    return {
-      total: users.length,
-      admins: users.filter((user) => user.profile === 'ADMIN').length,
-      managers: users.filter((user) => user.profile === 'MANAGER').length,
-      operators: users.filter((user) => user.profile === 'OPERATOR').length,
-      readonly: users.filter((user) => user.profile === 'READONLY').length,
-    }
-  }, [users])
+  const activeUsers = useMemo(() => users.filter((user) => user.accountStatus === 'ACTIVE'), [users])
+  const inactiveUsers = useMemo(() => users.filter((user) => user.accountStatus === 'INACTIVE'), [users])
+  const visibleUsers = activeTab === 'ACTIVE' ? activeUsers : inactiveUsers
+
+  const stats = useMemo(() => ({
+    total: users.length,
+    admins: users.filter((user) => user.profile === 'ADMIN').length,
+    collaborators: users.filter((user) => user.profile === 'COLLABORATOR').length,
+    viewers: users.filter((user) => user.profile === 'VIEWER').length,
+    active: activeUsers.length,
+    inactive: inactiveUsers.length,
+  }), [users, activeUsers.length, inactiveUsers.length])
 
   function openCreate() {
     setEditing(null)
@@ -244,8 +251,7 @@ export default function ColaboradoresPage() {
 
   function toggleModule(module: ModuleKey) {
     setForm((current) => {
-      const supported = MODULES.find((item) => item.key === module)?.profiles.includes(current.profile)
-      if (!supported) {
+      if (current.profile === 'ADMIN' || !NON_ADMIN_MODULES.includes(module)) {
         return current
       }
 
@@ -265,19 +271,24 @@ export default function ColaboradoresPage() {
     setSaving(true)
 
     try {
+      const allowedModules = form.profile === 'ADMIN'
+        ? []
+        : sanitizeModulesForProfile(form.profile, form.allowedModules)
+
       const payload = editing
         ? {
             name: form.name,
+            email: editing.accountStatus === 'INACTIVE' ? form.email : undefined,
             phone: form.phone,
             profile: form.profile,
-            allowedModules: form.profile === 'ADMIN' ? [] : sanitizeModulesForProfile(form.profile, form.allowedModules),
+            allowedModules,
           }
         : {
             name: form.name,
             email: form.email,
             phone: form.phone,
             profile: form.profile,
-            allowedModules: form.profile === 'ADMIN' ? [] : sanitizeModulesForProfile(form.profile, form.allowedModules),
+            allowedModules,
           }
 
       const url = editing ? `${API_URL}/api/v1/users/${editing.id}` : `${API_URL}/api/v1/users`
@@ -289,12 +300,20 @@ export default function ColaboradoresPage() {
         body: JSON.stringify(payload),
       })
 
-      const data = await res.json() as { success?: boolean; message?: string; data?: Collaborator }
+      const data = await res.json() as CollaboratorApiResponse
       if (!res.ok || !data.success) {
         throw new Error(data.message ?? 'Erro ao salvar colaborador')
       }
 
-      toast.success(editing ? 'Colaborador atualizado' : 'Convite enviado por e-mail')
+      if (editing) {
+        toast.success('Colaborador atualizado')
+      } else if (data.meta?.inviteEmailSent) {
+        toast.success('Convite enviado por e-mail')
+      } else {
+        toast.warning('Colaborador criado, mas o e-mail falhou. Use o botao "Reenviar e-mail" na aba Inativos.')
+        setActiveTab('INACTIVE')
+      }
+
       setShowModal(false)
       await fetchUsers()
 
@@ -303,7 +322,7 @@ export default function ColaboradoresPage() {
           user: {
             name: form.name,
             profile: form.profile,
-            allowedModules: payload.allowedModules,
+            allowedModules,
           },
         })
       }
@@ -315,7 +334,7 @@ export default function ColaboradoresPage() {
   }
 
   async function handleDelete(id: string) {
-    setDeleting(id)
+    setActionKey(`delete:${id}`)
     try {
       const res = await fetch(`${API_URL}/api/v1/users/${id}`, {
         method: 'DELETE',
@@ -329,8 +348,35 @@ export default function ColaboradoresPage() {
     } catch {
       toast.error('Erro ao remover colaborador')
     } finally {
-      setDeleting(null)
+      setActionKey(null)
       setConfirmDelete(null)
+    }
+  }
+
+  async function handleResendInvite(user: Collaborator) {
+    setActionKey(`invite:${user.id}`)
+    try {
+      const res = await fetch(`${API_URL}/api/v1/users/${user.id}/resend-invite`, {
+        method: 'POST',
+        headers,
+      })
+      const data = await res.json() as CollaboratorApiResponse
+
+      if (!res.ok || !data.success) {
+        throw new Error(data.message ?? 'Erro ao reenviar e-mail')
+      }
+
+      if (data.meta?.inviteEmailSent) {
+        toast.success('E-mail reenviado com sucesso')
+      } else {
+        toast.warning('O e-mail falhou novamente. Revise o cadastro ou a configuracao SMTP.')
+      }
+
+      await fetchUsers()
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Erro ao reenviar e-mail')
+    } finally {
+      setActionKey(null)
     }
   }
 
@@ -348,7 +394,7 @@ export default function ColaboradoresPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="font-heading text-2xl font-bold text-charcoal dark:text-charcoal-50">Colaboradores</h1>
-          <p className="text-charcoal-400 text-sm mt-1">Perfis novos: Admin, Gestor, Operador e Somente leitura.</p>
+          <p className="text-charcoal-400 text-sm mt-1">Perfis disponiveis: Admin, Colaborador e Viewer.</p>
         </div>
         <button
           onClick={openCreate}
@@ -359,13 +405,14 @@ export default function ColaboradoresPage() {
         </button>
       </div>
 
-      <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-6 gap-4">
         {[
           { label: 'Total', value: stats.total, icon: Users, color: 'text-rose-gold', bg: 'bg-rose-gold/10' },
           { label: 'Admins', value: stats.admins, icon: Crown, color: 'text-amber-500', bg: 'bg-amber-500/10' },
-          { label: 'Gestores', value: stats.managers, icon: Shield, color: 'text-violet-500', bg: 'bg-violet-500/10' },
-          { label: 'Operadores', value: stats.operators, icon: Users, color: 'text-blue-500', bg: 'bg-blue-500/10' },
-          { label: 'Somente leitura', value: stats.readonly, icon: Eye, color: 'text-emerald-500', bg: 'bg-emerald-500/10' },
+          { label: 'Colaboradores', value: stats.collaborators, icon: Users, color: 'text-blue-500', bg: 'bg-blue-500/10' },
+          { label: 'Viewers', value: stats.viewers, icon: Eye, color: 'text-emerald-500', bg: 'bg-emerald-500/10' },
+          { label: 'Ativos', value: stats.active, icon: CheckSquare, color: 'text-green-600', bg: 'bg-green-500/10' },
+          { label: 'Inativos', value: stats.inactive, icon: Mail, color: 'text-orange-500', bg: 'bg-orange-500/10' },
         ].map((item) => (
           <div key={item.label} className="card-dark p-4 shadow-sm flex items-center gap-3">
             <div className={`w-9 h-9 rounded-xl ${item.bg} flex items-center justify-center flex-shrink-0`}>
@@ -379,23 +426,43 @@ export default function ColaboradoresPage() {
         ))}
       </div>
 
+      <div className="card-dark p-2 shadow-sm flex gap-2">
+        {([
+          { key: 'ACTIVE', label: `Ativos (${stats.active})` },
+          { key: 'INACTIVE', label: `Inativos (${stats.inactive})` },
+        ] as const).map((tab) => (
+          <button
+            key={tab.key}
+            onClick={() => setActiveTab(tab.key)}
+            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+              activeTab === tab.key
+                ? 'bg-rose-gold text-white'
+                : 'text-charcoal-400 hover:bg-blush dark:hover:bg-charcoal-700'
+            }`}
+          >
+            {tab.label}
+          </button>
+        ))}
+      </div>
+
       <div className="card-dark overflow-hidden shadow-sm">
         {loading ? (
           <div className="flex items-center justify-center py-16">
             <Loader2 size={24} className="animate-spin text-rose-gold" />
           </div>
-        ) : users.length === 0 ? (
+        ) : visibleUsers.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 text-center">
             <Users size={36} className="text-charcoal-300 mb-3" />
-            <p className="text-charcoal-400 text-sm">Nenhum colaborador cadastrado.</p>
-            <button onClick={openCreate} className="mt-3 text-rose-gold text-sm hover:underline">+ Adicionar o primeiro</button>
+            <p className="text-charcoal-400 text-sm">
+              {activeTab === 'ACTIVE' ? 'Nenhum colaborador ativo encontrado.' : 'Nenhum colaborador inativo encontrado.'}
+            </p>
           </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead className="border-b border-blush-100 dark:border-charcoal-700">
                 <tr>
-                  {['Colaborador', 'Perfil', 'Modulos', 'Ultimo acesso', ''].map((header) => (
+                  {['Colaborador', 'Perfil', 'Modulos', activeTab === 'ACTIVE' ? 'Ultimo acesso' : 'Status', ''].map((header) => (
                     <th key={header} className="px-4 py-3 text-left text-xs font-semibold text-charcoal-400 uppercase tracking-wide">
                       {header}
                     </th>
@@ -403,12 +470,15 @@ export default function ColaboradoresPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-blush-50 dark:divide-charcoal-700/40">
-                {users.map((user) => {
+                {visibleUsers.map((user) => {
                   const meta = PROFILE_META[user.profile]
                   const Icon = meta.icon
+                  const isInviting = actionKey === `invite:${user.id}`
+                  const isDeleting = actionKey === `delete:${user.id}`
+                  const canEditEmail = user.accountStatus === 'INACTIVE'
 
                   return (
-                    <tr key={user.id} className="hover:bg-blush-50 dark:hover:bg-charcoal-700/20 transition-colors group">
+                    <tr key={user.id} className="hover:bg-blush-50 dark:hover:bg-charcoal-700/20 transition-colors">
                       <td className="px-4 py-3">
                         <div className="min-w-0">
                           <p className="text-sm font-medium text-charcoal dark:text-charcoal-100 truncate">{user.name ?? 'Sem nome'}</p>
@@ -422,6 +492,9 @@ export default function ColaboradoresPage() {
                               {user.phone}
                             </div>
                           ) : null}
+                          {canEditEmail ? (
+                            <p className="text-[11px] text-orange-500 mt-1">Cadastro pendente. E-mail ainda pode ser alterado.</p>
+                          ) : null}
                         </div>
                       </td>
                       <td className="px-4 py-3">
@@ -429,17 +502,10 @@ export default function ColaboradoresPage() {
                           <Icon size={10} />
                           {meta.label}
                         </span>
-                        {user.mustChangePassword ? (
-                          <span className="ml-1 inline-flex text-xs text-orange-500 bg-orange-500/10 px-1.5 py-0.5 rounded-full">
-                            Primeiro login
-                          </span>
-                        ) : null}
                       </td>
                       <td className="px-4 py-3">
                         {user.profile === 'ADMIN' ? (
                           <span className="text-xs text-charcoal-400">Todos</span>
-                        ) : user.allowedModules.length === 0 ? (
-                          <span className="text-xs text-charcoal-400">Nenhum</span>
                         ) : (
                           <div className="flex flex-wrap gap-1 max-w-[240px]">
                             {user.allowedModules.map((module) => (
@@ -451,23 +517,39 @@ export default function ColaboradoresPage() {
                         )}
                       </td>
                       <td className="px-4 py-3 text-xs text-charcoal-400">
-                        {user.lastLogin ? new Date(user.lastLogin).toLocaleDateString('pt-BR') : 'Nunca'}
+                        {activeTab === 'ACTIVE'
+                          ? new Date(user.lastLogin ?? '').toLocaleDateString('pt-BR')
+                          : 'Aguardando primeiro acesso'}
                       </td>
                       <td className="px-4 py-3">
-                        <div className="flex items-center gap-1">
+                        <div className="flex items-center gap-1 justify-end">
                           <button
                             onClick={() => openEdit(user)}
                             className="p-1.5 rounded-lg text-charcoal-400 hover:text-rose-gold hover:bg-rose-gold/10 transition-colors"
+                            title="Editar colaborador"
                           >
                             <Pencil size={13} />
                           </button>
-                          <button
-                            onClick={() => setConfirmDelete({ id: user.id, name: user.name })}
-                            disabled={deleting === user.id}
-                            className="p-1.5 rounded-lg text-charcoal-400 hover:text-red-400 hover:bg-red-400/10 transition-colors disabled:opacity-50"
-                          >
-                            {deleting === user.id ? <Loader2 size={13} className="animate-spin" /> : <Trash2 size={13} />}
-                          </button>
+                          {user.accountStatus === 'INACTIVE' ? (
+                            <>
+                              <button
+                                onClick={() => void handleResendInvite(user)}
+                                disabled={Boolean(actionKey)}
+                                className="p-1.5 rounded-lg text-charcoal-400 hover:text-blue-500 hover:bg-blue-500/10 transition-colors disabled:opacity-50"
+                                title="Reenviar e-mail"
+                              >
+                                {isInviting ? <Loader2 size={13} className="animate-spin" /> : <Send size={13} />}
+                              </button>
+                              <button
+                                onClick={() => setConfirmDelete({ id: user.id, name: user.name })}
+                                disabled={Boolean(actionKey)}
+                                className="p-1.5 rounded-lg text-charcoal-400 hover:text-red-400 hover:bg-red-400/10 transition-colors disabled:opacity-50"
+                                title="Remover colaborador"
+                              >
+                                {isDeleting ? <Loader2 size={13} className="animate-spin" /> : <Trash2 size={13} />}
+                              </button>
+                            </>
+                          ) : null}
                         </div>
                       </td>
                     </tr>
@@ -481,7 +563,7 @@ export default function ColaboradoresPage() {
 
       <ConfirmDeleteModal
         state={confirmDelete}
-        isLoading={Boolean(deleting)}
+        isLoading={Boolean(actionKey?.startsWith('delete:'))}
         onClose={() => setConfirmDelete(null)}
         onConfirm={() => confirmDelete ? void handleDelete(confirmDelete.id) : undefined}
       />
@@ -500,7 +582,13 @@ export default function ColaboradoresPage() {
                   {editing ? 'Editar colaborador' : 'Adicionar colaborador'}
                 </h2>
                 {!editing ? (
-                  <p className="text-xs text-charcoal-400 mt-0.5">A senha temporaria sera enviada por e-mail automaticamente.</p>
+                  <p className="text-xs text-charcoal-400 mt-0.5">
+                    Se o e-mail falhar, o colaborador ficara em Inativos para ajuste e reenvio.
+                  </p>
+                ) : editing.accountStatus === 'INACTIVE' ? (
+                  <p className="text-xs text-charcoal-400 mt-0.5">
+                    Conta inativa: todos os campos podem ser corrigidos antes do primeiro acesso.
+                  </p>
                 ) : null}
               </div>
               <button onClick={() => setShowModal(false)} className="text-charcoal-400 hover:text-charcoal dark:hover:text-charcoal-100">
@@ -537,7 +625,7 @@ export default function ColaboradoresPage() {
                   required
                   type="email"
                   value={form.email}
-                  disabled={Boolean(editing)}
+                  disabled={Boolean(editing && editing.accountStatus === 'ACTIVE')}
                   onChange={(event) => setForm((current) => ({ ...current, email: event.target.value }))}
                   className="w-full px-3 py-2 text-sm rounded-lg border border-blush-300 dark:border-charcoal-600 bg-white dark:bg-charcoal-700 text-charcoal dark:text-charcoal-100 focus:outline-none focus:ring-2 focus:ring-rose-gold/40 disabled:opacity-60 disabled:cursor-not-allowed"
                 />
@@ -545,7 +633,7 @@ export default function ColaboradoresPage() {
 
               <div>
                 <label className="block text-xs font-medium text-charcoal-400 mb-2">Perfil *</label>
-                <div className="grid grid-cols-1 gap-3 lg:grid-cols-4">
+                <div className="grid grid-cols-1 gap-3 lg:grid-cols-3">
                   {(Object.keys(PROFILE_META) as UserProfile[]).map((profile) => {
                     const meta = PROFILE_META[profile]
                     const Icon = meta.icon
@@ -576,7 +664,6 @@ export default function ColaboradoresPage() {
                   <label className="block text-xs font-medium text-charcoal-400 mb-2">Modulos liberados</label>
                   <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
                     {MODULES.map((module) => {
-                      const supported = module.profiles.includes(form.profile)
                       const active = form.allowedModules.includes(module.key)
 
                       return (
@@ -584,17 +671,16 @@ export default function ColaboradoresPage() {
                           key={module.key}
                           type="button"
                           onClick={() => toggleModule(module.key)}
-                          disabled={!supported}
                           className={`flex items-start gap-2.5 px-3 py-3 rounded-xl border text-left transition-all text-sm ${
                             active
                               ? 'border-rose-gold bg-rose-gold/5 text-rose-gold'
                               : 'border-blush-300 dark:border-charcoal-600 text-charcoal-400 hover:border-rose-gold/30'
-                          } ${!supported ? 'opacity-40 cursor-not-allowed' : ''}`}
+                          }`}
                         >
                           {active ? <CheckSquare size={15} className="flex-shrink-0 mt-0.5" /> : <Square size={15} className="flex-shrink-0 mt-0.5" />}
                           <span>
                             <strong className="block">{module.label}</strong>
-                            <span className="text-xs opacity-70">{supported ? module.description : 'Nao disponivel para este perfil'}</span>
+                            <span className="text-xs opacity-70">{module.description}</span>
                           </span>
                         </button>
                       )
@@ -604,7 +690,9 @@ export default function ColaboradoresPage() {
               ) : null}
 
               <div className="rounded-xl border border-blush-200 dark:border-charcoal-700 bg-blush/40 dark:bg-charcoal-800/60 p-4 text-sm text-charcoal-500 dark:text-charcoal-400">
-                {form.profile === 'ADMIN' ? 'Admin recebe acesso total e nao depende de modulos individuais.' : PROFILE_META[form.profile].description}
+                {form.profile === 'ADMIN'
+                  ? 'Admin recebe acesso total, incluindo Editar Site, Seguranca e Colaboradores.'
+                  : PROFILE_META[form.profile].description}
               </div>
 
               <div className="flex gap-3 pt-2">
@@ -621,7 +709,7 @@ export default function ColaboradoresPage() {
                   className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl bg-rose-gold text-white text-sm font-semibold hover:bg-rose-gold/90 transition-colors disabled:opacity-60"
                 >
                   {saving ? <Loader2 size={14} className="animate-spin" /> : null}
-                  {editing ? 'Salvar alteracoes' : 'Criar e enviar convite'}
+                  {editing ? 'Salvar alteracoes' : 'Criar colaborador'}
                 </button>
               </div>
             </form>

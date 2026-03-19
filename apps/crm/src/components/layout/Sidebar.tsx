@@ -33,9 +33,8 @@ const NAV_ITEMS: NavItem[] = [
 
 function getRoleLabel(profile: string | null, isAdmin: boolean) {
   if (isAdmin || profile === 'ADMIN') return 'Administrador'
-  if (profile === 'MANAGER') return 'Gestor'
-  if (profile === 'READONLY') return 'Somente leitura'
-  return 'Operador'
+  if (profile === 'COLLABORATOR') return 'Colaborador'
+  return 'Viewer'
 }
 
 function Sidebar() {

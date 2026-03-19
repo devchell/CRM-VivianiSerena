@@ -90,6 +90,8 @@ model User {
   passwordHash       String    @map("password_hash")
   totpSecret         String?   @map("totp_secret")
   twoFactorEnabled   Boolean   @default(false) @map("two_factor_enabled")
+  twoFactorEmailEnabled Boolean @default(false) @map("two_factor_email_enabled")
+  twoFactorSmsEnabled Boolean   @default(false) @map("two_factor_sms_enabled")
   role               UserRole  @default(VIEWER)
   photoUrl           String?   @map("photo_url")
   mustChangePassword Boolean   @default(false) @map("must_change_password")

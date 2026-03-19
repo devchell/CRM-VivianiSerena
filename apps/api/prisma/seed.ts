@@ -26,6 +26,9 @@ async function main() {
       role: UserRole.ADMIN,
       allowedModules: [],
       mustChangePassword: false,
+      twoFactorEnabled: false,
+      twoFactorEmailEnabled: false,
+      twoFactorSmsEnabled: false,
     },
   })
 
@@ -37,6 +40,9 @@ async function main() {
       role: UserRole.VIEWER,
       allowedModules: ['dashboard', 'leads', 'financeiro'],
       mustChangePassword: false,
+      twoFactorEnabled: false,
+      twoFactorEmailEnabled: false,
+      twoFactorSmsEnabled: false,
     },
   })
 
