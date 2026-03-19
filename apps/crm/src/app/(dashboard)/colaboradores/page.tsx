@@ -56,6 +56,7 @@ type FormState = {
 type ConfirmDeleteState = {
   id: string
   name: string | null
+  email: string
 } | null
 
 type CollaboratorApiResponse = {
@@ -144,6 +145,7 @@ function ConfirmDeleteModal(props: {
           <p className="text-sm text-[#888] mt-2">
             Tem certeza que deseja remover <strong className="text-charcoal dark:text-[#e5e5e5]">{props.state.name ?? 'este colaborador'}</strong>?
           </p>
+          <p className="text-xs text-charcoal-400 mt-2">{props.state.email}</p>
         </div>
 
         <div className="flex items-start gap-2 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700/40 rounded-lg px-3 py-2.5 mb-5">
@@ -476,6 +478,7 @@ export default function ColaboradoresPage() {
                   const isInviting = actionKey === `invite:${user.id}`
                   const isDeleting = actionKey === `delete:${user.id}`
                   const canEditEmail = user.accountStatus === 'INACTIVE'
+                  const canDeleteUser = user.id !== userId
 
                   return (
                     <tr key={user.id} className="hover:bg-blush-50 dark:hover:bg-charcoal-700/20 transition-colors">
@@ -531,24 +534,24 @@ export default function ColaboradoresPage() {
                             <Pencil size={13} />
                           </button>
                           {user.accountStatus === 'INACTIVE' ? (
-                            <>
-                              <button
-                                onClick={() => void handleResendInvite(user)}
-                                disabled={Boolean(actionKey)}
-                                className="p-1.5 rounded-lg text-charcoal-400 hover:text-blue-500 hover:bg-blue-500/10 transition-colors disabled:opacity-50"
-                                title="Reenviar e-mail"
-                              >
-                                {isInviting ? <Loader2 size={13} className="animate-spin" /> : <Send size={13} />}
-                              </button>
-                              <button
-                                onClick={() => setConfirmDelete({ id: user.id, name: user.name })}
-                                disabled={Boolean(actionKey)}
-                                className="p-1.5 rounded-lg text-charcoal-400 hover:text-red-400 hover:bg-red-400/10 transition-colors disabled:opacity-50"
-                                title="Remover colaborador"
-                              >
-                                {isDeleting ? <Loader2 size={13} className="animate-spin" /> : <Trash2 size={13} />}
-                              </button>
-                            </>
+                            <button
+                              onClick={() => void handleResendInvite(user)}
+                              disabled={Boolean(actionKey)}
+                              className="p-1.5 rounded-lg text-charcoal-400 hover:text-blue-500 hover:bg-blue-500/10 transition-colors disabled:opacity-50"
+                              title="Reenviar e-mail"
+                            >
+                              {isInviting ? <Loader2 size={13} className="animate-spin" /> : <Send size={13} />}
+                            </button>
+                          ) : null}
+                          {canDeleteUser ? (
+                            <button
+                              onClick={() => setConfirmDelete({ id: user.id, name: user.name, email: user.email })}
+                              disabled={Boolean(actionKey)}
+                              className="p-1.5 rounded-lg text-charcoal-400 hover:text-red-400 hover:bg-red-400/10 transition-colors disabled:opacity-50"
+                              title="Excluir colaborador"
+                            >
+                              {isDeleting ? <Loader2 size={13} className="animate-spin" /> : <Trash2 size={13} />}
+                            </button>
                           ) : null}
                         </div>
                       </td>
