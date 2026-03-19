@@ -1,5 +1,6 @@
 'use client'
 
+import type { Session } from 'next-auth'
 import { useSession, signOut } from 'next-auth/react'
 import { usePathname, useRouter } from 'next/navigation'
 import { useMemo, useEffect } from 'react'
@@ -7,7 +8,7 @@ import Link from 'next/link'
 import {
   LayoutDashboard, Users, Calendar, DollarSign,
   Paintbrush, Shield, Settings, UserCheck, LogOut,
-  PanelLeftClose, PanelLeftOpen, Menu, Sparkles,
+  PanelLeftClose, Menu, Sparkles,
 } from 'lucide-react'
 import { useSidebar } from '@/hooks/useSidebar'
 
@@ -32,15 +33,18 @@ function Sidebar() {
   const { data: session, status } = useSession()
   const pathname = usePathname()
   const router = useRouter()
-  const { collapsed, toggle, mobileOpen, toggleMobile, closeMobile } = useSidebar()
+  const { collapsed, toggle, mobileOpen, closeMobile } = useSidebar()
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const rawUser = (session?.user ?? {}) as any
-  const role: string = typeof rawUser.role === 'string' ? rawUser.role : 'user'
+  const typedSession = session as Session | null
+  const rawUser = typedSession?.user
+  const role: string = typeof rawUser?.role === 'string' ? rawUser.role : 'user'
   const isAdmin = role === 'admin' || role === 'ADMIN'
-  const allowedModules: string[] = Array.isArray(rawUser.allowedModules) ? rawUser.allowedModules : []
+  const allowedModules = useMemo(
+    () => (Array.isArray(rawUser?.allowedModules) ? rawUser.allowedModules : []),
+    [rawUser?.allowedModules],
+  )
   const userName = (() => {
-    const name = (rawUser.name ?? '').toString().trim()
+    const name = (rawUser?.name ?? '').toString().trim()
     if (name) return name
     return 'Usuário'
   })()

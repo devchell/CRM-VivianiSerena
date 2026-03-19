@@ -2,6 +2,7 @@
 
 import { useEffect } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
+import type { Session } from 'next-auth'
 import { useSession } from 'next-auth/react'
 import { motion } from 'framer-motion'
 import Sidebar from '@/components/layout/Sidebar'
@@ -51,26 +52,24 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const { data: session, status, update } = useSession()
   const router = useRouter()
   const pathname = usePathname()
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const u = (session?.user as any) ?? {}
-  const role: string = typeof u.role === 'string' ? u.role : 'user'
-  const allowedModules: string[] = Array.isArray(u.allowedModules) ? u.allowedModules : []
-  const userName: string | null = session?.user?.name ?? null
-  const userEmail: string | null = session?.user?.email ?? null
-  const photoUrl: string | null = u.photoUrl ?? session?.user?.image ?? null
-  const accessToken: string = (session as any)?.accessToken ?? ''
-  const mustChangePassword: boolean = u.mustChangePassword ?? false
+  const typedSession = session as Session | null
+  const u = typedSession?.user
+  const role: string = typeof u?.role === 'string' ? u.role : 'user'
+  const allowedModules: string[] = Array.isArray(u?.allowedModules) ? u.allowedModules : []
+  const userName: string | null = typedSession?.user?.name ?? null
+  const userEmail: string | null = typedSession?.user?.email ?? null
+  const photoUrl: string | null = u?.photoUrl ?? typedSession?.user?.image ?? null
+  const accessToken: string = typedSession?.accessToken ?? ''
+  const mustChangePassword: boolean = u?.mustChangePassword ?? false
   const isAdmin = role === 'ADMIN' || role === 'admin'
   const hasRouteAccess = canAccessPath(pathname ?? '/', isAdmin, allowedModules)
   const fallbackRoute = resolveAuthorizedFallback(isAdmin, allowedModules)
 
   useEffect(() => {
     if (status === 'unauthenticated') router.push('/login')
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const s = session as any
-    if (status === 'authenticated' && s?.error === 'RefreshAccessTokenError') router.push('/login')
-    if (status === 'authenticated' && s?.user?.mustChangePassword) router.push('/definir-senha')
-  }, [status, router, session])
+    if (status === 'authenticated' && typedSession?.error === 'RefreshAccessTokenError') router.push('/login')
+    if (status === 'authenticated' && typedSession?.user?.mustChangePassword) router.push('/definir-senha')
+  }, [status, router, typedSession])
 
   useEffect(() => {
     if (status === 'authenticated' && !hasRouteAccess) {

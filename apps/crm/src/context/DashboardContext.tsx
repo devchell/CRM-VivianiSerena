@@ -1,9 +1,13 @@
 'use client'
 
 import { createContext, useContext } from 'react'
+import type { Session } from 'next-auth'
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type UpdateFn = (data?: any) => Promise<any>
+type SessionUpdatePayload = Partial<Omit<Session, 'user'>> & {
+  user?: Partial<Session['user']>
+}
+
+type UpdateFn = (data?: SessionUpdatePayload) => Promise<Session | null>
 
 export interface DashboardContextValue {
   role: string

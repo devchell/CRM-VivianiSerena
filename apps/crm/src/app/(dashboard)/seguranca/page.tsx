@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import { useAuth } from '@/lib/useAuth'
 import { toast } from 'sonner'
 import {
@@ -9,7 +9,7 @@ import {
 } from 'recharts'
 import {
   Shield, ShieldCheck, ShieldAlert, ShieldX, Users,
-  Clock, CheckCircle2, AlertTriangle, XCircle, Info,
+  Clock, CheckCircle2, XCircle, Info,
   RefreshCw, Bell, Download, Zap, Lock, Eye, Globe,
   ChevronDown, ChevronUp, X, Activity, Wifi, Server,
 } from 'lucide-react'
@@ -320,7 +320,7 @@ export default function SegurancaPage() {
   const [notifPermission, setNotifPermission] = useState<NotificationPermission>('default')
   const socketRef = useRef<ReturnType<typeof import('socket.io-client').io> | null>(null)
 
-  const headers = { Authorization: `Bearer ${accessToken}` }
+  const headers = useMemo(() => ({ Authorization: `Bearer ${accessToken}` }), [accessToken])
 
   const fetchEvents = useCallback(async () => {
     if (!accessToken) return
@@ -334,7 +334,7 @@ export default function SegurancaPage() {
         setLastCheck(new Date())
       }
     } catch { /* silent */ }
-  }, [accessToken, severityFilter])
+  }, [accessToken, headers, severityFilter])
 
   const fetchStats = useCallback(async () => {
     if (!accessToken) return
@@ -343,7 +343,7 @@ export default function SegurancaPage() {
       const res = await fetch(`${API_URL}/api/v1/security/stats`, { headers })
       if (res.ok) { const d = await res.json() as { data: SecurityStats }; setStats(d.data) }
     } catch { /* silent */ } finally { setLoading(false) }
-  }, [accessToken])
+  }, [accessToken, headers])
 
   const fetchActivity = useCallback(async () => {
     if (!accessToken) return
@@ -352,7 +352,7 @@ export default function SegurancaPage() {
       const res = await fetch(`${API_URL}/api/v1/security/activity`, { headers })
       if (res.ok) { const d = await res.json() as { data: ActivityPoint[] }; setActivity(d.data ?? []) }
     } catch { /* silent */ } finally { setActivityLoading(false) }
-  }, [accessToken])
+  }, [accessToken, headers])
 
   const fetchChecklist = useCallback(async () => {
     if (!accessToken) return
@@ -361,7 +361,7 @@ export default function SegurancaPage() {
       const res = await fetch(`${API_URL}/api/v1/security/checklist`, { headers })
       if (res.ok) { const d = await res.json() as { data: ChecklistItem[] }; setChecklist(d.data ?? []) }
     } catch { /* silent */ } finally { setChecklistLoading(false) }
-  }, [accessToken])
+  }, [accessToken, headers])
 
   const fetchAll = useCallback(async () => {
     await Promise.all([fetchEvents(), fetchStats(), fetchActivity(), fetchChecklist()])

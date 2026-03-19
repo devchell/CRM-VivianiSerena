@@ -320,9 +320,6 @@ export default function EditarSitePage() {
   }
 
   // ── History ────────────────────────────────────────────────────────────────
-  const fetchHistoryLegacy = async () => {
-    setHistory([])
-  }
 
   // Image dropzone ─────────────────────────────────────────────────────────
   const fetchHistory = async () => {

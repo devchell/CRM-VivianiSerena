@@ -3,7 +3,7 @@
 import { useEditor, EditorContent } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import Link from '@tiptap/extension-link'
-import { Bold, Italic, List, ListOrdered, Link2, Minus } from 'lucide-react'
+import { Bold, Italic, List, ListOrdered, Link2 } from 'lucide-react'
 
 interface RichTextEditorProps {
   value: string

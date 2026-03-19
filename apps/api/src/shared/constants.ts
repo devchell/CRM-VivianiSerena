@@ -51,9 +51,9 @@ export const BOT_USER_AGENTS = [
 ] as const
 
 export const SQL_INJECTION_PATTERNS = [
-  /(\b(SELECT|INSERT|UPDATE|DELETE|DROP|CREATE|ALTER|EXEC|UNION)\b)/i,
-  /(--|;|\/\*|\*\/)/,
-  /(\bOR\b\s+\d+\s*=\s*\d+)/i,
-  /(\bAND\b\s+\d+\s*=\s*\d+)/i,
-  /'(\s*)(OR|AND)(\s*)'.*='.*'/i,
+  /\bUNION\b[\s\S]{0,40}\bSELECT\b/i,
+  /(?:^|[\s('"])(?:OR|AND)\s+(?:\d+\s*=\s*\d+|'[^']*'\s*=\s*'[^']*'|"[^"]*"\s*=\s*"[^"]*")/i,
+  /;\s*(?:DROP|DELETE|TRUNCATE|ALTER|CREATE|EXEC)\b/i,
+  /(?:--|\/\*|\*\/)[\s\S]{0,40}\b(?:SELECT|INSERT|UPDATE|DELETE|DROP|UNION|ALTER|EXEC)\b/i,
+  /\b(?:SLEEP|BENCHMARK)\s*\(/i,
 ] as const
