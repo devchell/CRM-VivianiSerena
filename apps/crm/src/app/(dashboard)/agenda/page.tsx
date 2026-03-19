@@ -143,7 +143,7 @@ function buildDefaultForm(): CreateAppointmentDto {
 }
 
 export default function AgendaPage() {
-  const { accessToken } = useAuth()
+  const { accessToken, hasPermission } = useAuth()
   const [appointments, setAppointments] = useState<AppointmentListItem[]>([])
   const [leads, setLeads] = useState<Lead[]>([])
   const [loading, setLoading] = useState(true)
@@ -151,20 +151,27 @@ export default function AgendaPage() {
   const [submitting, setSubmitting] = useState(false)
   const [form, setForm] = useState<CreateAppointmentDto>(buildDefaultForm())
 
+  const canViewLeads = hasPermission('leads.view')
+  const canCreateAppointments = hasPermission('agenda.create') && canViewLeads
+
   useEffect(() => {
     if (!accessToken) return
 
     let active = true
     setLoading(true)
 
-    Promise.all([
+    const requests: [Promise<AppointmentsResponse>, Promise<LeadsResponse | { success: true; data: Lead[] }>] = [
       apiFetchJson<AppointmentsResponse>('/api/v1/appointments?limit=200', {
         headers: buildAuthHeaders(accessToken),
       }),
-      apiFetchJson<LeadsResponse>('/api/v1/leads?limit=200', {
-        headers: buildAuthHeaders(accessToken),
-      }),
-    ])
+      canViewLeads
+        ? apiFetchJson<LeadsResponse>('/api/v1/leads?limit=200', {
+            headers: buildAuthHeaders(accessToken),
+          })
+        : Promise.resolve({ success: true as const, data: [] }),
+    ]
+
+    Promise.all(requests)
       .then(([appointmentsResponse, leadsResponse]) => {
         if (!active) return
         setAppointments(appointmentsResponse.data)
@@ -181,7 +188,7 @@ export default function AgendaPage() {
     return () => {
       active = false
     }
-  }, [accessToken])
+  }, [accessToken, canViewLeads])
 
   const leadOptions = useMemo(() => {
     return leads.map((lead) => ({
@@ -239,7 +246,7 @@ export default function AgendaPage() {
   }, [appointments])
 
   async function refreshAppointments() {
-    if (!accessToken) return
+    if (!accessToken || !canCreateAppointments) return
     const response = await apiFetchJson<AppointmentsResponse>('/api/v1/appointments?limit=200', {
       headers: buildAuthHeaders(accessToken),
     })
@@ -280,6 +287,7 @@ export default function AgendaPage() {
   }
 
   function handleSelect(info: CalendarSelectArg) {
+    if (!canCreateAppointments) return
     setForm((current) => ({
       ...current,
       date: info.startStr.slice(0, 16),
@@ -350,7 +358,8 @@ export default function AgendaPage() {
 
             <button
               onClick={() => setShowModal(true)}
-              className="inline-flex items-center justify-center gap-2 rounded-2xl bg-rose-gold px-5 py-3 text-sm font-medium text-white shadow-sm transition-all hover:bg-rose-gold-500 hover:shadow-md"
+              disabled={!canCreateAppointments}
+              className="inline-flex items-center justify-center gap-2 rounded-2xl bg-rose-gold px-5 py-3 text-sm font-medium text-white shadow-sm transition-all hover:bg-rose-gold-500 hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <Plus size={16} />
               Novo agendamento
@@ -422,7 +431,7 @@ export default function AgendaPage() {
                   slotMaxTime="20:00:00"
                   slotDuration="00:30:00"
                   allDaySlot={false}
-                  selectable
+                  selectable={canCreateAppointments}
                   nowIndicator
                   height={720}
                   dayMaxEventRows={3}
@@ -582,6 +591,11 @@ export default function AgendaPage() {
                     </option>
                   ))}
                 </select>
+                {!canViewLeads ? (
+                  <p className="mt-1 text-[11px] text-charcoal-400 dark:text-charcoal-500">
+                    Este perfil precisa de acesso a leads para criar agendamentos.
+                  </p>
+                ) : null}
               </div>
 
               <div className="grid grid-cols-2 gap-3">
@@ -662,7 +676,7 @@ export default function AgendaPage() {
                 </button>
                 <button
                   type="submit"
-                  disabled={submitting}
+                  disabled={submitting || !canCreateAppointments}
                   className="flex-1 rounded-2xl bg-rose-gold px-4 py-3 text-sm font-medium text-white transition-colors hover:bg-rose-gold-500 disabled:opacity-60"
                 >
                   {submitting ? 'Salvando...' : 'Salvar agendamento'}

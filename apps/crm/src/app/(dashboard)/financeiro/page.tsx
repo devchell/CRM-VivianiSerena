@@ -65,8 +65,12 @@ function defaultForm(type: TransactionType = 'income'): FormState {
 }
 
 export default function FinanceiroPage() {
-  const { accessToken } = useAuth()
+  const { accessToken, hasPermission } = useAuth()
   const colors = useFinancialColors()
+  const canCreateFinancial = hasPermission('financeiro.create')
+  const canUpdateFinancial = hasPermission('financeiro.update')
+  const canDeleteFinancial = hasPermission('financeiro.delete')
+  const canExportFinancial = hasPermission('financeiro.export')
   const [transactions, setTransactions] = useState<FinancialRecord[]>([])
   const [summary, setSummary] = useState<FinancialSummary | null>(null)
   const [charts, setCharts] = useState<FinancialCharts | null>(null)
@@ -141,12 +145,14 @@ export default function FinanceiroPage() {
   const pagedTransactions = filteredTransactions.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE)
 
   function openCreateModal(type: TransactionType = 'income') {
+    if (!canCreateFinancial) return
     setEditing(null)
     setForm(defaultForm(type))
     setShowModal(true)
   }
 
   function openEditModal(transaction: FinancialRecord) {
+    if (!canUpdateFinancial) return
     setEditing(transaction)
     setForm({
       type: transaction.type,
@@ -182,7 +188,7 @@ export default function FinanceiroPage() {
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
-    if (!accessToken) return
+    if (!accessToken || (editing ? !canUpdateFinancial : !canCreateFinancial)) return
 
     setSubmitting(true)
     try {
@@ -217,7 +223,7 @@ export default function FinanceiroPage() {
   }
 
   async function handleDelete(transactionId: string) {
-    if (!accessToken) return
+    if (!accessToken || !canDeleteFinancial) return
 
     try {
       await apiFetchJson(`/api/v1/financials/${transactionId}`, {
@@ -232,6 +238,7 @@ export default function FinanceiroPage() {
   }
 
   function handleExportCsv() {
+    if (!canExportFinancial) return
     const header = 'Data,Tipo,Categoria,Descricao,Valor,Recorrente\n'
     const rows = filteredTransactions.map((transaction) => {
       return [
@@ -253,6 +260,7 @@ export default function FinanceiroPage() {
   }
 
   async function handleExportPdf() {
+    if (!canExportFinancial) return
     const { default: jsPDF } = await import('jspdf')
     const { default: autoTable } = await import('jspdf-autotable')
     const doc = new jsPDF()
@@ -307,15 +315,15 @@ export default function FinanceiroPage() {
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
-            <button onClick={handleExportCsv} className="flex items-center gap-1.5 rounded-2xl border border-blush-300 bg-white/75 px-4 py-3 text-sm text-charcoal-400 shadow-sm transition-colors hover:text-rose-gold dark:border-charcoal-600 dark:bg-charcoal-800/65 dark:text-charcoal-400">
+            <button onClick={handleExportCsv} disabled={!canExportFinancial} className="flex items-center gap-1.5 rounded-2xl border border-blush-300 bg-white/75 px-4 py-3 text-sm text-charcoal-400 shadow-sm transition-colors hover:text-rose-gold disabled:opacity-50 disabled:cursor-not-allowed dark:border-charcoal-600 dark:bg-charcoal-800/65 dark:text-charcoal-400">
               <Download size={14} />
               CSV
             </button>
-            <button onClick={() => void handleExportPdf()} className="flex items-center gap-1.5 rounded-2xl border border-blush-300 bg-white/75 px-4 py-3 text-sm text-charcoal-400 shadow-sm transition-colors hover:text-rose-gold dark:border-charcoal-600 dark:bg-charcoal-800/65 dark:text-charcoal-400">
+            <button onClick={() => void handleExportPdf()} disabled={!canExportFinancial} className="flex items-center gap-1.5 rounded-2xl border border-blush-300 bg-white/75 px-4 py-3 text-sm text-charcoal-400 shadow-sm transition-colors hover:text-rose-gold disabled:opacity-50 disabled:cursor-not-allowed dark:border-charcoal-600 dark:bg-charcoal-800/65 dark:text-charcoal-400">
               <FileText size={14} />
               PDF
             </button>
-            <button onClick={() => openCreateModal('income')} className="flex items-center gap-2 rounded-2xl bg-rose-gold px-5 py-3 text-sm font-medium text-white shadow-sm transition-colors hover:bg-rose-gold-500">
+            <button onClick={() => openCreateModal('income')} disabled={!canCreateFinancial} className="flex items-center gap-2 rounded-2xl bg-rose-gold px-5 py-3 text-sm font-medium text-white shadow-sm transition-colors hover:bg-rose-gold-500 disabled:opacity-50 disabled:cursor-not-allowed">
               <Plus size={16} />
               Novo lancamento
             </button>
@@ -462,10 +470,10 @@ export default function FinanceiroPage() {
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex items-center justify-end gap-1 opacity-0 transition-opacity group-hover:opacity-100">
-                        <button onClick={() => openEditModal(transaction)} className="rounded-lg p-1.5 text-charcoal-400 transition-colors hover:bg-rose-gold/10 hover:text-rose-gold">
+                        <button onClick={() => openEditModal(transaction)} disabled={!canUpdateFinancial} className="rounded-lg p-1.5 text-charcoal-400 transition-colors hover:bg-rose-gold/10 hover:text-rose-gold disabled:opacity-40 disabled:cursor-not-allowed">
                           <Pencil size={13} />
                         </button>
-                        <button onClick={() => void handleDelete(transaction.id)} className="rounded-lg p-1.5 text-charcoal-400 transition-colors hover:bg-red-500/10 hover:text-red-500">
+                        <button onClick={() => void handleDelete(transaction.id)} disabled={!canDeleteFinancial} className="rounded-lg p-1.5 text-charcoal-400 transition-colors hover:bg-red-500/10 hover:text-red-500 disabled:opacity-40 disabled:cursor-not-allowed">
                           <Trash2 size={13} />
                         </button>
                       </div>

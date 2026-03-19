@@ -1,10 +1,12 @@
 import { beforeAll, describe, expect, it, vi } from 'vitest'
 import type { NextFunction, Request, Response } from 'express'
+import type { AuthTokenPayload } from '@viviani/types'
 
 type AuthModule = typeof import('./authenticate')
 
 let authorize: AuthModule['authorize']
 let authorizeModule: AuthModule['authorizeModule']
+let authorizePermission: AuthModule['authorizePermission']
 
 beforeAll(async () => {
   process.env.DATABASE_URL = process.env.DATABASE_URL ?? 'postgresql://user:pass@db.example.com:5432/app?schema=public'
@@ -21,13 +23,14 @@ beforeAll(async () => {
   const module = await import('./authenticate')
   authorize = module.authorize
   authorizeModule = module.authorizeModule
+  authorizePermission = module.authorizePermission
 })
 
 function createNext() {
   return vi.fn() as unknown as NextFunction & ReturnType<typeof vi.fn>
 }
 
-function createRequest(user?: Request['user']): Request {
+function createRequest(user?: AuthTokenPayload): Request {
   return { user } as Request
 }
 
@@ -56,15 +59,15 @@ describe('authorize', () => {
 })
 
 describe('authorizeModule', () => {
-  it('allows users with the assigned module', () => {
+  it('allows legacy module grants for backward compatibility', () => {
     const next = createNext()
-    const middleware = authorizeModule('seguranca')
+    const middleware = authorizeModule('financeiro')
 
     middleware(createRequest({
       sub: 'viewer',
       email: 'viewer@example.com',
       role: 'VIEWER',
-      allowedModules: ['seguranca'],
+      allowedModules: ['financeiro'],
       iat: 0,
       exp: 0,
     }), createResponse(), next)
@@ -72,7 +75,7 @@ describe('authorizeModule', () => {
     expect(next).toHaveBeenCalledWith()
   })
 
-  it('blocks users without the assigned module', () => {
+  it('blocks users without module access', () => {
     const next = createNext()
     const middleware = authorizeModule('seguranca')
 
@@ -80,6 +83,7 @@ describe('authorizeModule', () => {
       sub: 'viewer',
       email: 'viewer@example.com',
       role: 'VIEWER',
+      permissions: ['dashboard.view'],
       allowedModules: ['dashboard'],
       iat: 0,
       exp: 0,
@@ -89,5 +93,46 @@ describe('authorizeModule', () => {
     const [error] = next.mock.calls[0]
     expect(error).toBeInstanceOf(Error)
     expect((error as Error).message).toContain('Module access denied')
+  })
+})
+
+describe('authorizePermission', () => {
+  it('allows explicit permission grants', () => {
+    const next = createNext()
+    const middleware = authorizePermission('financeiro.update')
+
+    middleware(createRequest({
+      sub: 'operator',
+      email: 'operator@example.com',
+      role: 'VIEWER',
+      profile: 'OPERATOR',
+      permissions: ['financeiro.view', 'financeiro.update'],
+      allowedModules: ['financeiro'],
+      iat: 0,
+      exp: 0,
+    }), createResponse(), next)
+
+    expect(next).toHaveBeenCalledWith()
+  })
+
+  it('blocks readonly users from write actions', () => {
+    const next = createNext()
+    const middleware = authorizePermission('financeiro.update')
+
+    middleware(createRequest({
+      sub: 'readonly',
+      email: 'readonly@example.com',
+      role: 'VIEWER',
+      profile: 'READONLY',
+      permissions: ['financeiro.view'],
+      allowedModules: ['financeiro'],
+      iat: 0,
+      exp: 0,
+    }), createResponse(), next)
+
+    expect(next).toHaveBeenCalledTimes(1)
+    const [error] = next.mock.calls[0]
+    expect(error).toBeInstanceOf(Error)
+    expect((error as Error).message).toContain('Permission denied')
   })
 })

@@ -1,7 +1,14 @@
 import type { Request, Response, NextFunction } from 'express'
 import { verifyAccessToken } from '../lib/jwt'
 import { AppError } from './errorHandler'
-import type { AuthTokenPayload, CrmModule, UserRole } from '@viviani/types'
+import {
+  hasModuleAccess,
+  hasPermission,
+  type AppPermission,
+  type AuthTokenPayload,
+  type CrmModule,
+  type UserRole,
+} from '@viviani/types'
 
 declare global {
   namespace Express {
@@ -59,12 +66,26 @@ export function authorizeModule(module: CrmModule, ...roles: UserRole[]) {
       return next(new AppError(403, 'Insufficient permissions'))
     }
 
-    const allowedModules = Array.isArray(req.user.allowedModules)
-      ? req.user.allowedModules
-      : []
-
-    if (!allowedModules.includes(module)) {
+    if (!hasModuleAccess(req.user.role, req.user.permissions ?? req.user.allowedModules, module)) {
       return next(new AppError(403, 'Module access denied'))
+    }
+
+    return next()
+  }
+}
+
+export function authorizePermission(permission: AppPermission, ...roles: UserRole[]) {
+  return (req: Request, _res: Response, next: NextFunction) => {
+    if (!req.user) {
+      return next(new AppError(401, 'Authentication required'))
+    }
+
+    if (roles.length > 0 && !roles.includes(req.user.role)) {
+      return next(new AppError(403, 'Insufficient permissions'))
+    }
+
+    if (!hasPermission(req.user.role, req.user.permissions ?? req.user.allowedModules, permission)) {
+      return next(new AppError(403, 'Permission denied'))
     }
 
     return next()

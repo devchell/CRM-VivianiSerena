@@ -12,6 +12,13 @@ import { logger } from "../lib/logger"
 import { recordLoginFailure, resetLoginFailures, bruteForceCheck } from "../middleware/security"
 import { emailService } from "../infrastructure/email"
 import { smsService } from "../infrastructure/sms"
+import {
+  inferUserProfile,
+  resolveAllowedModules,
+  resolvePermissions,
+  type AuthTokenPayload,
+  type UserRole,
+} from "@viviani/types"
 
 export const authRouter: Router = Router()
 
@@ -26,6 +33,45 @@ const COOKIE_OPTS = {
   secure: process.env.NODE_ENV === "production",
   sameSite: "lax" as const,
   path: "/",
+}
+
+function buildAccessContext(user: {
+  id: string
+  email: string
+  name?: string | null
+  role: UserRole
+  allowedModules?: string[]
+  mustChangePassword?: boolean
+  photoUrl?: string | null
+}) {
+  const permissions = resolvePermissions(user.role, user.allowedModules)
+  const allowedModules = resolveAllowedModules(user.role, user.allowedModules)
+  const profile = inferUserProfile(user.role, user.allowedModules)
+
+  return {
+    accessTokenPayload: {
+      sub: user.id,
+      email: user.email,
+      name: user.name,
+      role: user.role,
+      profile,
+      permissions,
+      allowedModules,
+      mustChangePassword: user.mustChangePassword,
+      photoUrl: user.photoUrl,
+    } satisfies Omit<AuthTokenPayload, "iat" | "exp">,
+    userPayload: {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      profile,
+      permissions,
+      allowedModules,
+      mustChangePassword: user.mustChangePassword ?? false,
+      photoUrl: user.photoUrl ?? null,
+    },
+  }
 }
 
 // ─── Schemas ──────────────────────────────────────────────────────────────────
@@ -52,15 +98,8 @@ authRouter.post("/login", authRateLimiter, bruteForceCheck, async (req, res, nex
       const session = JSON.parse(raw) as { userId: string; email: string; role: string }
       const user = await prisma.user.findUnique({ where: { id: session.userId } })
       if (!user) throw new AppError(401, "Usuário não encontrado")
-      const accessToken = signAccessToken({
-        sub: user.id,
-        email: user.email,
-        name: user.name,
-        role: user.role,
-        allowedModules: user.allowedModules,
-        mustChangePassword: user.mustChangePassword,
-        photoUrl: user.photoUrl,
-      })
+      const access = buildAccessContext(user)
+      const accessToken = signAccessToken(access.accessTokenPayload)
       const refreshToken = signRefreshToken(user.id)
       await redis.setex(`refresh:${user.id}`, 7 * 24 * 60 * 60, refreshToken)
       await prisma.auditLog.create({ data: { userId: user.id, action: "LOGIN_2FA", resource: "auth", ip, details: {} } })
@@ -72,15 +111,7 @@ authRouter.post("/login", authRateLimiter, bruteForceCheck, async (req, res, nex
           data: {
             accessToken,
             refreshToken,
-            user: {
-              id: user.id,
-              name: user.name,
-              email: user.email,
-              role: user.role,
-              mustChangePassword: user.mustChangePassword,
-              allowedModules: user.allowedModules,
-              photoUrl: user.photoUrl,
-            },
+            user: access.userPayload,
           },
         })
     }
@@ -124,15 +155,8 @@ authRouter.post("/login", authRateLimiter, bruteForceCheck, async (req, res, nex
     }
 
     // ── Login direto (sem 2FA) ──
-    const accessToken = signAccessToken({
-      sub: user.id,
-      email: user.email,
-      role: user.role,
-      name: user.name,
-      allowedModules: user.allowedModules,
-      mustChangePassword: user.mustChangePassword,
-      photoUrl: user.photoUrl,
-    })
+    const access = buildAccessContext(user)
+    const accessToken = signAccessToken(access.accessTokenPayload)
     const refreshToken = signRefreshToken(user.id)
     await redis.setex(`refresh:${user.id}`, 7 * 24 * 60 * 60, refreshToken)
     await prisma.auditLog.create({ data: { userId: user.id, action: "LOGIN", resource: "auth", ip, details: {} } })
@@ -146,15 +170,7 @@ authRouter.post("/login", authRateLimiter, bruteForceCheck, async (req, res, nex
         data: {
           accessToken,
           refreshToken,
-          user: {
-            id: user.id,
-            name: user.name,
-            email: user.email,
-            role: user.role,
-            mustChangePassword: user.mustChangePassword,
-            allowedModules: user.allowedModules,
-            photoUrl: user.photoUrl,
-          },
+          user: access.userPayload,
         },
       })
   } catch (error) { next(error) }
@@ -239,15 +255,8 @@ authRouter.post("/refresh", async (req, res, next) => {
     if (!stored || stored !== token) throw new AppError(401, "Invalid refresh token")
     const user = await prisma.user.findUnique({ where: { id: payload.sub } })
     if (!user) throw new AppError(401, "User not found")
-    const newAccessToken = signAccessToken({
-      sub: user.id,
-      email: user.email,
-      name: user.name,
-      role: user.role,
-      allowedModules: user.allowedModules,
-      mustChangePassword: user.mustChangePassword,
-      photoUrl: user.photoUrl,
-    })
+    const access = buildAccessContext(user)
+    const newAccessToken = signAccessToken(access.accessTokenPayload)
     const newRefreshToken = signRefreshToken(user.id)
     await redis.setex(`refresh:${user.id}`, 7 * 24 * 60 * 60, newRefreshToken)
     res
@@ -290,7 +299,8 @@ authRouter.get("/me", authenticate, async (req, res, next) => {
       },
     })
     if (!user) throw new AppError(404, "User not found")
-    res.json({ success: true, data: { ...user } })
+    const access = buildAccessContext(user)
+    res.json({ success: true, data: { ...user, ...access.userPayload } })
   } catch (error) { next(error) }
 })
 

@@ -10,15 +10,20 @@ import { useDashboardContext } from '@/context/DashboardContext'
 export function useAuth() {
   const ctx = useDashboardContext()
   return {
+    userId: ctx.userId,
     role: ctx.role,
+    profile: ctx.profile,
     isAdmin: ctx.isAdmin,
     allowedModules: ctx.allowedModules,
+    permissions: ctx.permissions,
     userName: ctx.userName,
     userEmail: ctx.userEmail,
     photoUrl: ctx.photoUrl,
     accessToken: ctx.accessToken,
     mustChangePassword: ctx.mustChangePassword,
     status: ctx.status,
+    hasPermission: ctx.hasPermission,
+    canAccessModule: ctx.canAccessModule,
     updateSession: ctx.updateSession,
     session: null as null,
   }

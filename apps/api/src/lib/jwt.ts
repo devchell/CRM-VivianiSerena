@@ -1,5 +1,5 @@
 import jwt from 'jsonwebtoken'
-import type { AuthTokenPayload, UserRole } from '@viviani/types'
+import type { AppPermission, AuthTokenPayload, UserProfile, UserRole } from '@viviani/types'
 import { apiEnv } from './env'
 
 const PRIVATE_KEY = apiEnv.jwtPrivateKey.replace(/\\n/g, '\n')
@@ -12,6 +12,8 @@ export function signAccessToken(payload: {
   email: string
   name?: string | null
   role: UserRole
+  profile?: UserProfile
+  permissions?: AppPermission[]
   allowedModules?: string[]
   mustChangePassword?: boolean
   photoUrl?: string | null

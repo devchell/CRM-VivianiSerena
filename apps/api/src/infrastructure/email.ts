@@ -112,6 +112,7 @@ export const emailService = {
     tempPassword: string
     crmUrl: string
     role: string
+    profile?: string
     modules: string[]
   }) {
     const moduleLabels: Record<string, string> = {
@@ -121,6 +122,13 @@ export const emailService = {
     const moduleList = params.modules.length
       ? params.modules.map(m => moduleLabels[m] ?? m).join(', ')
       : 'Acesso completo (Admin)'
+    const profileLabel = (params.profile ?? params.role) === 'ADMIN'
+      ? 'Administrador'
+      : params.profile === 'MANAGER'
+        ? 'Gestor'
+        : params.profile === 'READONLY'
+          ? 'Somente leitura'
+          : 'Operador'
     const content = `
       <span class="badge">👋 Convite para o CRM</span>
       <p>Olá, <strong>${params.name}</strong>!</p>
@@ -128,7 +136,7 @@ export const emailService = {
       <div class="info-box">
         <p><strong>E-mail de acesso:</strong> ${params.to}</p>
         <p><strong>Senha temporária:</strong> <span style="font-family:monospace;font-size:16px;letter-spacing:2px;color:#C9967A">${params.tempPassword}</span></p>
-        <p><strong>Perfil:</strong> ${params.role === 'ADMIN' ? 'Administrador' : 'Acesso Limitado'}</p>
+        <p><strong>Perfil:</strong> ${profileLabel}</p>
         <p><strong>Módulos liberados:</strong> ${moduleList}</p>
       </div>
       <p>⚠️ <strong>Na primeira entrada, você deverá criar uma nova senha.</strong></p>

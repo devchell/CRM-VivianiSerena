@@ -305,7 +305,8 @@ function BlockIpModal({ onClose, onBlock }: {
 // ── Main Page ─────────────────────────────────────────────────────────────────
 
 export default function SegurancaPage() {
-  const { accessToken } = useAuth()
+  const { accessToken, hasPermission } = useAuth()
+  const canManageSecurity = hasPermission('seguranca.manage')
   const [events, setEvents] = useState<SecurityEvent[]>([])
   const [stats, setStats] = useState<SecurityStats | null>(null)
   const [activity, setActivity] = useState<ActivityPoint[]>([])
@@ -439,6 +440,7 @@ export default function SegurancaPage() {
   }, [])
 
   const handleResolve = async (id: string) => {
+    if (!canManageSecurity) return
     try {
       const res = await fetch(`${API_URL}/api/v1/security/events/${id}/resolve`, { method: 'PATCH', headers })
       if (res.ok) {
@@ -449,6 +451,7 @@ export default function SegurancaPage() {
   }
 
   const handleBlockIp = async (ip: string, minutes: number) => {
+    if (!canManageSecurity) return
     try {
       const res = await fetch(`${API_URL}/api/v1/security/block-ip`, {
         method: 'POST',
@@ -465,6 +468,7 @@ export default function SegurancaPage() {
   }
 
   const handleTestAlert = async () => {
+    if (!canManageSecurity) return
     try {
       await fetch(`${API_URL}/api/v1/security/test-alert`, { method: 'POST', headers })
       toast.info('Alerta de teste disparado — aguarde alguns segundos')
@@ -537,7 +541,7 @@ export default function SegurancaPage() {
               <Bell size={14} /> Ativar alertas
             </button>
           )}
-          <button onClick={() => setShowBlockModal(true)} className="flex items-center gap-2 text-xs px-3 py-2 rounded-lg border border-red-400/30 text-red-400 hover:bg-red-500/10 transition-colors">
+          <button onClick={() => setShowBlockModal(true)} disabled={!canManageSecurity} className="flex items-center gap-2 text-xs px-3 py-2 rounded-lg border border-red-400/30 text-red-400 hover:bg-red-500/10 transition-colors disabled:opacity-40 disabled:cursor-not-allowed">
             <Lock size={14} /> Bloquear IP
           </button>
           <button onClick={handleExportPDF} className="flex items-center gap-2 text-xs px-3 py-2 rounded-lg border border-blush-300 dark:border-charcoal-600 text-charcoal-400 hover:text-rose-gold hover:border-rose-gold/30 transition-colors">
@@ -644,7 +648,8 @@ export default function SegurancaPage() {
                     {!ev.resolved && (
                       <button
                         onClick={() => handleResolve(ev.id)}
-                        className="text-xs px-2.5 py-1.5 rounded-lg border border-blush-300 dark:border-charcoal-600 text-charcoal-400 hover:bg-green-500/10 hover:text-green-400 hover:border-green-500/30 transition-colors"
+                        disabled={!canManageSecurity}
+                        className="text-xs px-2.5 py-1.5 rounded-lg border border-blush-300 dark:border-charcoal-600 text-charcoal-400 hover:bg-green-500/10 hover:text-green-400 hover:border-green-500/30 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
                       >
                         <CheckCircle2 size={12} />
                       </button>
@@ -676,7 +681,8 @@ export default function SegurancaPage() {
             <div className="space-y-2">
               <button
                 onClick={() => setShowBlockModal(true)}
-                className="w-full flex items-center gap-3 px-4 py-3 rounded-xl border border-red-400/20 text-red-400 hover:bg-red-500/10 transition-colors text-sm"
+                disabled={!canManageSecurity}
+                className="w-full flex items-center gap-3 px-4 py-3 rounded-xl border border-red-400/20 text-red-400 hover:bg-red-500/10 transition-colors text-sm disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 <Lock size={16} />
                 <div className="text-left">
@@ -696,7 +702,8 @@ export default function SegurancaPage() {
               </button>
               <button
                 onClick={handleTestAlert}
-                className="w-full flex items-center gap-3 px-4 py-3 rounded-xl border border-blue-400/20 text-blue-400 hover:bg-blue-500/10 transition-colors text-sm"
+                disabled={!canManageSecurity}
+                className="w-full flex items-center gap-3 px-4 py-3 rounded-xl border border-blue-400/20 text-blue-400 hover:bg-blue-500/10 transition-colors text-sm disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 <Wifi size={16} />
                 <div className="text-left">

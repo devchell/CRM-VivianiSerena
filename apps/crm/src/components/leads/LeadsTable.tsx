@@ -40,7 +40,9 @@ const SOURCE_LABELS: Record<string, string> = {
 const API_URL = crmPublicEnv.apiBaseUrl
 
 export function LeadsTable() {
-  const { accessToken, status } = useAuth()
+  const { accessToken, status, hasPermission } = useAuth()
+  const canUpdateLeads = hasPermission('leads.update')
+  const canExportLeads = hasPermission('leads.export')
   const [leads, setLeads] = useState<Lead[]>([])
   const [loading, setLoading] = useState(true)
   const [globalFilter, setGlobalFilter] = useState('')
@@ -101,7 +103,7 @@ export function LeadsTable() {
   }, [leads])
 
   const handleStatusChange = async (id: string, status: string) => {
-    if (!accessToken) return
+    if (!accessToken || !canUpdateLeads) return
     try {
       await fetch(`${API_URL}/api/v1/leads/${id}`, {
         method: 'PATCH',
@@ -116,7 +118,7 @@ export function LeadsTable() {
   }
 
   const handleExport = async () => {
-    if (!accessToken) return
+    if (!accessToken || !canExportLeads) return
     try {
       const res = await fetch(`${API_URL}/api/v1/leads/export`, {
         headers: { Authorization: `Bearer ${accessToken}` },
@@ -184,6 +186,7 @@ export function LeadsTable() {
             <select
               value={status}
               onChange={e => handleStatusChange(info.row.original.id, e.target.value)}
+              disabled={!canUpdateLeads}
               className={`text-xs font-semibold px-3 py-1.5 rounded-full border border-transparent outline-none cursor-pointer shadow-[0_8px_20px_-18px_rgba(0,0,0,0.6)] backdrop-blur appearance-none pr-7 transition-all duration-150 ${cfg.color}`}
             >
               {Object.entries(STATUS_CONFIG).map(([k, v]) => (
@@ -269,7 +272,11 @@ export function LeadsTable() {
           <button onClick={fetchLeads} className="rounded-2xl border border-blush-300 p-3 text-charcoal-400 transition-colors hover:text-rose-gold dark:border-charcoal-600" title="Atualizar">
             <RefreshCw size={16} className={loading ? 'animate-spin' : ''} />
           </button>
-          <button onClick={handleExport} className="inline-flex items-center gap-2 rounded-2xl bg-rose-gold px-4 py-3 text-sm font-medium text-white shadow-sm transition-colors hover:bg-rose-gold-500">
+          <button
+            onClick={handleExport}
+            disabled={!canExportLeads}
+            className="inline-flex items-center gap-2 rounded-2xl bg-rose-gold px-4 py-3 text-sm font-medium text-white shadow-sm transition-colors hover:bg-rose-gold-500 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
             <Download size={14} />
             Exportar CSV
           </button>

@@ -6,7 +6,7 @@ import sharp from 'sharp'
 import { Prisma, type ContentSection } from '@prisma/client'
 import { prisma } from '../lib/prisma'
 import { apiEnv } from '../lib/env'
-import { authenticate, authorize, authorizeModule } from '../middleware/authenticate'
+import { authenticate, authorizePermission } from '../middleware/authenticate'
 import { AppError } from '../middleware/errorHandler'
 import {
   buildUploadUrl,
@@ -132,7 +132,7 @@ contentRouter.get('/', async (_req, res, next) => {
   }
 })
 
-contentRouter.get('/history', authenticate, authorizeModule('editar-site', 'MANAGER', 'VIEWER'), authorize('ADMIN', 'MANAGER'), async (req, res, next) => {
+contentRouter.get('/history', authenticate, authorizePermission('editar-site.history'), async (req, res, next) => {
   try {
     const query = historyQuerySchema.parse(req.query)
     const limit = query.limit ?? 25
@@ -160,7 +160,7 @@ contentRouter.get('/history', authenticate, authorizeModule('editar-site', 'MANA
   }
 })
 
-contentRouter.post('/history/:id/restore', authenticate, authorizeModule('editar-site', 'MANAGER'), authorize('ADMIN', 'MANAGER'), async (req, res, next) => {
+contentRouter.post('/history/:id/restore', authenticate, authorizePermission('editar-site.restore'), async (req, res, next) => {
   try {
     const versionId = String(req.params.id)
     const restoredBy = req.user!.sub
@@ -226,7 +226,7 @@ contentRouter.post('/history/:id/restore', authenticate, authorizeModule('editar
   }
 })
 
-contentRouter.post('/upload', authenticate, authorizeModule('editar-site', 'MANAGER'), authorize('ADMIN', 'MANAGER'), upload.single('file'), async (req, res, next) => {
+contentRouter.post('/upload', authenticate, authorizePermission('editar-site.upload'), upload.single('file'), async (req, res, next) => {
   try {
     if (!req.file) {
       res.status(400).json({ success: false, error: 'No file provided' })
@@ -273,7 +273,7 @@ contentRouter.post('/upload', authenticate, authorizeModule('editar-site', 'MANA
   }
 })
 
-contentRouter.post('/publish', authenticate, authorizeModule('editar-site', 'MANAGER'), authorize('ADMIN', 'MANAGER'), async (_req, res, next) => {
+contentRouter.post('/publish', authenticate, authorizePermission('editar-site.publish'), async (_req, res, next) => {
   try {
     const landingRevalidateUrl = apiEnv.landingRevalidateUrl
     const secret = apiEnv.revalidateSecret
@@ -300,7 +300,7 @@ contentRouter.post('/publish', authenticate, authorizeModule('editar-site', 'MAN
   }
 })
 
-contentRouter.delete('/upload/:filename', authenticate, authorizeModule('editar-site', 'MANAGER'), authorize('ADMIN', 'MANAGER'), async (req, res, next) => {
+contentRouter.delete('/upload/:filename', authenticate, authorizePermission('editar-site.delete'), async (req, res, next) => {
   try {
     const baseName = path.basename(String(req.params.filename)).replace(/(-thumb|-blur)?\.(webp|jpg|png)$/, '')
     const files = [`${baseName}.webp`, `${baseName}-thumb.webp`, `${baseName}-blur.webp`]
@@ -313,7 +313,7 @@ contentRouter.delete('/upload/:filename', authenticate, authorizeModule('editar-
   }
 })
 
-contentRouter.get('/:section/:key/history', authenticate, authorizeModule('editar-site', 'MANAGER', 'VIEWER'), authorize('ADMIN', 'MANAGER'), async (req, res, next) => {
+contentRouter.get('/:section/:key/history', authenticate, authorizePermission('editar-site.history'), async (req, res, next) => {
   try {
     const section = String(req.params.section) as ContentSection
     const key = String(req.params.key)
@@ -369,7 +369,7 @@ contentRouter.get('/:section/:key', async (req, res, next) => {
   }
 })
 
-contentRouter.put('/:section/:key', authenticate, authorizeModule('editar-site', 'MANAGER'), authorize('ADMIN', 'MANAGER'), async (req, res, next) => {
+contentRouter.put('/:section/:key', authenticate, authorizePermission('editar-site.update'), async (req, res, next) => {
   try {
     const { value } = updateSchema.parse(req.body)
     const section = String(req.params.section) as ContentSection
@@ -411,7 +411,7 @@ contentRouter.put('/:section/:key', authenticate, authorizeModule('editar-site',
   }
 })
 
-contentRouter.delete('/:section/:key', authenticate, authorizeModule('editar-site', 'MANAGER'), authorize('ADMIN', 'MANAGER'), async (req, res, next) => {
+contentRouter.delete('/:section/:key', authenticate, authorizePermission('editar-site.delete'), async (req, res, next) => {
   try {
     const section = String(req.params.section) as ContentSection
     const key = String(req.params.key)

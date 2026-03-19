@@ -5,6 +5,15 @@ import { useRouter, usePathname } from 'next/navigation'
 import type { Session } from 'next-auth'
 import { useSession } from 'next-auth/react'
 import { motion } from 'framer-motion'
+import {
+  hasModuleAccess,
+  hasPermission,
+  inferUserProfile,
+  resolveAllowedModules,
+  type AppPermission,
+  type CrmModule,
+  type UserRole,
+} from '@viviani/types'
 import Sidebar from '@/components/layout/Sidebar'
 import { Header } from '@/components/layout/Header'
 import { DashboardProvider } from '@/context/DashboardContext'
@@ -17,35 +26,41 @@ const MODULE_ROUTE_MATCHERS = [
   { prefix: '/editar-site', module: 'editar-site' },
   { prefix: '/site', module: 'editar-site' },
   { prefix: '/seguranca', module: 'seguranca' },
-  { prefix: '/colaboradores', adminOnly: true },
+  { prefix: '/colaboradores', permission: 'users.manage' },
 ] as const
 
-function resolveAuthorizedFallback(isAdmin: boolean, allowedModules: string[]): string {
-  if (isAdmin) return '/dashboard'
-
-  const preferredModule = MODULE_ROUTE_MATCHERS.find((item) => {
-    return 'module' in item && allowedModules.includes(item.module)
-  })
-
-  if (preferredModule && 'module' in preferredModule) {
-    return preferredModule.prefix
-  }
-
-  return '/configuracoes'
+function toKnownRole(value: string | undefined): UserRole {
+  return value === 'ADMIN' || value === 'MANAGER' || value === 'VIEWER'
+    ? value
+    : 'VIEWER'
 }
 
-function canAccessPath(pathname: string, isAdmin: boolean, allowedModules: string[]): boolean {
+function resolveAuthorizedFallback(role: UserRole, grants: string[]): string {
+  if (role === 'ADMIN') return '/dashboard'
+
+  const preferredModule = MODULE_ROUTE_MATCHERS.find((item) => {
+    if ('module' in item) {
+      return hasModuleAccess(role, grants, item.module as CrmModule)
+    }
+
+    return hasPermission(role, grants, item.permission as AppPermission)
+  })
+
+  return preferredModule?.prefix ?? '/configuracoes'
+}
+
+function canAccessPath(pathname: string, role: UserRole, grants: string[]): boolean {
   const matcher = MODULE_ROUTE_MATCHERS.find((item) => pathname === item.prefix || pathname.startsWith(`${item.prefix}/`))
 
   if (!matcher) {
     return true
   }
 
-  if (!('module' in matcher)) {
-    return isAdmin
+  if ('module' in matcher) {
+    return hasModuleAccess(role, grants, matcher.module as CrmModule)
   }
 
-  return isAdmin || allowedModules.includes(matcher.module)
+  return hasPermission(role, grants, matcher.permission as AppPermission)
 }
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -53,17 +68,24 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const router = useRouter()
   const pathname = usePathname()
   const typedSession = session as Session | null
-  const u = typedSession?.user
-  const role: string = typeof u?.role === 'string' ? u.role : 'user'
-  const allowedModules: string[] = Array.isArray(u?.allowedModules) ? u.allowedModules : []
-  const userName: string | null = typedSession?.user?.name ?? null
-  const userEmail: string | null = typedSession?.user?.email ?? null
-  const photoUrl: string | null = u?.photoUrl ?? typedSession?.user?.image ?? null
-  const accessToken: string = typedSession?.accessToken ?? ''
-  const mustChangePassword: boolean = u?.mustChangePassword ?? false
-  const isAdmin = role === 'ADMIN' || role === 'admin'
-  const hasRouteAccess = canAccessPath(pathname ?? '/', isAdmin, allowedModules)
-  const fallbackRoute = resolveAuthorizedFallback(isAdmin, allowedModules)
+  const user = typedSession?.user
+
+  const role = toKnownRole(typeof user?.role === 'string' ? user.role : undefined)
+  const permissions = Array.isArray(user?.permissions) ? user.permissions : []
+  const grants = permissions.length > 0
+    ? permissions
+    : (Array.isArray(user?.allowedModules) ? user.allowedModules : [])
+  const allowedModules = resolveAllowedModules(role, grants)
+  const profile = user?.profile ?? inferUserProfile(role, grants)
+  const userId = typeof user?.id === 'string' ? user.id : null
+  const userName = typedSession?.user?.name ?? null
+  const userEmail = typedSession?.user?.email ?? null
+  const photoUrl = user?.photoUrl ?? typedSession?.user?.image ?? null
+  const accessToken = typedSession?.accessToken ?? ''
+  const mustChangePassword = user?.mustChangePassword ?? false
+  const isAdmin = role === 'ADMIN'
+  const hasRouteAccess = canAccessPath(pathname ?? '/', role, grants)
+  const fallbackRoute = resolveAuthorizedFallback(role, grants)
 
   useEffect(() => {
     if (status === 'unauthenticated') router.push('/login')
@@ -88,15 +110,20 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   if (!session || !session.user) return null
 
   const contextValue = {
+    userId,
     role,
+    profile,
     isAdmin,
     allowedModules,
+    permissions,
     userName,
     userEmail,
     photoUrl,
     accessToken,
     mustChangePassword,
     status,
+    hasPermission: (permission: AppPermission) => hasPermission(role, grants, permission),
+    canAccessModule: (module: CrmModule) => hasModuleAccess(role, grants, module),
     updateSession: update,
   }
 

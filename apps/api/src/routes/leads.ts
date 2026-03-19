@@ -2,7 +2,7 @@ import { Router } from 'express'
 import { z } from 'zod'
 import type { Server as SocketServer } from 'socket.io'
 import { prisma } from '../lib/prisma'
-import { authenticate, authorizeModule } from '../middleware/authenticate'
+import { authenticate, authorizePermission } from '../middleware/authenticate'
 import { AppError } from '../middleware/errorHandler'
 import { deletePattern } from '../lib/redis'
 import { anonymizeIp } from '../middleware/security'
@@ -60,9 +60,8 @@ leadsRouter.post('/', async (req, res, next) => {
 
 // All routes below require authentication
 leadsRouter.use(authenticate)
-leadsRouter.use(authorizeModule('leads'))
 
-leadsRouter.get('/', async (req, res, next) => {
+leadsRouter.get('/', authorizePermission('leads.view'), async (req, res, next) => {
   try {
     const { page = 1, limit = 20, status, source, search, from, to } = req.query
     const skip = (Number(page) - 1) * Number(limit)
@@ -90,7 +89,7 @@ leadsRouter.get('/', async (req, res, next) => {
 })
 
 // GET /stats — analytics for CRM dashboard
-leadsRouter.get('/stats', async (req, res, next) => {
+leadsRouter.get('/stats', authorizePermission('leads.view'), async (req, res, next) => {
   try {
     const { days = 30 } = req.query
     const metrics = await getLeadMetrics(Number(days) === 30 ? 'last30d' : 'month')
@@ -111,7 +110,7 @@ leadsRouter.get('/stats', async (req, res, next) => {
 })
 
 // GET /export — CSV download
-leadsRouter.get('/export', async (req, res, next) => {
+leadsRouter.get('/export', authorizePermission('leads.export'), async (req, res, next) => {
   try {
     const { status, from, to } = req.query
     const where: Record<string, unknown> = buildCommercialLeadWhere()
@@ -140,41 +139,45 @@ leadsRouter.get('/export', async (req, res, next) => {
   } catch (error) { next(error) }
 })
 
-leadsRouter.get('/:id', async (req, res, next) => {
+leadsRouter.get('/:id', authorizePermission('leads.view'), async (req, res, next) => {
   try {
-    const lead = await prisma.lead.findUnique({ where: { id: req.params.id }, include: { appointments: true, sessions: true } })
+    const leadId = String(req.params.id)
+    const lead = await prisma.lead.findUnique({ where: { id: leadId }, include: { appointments: true, sessions: true } })
     if (!lead) throw new AppError(404, 'Lead not found')
     res.json({ success: true, data: lead })
   } catch (error) { next(error) }
 })
 
-leadsRouter.put('/:id', async (req, res, next) => {
+leadsRouter.put('/:id', authorizePermission('leads.update'), async (req, res, next) => {
   try {
+    const leadId = String(req.params.id)
     const data = updateLeadSchema.parse(req.body)
     const updateData: Record<string, unknown> = { ...data }
     if (data.status === 'converted') updateData.convertedAt = new Date()
-    const lead = await prisma.lead.update({ where: { id: req.params.id }, data: updateData })
+    const lead = await prisma.lead.update({ where: { id: leadId }, data: updateData })
     await deletePattern('leads:*')
     await invalidateOperationalMetricCaches()
     res.json({ success: true, data: lead })
   } catch (error) { next(error) }
 })
 
-leadsRouter.patch('/:id', async (req, res, next) => {
+leadsRouter.patch('/:id', authorizePermission('leads.update'), async (req, res, next) => {
   try {
+    const leadId = String(req.params.id)
     const data = updateLeadSchema.parse(req.body)
     const updateData: Record<string, unknown> = { ...data }
     if (data.status === 'converted') updateData.convertedAt = new Date()
-    const lead = await prisma.lead.update({ where: { id: req.params.id }, data: updateData })
+    const lead = await prisma.lead.update({ where: { id: leadId }, data: updateData })
     await deletePattern('leads:*')
     await invalidateOperationalMetricCaches()
     res.json({ success: true, data: lead })
   } catch (error) { next(error) }
 })
 
-leadsRouter.delete('/:id', async (req, res, next) => {
+leadsRouter.delete('/:id', authorizePermission('leads.delete'), async (req, res, next) => {
   try {
-    await prisma.lead.delete({ where: { id: req.params.id } })
+    const leadId = String(req.params.id)
+    await prisma.lead.delete({ where: { id: leadId } })
     await deletePattern('leads:*')
     await invalidateOperationalMetricCaches()
     res.json({ success: true, message: 'Lead deleted' })
@@ -183,9 +186,10 @@ leadsRouter.delete('/:id', async (req, res, next) => {
 
 
 // LGPD Art. 18 — Anonimizar dados de um lead (não deleta para preservar métricas)
-leadsRouter.patch('/:id/gdpr', async (req, res, next) => {
+leadsRouter.patch('/:id/gdpr', authorizePermission('leads.gdpr'), async (req, res, next) => {
   try {
-    const lead = await prisma.lead.findUnique({ where: { id: req.params.id } })
+    const leadId = String(req.params.id)
+    const lead = await prisma.lead.findUnique({ where: { id: leadId } })
     if (!lead) throw new AppError(404, 'Lead not found')
     if (lead.anonymized) {
       res.json({ success: true, message: 'Dados já foram anonimizados anteriormente' })
@@ -193,7 +197,7 @@ leadsRouter.patch('/:id/gdpr', async (req, res, next) => {
     }
 
     const anonymized = await prisma.lead.update({
-      where: { id: req.params.id },
+      where: { id: leadId },
       data: {
         name: 'Anônimo',
         email: `anonimo_${EncryptionService.anonymize(lead.email)}@anonimizado.lgpd`,
@@ -212,7 +216,7 @@ leadsRouter.patch('/:id/gdpr', async (req, res, next) => {
         userId: authReq.user.id,
         action: 'GDPR_ANONYMIZE',
         resource: 'Lead',
-        details: { leadId: req.params.id, originalEmail: EncryptionService.anonymize(lead.email) },
+        details: { leadId, originalEmail: EncryptionService.anonymize(lead.email) },
         ip: req.ip,
       })
     }

@@ -1,13 +1,13 @@
 import { Router } from 'express'
 import { z } from 'zod'
 import { prisma } from '../lib/prisma'
-import { authenticate, authorize } from '../middleware/authenticate'
+import { authenticate, authorizePermission } from '../middleware/authenticate'
 import { EncryptionService } from '../infrastructure/security/EncryptionService'
 import { AuditLogger } from '../infrastructure/security/AuditLogger'
 
 export const privacyRouter: Router = Router()
 privacyRouter.use(authenticate)
-privacyRouter.use(authorize('ADMIN'))
+privacyRouter.use(authorizePermission('privacy.manage'))
 
 /**
  * GET /privacy/export?email=xxx

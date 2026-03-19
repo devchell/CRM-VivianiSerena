@@ -1,71 +1,65 @@
 'use client'
 
-import type { Session } from 'next-auth'
-import { useSession, signOut } from 'next-auth/react'
-import { usePathname, useRouter } from 'next/navigation'
-import { useMemo, useEffect } from 'react'
 import Link from 'next/link'
+import { signOut } from 'next-auth/react'
+import { usePathname, useRouter } from 'next/navigation'
+import { useEffect, useMemo } from 'react'
+import type { AppPermission, CrmModule } from '@viviani/types'
 import {
   LayoutDashboard, Users, Calendar, DollarSign,
   Paintbrush, Shield, Settings, UserCheck, LogOut,
   PanelLeftClose, Menu, Sparkles,
 } from 'lucide-react'
 import { useSidebar } from '@/hooks/useSidebar'
+import { useAuth } from '@/lib/useAuth'
 
 type NavItem = {
   href: string
   label: string
   icon: React.ElementType
-  module?: string // módulo necessário; admin ignora
+  module?: string
+  permission?: string
 }
 
 const NAV_ITEMS: NavItem[] = [
-  { href: '/dashboard',     label: 'Dashboard',     icon: LayoutDashboard, module: 'dashboard' },
-  { href: '/leads',         label: 'Leads',         icon: Users,           module: 'leads' },
-  { href: '/agenda',        label: 'Agenda',        icon: Calendar,        module: 'agenda' },
-  { href: '/financeiro',    label: 'Financeiro',    icon: DollarSign,      module: 'financeiro' },
-  { href: '/editar-site',   label: 'Editar Site',   icon: Paintbrush,      module: 'editar-site' },
-  { href: '/seguranca',     label: 'Segurança',     icon: Shield,          module: 'seguranca' },
-  { href: '/colaboradores', label: 'Colaboradores', icon: UserCheck,       module: 'admin-only' },
+  { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, module: 'dashboard' },
+  { href: '/leads', label: 'Leads', icon: Users, module: 'leads' },
+  { href: '/agenda', label: 'Agenda', icon: Calendar, module: 'agenda' },
+  { href: '/financeiro', label: 'Financeiro', icon: DollarSign, module: 'financeiro' },
+  { href: '/editar-site', label: 'Editar Site', icon: Paintbrush, module: 'editar-site' },
+  { href: '/seguranca', label: 'Seguranca', icon: Shield, module: 'seguranca' },
+  { href: '/colaboradores', label: 'Colaboradores', icon: UserCheck, permission: 'users.manage' },
 ]
 
+function getRoleLabel(profile: string | null, isAdmin: boolean) {
+  if (isAdmin || profile === 'ADMIN') return 'Administrador'
+  if (profile === 'MANAGER') return 'Gestor'
+  if (profile === 'READONLY') return 'Somente leitura'
+  return 'Operador'
+}
+
 function Sidebar() {
-  const { data: session, status } = useSession()
+  const { collapsed, toggle, mobileOpen, closeMobile } = useSidebar()
   const pathname = usePathname()
   const router = useRouter()
-  const { collapsed, toggle, mobileOpen, closeMobile } = useSidebar()
+  const { isAdmin, userName, profile, canAccessModule, hasPermission } = useAuth()
 
-  const typedSession = session as Session | null
-  const rawUser = typedSession?.user
-  const role: string = typeof rawUser?.role === 'string' ? rawUser.role : 'user'
-  const isAdmin = role === 'admin' || role === 'ADMIN'
-  const allowedModules = useMemo(
-    () => (Array.isArray(rawUser?.allowedModules) ? rawUser.allowedModules : []),
-    [rawUser?.allowedModules],
-  )
-  const userName = (() => {
-    const name = (rawUser?.name ?? '').toString().trim()
-    if (name) return name
-    return 'Usuário'
-  })()
-  const roleLabel = isAdmin ? 'Administrador' : 'Colaborador'
+  const roleLabel = getRoleLabel(profile, isAdmin)
 
   const visibleItems = useMemo(() => {
-    return NAV_ITEMS.filter(item => {
-      if (!item.module) return true
-      if (item.module === 'admin-only') return isAdmin
-      return isAdmin || (Array.isArray(allowedModules) && allowedModules.includes(item.module))
+    return NAV_ITEMS.filter((item) => {
+      if (item.permission) return hasPermission(item.permission as AppPermission)
+      if (item.module) return canAccessModule(item.module as CrmModule)
+      return true
     })
-  }, [isAdmin, allowedModules])
+  }, [canAccessModule, hasPermission])
 
-  // Prefetch de todas as rotas do menu para primeira navegação mais rápida após F5
   useEffect(() => {
-    NAV_ITEMS.forEach(item => router.prefetch(item.href))
+    NAV_ITEMS.forEach((item) => router.prefetch(item.href))
   }, [router])
 
   const navContent = (
     <>
-      {/* Header */}
       <div className="flex items-center h-16 px-3 border-b border-[#e7e1d9] bg-white dark:bg-[#141414] dark:border-charcoal-800 flex-shrink-0 transition-colors duration-200">
         {collapsed ? (
           <button
@@ -94,12 +88,12 @@ function Sidebar() {
         )}
       </div>
 
-      {/* Nav */}
       <nav className="flex-1 overflow-y-auto overflow-x-hidden py-4 px-3 space-y-1 bg-white dark:bg-[#0f0f0f] transition-opacity duration-200 ease-out">
         {visibleItems.map(({ href, label, icon: Icon }) => {
           const active = pathname === href || (pathname?.startsWith(href + '/') ?? false)
           const collapsedClasses = collapsed ? 'justify-center gap-0' : 'gap-3'
           const hoverShift = collapsed ? '' : 'hover:translate-x-1'
+
           return (
             <Link key={href} href={href} prefetch onClick={closeMobile}>
               <div
@@ -124,11 +118,10 @@ function Sidebar() {
         })}
       </nav>
 
-      {/* Footer */}
       <div className="border-t border-[#e7e1d9] dark:border-charcoal-800 bg-white dark:bg-[#0f0f0f] flex-shrink-0">
         {collapsed ? (
           <div className="flex flex-col items-center gap-2 p-3">
-            <Link href="/configuracoes" title={`${userName} — ${roleLabel} — Configurações`}>
+            <Link href="/configuracoes" title={`${userName} - ${roleLabel} - Configuracoes`}>
               <div className="w-9 h-9 rounded-lg bg-[#f7efe6] hover:bg-[#f1e3d6] border border-[#eadfd2] dark:bg-[#2a2622] dark:hover:bg-[#322c26] dark:border-[#3a332c] flex items-center justify-center transition-colors group">
                 <Settings size={16} className="text-[#9c8c7a] dark:text-[#d8b898] group-hover:text-[#c58b62] transition-colors" />
               </div>
@@ -143,13 +136,13 @@ function Sidebar() {
           </div>
         ) : (
           <div className="flex items-center gap-2 p-3">
-            <Link href="/configuracoes" className="flex-shrink-0" title="Configurações">
+            <Link href="/configuracoes" className="flex-shrink-0" title="Configuracoes">
               <div className="w-9 h-9 rounded-lg bg-[#f7efe6] hover:bg-[#f1e3d6] border border-[#eadfd2] dark:bg-[#2a2622] dark:hover:bg-[#322c26] dark:border-[#3a332c] flex items-center justify-center transition-colors group">
                 <Settings size={16} className="text-[#9c8c7a] dark:text-[#d8b898] group-hover:text-[#c58b62] transition-colors" />
               </div>
             </Link>
             <div className="flex-1 min-w-0">
-              <p className="text-[#56493d] dark:text-[#e6d7c6] text-sm font-semibold truncate leading-tight">{userName}</p>
+              <p className="text-[#56493d] dark:text-[#e6d7c6] text-sm font-semibold truncate leading-tight">{userName || 'Usuario'}</p>
               <p className="text-[#9c8c7a] dark:text-[#c6b29b] text-[11px] truncate leading-tight">{roleLabel}</p>
             </div>
             <button
@@ -167,17 +160,8 @@ function Sidebar() {
 
   const width = collapsed ? 72 : 240
 
-  if (status === 'loading') {
-    return (
-      <aside style={{ width, minWidth: width }} className="h-screen bg-white border-r border-[#e7e1d9] flex items-center justify-center">
-        <div className="w-6 h-6 border-2 border-[#c58b62] border-t-transparent rounded-full animate-spin" />
-      </aside>
-    )
-  }
-
   return (
     <>
-      {/* Desktop */}
       <aside
         style={{ width, minWidth: width }}
         className="h-screen hidden lg:flex flex-col bg-white dark:bg-[#0f0f0f] border-r border-[#e7e1d9] dark:border-charcoal-800 shadow-sm transition-[width] duration-300 ease-in-out"
@@ -185,7 +169,6 @@ function Sidebar() {
         {navContent}
       </aside>
 
-      {/* Mobile trigger (shown via Header's button) */}
       {mobileOpen && (
         <div className="lg:hidden fixed inset-0 z-50">
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={closeMobile} />

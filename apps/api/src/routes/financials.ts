@@ -1,7 +1,7 @@
 import { Router } from 'express'
 import { z } from 'zod'
 import { prisma } from '../lib/prisma'
-import { authenticate, authorizeModule } from '../middleware/authenticate'
+import { authenticate, authorizePermission } from '../middleware/authenticate'
 import { getCache, setCache, CACHE_TTL, deleteCache } from '../lib/redis'
 import { FINANCIAL_CATEGORIES_BY_TYPE } from '@viviani/types'
 import { getFinancialCharts, getFinancialSummary } from '../domain/metrics/service'
@@ -9,7 +9,6 @@ import { invalidateOperationalMetricCaches } from '../domain/metrics/cache'
 
 export const financialsRouter: Router = Router()
 financialsRouter.use(authenticate)
-financialsRouter.use(authorizeModule('financeiro'))
 
 const schema = z.object({
   type: z.enum(['income', 'expense']),
@@ -21,7 +20,7 @@ const schema = z.object({
   tags: z.array(z.string()).optional().default([]),
 })
 
-financialsRouter.get('/', async (req, res, next) => {
+financialsRouter.get('/', authorizePermission('financeiro.view'), async (req, res, next) => {
   try {
     const { type, from, to, category, page = 1, limit = 20 } = req.query
     const skip = (Number(page) - 1) * Number(limit)
@@ -41,7 +40,7 @@ financialsRouter.get('/', async (req, res, next) => {
   } catch (error) { next(error) }
 })
 
-financialsRouter.get('/summary', async (_req, res, next) => {
+financialsRouter.get('/summary', authorizePermission('financeiro.view'), async (_req, res, next) => {
   try {
     const cached = await getCache('financial:summary')
     if (cached) { res.json({ success: true, data: cached }); return }
@@ -63,7 +62,7 @@ financialsRouter.get('/summary', async (_req, res, next) => {
   } catch (error) { next(error) }
 })
 
-financialsRouter.get('/charts', async (_req, res, next) => {
+financialsRouter.get('/charts', authorizePermission('financeiro.view'), async (_req, res, next) => {
   try {
     const cached = await getCache('financial:charts')
     if (cached) { res.json({ success: true, data: cached }); return }
@@ -74,7 +73,7 @@ financialsRouter.get('/charts', async (_req, res, next) => {
   } catch (error) { next(error) }
 })
 
-financialsRouter.post('/', async (req, res, next) => {
+financialsRouter.post('/', authorizePermission('financeiro.create'), async (req, res, next) => {
   try {
     const data = schema.parse(req.body)
     const financial = await prisma.financial.create({ data: { ...data, date: new Date(data.date) } })
@@ -85,7 +84,7 @@ financialsRouter.post('/', async (req, res, next) => {
   } catch (error) { next(error) }
 })
 
-financialsRouter.post('/recurring', async (req, res, next) => {
+financialsRouter.post('/recurring', authorizePermission('financeiro.create'), async (req, res, next) => {
   try {
     const data = schema.parse(req.body)
     const financial = await prisma.financial.create({ data: { ...data, date: new Date(data.date), recurring: true } })
@@ -94,11 +93,12 @@ financialsRouter.post('/recurring', async (req, res, next) => {
   } catch (error) { next(error) }
 })
 
-financialsRouter.patch('/:id', async (req, res, next) => {
+financialsRouter.patch('/:id', authorizePermission('financeiro.update'), async (req, res, next) => {
   try {
+    const financialId = String(req.params.id)
     const data = schema.partial().parse(req.body)
     const financial = await prisma.financial.update({
-      where: { id: req.params.id },
+      where: { id: financialId },
       data: data.date ? { ...data, date: new Date(data.date) } : data,
     })
     await deleteCache('financial:summary')
@@ -108,9 +108,10 @@ financialsRouter.patch('/:id', async (req, res, next) => {
   } catch (error) { next(error) }
 })
 
-financialsRouter.delete('/:id', async (req, res, next) => {
+financialsRouter.delete('/:id', authorizePermission('financeiro.delete'), async (req, res, next) => {
   try {
-    await prisma.financial.delete({ where: { id: req.params.id } })
+    const financialId = String(req.params.id)
+    await prisma.financial.delete({ where: { id: financialId } })
     await deleteCache('financial:summary')
     await deleteCache('financial:charts')
     await invalidateOperationalMetricCaches()
