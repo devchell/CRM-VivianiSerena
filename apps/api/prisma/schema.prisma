@@ -101,6 +101,8 @@ model User {
 
   auditLogs AuditLog[]
   contents  Content[]
+  contentVersions   ContentVersion[]
+  notificationReads NotificationRead[]
 
   @@map("users")
 }
@@ -132,7 +134,7 @@ model Lead {
 
 model Session {
   id           String   @id @default(cuid())
-  leadId       String   @map("lead_id")
+  leadId       String?  @map("lead_id")
   ip           String?
   userAgent    String?  @map("user_agent")
   referrer     String?
@@ -140,7 +142,9 @@ model Session {
   duration     Int      @default(0)
   createdAt    DateTime @default(now()) @map("created_at")
 
-  lead Lead @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  lead Lead? @relation(fields: [leadId], references: [id], onDelete: SetNull)
+  analyticsEvents AnalyticsEvent[]
+  webVitals      WebVital[]
 
   @@index([leadId])
   @@map("sessions")
@@ -192,9 +196,30 @@ model Content {
   updatedBy String         @map("updated_by")
 
   user User @relation(fields: [updatedBy], references: [id])
+  versions ContentVersion[]
 
   @@unique([section, key])
   @@map("contents")
+}
+
+model ContentVersion {
+  id             String         @id @default(cuid())
+  contentId      String?        @map("content_id")
+  section        ContentSection
+  key            String
+  value          Json
+  version        Int
+  reason         String         @default("update")
+  restoredFromId String?        @map("restored_from_id")
+  createdAt      DateTime       @default(now()) @map("created_at")
+  createdBy      String         @map("created_by")
+
+  content Content? @relation(fields: [contentId], references: [id], onDelete: SetNull)
+  user    User     @relation(fields: [createdBy], references: [id])
+
+  @@index([section, key, createdAt])
+  @@unique([section, key, version])
+  @@map("content_versions")
 }
 
 model AuditLog {
@@ -228,6 +253,56 @@ model SecurityEvent {
   @@index([timestamp])
   @@index([resolved])
   @@map("security_events")
+}
+
+model AnalyticsEvent {
+  id        String   @id @default(cuid())
+  sessionId String?  @map("session_id")
+  name      String
+  category  String
+  label     String?
+  value     Float?
+  page      String?
+  payload   Json     @default("{}")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  session Session? @relation(fields: [sessionId], references: [id], onDelete: SetNull)
+
+  @@index([createdAt])
+  @@index([name])
+  @@index([category])
+  @@map("analytics_events")
+}
+
+model WebVital {
+  id             String   @id @default(cuid())
+  sessionId      String?  @map("session_id")
+  metricId       String?  @map("metric_id")
+  name           String
+  value          Float
+  rating         String?
+  page           String?
+  navigationType String?  @map("navigation_type")
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  session Session? @relation(fields: [sessionId], references: [id], onDelete: SetNull)
+
+  @@index([createdAt])
+  @@index([name])
+  @@map("web_vitals")
+}
+
+model NotificationRead {
+  id             String   @id @default(cuid())
+  userId         String   @map("user_id")
+  notificationId String   @map("notification_id")
+  readAt         DateTime @default(now()) @map("read_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, notificationId])
+  @@index([userId, readAt])
+  @@map("notification_reads")
 }
 
 // LGPD — Registro de consentimento de uso de dados

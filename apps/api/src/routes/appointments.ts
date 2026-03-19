@@ -10,12 +10,13 @@ import { invalidateOperationalMetricCaches } from '../domain/metrics/cache'
 export const appointmentsRouter: Router = Router()
 appointmentsRouter.use(authenticate)
 
+const DEFAULT_APPOINTMENT_DURATION_MINUTES = 60
+
 const schema = z.object({
   leadId: z.string(),
   date: z.string().datetime(),
   serviceType: z.enum(['coaching_individual', 'coaching_group', 'workshop', 'mentoring', 'consultation']),
   notes: z.string().optional(),
-  duration: z.number().min(30).max(240).optional().default(60),
 })
 
 appointmentsRouter.get('/', async (req, res, next) => {
@@ -42,7 +43,9 @@ appointmentsRouter.get('/', async (req, res, next) => {
         leadEmail: appointment.lead.email,
         leadPhone: appointment.lead.phone,
         startTime: appointment.date.toISOString(),
-        endTime: new Date(appointment.date.getTime() + 60 * 60 * 1000).toISOString(),
+        endTime: new Date(
+          appointment.date.getTime() + DEFAULT_APPOINTMENT_DURATION_MINUTES * 60 * 1000
+        ).toISOString(),
         serviceType: appointment.serviceType,
         status: appointment.status,
         notes: appointment.notes,
@@ -65,7 +68,9 @@ appointmentsRouter.post('/', async (req, res, next) => {
     if (!lead) throw new AppError(404, 'Lead not found')
 
     const startDate = new Date(data.date)
-    const endDate = new Date(startDate.getTime() + (data.duration ?? 60) * 60 * 1000)
+    const endDate = new Date(
+      startDate.getTime() + DEFAULT_APPOINTMENT_DURATION_MINUTES * 60 * 1000
+    )
 
     const calEvent = await googleCalendar.createEvent({
       summary: data.serviceType.replace(/_/g, ' ') + ' - ' + lead.name,

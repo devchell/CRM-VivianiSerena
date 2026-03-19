@@ -5,6 +5,7 @@ import { authenticate } from '../middleware/authenticate'
 import { getCache, setCache, CACHE_TTL } from '../lib/redis'
 import { anonymizeIp } from '../middleware/security'
 import { getAnalyticsMetrics } from '../domain/metrics/service'
+import { invalidateOperationalMetricCaches } from '../domain/metrics/cache'
 
 export const analyticsRouter: Router = Router()
 
@@ -32,41 +33,44 @@ const vitalsSchema = z.object({
   value: z.number(),
   rating: z.enum(['good', 'needs-improvement', 'poor']).optional(),
   page: z.string().optional(),
+  sessionId: z.string().optional(),
+  id: z.string().optional(),
+  navigationType: z.string().optional(),
 })
 
-// POST /analytics/pageview — public
 analyticsRouter.post('/pageview', async (req, res, next) => {
   try {
     const data = pageviewSchema.parse(req.body)
     const ip = anonymizeIp(req.ip ?? '0.0.0.0')
 
-    // Find or create a session (by sessionId cookie or IP+UA fingerprint)
-    const sessionId = data.sessionId
-    if (sessionId) {
-      // Try to update existing session
-      const session = await prisma.session.findFirst({
-        where: { id: sessionId },
+    if (data.sessionId) {
+      const existing = await prisma.session.findUnique({
+        where: { id: data.sessionId },
       })
-      if (session) {
-        const pages = (session.pagesVisited as string[]) ?? []
-        if (!pages.includes(data.page)) pages.push(data.page)
+
+      if (existing) {
+        const pages = (existing.pagesVisited as string[]) ?? []
+        if (!pages.includes(data.page)) {
+          pages.push(data.page)
+        }
+
         await prisma.session.update({
-          where: { id: sessionId },
+          where: { id: data.sessionId },
           data: {
             pagesVisited: pages,
-            duration: data.duration ?? session.duration,
-            referrer: data.referrer ?? session.referrer,
+            duration: data.duration ?? existing.duration,
+            referrer: data.referrer ?? existing.referrer,
           },
         })
-        res.json({ success: true })
+
+        await invalidateOperationalMetricCaches()
+        res.json({ success: true, data: { sessionId: data.sessionId } })
         return
       }
     }
 
-    // Create anonymous session (not linked to any lead)
-    await prisma.session.create({
+    const session = await prisma.session.create({
       data: {
-        leadId: await getOrCreateAnonymousLeadId(ip),
         ip,
         userAgent: req.headers['user-agent'] ?? null,
         referrer: data.referrer ?? null,
@@ -75,40 +79,79 @@ analyticsRouter.post('/pageview', async (req, res, next) => {
       },
     })
 
-    res.json({ success: true })
+    await invalidateOperationalMetricCaches()
+    res.json({ success: true, data: { sessionId: session.id } })
   } catch (error) {
     next(error)
   }
 })
 
-// POST /analytics/event — public
 analyticsRouter.post('/event', async (req, res, next) => {
   try {
-    eventSchema.parse(req.body)
-    // Events are stored as SecurityEvent with severity=low for now
-    // In a full implementation, we'd have an AnalyticsEvent table
-    res.json({ success: true })
+    const data = eventSchema.parse(req.body)
+    const session = data.sessionId
+      ? await prisma.session.findUnique({ where: { id: data.sessionId }, select: { id: true } })
+      : null
+
+    const event = await prisma.analyticsEvent.create({
+      data: {
+        sessionId: session?.id ?? null,
+        name: data.name,
+        category: data.category,
+        label: data.label ?? null,
+        value: data.value ?? null,
+        page: data.page ?? null,
+        payload: {
+          name: data.name,
+          category: data.category,
+          label: data.label ?? null,
+          value: data.value ?? null,
+          page: data.page ?? null,
+        },
+      },
+    })
+
+    await invalidateOperationalMetricCaches()
+    res.json({ success: true, data: { id: event.id } })
   } catch (error) {
     next(error)
   }
 })
 
-// POST /analytics/vitals — public
 analyticsRouter.post('/vitals', async (req, res, next) => {
   try {
-    vitalsSchema.parse(req.body)
-    res.json({ success: true })
+    const data = vitalsSchema.parse(req.body)
+    const session = data.sessionId
+      ? await prisma.session.findUnique({ where: { id: data.sessionId }, select: { id: true } })
+      : null
+
+    const vital = await prisma.webVital.create({
+      data: {
+        sessionId: session?.id ?? null,
+        metricId: data.id ?? null,
+        name: data.name,
+        value: data.value,
+        rating: data.rating ?? null,
+        page: data.page ?? null,
+        navigationType: data.navigationType ?? null,
+      },
+    })
+
+    await invalidateOperationalMetricCaches()
+    res.json({ success: true, data: { id: vital.id } })
   } catch (error) {
     next(error)
   }
 })
 
-// GET /analytics/dashboard — authenticated
 analyticsRouter.get('/dashboard', authenticate, async (_req, res, next) => {
   try {
     const cacheKey = 'analytics:dashboard'
     const cached = await getCache(cacheKey)
-    if (cached) { res.json({ success: true, data: cached }); return }
+    if (cached) {
+      res.json({ success: true, data: cached })
+      return
+    }
 
     const metrics = await getAnalyticsMetrics()
     const data = {
@@ -127,22 +170,3 @@ analyticsRouter.get('/dashboard', authenticate, async (_req, res, next) => {
     next(error)
   }
 })
-
-// Helper: get or create an anonymous lead record for tracking
-async function getOrCreateAnonymousLeadId(ip: string): Promise<string> {
-  const existing = await prisma.lead.findFirst({
-    where: { email: `anonymous+${ip.replace(/\./g, '_')}@tracking.internal` },
-    select: { id: true },
-  })
-  if (existing) return existing.id
-
-  const lead = await prisma.lead.create({
-    data: {
-      name: 'Visitante Anônimo',
-      email: `anonymous+${ip.replace(/\./g, '_')}@tracking.internal`,
-      source: 'organic',
-      status: 'new',
-    },
-  })
-  return lead.id
-}

@@ -76,7 +76,7 @@ interface Collaborator {
   name: string | null
   email: string
   phone: string | null
-  role: 'ADMIN' | 'VIEWER'
+  role: 'ADMIN' | 'MANAGER' | 'VIEWER'
   allowedModules: string[]
   photoUrl: string | null
   createdAt: string
@@ -88,7 +88,7 @@ interface FormState {
   name: string
   email: string
   phone: string
-  role: 'ADMIN' | 'VIEWER'
+  role: 'ADMIN' | 'MANAGER' | 'VIEWER'
   allowedModules: string[]
 }
 
@@ -153,7 +153,7 @@ export default function ColaboradoresPage() {
       const method = editing ? 'PATCH' : 'POST'
       const body = editing
         ? { name: form.name, phone: form.phone, role: form.role, allowedModules: form.role === 'ADMIN' ? [] : form.allowedModules }
-        : form
+        : { ...form, allowedModules: form.role === 'ADMIN' ? [] : form.allowedModules }
 
       const res = await fetch(url, { method, headers: hdrs, body: JSON.stringify(body) })
       const data = await res.json() as { success: boolean; message?: string }
@@ -212,10 +212,11 @@ export default function ColaboradoresPage() {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         {[
           { label: 'Total', value: users.length, icon: Users, color: 'text-rose-gold', bg: 'bg-rose-gold/10' },
           { label: 'Admins', value: users.filter(u => u.role === 'ADMIN').length, icon: Crown, color: 'text-amber-500', bg: 'bg-amber-500/10' },
+          { label: 'Gestores', value: users.filter(u => u.role === 'MANAGER').length, icon: Shield, color: 'text-violet-500', bg: 'bg-violet-500/10' },
           { label: 'Acesso Limitado', value: users.filter(u => u.role === 'VIEWER').length, icon: Eye, color: 'text-blue-400', bg: 'bg-blue-400/10' },
         ].map(s => (
           <div key={s.label} className="card-dark p-4 shadow-sm flex items-center gap-3">
@@ -271,8 +272,18 @@ export default function ColaboradoresPage() {
                       </div>
                     </td>
                     <td className="px-4 py-3">
-                      <span className={`inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full ${u.role === 'ADMIN' ? 'text-amber-600 bg-amber-500/10' : 'text-blue-500 bg-blue-500/10'}`}>
-                        {u.role === 'ADMIN' ? <><Crown size={10} /> Admin</> : <><Eye size={10} /> Limitado</>}
+                      <span className={`inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full ${
+                        u.role === 'ADMIN'
+                          ? 'text-amber-600 bg-amber-500/10'
+                          : u.role === 'MANAGER'
+                            ? 'text-violet-500 bg-violet-500/10'
+                            : 'text-blue-500 bg-blue-500/10'
+                      }`}>
+                        {u.role === 'ADMIN'
+                          ? <><Crown size={10} /> Admin</>
+                          : u.role === 'MANAGER'
+                            ? <><Shield size={10} /> Gestor</>
+                            : <><Eye size={10} /> Limitado</>}
                       </span>
                       {u.mustChangePassword && (
                         <span className="ml-1 inline-flex text-xs text-orange-500 bg-orange-500/10 px-1.5 py-0.5 rounded-full">
@@ -373,24 +384,37 @@ export default function ColaboradoresPage() {
               {/* Tipo de acesso */}
               <div>
                 <label className="block text-xs font-medium text-charcoal-400 mb-2">Tipo de Acesso *</label>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
                   {[
                     { value: 'ADMIN', label: 'Admin', desc: 'Acesso total ao CRM', icon: Crown, color: 'border-amber-400 bg-amber-50 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400' },
                     { value: 'VIEWER', label: 'Limitado', desc: 'Acesso aos módulos selecionados', icon: Eye, color: 'border-blue-400 bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400' },
                   ].map(opt => (
                     <button key={opt.value} type="button"
-                      onClick={() => setForm(f => ({ ...f, role: opt.value as 'ADMIN' | 'VIEWER' }))}
+                      onClick={() => setForm(f => ({ ...f, role: opt.value as 'ADMIN' | 'MANAGER' | 'VIEWER' }))}
                       className={`p-4 rounded-xl border-2 text-left transition-all ${form.role === opt.value ? opt.color : 'border-blush-300 dark:border-charcoal-600 hover:border-rose-gold/30'}`}>
                       <opt.icon size={20} className="mb-2 opacity-70" />
                       <p className="text-sm font-semibold">{opt.label}</p>
                       <p className="text-xs opacity-70 mt-0.5">{opt.desc}</p>
                     </button>
                   ))}
+                  <button
+                    type="button"
+                    onClick={() => setForm(f => ({ ...f, role: 'MANAGER' }))}
+                    className={`p-4 rounded-xl border-2 text-left transition-all ${
+                      form.role === 'MANAGER'
+                        ? 'border-violet-400 bg-violet-50 dark:bg-violet-500/10 text-violet-600 dark:text-violet-400'
+                        : 'border-blush-300 dark:border-charcoal-600 hover:border-rose-gold/30'
+                    }`}
+                  >
+                    <Shield size={20} className="mb-2 opacity-70" />
+                    <p className="text-sm font-semibold">Gestor</p>
+                    <p className="text-xs opacity-70 mt-0.5">Acesso ampliado com modulos definidos</p>
+                  </button>
                 </div>
               </div>
 
               {/* Módulos (só para limitado) */}
-              {form.role === 'VIEWER' && (
+              {form.role !== 'ADMIN' && (
                 <div>
                   <label className="block text-xs font-medium text-charcoal-400 mb-2">
                     Módulos disponíveis

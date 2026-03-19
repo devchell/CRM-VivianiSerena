@@ -1,6 +1,9 @@
 import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
+import Script from 'next/script'
+import { Suspense } from 'react'
 import './globals.css'
+import { PageTracker } from '@/components/PageTracker'
 
 const inter = Inter({
   subsets: ['latin'],
@@ -146,6 +149,8 @@ const jsonLd = {
   },
 }
 
+const gaId = process.env.NEXT_PUBLIC_GA_ID?.trim() || null
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="pt-BR" className={inter.variable}>
@@ -154,20 +159,22 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
-        {/* Google Analytics 4 - substitua G-XXXXXXXXXX pelo ID real */}
-        <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX" />
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
+        {gaId ? <Script src={`https://www.googletagmanager.com/gtag/js?id=${gaId}`} strategy="afterInteractive" /> : null}
+        {gaId ? (
+          <Script id="ga-init" strategy="afterInteractive">
+            {`
               window.dataLayer = window.dataLayer || [];
-              function gtag(){dataLayer.push(arguments);}
+              function gtag(){window.dataLayer.push(arguments);}
               gtag('js', new Date());
-              gtag('config', 'G-XXXXXXXXXX', { page_path: window.location.pathname });
-            `,
-          }}
-        />
+              gtag('config', '${gaId}', { page_path: window.location.pathname });
+            `}
+          </Script>
+        ) : null}
       </head>
       <body className="min-h-screen bg-cream font-body text-charcoal antialiased">
+        <Suspense fallback={null}>
+          <PageTracker />
+        </Suspense>
         <a
           href="#main-content"
           className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-[100] focus:px-4 focus:py-2 focus:bg-rose-gold focus:text-white focus:rounded-md focus:outline-none"

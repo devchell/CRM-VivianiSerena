@@ -1,16 +1,36 @@
 import NextAuth from 'next-auth'
 import Credentials from 'next-auth/providers/credentials'
 import { z } from 'zod'
-import { crmServerEnv } from './lib/server-env'
 
-const API_BASE = crmServerEnv.apiBaseUrl
 
 // Access token dura 15min — renovamos 1 minuto antes do vencimento
 const ACCESS_TOKEN_LIFETIME_MS = 14 * 60 * 1000 // 14 min
 
+function getApiBaseUrl(): string {
+  const value = process.env.API_BASE_URL?.trim() || process.env.NEXT_PUBLIC_API_URL?.trim()
+
+  if (!value) {
+    throw new Error('[auth] Missing API_BASE_URL or NEXT_PUBLIC_API_URL')
+  }
+
+  let parsed: URL
+  try {
+    parsed = new URL(value)
+  } catch {
+    throw new Error(`[auth] Invalid API URL: ${value}`)
+  }
+
+  if (['localhost', '127.0.0.1', '0.0.0.0'].includes(parsed.hostname)) {
+    throw new Error('[env] API_BASE_URL must not point to localhost in this deployment model')
+  }
+
+  return value.replace(/\/+$/, '')
+}
+
 async function refreshAccessToken(refreshToken: string): Promise<{ accessToken: string; refreshToken: string } | null> {
   try {
-    const res = await fetch(`${API_BASE}/api/v1/auth/refresh`, {
+    const apiBaseUrl = getApiBaseUrl()
+    const res = await fetch(`${apiBaseUrl}/api/v1/auth/refresh`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ refreshToken }),
@@ -33,12 +53,13 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         twoFactorSessionToken: { label: '2FA Session Token', type: 'text' },
       },
       async authorize(credentials) {
+        const apiBaseUrl = getApiBaseUrl()
         // ── Conclusão de fluxo 2FA ──
         if (credentials?.twoFactorSessionToken) {
           const parsed = z.object({ twoFactorSessionToken: z.string() }).safeParse(credentials)
           if (!parsed.success) return null
 
-          const res = await fetch(`${API_BASE}/api/v1/auth/login`, {
+          const res = await fetch(`${apiBaseUrl}/api/v1/auth/login`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -90,7 +111,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           return null
         }
 
-        const res = await fetch(`${API_BASE}/api/v1/auth/login`, {
+        const res = await fetch(`${apiBaseUrl}/api/v1/auth/login`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(parsed.data),
@@ -209,7 +230,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         : false
 
       try {
-        const res = await fetch(`${API_BASE}/api/v1/auth/me`, {
+        const apiBaseUrl = getApiBaseUrl()
+        const res = await fetch(`${apiBaseUrl}/api/v1/auth/me`, {
           headers: { Authorization: `Bearer ${refreshed.accessToken}` },
         })
         if (res.ok) {

@@ -11,6 +11,44 @@ import { logger } from '../lib/logger'
 export const securityRouter: Router = Router()
 securityRouter.use(authenticate)
 
+const SECURITY_STATS_CACHE_KEY = 'security:stats'
+const SECURITY_ACTIVITY_CACHE_KEY = 'security:activity'
+
+async function invalidateSecurityCaches() {
+  await Promise.allSettled([
+    redis.del(SECURITY_STATS_CACHE_KEY),
+    redis.del(SECURITY_ACTIVITY_CACHE_KEY),
+  ])
+}
+
+function emitSecurityAlert(
+  req: { app: { get: (key: string) => unknown } },
+  event: {
+    id: string
+    type: string
+    severity: string
+    sourceIp?: string | null
+    details?: unknown
+    resolved?: boolean
+    timestamp?: Date
+  }
+) {
+  const io = req.app.get('io') as {
+    emit?: (channel: string, payload: Record<string, unknown>) => void
+  } | undefined
+
+  io?.emit?.('security_alert', {
+    id: event.id,
+    type: event.type,
+    severity: event.severity,
+    sourceIp: event.sourceIp ?? null,
+    details: event.details ?? {},
+    resolved: event.resolved ?? false,
+    timestamp: event.timestamp?.toISOString() ?? new Date().toISOString(),
+    message: `${event.type}:${event.severity}`,
+  })
+}
+
 // ─── Events ─────────────────────────────────────────────────────────────────
 
 // GET /security/events — últimas 48h ou 7d
@@ -49,6 +87,8 @@ securityRouter.post('/events', async (req, res, next) => {
         details: (data.details ?? {}) as Prisma.InputJsonObject,
       },
     })
+    await invalidateSecurityCaches()
+    emitSecurityAlert(req, event)
     res.status(201).json({ success: true, data: event })
   } catch (err) { next(err) }
 })
@@ -60,6 +100,8 @@ securityRouter.patch('/events/:id/resolve', async (req, res, next) => {
       where: { id: req.params.id },
       data: { resolved: true },
     })
+    await invalidateSecurityCaches()
+    emitSecurityAlert(req, event)
     res.json({ success: true, data: event })
   } catch (err) { next(err) }
 })
@@ -68,7 +110,7 @@ securityRouter.patch('/events/:id/resolve', async (req, res, next) => {
 
 securityRouter.get('/stats', async (_req, res, next) => {
   try {
-    const cached = await getCache('security:stats')
+    const cached = await getCache(SECURITY_STATS_CACHE_KEY)
     if (cached) { res.json({ success: true, data: cached }); return }
 
     const since7d = new Date(Date.now() - 7 * 86400_000)
@@ -91,7 +133,7 @@ securityRouter.get('/stats', async (_req, res, next) => {
       byType: byType.slice(0, 10).map(t => ({ type: t.type, count: t._count._all })),
     }
 
-    await setCache('security:stats', data, CACHE_TTL.SHORT)
+    await setCache(SECURITY_STATS_CACHE_KEY, data, CACHE_TTL.SHORT)
     res.json({ success: true, data })
   } catch (err) { next(err) }
 })
@@ -100,7 +142,7 @@ securityRouter.get('/stats', async (_req, res, next) => {
 
 securityRouter.get('/activity', async (_req, res, next) => {
   try {
-    const cached = await getCache('security:activity')
+    const cached = await getCache(SECURITY_ACTIVITY_CACHE_KEY)
     if (cached) { res.json({ success: true, data: cached }); return }
 
     const since = new Date(Date.now() - 24 * 60 * 60 * 1000)
@@ -123,7 +165,7 @@ securityRouter.get('/activity', async (_req, res, next) => {
       hours.push({ hour: label, blocked, total: inBucket.length })
     }
 
-    await setCache('security:activity', hours, 300)
+    await setCache(SECURITY_ACTIVITY_CACHE_KEY, hours, 300)
     res.json({ success: true, data: hours })
   } catch (err) { next(err) }
 })
@@ -147,7 +189,7 @@ securityRouter.post('/block-ip', async (req, res, next) => {
 
     await IpBlocklist.block(ip, Number(ttlMinutes) * 60, reason)
 
-    await prisma.securityEvent.create({
+    const event = await prisma.securityEvent.create({
       data: {
         type: 'IP_MANUALLY_BLOCKED',
         severity: 'medium',
@@ -157,6 +199,8 @@ securityRouter.post('/block-ip', async (req, res, next) => {
     })
 
     logger.info('IP manually blocked', { ip, ttlMinutes, reason })
+    await invalidateSecurityCaches()
+    emitSecurityAlert(req, event)
     res.json({ success: true, message: `IP ${ip} bloqueado por ${ttlMinutes} minutos` })
   } catch (err) { next(err) }
 })
@@ -181,7 +225,8 @@ securityRouter.post('/test-alert', async (req, res, next) => {
       },
     })
 
-    // Socket emit handled by server.ts io instance watching security_events table
+    await invalidateSecurityCaches()
+    emitSecurityAlert(req, event)
 
     res.json({ success: true, data: event })
   } catch (err) { next(err) }

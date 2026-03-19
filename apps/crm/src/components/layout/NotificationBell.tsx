@@ -10,6 +10,7 @@ interface Notification {
   desc: string
   time: string
   read: boolean
+  readAt?: string | null
 }
 
 function timeAgo(date: string): string {
@@ -26,19 +27,26 @@ export function NotificationBell() {
   const [notifications, setNotifications] = useState<Notification[]>([])
   const ref = useRef<HTMLDivElement>(null)
 
+  const loadNotifications = async () => {
+    try {
+      const response = await fetch('/api/notifications', { cache: 'no-store' })
+      const data = await response.json()
+      if (Array.isArray(data)) {
+        setNotifications(data as Notification[])
+      }
+    } catch {
+      return null
+    }
+  }
+
   useEffect(() => {
-    fetch('/api/notifications')
-      .then((response) => response.json())
-      .then((data: unknown) => {
-        if (Array.isArray(data)) {
-          setNotifications(data as Notification[])
-        }
-      })
-      .catch(() => null)
+    void loadNotifications()
   }, [])
 
   useEffect(() => {
     if (!open) return
+
+    void loadNotifications()
 
     const handler = (event: MouseEvent) => {
       if (ref.current && !ref.current.contains(event.target as Node)) {
@@ -49,6 +57,30 @@ export function NotificationBell() {
     document.addEventListener('mousedown', handler)
     return () => document.removeEventListener('mousedown', handler)
   }, [open])
+
+  useEffect(() => {
+    if (!open) return
+
+    const unreadIds = notifications.filter((notification) => !notification.read).map((notification) => notification.id)
+
+    if (unreadIds.length === 0) {
+      return
+    }
+
+    setNotifications((current) =>
+      current.map((notification) => ({
+        ...notification,
+        read: true,
+        readAt: notification.readAt ?? new Date().toISOString(),
+      }))
+    )
+
+    void fetch('/api/notifications', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ notificationIds: unreadIds }),
+    }).catch(() => null)
+  }, [open, notifications])
 
   const unread = notifications.filter((notification) => !notification.read).length
 

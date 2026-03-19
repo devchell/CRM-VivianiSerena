@@ -29,7 +29,20 @@ const SECTIONS: [SectionKey, SectionMeta][] = [
 
 interface ContentStore { [section: string]: { [key: string]: unknown } }
 interface SaveStatus { state: 'idle' | 'saving' | 'saved'; time?: string }
-interface HistoryEntry { key: string; value: unknown; savedAt: string }
+interface HistoryEntry {
+  id: string
+  section: string
+  key: string
+  value: unknown
+  version: number
+  reason: string
+  savedAt: string
+  author?: {
+    id: string
+    name: string | null
+    email: string
+  }
+}
 
 // ── Shared class strings ──────────────────────────────────────────────────────
 
@@ -169,6 +182,8 @@ export default function EditarSitePage() {
   const [showPublishModal, setShowPublishModal] = useState(false)
   const [showHistory, setShowHistory] = useState(false)
   const [history, setHistory] = useState<HistoryEntry[]>([])
+  const [loadingHistory, setLoadingHistory] = useState(false)
+  const [restoringHistoryId, setRestoringHistoryId] = useState<string | null>(null)
   const [uploading, setUploading] = useState<string | null>(null)
 
   const hdrs = { Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json' }
@@ -305,16 +320,67 @@ export default function EditarSitePage() {
   }
 
   // ── History ────────────────────────────────────────────────────────────────
-  const fetchHistory = async () => {
-    setHistory([
-      { key: 'hero.urgency_badge', value: { enabled: true, text: 'Últimas vagas' }, savedAt: '15/03 14:32' },
-      { key: 'hero.title', value: { pt: 'Renovo a originalidade da tua pele' }, savedAt: '15/03 11:20' },
-      { key: 'sobre.bio', value: { pt: '...' }, savedAt: '14/03 16:45' },
-    ])
-    setShowHistory(true)
+  const fetchHistoryLegacy = async () => {
+    setHistory([])
   }
 
-  // ── Image dropzone ─────────────────────────────────────────────────────────
+  // Image dropzone ─────────────────────────────────────────────────────────
+  const fetchHistory = async () => {
+    if (!accessToken) {
+      toast.error('Sessao expirada - faca login novamente')
+      return
+    }
+
+    setLoadingHistory(true)
+    try {
+      const response = await fetch(`${API_URL}/api/v1/content/history?limit=30`, {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      })
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`)
+      }
+
+      const payload = await response.json() as { success: true; data: HistoryEntry[] }
+      setHistory(payload.data ?? [])
+      setShowHistory(true)
+    } catch {
+      toast.error('Erro ao carregar historico de versoes')
+    } finally {
+      setLoadingHistory(false)
+    }
+  }
+
+  const handleRestoreHistory = async (entry: HistoryEntry) => {
+    if (!accessToken) {
+      toast.error('Sessao expirada - faca login novamente')
+      return
+    }
+
+    setRestoringHistoryId(entry.id)
+    try {
+      const response = await fetch(`${API_URL}/api/v1/content/history/${entry.id}/restore`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${accessToken}` },
+      })
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`)
+      }
+
+      await fetchContent()
+      if (iframeRef.current) {
+        iframeRef.current.src = `${LANDING_URL}?t=${Date.now()}`
+      }
+      toast.success(`Versao ${entry.version} restaurada com sucesso`)
+      await fetchHistory()
+    } catch {
+      toast.error('Erro ao restaurar esta versao')
+    } finally {
+      setRestoringHistoryId(null)
+    }
+  }
+
   const ImageField = ({ section, fieldKey, label }: { section: string; fieldKey: string; label: string }) => {
     const val = get(section, fieldKey) as { url?: string } | null
     const isUp = uploading === `${section}.${fieldKey}`
@@ -717,18 +783,30 @@ export default function EditarSitePage() {
               <button onClick={() => setShowHistory(false)} className="text-charcoal-400 hover:text-charcoal dark:hover:text-charcoal-200 transition-colors"><X size={18} /></button>
             </div>
             <div className="divide-y divide-blush-100 dark:divide-charcoal-700">
-              {history.map((h, i) => (
-                <div key={i} className="px-6 py-4 flex items-center justify-between gap-4">
+              {loadingHistory && (
+                <p className="px-6 py-8 text-center text-sm text-charcoal-400 dark:text-charcoal-500">Carregando historico...</p>
+              )}
+              {!loadingHistory && history.map((h) => (
+                <div key={h.id} className="px-6 py-4 flex items-center justify-between gap-4">
                   <div>
-                    <p className="font-mono text-xs text-charcoal dark:text-charcoal-200">{h.key}</p>
-                    <p className="text-xs text-charcoal-400 dark:text-charcoal-500 mt-0.5">Salvo em {h.savedAt}</p>
+                    <p className="font-mono text-xs text-charcoal dark:text-charcoal-200">{h.section}.{h.key}</p>
+                    <p className="text-xs text-charcoal-400 dark:text-charcoal-500 mt-0.5">
+                      V{h.version} • {new Date(h.savedAt).toLocaleString('pt-BR')}
+                    </p>
+                    <p className="text-[11px] text-charcoal-400 dark:text-charcoal-500 mt-1">
+                      {h.reason} • {h.author?.name || h.author?.email || 'sistema'}
+                    </p>
                   </div>
-                  <button className="text-xs px-3 py-1.5 rounded-lg border border-blush-200 dark:border-charcoal-600 text-charcoal-500 dark:text-charcoal-400 hover:bg-rose-gold/10 hover:text-rose-gold hover:border-rose-gold/30 transition-colors whitespace-nowrap">
-                    Restaurar
+                  <button
+                    onClick={() => handleRestoreHistory(h)}
+                    disabled={restoringHistoryId === h.id}
+                    className="text-xs px-3 py-1.5 rounded-lg border border-blush-200 dark:border-charcoal-600 text-charcoal-500 dark:text-charcoal-400 hover:bg-rose-gold/10 hover:text-rose-gold hover:border-rose-gold/30 transition-colors whitespace-nowrap disabled:opacity-60"
+                  >
+                    {restoringHistoryId === h.id ? 'Restaurando...' : 'Restaurar'}
                   </button>
                 </div>
               ))}
-              {history.length === 0 && (
+              {!loadingHistory && history.length === 0 && (
                 <p className="px-6 py-8 text-center text-sm text-charcoal-400 dark:text-charcoal-500">Nenhuma versão anterior</p>
               )}
             </div>
@@ -738,3 +816,4 @@ export default function EditarSitePage() {
     </div>
   )
 }
+

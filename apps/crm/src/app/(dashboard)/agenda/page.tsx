@@ -97,7 +97,6 @@ const STATUS_META = {
   },
 } as const
 
-const DEFAULT_DURATION = 60
 const FullCalendarView = FullCalendar as unknown as ComponentType<Record<string, unknown>>
 
 interface CalendarSelectArg {
@@ -130,7 +129,7 @@ function formatDateLabel(value: string) {
   }).format(new Date(value))
 }
 
-function buildDefaultForm(): CreateAppointmentDto & { duration: number } {
+function buildDefaultForm(): CreateAppointmentDto {
   const now = new Date()
   now.setMinutes(0, 0, 0)
   now.setHours(Math.max(9, now.getHours() + 1))
@@ -140,7 +139,6 @@ function buildDefaultForm(): CreateAppointmentDto & { duration: number } {
     date: formatDateTimeLocal(now.toISOString()),
     serviceType: 'consultation',
     notes: '',
-    duration: DEFAULT_DURATION,
   }
 }
 
@@ -151,7 +149,7 @@ export default function AgendaPage() {
   const [loading, setLoading] = useState(true)
   const [showModal, setShowModal] = useState(false)
   const [submitting, setSubmitting] = useState(false)
-  const [form, setForm] = useState<CreateAppointmentDto & { duration: number }>(buildDefaultForm())
+  const [form, setForm] = useState<CreateAppointmentDto>(buildDefaultForm())
 
   useEffect(() => {
     if (!accessToken) return
@@ -267,7 +265,6 @@ export default function AgendaPage() {
           date: new Date(form.date).toISOString(),
           serviceType: form.serviceType,
           notes: form.notes?.trim() || undefined,
-          duration: form.duration,
         }),
       })
 
@@ -605,17 +602,12 @@ export default function AgendaPage() {
                   <label className="mb-1.5 block text-xs font-medium uppercase tracking-[0.12em] text-charcoal-400 dark:text-charcoal-400">
                     Duracao
                   </label>
-                  <select
-                    value={form.duration}
-                    onChange={(event) => setForm((current) => ({ ...current, duration: Number(event.target.value) }))}
-                    className="w-full rounded-2xl border border-blush-300 bg-white px-4 py-3 text-sm text-charcoal shadow-sm focus:outline-none focus:ring-2 focus:ring-rose-gold/30 dark:border-charcoal-600 dark:bg-charcoal-700 dark:text-charcoal-100"
-                  >
-                    {[30, 60, 90, 120].map((minutes) => (
-                      <option key={minutes} value={minutes}>
-                        {minutes} min
-                      </option>
-                    ))}
-                  </select>
+                  <div className="flex h-[50px] items-center rounded-2xl border border-blush-300 bg-blush-50 px-4 text-sm font-medium text-charcoal-500 shadow-sm dark:border-charcoal-600 dark:bg-charcoal-700/60 dark:text-charcoal-300">
+                    60 min padrao
+                  </div>
+                  <p className="mt-1 text-[11px] text-charcoal-400 dark:text-charcoal-500">
+                    A duracao operacional atual do CRM e fixa em 1 hora por agendamento.
+                  </p>
                 </div>
               </div>
 
