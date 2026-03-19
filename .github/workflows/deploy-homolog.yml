@@ -11,8 +11,27 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  preflight:
+    runs-on: ubuntu-latest
+    outputs:
+      has_vercel_token: ${{ steps.check.outputs.has_vercel_token }}
+    steps:
+      - name: Check Vercel token
+        id: check
+        shell: bash
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        run: |
+          if [[ -n "${VERCEL_TOKEN}" ]]; then
+            echo "has_vercel_token=true" >> "${GITHUB_OUTPUT}"
+          else
+            echo "has_vercel_token=false" >> "${GITHUB_OUTPUT}"
+            echo "VERCEL_TOKEN secret not configured; skipping Vercel deploy jobs."
+          fi
+
   deploy-landing-hml:
-    if: ${{ secrets.VERCEL_TOKEN != '' }}
+    needs: preflight
+    if: ${{ needs.preflight.outputs.has_vercel_token == 'true' }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -53,7 +72,8 @@ jobs:
         run: vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }}
 
   deploy-crm-hml:
-    if: ${{ secrets.VERCEL_TOKEN != '' }}
+    needs: preflight
+    if: ${{ needs.preflight.outputs.has_vercel_token == 'true' }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
