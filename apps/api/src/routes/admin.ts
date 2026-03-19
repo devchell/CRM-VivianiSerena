@@ -7,6 +7,7 @@ import { apiEnv } from '../lib/env'
 import { healthcheckUploadStorage } from '../infrastructure/storage'
 import { getEmailSettingsOverview, saveEmailSettings } from '../infrastructure/emailSettings'
 import { getGoogleCalendarConnectionStatus } from '../infrastructure/googleCalendar'
+import { fetchGoogleBusinessReviews, listGoogleBusinessLocations } from '../infrastructure/googleBusiness'
 
 export const adminRouter: Router = Router()
 
@@ -19,6 +20,16 @@ const emailSettingsSchema = z.object({
   from: z.string().trim().email('E-mail remetente invalido'),
   fromName: z.string().trim().min(1, 'Nome do remetente e obrigatorio'),
   adminEmail: z.string().trim().email('E-mail administrativo invalido'),
+})
+
+const linkedGoogleLocationSchema = z.object({
+  accountName: z.string().min(1),
+  accountId: z.string().min(1),
+  accountLabel: z.string().min(1),
+  locationName: z.string().min(1),
+  locationId: z.string().min(1),
+  title: z.string().min(1),
+  address: z.string().optional().default(''),
 })
 
 adminRouter.use(authenticate, authorize('ADMIN'))
@@ -103,6 +114,28 @@ adminRouter.put('/email-settings', async (req, res, next) => {
       message: 'Dados de e-mail atualizados com sucesso',
       data: email,
     })
+  } catch (error) {
+    next(error)
+  }
+})
+
+adminRouter.get('/google-business/locations', async (_req, res, next) => {
+  try {
+    const locations = await listGoogleBusinessLocations()
+    res.json({ success: true, data: locations })
+  } catch (error) {
+    next(error)
+  }
+})
+
+adminRouter.post('/google-business/reviews', async (req, res, next) => {
+  try {
+    const body = z.object({
+      locations: z.array(linkedGoogleLocationSchema).max(25),
+    }).parse(req.body)
+
+    const reviews = await fetchGoogleBusinessReviews(body.locations)
+    res.json({ success: true, data: reviews })
   } catch (error) {
     next(error)
   }

@@ -1,5 +1,6 @@
 'use client'
 
+import Image from 'next/image'
 import {
   useState, useEffect, useCallback, useRef, memo,
 } from 'react'
@@ -7,7 +8,7 @@ import { useAuth } from '@/lib/useAuth'
 import { toast } from 'sonner'
 import {
   ChevronDown, Eye, EyeOff, Upload, X, Check,
-  RefreshCw, Send, History, Plus, ExternalLink, Loader2,
+  RefreshCw, Send, History, Plus, ExternalLink, Loader2, Link2, Star,
 } from 'lucide-react'
 import { RichTextEditor } from '@/components/editor/RichTextEditor'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -29,6 +30,31 @@ const SECTIONS: [SectionKey, SectionMeta][] = [
 
 interface ContentStore { [section: string]: { [key: string]: unknown } }
 interface SaveStatus { state: 'idle' | 'saving' | 'saved'; time?: string }
+interface ResultEditorItem {
+  id: string
+  title: string
+  text: string
+  category: string
+  beforeImage: string
+  afterImage: string
+}
+interface TestimonialEditorItem {
+  id: string
+  name: string
+  city: string
+  service: string
+  text: string
+  stars: number
+}
+interface GoogleBusinessLocation {
+  accountName: string
+  accountId: string
+  accountLabel: string
+  locationName: string
+  locationId: string
+  title: string
+  address: string
+}
 interface HistoryEntry {
   id: string
   section: string
@@ -185,6 +211,9 @@ export default function EditarSitePage() {
   const [loadingHistory, setLoadingHistory] = useState(false)
   const [restoringHistoryId, setRestoringHistoryId] = useState<string | null>(null)
   const [uploading, setUploading] = useState<string | null>(null)
+  const [googleLocations, setGoogleLocations] = useState<GoogleBusinessLocation[]>([])
+  const [loadingGoogleLocations, setLoadingGoogleLocations] = useState(false)
+  const [googleConnecting, setGoogleConnecting] = useState(false)
 
   const hdrs = { Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json' }
 
@@ -227,6 +256,17 @@ export default function EditarSitePage() {
     return Array.isArray(v) ? (v as T[]) : []
   }, [content])
 
+  const getNum = useCallback((section: string, key: string, subkey?: string): number => {
+    const v = content[section]?.[key]
+    if (!v) return 0
+    if (subkey && typeof v === 'object' && v !== null) {
+      const n = Number((v as Record<string, unknown>)[subkey])
+      return Number.isFinite(n) ? n : 0
+    }
+    const n = Number(v)
+    return Number.isFinite(n) ? n : 0
+  }, [content])
+
   const setVal = useCallback((section: string, key: string, value: unknown) => {
     setContent(prev => ({
       ...prev,
@@ -250,6 +290,48 @@ export default function EditarSitePage() {
     })
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
+
+  const fetchGoogleBusinessLocations = useCallback(async () => {
+    if (!accessToken) return
+    setLoadingGoogleLocations(true)
+    try {
+      const response = await fetch(`${API_URL}/api/v1/admin/google-business/locations`, {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      })
+
+      const payload = await response.json() as { success: boolean; data?: GoogleBusinessLocation[]; message?: string }
+      if (!response.ok || !payload.success || !payload.data) {
+        throw new Error(payload.message ?? 'Nao foi possivel carregar os perfis do Google Empresa')
+      }
+
+      setGoogleLocations(payload.data)
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Erro ao buscar perfis do Google Empresa')
+    } finally {
+      setLoadingGoogleLocations(false)
+    }
+  }, [accessToken])
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+
+    const url = new URL(window.location.href)
+    const googleStatus = url.searchParams.get('google')
+    if (!googleStatus) return
+
+    setGoogleConnecting(false)
+
+    if (googleStatus === 'connected') {
+      toast.success('Conta Google conectada com sucesso')
+      fetchGoogleBusinessLocations()
+    } else if (googleStatus === 'error') {
+      toast.error('Nao foi possivel concluir a conexao com o Google')
+    }
+
+    url.searchParams.delete('google')
+    const nextUrl = `${url.pathname}${url.searchParams.toString() ? `?${url.searchParams.toString()}` : ''}`
+    window.history.replaceState({}, '', nextUrl)
+  }, [fetchGoogleBusinessLocations])
 
   // ── Auto-save ──────────────────────────────────────────────────────────────
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -308,6 +390,45 @@ export default function EditarSitePage() {
       setVal(section, key, { url: data.data.url, blur: data.data.blur })
       toast.success('Imagem enviada com sucesso')
     } catch { toast.error('Erro ao enviar imagem') } finally { setUploading(null) }
+  }
+
+  const uploadStandaloneImage = async (file: File) => {
+    if (!accessToken) throw new Error('Sessao expirada')
+
+    const formData = new FormData()
+    formData.append('file', file)
+
+    const response = await fetch(`${API_URL}/api/v1/content/upload`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${accessToken}` },
+      body: formData,
+    })
+
+    if (!response.ok) {
+      throw new Error('Erro ao enviar imagem')
+    }
+
+    const data = await response.json() as { data: { url: string } }
+    return data.data.url
+  }
+
+  const handleConnectGoogleAccount = async () => {
+    if (!accessToken) return
+    setGoogleConnecting(true)
+    try {
+      const response = await fetch(`${API_URL}/api/v1/auth/google?redirect=${encodeURIComponent('/editar-site?google=connected')}`, {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      })
+      const payload = await response.json() as { success: boolean; data?: { authUrl: string }; message?: string }
+      if (!response.ok || !payload.success || !payload.data?.authUrl) {
+        throw new Error(payload.message ?? 'Nao foi possivel iniciar a conexao com o Google')
+      }
+
+      window.location.href = payload.data.authUrl
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Erro ao conectar conta Google')
+      setGoogleConnecting(false)
+    }
   }
 
   // ── Publish ────────────────────────────────────────────────────────────────
@@ -400,7 +521,16 @@ export default function EditarSitePage() {
         >
           {val?.url ? (
             <div className="relative group">
-              <img src={val.url} alt="" className="w-full h-28 object-cover rounded-lg" />
+              <div className="relative h-28 w-full overflow-hidden rounded-lg">
+                <Image
+                  src={val.url}
+                  alt={label}
+                  fill
+                  unoptimized
+                  sizes="(max-width: 768px) 100vw, 28rem"
+                  className="object-cover"
+                />
+              </div>
               <div className="absolute inset-0 bg-black/50 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                 <p className="text-white text-xs font-medium">Clique para trocar</p>
               </div>
@@ -466,6 +596,31 @@ export default function EditarSitePage() {
             placeholder="#agendamento"
           />
           <ImageField section="hero" fieldKey="background_image" label="Imagem de Fundo" />
+          <div className="space-y-3 rounded-xl border border-blush-200 bg-cream p-4 dark:border-charcoal-600 dark:bg-charcoal-700">
+            <ToggleField
+              enabled={getBool('contact', 'social_proof', 'enabled') || !get('contact', 'social_proof')}
+              onToggle={() => setSubVal('contact', 'social_proof', 'enabled', !(getBool('contact', 'social_proof', 'enabled') || !get('contact', 'social_proof')))}
+              label="Box lateral de prova social"
+              description="Controla o card cinza com Clientes registrados e Avaliacoes publicas ao lado do formulario."
+            />
+            <div className="grid grid-cols-2 gap-3">
+              <TextField
+                value={String(getNum('contact', 'social_proof', 'baseClients'))}
+                onChange={v => setSubVal('contact', 'social_proof', 'baseClients', Number(v) || 0)}
+                label="Base inicial de clientes"
+                placeholder="0"
+              />
+              <TextField
+                value={String(getNum('contact', 'social_proof', 'basePublicReviews'))}
+                onChange={v => setSubVal('contact', 'social_proof', 'basePublicReviews', Number(v) || 0)}
+                label="Base inicial de avaliacoes"
+                placeholder="0"
+              />
+            </div>
+            <p className="text-xs text-charcoal-400 dark:text-charcoal-500">
+              O site soma automaticamente os leads reais cadastrados para atualizar Clientes registrados.
+            </p>
+          </div>
         </div>
       )
 
@@ -496,81 +651,289 @@ export default function EditarSitePage() {
       )
 
       case 'resultados': {
-        const photos = getArr<{ url: string; caption: string; blur?: string }>('results', 'gallery')
+        const results = getArr<ResultEditorItem>('services', 'results_items')
         return (
           <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-3">
-              {photos.map((p, idx) => (
-                <div key={idx} className="relative group rounded-xl overflow-hidden border border-blush-200 dark:border-charcoal-600">
-                  <img src={p.url} alt={p.caption} className="w-full h-24 object-cover" />
-                  <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-                    <button
-                      type="button"
-                      onClick={() => setVal('results', 'gallery', photos.filter((_, i) => i !== idx))}
-                      className="p-1.5 bg-red-500 rounded-lg text-white"
-                    ><X size={12} /></button>
-                  </div>
-                  <input
-                    value={p.caption}
-                    onChange={e => {
-                      const updated = [...photos]
-                      updated[idx] = { ...p, caption: e.target.value }
-                      setVal('results', 'gallery', updated)
-                    }}
-                    placeholder="Legenda"
-                    className="w-full text-xs px-2 py-1.5 border-t border-blush-200 dark:border-charcoal-600 bg-white dark:bg-charcoal-800 text-charcoal dark:text-charcoal-100 focus:outline-none focus:ring-1 focus:ring-rose-gold/40"
-                  />
+            {results.map((item, idx) => (
+              <div key={item.id || idx} className="space-y-3 rounded-xl border border-blush-200 bg-cream p-4 dark:border-charcoal-600 dark:bg-charcoal-700">
+                <div className="flex items-center justify-between gap-3">
+                  <p className="text-sm font-semibold text-charcoal dark:text-charcoal-100">Resultado {idx + 1}</p>
+                  <button
+                    type="button"
+                    onClick={() => setVal('services', 'results_items', results.filter((_, index) => index !== idx))}
+                    className="rounded p-1 text-charcoal-400 transition-colors hover:text-red-400"
+                  >
+                    <X size={13} />
+                  </button>
                 </div>
-              ))}
-            </div>
-            <label className="flex items-center justify-center gap-2 px-4 py-3 rounded-xl border-2 border-dashed border-blush-200 dark:border-charcoal-600 text-charcoal-400 hover:border-rose-gold/50 hover:text-rose-gold cursor-pointer transition-colors text-sm">
-              <Plus size={16} />
-              Adicionar fotos
-              <input type="file" accept="image/*" multiple className="hidden"
-                onChange={async e => {
-                  const files = Array.from(e.target.files ?? [])
-                  for (const file of files) {
-                    const formData = new FormData()
-                    formData.append('file', file)
-                    try {
-                      const res = await fetch(`${API_URL}/api/v1/content/upload`, {
-                        method: 'POST',
-                        headers: { Authorization: `Bearer ${accessToken ?? ''}` },
-                        body: formData,
-                      })
-                      if (res.ok) {
-                        const d = await res.json() as { data: { url: string; blur: string } }
-                        setVal('results', 'gallery', [...photos, { url: d.data.url, caption: '', blur: d.data.blur }])
-                      }
-                    } catch { toast.error('Erro ao enviar foto') }
-                  }
-                }}
-              />
-            </label>
+
+                <TextField
+                  value={item.title}
+                  onChange={v => {
+                    const updated = [...results]
+                    updated[idx] = { ...item, title: v }
+                    setVal('services', 'results_items', updated)
+                  }}
+                  label="Titulo"
+                />
+                <TextField
+                  value={item.text}
+                  onChange={v => {
+                    const updated = [...results]
+                    updated[idx] = { ...item, text: v }
+                    setVal('services', 'results_items', updated)
+                  }}
+                  label="Texto"
+                  multiline
+                  rows={2}
+                />
+                <TextField
+                  value={item.category}
+                  onChange={v => {
+                    const updated = [...results]
+                    updated[idx] = { ...item, category: v }
+                    setVal('services', 'results_items', updated)
+                  }}
+                  label="Categoria"
+                  placeholder="Ex: Sobrancelhas"
+                />
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-2">
+                    <label className={labelCls}>Antes</label>
+                    <div className="relative h-24 overflow-hidden rounded-lg border border-blush-200 bg-white dark:border-charcoal-600 dark:bg-charcoal-800">
+                      {item.beforeImage ? (
+                        <Image src={item.beforeImage} alt={`Antes ${item.title || idx + 1}`} fill unoptimized className="object-cover" sizes="14rem" />
+                      ) : (
+                        <div className="flex h-full items-center justify-center text-xs text-charcoal-400">Sem imagem</div>
+                      )}
+                    </div>
+                    <label className="flex cursor-pointer items-center justify-center gap-2 rounded-xl border-2 border-dashed border-blush-200 px-3 py-2 text-xs text-charcoal-400 transition-colors hover:border-rose-gold/50 hover:text-rose-gold dark:border-charcoal-600">
+                      <Upload size={14} /> Adicionar imagem
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={async e => {
+                          const file = e.target.files?.[0]
+                          if (!file) return
+                          try {
+                            const imageUrl = await uploadStandaloneImage(file)
+                            const updated = [...results]
+                            updated[idx] = { ...item, beforeImage: imageUrl }
+                            setVal('services', 'results_items', updated)
+                          } catch {
+                            toast.error('Erro ao enviar imagem do antes')
+                          }
+                        }}
+                      />
+                    </label>
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className={labelCls}>Depois</label>
+                    <div className="relative h-24 overflow-hidden rounded-lg border border-blush-200 bg-white dark:border-charcoal-600 dark:bg-charcoal-800">
+                      {item.afterImage ? (
+                        <Image src={item.afterImage} alt={`Depois ${item.title || idx + 1}`} fill unoptimized className="object-cover" sizes="14rem" />
+                      ) : (
+                        <div className="flex h-full items-center justify-center text-xs text-charcoal-400">Sem imagem</div>
+                      )}
+                    </div>
+                    <label className="flex cursor-pointer items-center justify-center gap-2 rounded-xl border-2 border-dashed border-blush-200 px-3 py-2 text-xs text-charcoal-400 transition-colors hover:border-rose-gold/50 hover:text-rose-gold dark:border-charcoal-600">
+                      <Upload size={14} /> Adicionar imagem
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={async e => {
+                          const file = e.target.files?.[0]
+                          if (!file) return
+                          try {
+                            const imageUrl = await uploadStandaloneImage(file)
+                            const updated = [...results]
+                            updated[idx] = { ...item, afterImage: imageUrl }
+                            setVal('services', 'results_items', updated)
+                          } catch {
+                            toast.error('Erro ao enviar imagem do depois')
+                          }
+                        }}
+                      />
+                    </label>
+                  </div>
+                </div>
+              </div>
+            ))}
+
+            <button
+              type="button"
+              onClick={() => setVal('services', 'results_items', [
+                ...results,
+                {
+                  id: `result-${Date.now()}`,
+                  title: '',
+                  text: '',
+                  category: '',
+                  beforeImage: '',
+                  afterImage: '',
+                },
+              ])}
+              className="flex w-full items-center justify-center gap-2 rounded-xl border-2 border-dashed border-blush-200 py-2.5 text-sm text-charcoal-400 transition-colors hover:border-rose-gold/50 hover:text-rose-gold dark:border-charcoal-600"
+            >
+              <Plus size={14} /> Adicionar resultado
+            </button>
           </div>
         )
       }
 
       case 'depoimentos': {
-        const testimonials = getArr<{ name: string; city: string; service: string; text: string; photo?: string }>('testimonials', 'items')
+        const testimonials = getArr<TestimonialEditorItem>('testimonials', 'manual_items')
+        const linkedLocations = getArr<GoogleBusinessLocation>('testimonials', 'google_business_locations')
+        const googleEnabled = getBool('testimonials', 'display_options', 'googleEnabled')
+        const artificialEnabled = getBool('testimonials', 'display_options', 'artificialEnabled')
+        const availableLocations = googleLocations.filter((location) => (
+          !linkedLocations.some((linked) => (
+            linked.accountName === location.accountName
+            && linked.locationId === location.locationId
+          ))
+        ))
         const itemInputCls = 'w-full px-2.5 py-1.5 text-xs rounded-lg border border-blush-200 dark:border-charcoal-600 bg-white dark:bg-charcoal-800 text-charcoal dark:text-charcoal-100 focus:outline-none focus:ring-1 focus:ring-rose-gold/40'
         return (
-          <div className="space-y-3">
+          <div className="space-y-4">
+            <ToggleField
+              enabled={artificialEnabled}
+              onToggle={() => setSubVal('testimonials', 'display_options', 'artificialEnabled', !artificialEnabled)}
+              label="Gerar depoimentos artificiais"
+              description="Preenche a secao com alguns depoimentos fixos de exemplo para deixar a vitrine mais completa."
+            />
+
+            <ToggleField
+              enabled={googleEnabled}
+              onToggle={() => setSubVal('testimonials', 'display_options', 'googleEnabled', !googleEnabled)}
+              label="Exibir avaliacoes do Google Empresa"
+              description="Permite puxar reviews publicos das contas vinculadas do Google Business Profile."
+            />
+
+            {googleEnabled && (
+              <div className="space-y-3 rounded-xl border border-blush-200 bg-cream p-4 dark:border-charcoal-600 dark:bg-charcoal-700">
+                <div className="flex flex-wrap items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={handleConnectGoogleAccount}
+                    disabled={googleConnecting}
+                    className="inline-flex items-center gap-2 rounded-xl bg-rose-gold px-3 py-2 text-xs font-semibold text-white transition-colors hover:bg-rose-gold/90 disabled:cursor-not-allowed disabled:opacity-70"
+                  >
+                    {googleConnecting ? <Loader2 size={14} className="animate-spin" /> : <Link2 size={14} />}
+                    Vincular sua conta do Google
+                  </button>
+                  <button
+                    type="button"
+                    onClick={fetchGoogleBusinessLocations}
+                    disabled={loadingGoogleLocations}
+                    className="inline-flex items-center gap-2 rounded-xl border border-blush-200 px-3 py-2 text-xs font-semibold text-charcoal-500 transition-colors hover:border-rose-gold/40 hover:text-rose-gold disabled:cursor-not-allowed disabled:opacity-70 dark:border-charcoal-600 dark:text-charcoal-300"
+                  >
+                    {loadingGoogleLocations ? <Loader2 size={14} className="animate-spin" /> : <RefreshCw size={14} />}
+                    Buscar perfis do Google Empresa
+                  </button>
+                </div>
+
+                <p className="text-xs text-charcoal-400 dark:text-charcoal-500">
+                  Voce pode vincular varias contas e selecionar mais de um perfil empresarial para alimentar a secao de depoimentos.
+                </p>
+
+                {linkedLocations.length > 0 && (
+                  <div className="space-y-2">
+                    <p className="text-xs font-semibold uppercase tracking-[0.18em] text-charcoal-400 dark:text-charcoal-500">
+                      Perfis vinculados
+                    </p>
+                    {linkedLocations.map((location) => (
+                      <div
+                        key={`${location.accountName}-${location.locationId}`}
+                        className="flex items-start justify-between gap-3 rounded-xl border border-blush-200 bg-white p-3 dark:border-charcoal-600 dark:bg-charcoal-800"
+                      >
+                        <div className="min-w-0">
+                          <p className="text-sm font-semibold text-charcoal dark:text-charcoal-100">{location.title}</p>
+                          <p className="text-xs text-charcoal-400 dark:text-charcoal-500">{location.accountLabel}</p>
+                          {location.address && (
+                            <p className="mt-1 text-xs text-charcoal-400 dark:text-charcoal-500">{location.address}</p>
+                          )}
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => setVal(
+                            'testimonials',
+                            'google_business_locations',
+                            linkedLocations.filter((item) => !(
+                              item.accountName === location.accountName
+                              && item.locationId === location.locationId
+                            ))
+                          )}
+                          className="rounded p-1 text-charcoal-400 transition-colors hover:text-red-400"
+                          title="Remover perfil"
+                        >
+                          <X size={13} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                <div className="space-y-2">
+                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-charcoal-400 dark:text-charcoal-500">
+                    Perfis disponiveis para adicionar
+                  </p>
+
+                  {availableLocations.length > 0 ? (
+                    availableLocations.map((location) => (
+                      <div
+                        key={`${location.accountName}-${location.locationId}`}
+                        className="flex items-start justify-between gap-3 rounded-xl border border-blush-200 bg-white p-3 dark:border-charcoal-600 dark:bg-charcoal-800"
+                      >
+                        <div className="min-w-0">
+                          <p className="text-sm font-semibold text-charcoal dark:text-charcoal-100">{location.title}</p>
+                          <p className="text-xs text-charcoal-400 dark:text-charcoal-500">{location.accountLabel}</p>
+                          {location.address && (
+                            <p className="mt-1 text-xs text-charcoal-400 dark:text-charcoal-500">{location.address}</p>
+                          )}
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => setVal('testimonials', 'google_business_locations', [...linkedLocations, location])}
+                          className="inline-flex items-center gap-1.5 rounded-lg border border-blush-200 px-2.5 py-1.5 text-xs font-medium text-charcoal-500 transition-colors hover:border-rose-gold/40 hover:text-rose-gold dark:border-charcoal-600 dark:text-charcoal-300"
+                        >
+                          <Plus size={12} /> Adicionar
+                        </button>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="rounded-xl border border-dashed border-blush-200 px-3 py-4 text-center text-xs text-charcoal-400 dark:border-charcoal-600 dark:text-charcoal-500">
+                      {loadingGoogleLocations
+                        ? 'Buscando perfis do Google Empresa...'
+                        : 'Nenhum novo perfil encontrado. Use o botao acima para buscar novamente apos vincular a conta.'}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            <div className="space-y-2">
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-charcoal-400 dark:text-charcoal-500">
+                Depoimentos manuais
+              </p>
             {testimonials.map((t, idx) => (
-              <div key={idx} className="p-4 rounded-xl border border-blush-200 dark:border-charcoal-600 bg-cream dark:bg-charcoal-700 space-y-2.5 relative">
+              <div key={t.id || idx} className="relative space-y-2.5 rounded-xl border border-blush-200 bg-cream p-4 dark:border-charcoal-600 dark:bg-charcoal-700">
                 <button
                   type="button"
-                  onClick={() => setVal('testimonials', 'items', testimonials.filter((_, i) => i !== idx))}
-                  className="absolute top-3 right-3 p-1 rounded text-charcoal-400 hover:text-red-400 transition-colors"
+                  onClick={() => setVal('testimonials', 'manual_items', testimonials.filter((_, i) => i !== idx))}
+                  className="absolute top-3 right-3 rounded p-1 text-charcoal-400 transition-colors hover:text-red-400"
                 ><X size={13} /></button>
-                <div className="pr-6 space-y-2">
+                <div className="space-y-2 pr-6">
                   {(['name', 'city', 'service'] as const).map(f => (
-                    <input key={f} value={t[f]}
+                    <input key={f} value={t[f] ?? ''}
                       placeholder={f === 'name' ? 'Nome' : f === 'city' ? 'Cidade' : 'Serviço realizado'}
                       onChange={e => {
                         const u = [...testimonials]
                         u[idx] = { ...t, [f]: e.target.value }
-                        setVal('testimonials', 'items', u)
+                        setVal('testimonials', 'manual_items', u)
                       }}
                       className={itemInputCls}
                     />
@@ -579,16 +942,50 @@ export default function EditarSitePage() {
                     onChange={e => {
                       const u = [...testimonials]
                       u[idx] = { ...t, text: e.target.value }
-                      setVal('testimonials', 'items', u)
+                        setVal('testimonials', 'manual_items', u)
                     }}
                     className={`${itemInputCls} resize-none`}
                   />
+                  <div>
+                    <label className={labelCls}>Nota</label>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="number"
+                        min={1}
+                        max={5}
+                        value={t.stars || 5}
+                        onChange={e => {
+                          const nextValue = Math.max(1, Math.min(5, Number(e.target.value) || 5))
+                          const u = [...testimonials]
+                          u[idx] = { ...t, stars: nextValue }
+                          setVal('testimonials', 'manual_items', u)
+                        }}
+                        className={`${itemInputCls} max-w-[84px]`}
+                      />
+                      <div className="flex items-center gap-1 text-amber-500">
+                        {Array.from({ length: Math.max(1, Math.min(5, t.stars || 5)) }).map((_, starIndex) => (
+                          <Star key={starIndex} size={13} className="fill-current" />
+                        ))}
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
             ))}
+            </div>
             <button
               type="button"
-              onClick={() => setVal('testimonials', 'items', [...testimonials, { name: '', city: '', service: '', text: '' }])}
+              onClick={() => setVal('testimonials', 'manual_items', [
+                ...testimonials,
+                {
+                  id: `testimonial-${Date.now()}`,
+                  name: '',
+                  city: '',
+                  service: '',
+                  text: '',
+                  stars: 5,
+                },
+              ])}
               className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl border-2 border-dashed border-blush-200 dark:border-charcoal-600 text-charcoal-400 hover:text-rose-gold hover:border-rose-gold/50 transition-colors text-sm"
             >
               <Plus size={14} /> Adicionar depoimento

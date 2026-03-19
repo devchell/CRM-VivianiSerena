@@ -40,6 +40,12 @@ const step3Schema = z.object({
 type Step1Data = z.infer<typeof step1Schema>
 type Step2Data = z.infer<typeof step2Schema>
 type Step3Data = z.infer<typeof step3Schema>
+type SocialProofSummary = {
+  enabled: boolean
+  clientsRegistered: number
+  publicReviews: number
+  averageRating: number | null
+}
 
 const SERVICE_OPTIONS = [
   { value: 'sobrancelhas', label: 'Sobrancelhas micropigmentadas', emoji: 'S' },
@@ -312,12 +318,16 @@ function SuccessScreen({ name }: { name: string }) {
   )
 }
 
-export function LeadFormSection() {
+export function LeadFormSection({ socialProof }: { socialProof?: SocialProofSummary | null }) {
   const [step, setStep] = useState(1)
   const [isLoading, setIsLoading] = useState(false)
   const [isSuccess, setIsSuccess] = useState(false)
   const [formData, setFormData] = useState<Partial<Step1Data & Step2Data & Step3Data>>({})
   const sectionRef = useRef<HTMLElement>(null)
+  const proofEnabled = socialProof?.enabled !== false
+  const clientsRegistered = socialProof?.clientsRegistered ?? 0
+  const publicReviews = socialProof?.publicReviews ?? 0
+  const averageRating = socialProof?.averageRating ?? 5
 
   const handleStep1 = useCallback((data: Step1Data) => {
     setFormData((previous) => ({ ...previous, ...data }))
@@ -404,23 +414,38 @@ export function LeadFormSection() {
               ))}
             </ul>
 
-            <div className="flex items-center gap-4 rounded-xl border border-blush bg-white p-4">
-              <div className="flex -space-x-2" aria-hidden="true">
-                {['AC', 'RM', 'FL'].map((initials) => (
-                  <div key={initials} className="flex h-9 w-9 items-center justify-center rounded-full border-2 border-white bg-rose-gold text-xs font-bold text-white">
-                    {initials}
+            {proofEnabled ? (
+              <div className="rounded-xl border border-blush bg-white p-4">
+                <div className="flex items-center gap-4">
+                  <div className="flex -space-x-2" aria-hidden="true">
+                    {['VS', 'LG', 'GL'].map((initials) => (
+                      <div key={initials} className="flex h-9 w-9 items-center justify-center rounded-full border-2 border-white bg-rose-gold text-xs font-bold text-white">
+                        {initials}
+                      </div>
+                    ))}
                   </div>
-                ))}
-              </div>
-              <div>
-                <div className="text-xs text-yellow-400" aria-label="5 estrelas">
-                  ***** 
+                  <div>
+                    <div className="text-xs text-yellow-400" aria-label={`${averageRating} estrelas`}>
+                      {'*'.repeat(Math.max(1, Math.round(averageRating)))}
+                    </div>
+                    <p className="mt-0.5 text-xs text-charcoal/60">
+                      Prova social configurada no painel
+                    </p>
+                  </div>
                 </div>
-                <p className="mt-0.5 text-xs text-charcoal/60">
-                  <strong className="text-charcoal">0 clientes</strong> registradas neste ambiente
-                </p>
+
+                <div className="mt-4 grid grid-cols-2 gap-3">
+                  <div className="rounded-lg bg-cream px-3 py-3">
+                    <p className="text-lg font-bold text-charcoal">{clientsRegistered}</p>
+                    <p className="mt-1 text-xs text-charcoal/60">Clientes registrados</p>
+                  </div>
+                  <div className="rounded-lg bg-cream px-3 py-3">
+                    <p className="text-lg font-bold text-charcoal">{publicReviews}</p>
+                    <p className="mt-1 text-xs text-charcoal/60">Avaliacoes publicas</p>
+                  </div>
+                </div>
               </div>
-            </div>
+            ) : null}
           </motion.div>
 
           <motion.div initial={{ opacity: 0, x: 24 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true, margin: '-80px' }} transition={{ duration: 0.6, delay: 0.15 }}>

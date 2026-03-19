@@ -813,6 +813,9 @@ authRouter.get('/google', authenticate, authorize('ADMIN'), async (req, res, nex
       googleCalendar: import('../infrastructure/googleCalendar').GoogleCalendarService
     }
     const state = crypto.randomUUID()
+    const redirect = resolveGoogleRedirectTarget(
+      typeof req.query.redirect === 'string' ? req.query.redirect : undefined
+    )
 
     await redis.setex(
       `google:oauth:state:${state}`,
@@ -820,6 +823,7 @@ authRouter.get('/google', authenticate, authorize('ADMIN'), async (req, res, nex
       JSON.stringify({
         userId: req.user!.sub,
         role: req.user!.role,
+        redirect,
       })
     )
 
@@ -840,6 +844,8 @@ authRouter.get('/google/status', authenticate, authorize('ADMIN'), async (_req, 
 })
 
 authRouter.get('/google/callback', async (req, res, next) => {
+  let redirectTarget = '/administracao?google=error'
+
   try {
     const { code, state } = z.object({ code: z.string(), state: z.string() }).parse(req.query)
     const stateKey = `google:oauth:state:${state}`
@@ -849,13 +855,17 @@ authRouter.get('/google/callback', async (req, res, next) => {
       throw new AppError(401, 'Google OAuth state invalido ou expirado')
     }
 
+    const parsedState = JSON.parse(authState) as { redirect?: string }
+    redirectTarget = resolveGoogleRedirectTarget(
+      parsedState.redirect?.replace('google=connected', 'google=error')
+    )
     await redis.del(stateKey)
     const { googleCalendar } = await import('../infrastructure/googleCalendar')
     await googleCalendar.handleCallback(code)
-    res.redirect(`${apiEnv.crmUrl}/administracao?google=connected`)
+    res.redirect(`${apiEnv.crmUrl}${resolveGoogleRedirectTarget(parsedState.redirect)}`)
   } catch (error) {
     logger.error('Google Calendar callback failed', error)
-    res.redirect(`${apiEnv.crmUrl}/administracao?google=error`)
+    res.redirect(`${apiEnv.crmUrl}${redirectTarget}`)
   }
 })
 
@@ -879,4 +889,20 @@ function maskEmail(email: string): string {
 function maskPhone(phone: string): string {
   const digits = phone.replace(/\D/g, '')
   return `${'*'.repeat(Math.max(0, digits.length - 4))}${digits.slice(-4)}`
+}
+
+function resolveGoogleRedirectTarget(input?: string) {
+  if (!input) {
+    return '/administracao?google=connected'
+  }
+
+  if (!input.startsWith('/')) {
+    return '/administracao?google=connected'
+  }
+
+  if (input.startsWith('//')) {
+    return '/administracao?google=connected'
+  }
+
+  return input
 }

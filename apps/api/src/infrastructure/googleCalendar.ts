@@ -3,11 +3,14 @@ import { logger } from '../lib/logger'
 import { redis } from '../lib/redis'
 
 export const GOOGLE_OAUTH_TOKEN_KEY = 'google:oauth:tokens'
+export const GOOGLE_CALENDAR_SCOPE = 'https://www.googleapis.com/auth/calendar'
+export const GOOGLE_BUSINESS_SCOPE = 'https://www.googleapis.com/auth/business.manage'
+export const GOOGLE_OAUTH_SCOPES = [GOOGLE_CALENDAR_SCOPE, GOOGLE_BUSINESS_SCOPE]
 const SLOT_DURATION_MINUTES = 60
 const BUSINESS_HOURS = { start: 9, end: 18 }
 const CALENDAR_ID = process.env.GOOGLE_CALENDAR_ID || 'primary'
 
-function createOAuth2Client() {
+function createOAuth2Client(): InstanceType<typeof google.auth.OAuth2> {
   return new google.auth.OAuth2(
     process.env.GOOGLE_CLIENT_ID,
     process.env.GOOGLE_CLIENT_SECRET,
@@ -15,7 +18,11 @@ function createOAuth2Client() {
   )
 }
 
-async function getAuthenticatedClient() {
+async function persistGoogleTokens(tokens: Record<string, unknown>) {
+  await redis.setex(GOOGLE_OAUTH_TOKEN_KEY, 365 * 24 * 60 * 60, JSON.stringify(tokens))
+}
+
+export async function getAuthenticatedGoogleClient(): Promise<InstanceType<typeof google.auth.OAuth2>> {
   const oauth2Client = createOAuth2Client()
   const tokenData = await redis.get(GOOGLE_OAUTH_TOKEN_KEY)
   if (!tokenData) {
@@ -27,11 +34,21 @@ async function getAuthenticatedClient() {
   // Auto-refresh if near expiry
   if (tokens.expiry_date && tokens.expiry_date - Date.now() < 5 * 60 * 1000) {
     const { credentials } = await oauth2Client.refreshAccessToken()
-    await redis.setex(GOOGLE_OAUTH_TOKEN_KEY, 7 * 24 * 60 * 60, JSON.stringify(credentials))
+    await persistGoogleTokens(credentials as Record<string, unknown>)
     oauth2Client.setCredentials(credentials)
   }
 
   return oauth2Client
+}
+
+export async function getGoogleAccessToken() {
+  const client = await getAuthenticatedGoogleClient()
+  const accessToken = await client.getAccessToken()
+  if (!accessToken.token) {
+    throw new Error('Google access token unavailable')
+  }
+
+  return accessToken.token
 }
 
 export function isGoogleCalendarConfigured() {
@@ -82,7 +99,7 @@ export class GoogleCalendarService {
     attendeeEmail?: string
   }): Promise<calendar_v3.Schema$Event | null> {
     try {
-      const auth = await getAuthenticatedClient()
+      const auth = await getAuthenticatedGoogleClient()
       const calendar = google.calendar({ version: 'v3', auth })
       const end = params.end ?? new Date(params.start.getTime() + SLOT_DURATION_MINUTES * 60 * 1000)
 
@@ -111,7 +128,7 @@ export class GoogleCalendarService {
     end?: Date
   }): Promise<boolean> {
     try {
-      const auth = await getAuthenticatedClient()
+      const auth = await getAuthenticatedGoogleClient()
       const calendar = google.calendar({ version: 'v3', auth })
       const patch: calendar_v3.Schema$Event = {}
       if (params.summary) patch.summary = params.summary
@@ -131,7 +148,7 @@ export class GoogleCalendarService {
 
   async deleteEvent(googleEventId: string): Promise<boolean> {
     try {
-      const auth = await getAuthenticatedClient()
+      const auth = await getAuthenticatedGoogleClient()
       const calendar = google.calendar({ version: 'v3', auth })
       await calendar.events.delete({ calendarId: CALENDAR_ID, eventId: googleEventId })
       return true
@@ -143,7 +160,7 @@ export class GoogleCalendarService {
 
   async listEvents(from: Date, to: Date): Promise<calendar_v3.Schema$Event[]> {
     try {
-      const auth = await getAuthenticatedClient()
+      const auth = await getAuthenticatedGoogleClient()
       const calendar = google.calendar({ version: 'v3', auth })
       const response = await calendar.events.list({
         calendarId: CALENDAR_ID,
@@ -202,7 +219,7 @@ export class GoogleCalendarService {
     const oauth2Client = createOAuth2Client()
     return oauth2Client.generateAuthUrl({
       access_type: 'offline',
-      scope: ['https://www.googleapis.com/auth/calendar'],
+      scope: GOOGLE_OAUTH_SCOPES,
       prompt: 'consent',
       state,
     })
@@ -211,7 +228,7 @@ export class GoogleCalendarService {
   async handleCallback(code: string): Promise<void> {
     const oauth2Client = createOAuth2Client()
     const { tokens } = await oauth2Client.getToken(code)
-    await redis.setex(GOOGLE_OAUTH_TOKEN_KEY, 365 * 24 * 60 * 60, JSON.stringify(tokens))
+    await persistGoogleTokens(tokens as Record<string, unknown>)
     logger.info('Google Calendar OAuth tokens stored')
   }
 }

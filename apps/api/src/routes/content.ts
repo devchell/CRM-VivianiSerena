@@ -14,6 +14,7 @@ import {
   ensureUploadStorageReady,
   uploadFile,
 } from '../infrastructure/storage'
+import { fetchGoogleBusinessReviews, type GoogleBusinessLocation } from '../infrastructure/googleBusiness'
 import { UPLOAD } from '../shared/constants'
 
 export const contentRouter: Router = Router()
@@ -113,6 +114,42 @@ function mapVersionEntry(entry: ContentVersionRecord) {
   }
 }
 
+function asObject(value: unknown): Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value)
+    ? value as Record<string, unknown>
+    : {}
+}
+
+function asNumber(value: unknown, fallback = 0) {
+  const numeric = Number(value)
+  return Number.isFinite(numeric) ? numeric : fallback
+}
+
+function asBoolean(value: unknown, fallback = false) {
+  return typeof value === 'boolean' ? value : fallback
+}
+
+function asString(value: unknown, fallback = '') {
+  return typeof value === 'string' ? value : fallback
+}
+
+function normalizeLinkedGoogleLocations(value: unknown): GoogleBusinessLocation[] {
+  if (!Array.isArray(value)) return []
+
+  return value
+    .map((item) => asObject(item))
+    .filter((item) => item.accountName && item.locationName && item.locationId)
+    .map((item) => ({
+      accountName: asString(item.accountName),
+      accountId: asString(item.accountId),
+      accountLabel: asString(item.accountLabel),
+      locationName: asString(item.locationName),
+      locationId: asString(item.locationId),
+      title: asString(item.title, 'Perfil Google'),
+      address: asString(item.address),
+    }))
+}
+
 contentRouter.get('/', async (_req, res, next) => {
   try {
     const contents = await prisma.content.findMany()
@@ -127,6 +164,95 @@ contentRouter.get('/', async (_req, res, next) => {
     })
 
     res.json({ success: true, data: result })
+  } catch (error) {
+    next(error)
+  }
+})
+
+contentRouter.get('/site-summary', async (_req, res, next) => {
+  try {
+    const [leadCount, completedAppointments, convertedCases, configuredContent] = await Promise.all([
+      prisma.lead.count(),
+      prisma.appointment.count({ where: { status: 'completed' } }),
+      prisma.lead.count({ where: { status: 'converted' } }),
+      prisma.content.findMany({
+        where: {
+          OR: [
+            { section: 'contact', key: 'social_proof' },
+            { section: 'contact', key: 'trust_stats' },
+            { section: 'testimonials', key: 'display_options' },
+            { section: 'testimonials', key: 'google_business_locations' },
+            { section: 'testimonials', key: 'google_business' },
+          ],
+        },
+      }),
+    ])
+
+    const contentMap = configuredContent.reduce<Record<string, Prisma.JsonValue>>((acc, item) => {
+      acc[`${item.section}.${item.key}`] = item.value
+      return acc
+    }, {})
+
+    const socialProof = asObject(contentMap['contact.social_proof'])
+    const trustStats = asObject(contentMap['contact.trust_stats'])
+    const testimonialDisplay = asObject(contentMap['testimonials.display_options'])
+    const googleBusiness = asObject(contentMap['testimonials.google_business'])
+    const googleBusinessLocations = contentMap['testimonials.google_business_locations']
+
+    const googleEnabled = asBoolean(testimonialDisplay.googleEnabled, asBoolean(googleBusiness.enabled))
+    const linkedLocations = normalizeLinkedGoogleLocations(
+      Array.isArray(googleBusinessLocations) ? googleBusinessLocations : googleBusiness.locations
+    )
+
+    let googleReviewCount = 0
+    let googleAverageRating: number | null = null
+    let googleReviews: Awaited<ReturnType<typeof fetchGoogleBusinessReviews>>['reviews'] = []
+
+    if (googleEnabled && linkedLocations.length > 0) {
+      try {
+        const googlePayload = await fetchGoogleBusinessReviews(linkedLocations)
+        googleReviewCount = googlePayload.count
+        googleAverageRating = googlePayload.averageRating
+        googleReviews = googlePayload.reviews
+      } catch {
+        googleReviewCount = 0
+        googleAverageRating = null
+        googleReviews = []
+      }
+    }
+
+    const baseClients = asNumber(socialProof.baseClients)
+    const basePublicReviews = asNumber(socialProof.basePublicReviews)
+    const clientsRegistered = baseClients + leadCount
+    const publicReviews = basePublicReviews + googleReviewCount
+
+    res.json({
+      success: true,
+      data: {
+        socialProof: {
+          enabled: asBoolean(socialProof.enabled, true),
+          baseClients,
+          basePublicReviews,
+          actualLeads: leadCount,
+          clientsRegistered,
+          publicReviews,
+          averageRating: googleAverageRating,
+        },
+        trust: {
+          clientsRegistered,
+          publicReviews,
+          completedAppointments: asNumber(trustStats.baseCompletedAppointments) + completedAppointments,
+          convertedCases: asNumber(trustStats.baseConvertedCases) + convertedCases,
+        },
+        googleBusiness: {
+          enabled: googleEnabled,
+          linkedLocations,
+          reviewCount: googleReviewCount,
+          averageRating: googleAverageRating,
+          reviews: googleReviews,
+        },
+      },
+    })
   } catch (error) {
     next(error)
   }
