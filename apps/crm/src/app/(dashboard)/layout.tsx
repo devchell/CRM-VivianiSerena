@@ -27,6 +27,7 @@ const MODULE_ROUTE_MATCHERS = [
   { prefix: '/site', module: 'editar-site' },
   { prefix: '/seguranca', module: 'seguranca' },
   { prefix: '/colaboradores', permission: 'users.manage' },
+  { prefix: '/administracao', permission: 'users.manage' },
 ] as const
 
 function toKnownRole(value: string | undefined): UserRole {

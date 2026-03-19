@@ -9,9 +9,11 @@ import { authenticate, authorize } from '../middleware/authenticate'
 import { authRateLimiter } from '../middleware/rateLimiter'
 import { AppError } from '../middleware/errorHandler'
 import { logger } from '../lib/logger'
+import { apiEnv } from '../lib/env'
 import { recordLoginFailure, resetLoginFailures, bruteForceCheck } from '../middleware/security'
 import { emailService } from '../infrastructure/email'
 import { smsService } from '../infrastructure/sms'
+import { disconnectGoogleCalendar, getGoogleCalendarConnectionStatus, isGoogleCalendarConfigured } from '../infrastructure/googleCalendar'
 import {
   inferUserProfile,
   resolveAllowedModules,
@@ -803,6 +805,10 @@ authRouter.post('/set-password', authenticate, async (req, res, next) => {
 
 authRouter.get('/google', authenticate, authorize('ADMIN'), async (req, res, next) => {
   try {
+    if (!isGoogleCalendarConfigured()) {
+      throw new AppError(400, 'Google Calendar nao esta configurado no ambiente')
+    }
+
     const { googleCalendar } = require('../infrastructure/googleCalendar') as {
       googleCalendar: import('../infrastructure/googleCalendar').GoogleCalendarService
     }
@@ -824,6 +830,15 @@ authRouter.get('/google', authenticate, authorize('ADMIN'), async (req, res, nex
   }
 })
 
+authRouter.get('/google/status', authenticate, authorize('ADMIN'), async (_req, res, next) => {
+  try {
+    const status = await getGoogleCalendarConnectionStatus()
+    res.json({ success: true, data: status })
+  } catch (error) {
+    next(error)
+  }
+})
+
 authRouter.get('/google/callback', async (req, res, next) => {
   try {
     const { code, state } = z.object({ code: z.string(), state: z.string() }).parse(req.query)
@@ -837,7 +852,17 @@ authRouter.get('/google/callback', async (req, res, next) => {
     await redis.del(stateKey)
     const { googleCalendar } = await import('../infrastructure/googleCalendar')
     await googleCalendar.handleCallback(code)
-    res.json({ success: true, message: 'Google Calendar connected successfully' })
+    res.redirect(`${apiEnv.crmUrl}/administracao?google=connected`)
+  } catch (error) {
+    logger.error('Google Calendar callback failed', error)
+    res.redirect(`${apiEnv.crmUrl}/administracao?google=error`)
+  }
+})
+
+authRouter.delete('/google', authenticate, authorize('ADMIN'), async (_req, res, next) => {
+  try {
+    await disconnectGoogleCalendar()
+    res.json({ success: true, message: 'Google Calendar desconectado com sucesso' })
   } catch (error) {
     next(error)
   }

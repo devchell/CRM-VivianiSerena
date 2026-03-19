@@ -29,6 +29,7 @@ const NAV_ITEMS: NavItem[] = [
   { href: '/editar-site', label: 'Editar Site', icon: Paintbrush, module: 'editar-site' },
   { href: '/seguranca', label: 'Seguranca', icon: Shield, module: 'seguranca' },
   { href: '/colaboradores', label: 'Colaboradores', icon: UserCheck, permission: 'users.manage' },
+  { href: '/administracao', label: 'Administracao', icon: Settings, permission: 'users.manage' },
 ]
 
 function getRoleLabel(profile: string | null, isAdmin: boolean) {

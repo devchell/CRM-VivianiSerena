@@ -2,7 +2,7 @@ import { google, calendar_v3 } from 'googleapis'
 import { logger } from '../lib/logger'
 import { redis } from '../lib/redis'
 
-const REDIS_TOKEN_KEY = 'google:oauth:tokens'
+export const GOOGLE_OAUTH_TOKEN_KEY = 'google:oauth:tokens'
 const SLOT_DURATION_MINUTES = 60
 const BUSINESS_HOURS = { start: 9, end: 18 }
 const CALENDAR_ID = process.env.GOOGLE_CALENDAR_ID || 'primary'
@@ -17,7 +17,7 @@ function createOAuth2Client() {
 
 async function getAuthenticatedClient() {
   const oauth2Client = createOAuth2Client()
-  const tokenData = await redis.get(REDIS_TOKEN_KEY)
+  const tokenData = await redis.get(GOOGLE_OAUTH_TOKEN_KEY)
   if (!tokenData) {
     throw new Error('Google Calendar not connected. Please authorize via OAuth.')
   }
@@ -27,11 +27,50 @@ async function getAuthenticatedClient() {
   // Auto-refresh if near expiry
   if (tokens.expiry_date && tokens.expiry_date - Date.now() < 5 * 60 * 1000) {
     const { credentials } = await oauth2Client.refreshAccessToken()
-    await redis.setex(REDIS_TOKEN_KEY, 7 * 24 * 60 * 60, JSON.stringify(credentials))
+    await redis.setex(GOOGLE_OAUTH_TOKEN_KEY, 7 * 24 * 60 * 60, JSON.stringify(credentials))
     oauth2Client.setCredentials(credentials)
   }
 
   return oauth2Client
+}
+
+export function isGoogleCalendarConfigured() {
+  return Boolean(
+    process.env.GOOGLE_CLIENT_ID?.trim()
+    && process.env.GOOGLE_CLIENT_SECRET?.trim()
+    && process.env.GOOGLE_REDIRECT_URI?.trim()
+  )
+}
+
+export async function getGoogleCalendarConnectionStatus() {
+  const tokenData = await redis.get(GOOGLE_OAUTH_TOKEN_KEY)
+
+  if (!tokenData) {
+    return {
+      configured: isGoogleCalendarConfigured(),
+      connected: false,
+      calendarId: CALENDAR_ID,
+      expiresAt: null as string | null,
+      hasRefreshToken: false,
+    }
+  }
+
+  const tokens = JSON.parse(tokenData) as {
+    expiry_date?: number
+    refresh_token?: string
+  }
+
+  return {
+    configured: isGoogleCalendarConfigured(),
+    connected: true,
+    calendarId: CALENDAR_ID,
+    expiresAt: tokens.expiry_date ? new Date(tokens.expiry_date).toISOString() : null,
+    hasRefreshToken: Boolean(tokens.refresh_token),
+  }
+}
+
+export async function disconnectGoogleCalendar() {
+  await redis.del(GOOGLE_OAUTH_TOKEN_KEY)
 }
 
 export class GoogleCalendarService {
@@ -172,7 +211,7 @@ export class GoogleCalendarService {
   async handleCallback(code: string): Promise<void> {
     const oauth2Client = createOAuth2Client()
     const { tokens } = await oauth2Client.getToken(code)
-    await redis.setex(REDIS_TOKEN_KEY, 365 * 24 * 60 * 60, JSON.stringify(tokens))
+    await redis.setex(GOOGLE_OAUTH_TOKEN_KEY, 365 * 24 * 60 * 60, JSON.stringify(tokens))
     logger.info('Google Calendar OAuth tokens stored')
   }
 }

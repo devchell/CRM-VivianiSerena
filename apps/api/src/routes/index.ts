@@ -11,6 +11,7 @@ import { securityRouter } from './security'
 import { privacyRouter } from './privacy'
 import { usersRouter } from './users'
 import { notificationsRouter } from './notifications'
+import { adminRouter } from './admin'
 
 export const router: Router = Router()
 
@@ -26,3 +27,4 @@ router.use('/analytics', analyticsRouter)
 router.use('/notifications', notificationsRouter)
 router.use('/security', securityRouter)
 router.use('/privacy', privacyRouter)
+router.use('/admin', adminRouter)
