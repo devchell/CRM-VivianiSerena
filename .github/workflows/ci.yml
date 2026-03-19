@@ -60,8 +60,8 @@ jobs:
       - name: Test API
         run: pnpm --filter @viviani/api test
 
-      - name: Build shared types
-        run: pnpm --filter @viviani/types build
+      - name: Build shared packages
+        run: pnpm --filter @viviani/types build && pnpm --filter @viviani/utils build && pnpm --filter @viviani/ui build
 
       - name: Build API
         run: pnpm --filter @viviani/api db:generate && pnpm --filter @viviani/api build
