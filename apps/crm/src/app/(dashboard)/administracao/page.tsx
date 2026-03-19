@@ -5,6 +5,8 @@ import { useSearchParams } from 'next/navigation'
 import {
   CheckCircle2,
   Database,
+  Eye,
+  EyeOff,
   ExternalLink,
   Loader2,
   Mail,
@@ -69,6 +71,9 @@ type EmailFormState = {
   adminEmail: string
 }
 
+type VisibilitySection = 'google' | 'email' | 'environment'
+type VisibilityState = Record<VisibilitySection, boolean>
+
 function StatusPill({ ok, label }: { ok: boolean; label: string }) {
   return (
     <span
@@ -84,6 +89,27 @@ function StatusPill({ ok, label }: { ok: boolean; label: string }) {
   )
 }
 
+function VisibilityToggle(props: {
+  label: string
+  active: boolean
+  onClick: () => void
+}) {
+  return (
+    <button
+      type="button"
+      onClick={props.onClick}
+      className={`inline-flex items-center gap-2 rounded-full border px-3 py-2 text-xs font-semibold transition-colors ${
+        props.active
+          ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
+          : 'border-blush-200 bg-white text-charcoal-500 hover:bg-blush dark:border-charcoal-700 dark:bg-charcoal-800 dark:text-charcoal-300 dark:hover:bg-charcoal-700'
+      }`}
+    >
+      {props.active ? <Eye size={14} /> : <EyeOff size={14} />}
+      {props.label}
+    </button>
+  )
+}
+
 function GoogleIcon() {
   return (
     <svg viewBox="0 0 24 24" aria-hidden="true" className="h-4 w-4">
@@ -95,6 +121,60 @@ function GoogleIcon() {
   )
 }
 
+function InfoCard(props: {
+  label: string
+  value: string
+  breakAll?: boolean
+}) {
+  return (
+    <div className="rounded-2xl border border-blush-200 bg-cream/70 px-4 py-3 dark:border-charcoal-700 dark:bg-charcoal-800/70">
+      <p className="text-xs font-semibold uppercase tracking-[0.14em] text-charcoal-400">{props.label}</p>
+      <p className={`mt-2 text-sm font-medium text-charcoal dark:text-charcoal-100 ${props.breakAll ? 'break-all' : ''}`}>
+        {props.value}
+      </p>
+    </div>
+  )
+}
+
+function SectionCard(props: {
+  eyebrow: string
+  title: string
+  description?: string
+  visible: boolean
+  onToggleVisibility: () => void
+  status?: React.ReactNode
+  children: React.ReactNode
+}) {
+  return (
+    <div className="card-dark rounded-[32px] p-6 shadow-sm">
+      <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-rose-gold">{props.eyebrow}</p>
+          <h2 className="mt-2 font-heading text-xl font-semibold text-charcoal dark:text-charcoal-50">
+            {props.title}
+          </h2>
+          {props.description ? (
+            <p className="mt-2 max-w-3xl text-sm leading-6 text-charcoal-500 dark:text-charcoal-400">
+              {props.description}
+            </p>
+          ) : null}
+        </div>
+
+        <div className="flex flex-wrap items-center gap-2">
+          {props.status}
+          <VisibilityToggle
+            label={props.visible ? 'Ocultar dados' : 'Exibir dados'}
+            active={props.visible}
+            onClick={props.onToggleVisibility}
+          />
+        </div>
+      </div>
+
+      <div className="mt-5">{props.children}</div>
+    </div>
+  )
+}
+
 export default function AdministracaoPage() {
   const { accessToken, isAdmin } = useAuth()
   const searchParams = useSearchParams()
@@ -102,6 +182,11 @@ export default function AdministracaoPage() {
   const [overview, setOverview] = useState<AdminOverview | null>(null)
   const [googleBusy, setGoogleBusy] = useState<'connect' | 'disconnect' | null>(null)
   const [emailSaving, setEmailSaving] = useState(false)
+  const [visibility, setVisibility] = useState<VisibilityState>({
+    google: false,
+    email: false,
+    environment: false,
+  })
   const [emailForm, setEmailForm] = useState<EmailFormState>({
     host: '',
     port: '587',
@@ -117,6 +202,11 @@ export default function AdministracaoPage() {
     Authorization: `Bearer ${accessToken}`,
     'Content-Type': 'application/json',
   }), [accessToken])
+
+  const allVisible = useMemo(
+    () => Object.values(visibility).every(Boolean),
+    [visibility]
+  )
 
   const loadOverview = useCallback(async () => {
     if (!accessToken) return
@@ -171,6 +261,37 @@ export default function AdministracaoPage() {
     })
   }, [overview])
 
+  function toggleSectionVisibility(section: VisibilitySection) {
+    setVisibility((current) => ({
+      ...current,
+      [section]: !current[section],
+    }))
+  }
+
+  function toggleAllVisibility() {
+    const nextValue = !allVisible
+    setVisibility({
+      google: nextValue,
+      email: nextValue,
+      environment: nextValue,
+    })
+  }
+
+  function updateEmailField<K extends keyof EmailFormState>(field: K, value: EmailFormState[K]) {
+    setEmailForm((current) => ({ ...current, [field]: value }))
+  }
+
+  function maskValue(value: string | null | undefined, visible: boolean) {
+    if (!value) return 'Nao configurado'
+    if (visible) return value
+
+    if (value.length <= 8) {
+      return '••••••••'
+    }
+
+    return `${value.slice(0, 3)}••••••${value.slice(-3)}`
+  }
+
   async function handleGoogleConnect() {
     setGoogleBusy('connect')
     try {
@@ -210,10 +331,6 @@ export default function AdministracaoPage() {
     } finally {
       setGoogleBusy(null)
     }
-  }
-
-  function updateEmailField<K extends keyof EmailFormState>(field: K, value: EmailFormState[K]) {
-    setEmailForm((current) => ({ ...current, [field]: value }))
   }
 
   async function handleEmailSave() {
@@ -275,20 +392,29 @@ export default function AdministracaoPage() {
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.24em] text-rose-gold">Administracao</p>
           <h1 className="mt-2 font-heading text-3xl font-bold text-charcoal dark:text-charcoal-50">
-            Integracoes, conexoes e configuracoes criticas do ambiente.
+            Integracoes, credenciais e configuracoes criticas.
           </h1>
           <p className="mt-3 max-w-3xl text-sm leading-6 text-charcoal-500 dark:text-charcoal-400">
-            Esta area concentra o que somente o admin deve alterar: Google Calendar, status do e-mail transacional e leitura das dependencias do ambiente.
+            O painel foi reorganizado para concentrar conexoes externas, dados de e-mail e ambiente com controles de visualizacao por bloco.
           </p>
         </div>
 
-        <button
-          onClick={() => void loadOverview()}
-          className="inline-flex items-center justify-center gap-2 rounded-2xl border border-blush-300 bg-white px-4 py-3 text-sm font-medium text-charcoal shadow-sm transition-colors hover:bg-blush dark:border-charcoal-600 dark:bg-charcoal-800 dark:text-charcoal-100 dark:hover:bg-charcoal-700"
-        >
-          <RefreshCw size={15} />
-          Atualizar painel
-        </button>
+        <div className="flex flex-wrap gap-3">
+          <button
+            onClick={() => toggleAllVisibility()}
+            className="inline-flex items-center justify-center gap-2 rounded-2xl border border-blush-300 bg-white px-4 py-3 text-sm font-medium text-charcoal shadow-sm transition-colors hover:bg-blush dark:border-charcoal-600 dark:bg-charcoal-800 dark:text-charcoal-100 dark:hover:bg-charcoal-700"
+          >
+            {allVisible ? <EyeOff size={15} /> : <Eye size={15} />}
+            {allVisible ? 'Ocultar tudo' : 'Mostrar tudo'}
+          </button>
+          <button
+            onClick={() => void loadOverview()}
+            className="inline-flex items-center justify-center gap-2 rounded-2xl border border-blush-300 bg-white px-4 py-3 text-sm font-medium text-charcoal shadow-sm transition-colors hover:bg-blush dark:border-charcoal-600 dark:bg-charcoal-800 dark:text-charcoal-100 dark:hover:bg-charcoal-700"
+          >
+            <RefreshCw size={15} />
+            Atualizar painel
+          </button>
+        </div>
       </div>
 
       <div className="grid gap-4 md:grid-cols-3">
@@ -335,88 +461,113 @@ export default function AdministracaoPage() {
         </div>
       </div>
 
-      <div className="grid gap-4 xl:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)]">
-        <div className="card-dark rounded-[32px] p-6 shadow-sm">
-          <div className="flex items-start justify-between gap-4">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-rose-gold">Google Calendar</p>
-              <h2 className="mt-2 font-heading text-xl font-semibold text-charcoal dark:text-charcoal-50">
-                Sincronizacao da agenda externa
-              </h2>
-            </div>
-            <div className="flex flex-wrap justify-end gap-2">
-              <StatusPill ok={overview.integrations.googleCalendar.configured} label={overview.integrations.googleCalendar.configured ? 'OAuth configurado' : 'OAuth pendente'} />
-              <StatusPill ok={overview.integrations.googleCalendar.connected} label={overview.integrations.googleCalendar.connected ? 'Conta conectada' : 'Sem conexao'} />
-            </div>
+      <div className="rounded-[28px] border border-blush-200 bg-white/80 p-5 shadow-sm dark:border-charcoal-700 dark:bg-charcoal-900/70">
+        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-rose-gold">Visualizacao</p>
+            <h2 className="mt-2 font-heading text-xl font-semibold text-charcoal dark:text-charcoal-50">
+              Controle rapido dos dados exibidos
+            </h2>
+            <p className="mt-2 text-sm text-charcoal-500 dark:text-charcoal-400">
+              Cada area tem seu proprio controle, e voce tambem pode abrir ou fechar tudo de uma vez.
+            </p>
           </div>
 
-          <div className="mt-5 grid gap-3 md:grid-cols-2">
-            <div className="rounded-2xl border border-blush-200 bg-cream/70 px-4 py-3 dark:border-charcoal-700 dark:bg-charcoal-800/70">
-              <p className="text-xs font-semibold uppercase tracking-[0.14em] text-charcoal-400">Calendar ID</p>
-              <p className="mt-2 text-sm font-medium text-charcoal dark:text-charcoal-100">{overview.integrations.googleCalendar.calendarId}</p>
-            </div>
-            <div className="rounded-2xl border border-blush-200 bg-cream/70 px-4 py-3 dark:border-charcoal-700 dark:bg-charcoal-800/70">
-              <p className="text-xs font-semibold uppercase tracking-[0.14em] text-charcoal-400">Refresh token</p>
-              <p className="mt-2 text-sm font-medium text-charcoal dark:text-charcoal-100">
-                {overview.integrations.googleCalendar.hasRefreshToken ? 'Disponivel' : 'Nao disponivel'}
-              </p>
-            </div>
-            <div className="rounded-2xl border border-blush-200 bg-cream/70 px-4 py-3 dark:border-charcoal-700 dark:bg-charcoal-800/70 md:col-span-2">
-              <p className="text-xs font-semibold uppercase tracking-[0.14em] text-charcoal-400">Redirect URI</p>
-              <p className="mt-2 break-all text-sm font-medium text-charcoal dark:text-charcoal-100">
-                {overview.environment.googleRedirectUri ?? 'Nao configurado'}
-              </p>
-            </div>
-          </div>
-
-          <p className="mt-4 text-sm text-charcoal-500 dark:text-charcoal-400">
-            {overview.integrations.googleCalendar.connected
-              ? `Conectado. ${overview.integrations.googleCalendar.expiresAt ? `Expiracao atual: ${new Date(overview.integrations.googleCalendar.expiresAt).toLocaleString('pt-BR')}.` : 'Sem expiracao exposta pelo token atual.'}`
-              : 'Use o acesso abaixo para entrar com sua conta Google e autorizar a sincronizacao do calendario e de futuras integracoes Google do sistema.'}
-          </p>
-
-          <div className="mt-5 flex flex-wrap gap-3">
-            <button
-              onClick={() => void handleGoogleConnect()}
-              disabled={googleBusy !== null || !overview.integrations.googleCalendar.configured}
-              className="inline-flex items-center gap-2 rounded-2xl border border-blush-300 bg-white px-4 py-3 text-sm font-medium text-charcoal transition-colors hover:bg-blush disabled:opacity-60 dark:border-charcoal-600 dark:bg-charcoal-800 dark:text-charcoal-100 dark:hover:bg-charcoal-700"
-            >
-              {googleBusy === 'connect' ? <Loader2 size={15} className="animate-spin" /> : <GoogleIcon />}
-              Acessar com sua conta Google
-              <ExternalLink size={14} className="opacity-60" />
-            </button>
-            <button
-              onClick={() => void handleGoogleDisconnect()}
-              disabled={googleBusy !== null || !overview.integrations.googleCalendar.connected}
-              className="inline-flex items-center gap-2 rounded-2xl border border-blush-300 bg-white px-4 py-3 text-sm font-medium text-charcoal transition-colors hover:bg-blush disabled:opacity-60 dark:border-charcoal-600 dark:bg-charcoal-800 dark:text-charcoal-100 dark:hover:bg-charcoal-700"
-            >
-              {googleBusy === 'disconnect' ? <Loader2 size={15} className="animate-spin" /> : <Unlink2 size={15} />}
-              Desconectar Google
-            </button>
+          <div className="flex flex-wrap gap-2">
+            <VisibilityToggle
+              label={visibility.google ? 'Google visivel' : 'Google oculto'}
+              active={visibility.google}
+              onClick={() => toggleSectionVisibility('google')}
+            />
+            <VisibilityToggle
+              label={visibility.email ? 'E-mail visivel' : 'E-mail oculto'}
+              active={visibility.email}
+              onClick={() => toggleSectionVisibility('email')}
+            />
+            <VisibilityToggle
+              label={visibility.environment ? 'Ambiente visivel' : 'Ambiente oculto'}
+              active={visibility.environment}
+              onClick={() => toggleSectionVisibility('environment')}
+            />
           </div>
         </div>
+      </div>
 
+      <div className="grid gap-4 xl:grid-cols-[minmax(0,1.12fr)_minmax(0,0.88fr)]">
         <div className="space-y-4">
-          <div className="card-dark rounded-[32px] p-6 shadow-sm">
-            <div className="flex items-start justify-between gap-4">
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-rose-gold">Dados de e-mail</p>
-                <h2 className="mt-2 font-heading text-xl font-semibold text-charcoal dark:text-charcoal-50">
-                  SMTP, remetente e notificacoes
-                </h2>
+          <SectionCard
+            eyebrow="Google Calendar"
+            title="Sincronizacao da agenda externa"
+            description={overview.integrations.googleCalendar.connected
+              ? `Conectado. ${overview.integrations.googleCalendar.expiresAt ? `Expiracao atual: ${new Date(overview.integrations.googleCalendar.expiresAt).toLocaleString('pt-BR')}.` : 'Sem expiracao exposta pelo token atual.'}`
+              : 'Use o acesso abaixo para entrar com sua conta Google e autorizar a sincronizacao do calendario e de futuras integracoes Google do sistema.'}
+            visible={visibility.google}
+            onToggleVisibility={() => toggleSectionVisibility('google')}
+            status={(
+              <>
+                <StatusPill ok={overview.integrations.googleCalendar.configured} label={overview.integrations.googleCalendar.configured ? 'OAuth configurado' : 'OAuth pendente'} />
+                <StatusPill ok={overview.integrations.googleCalendar.connected} label={overview.integrations.googleCalendar.connected ? 'Conta conectada' : 'Sem conexao'} />
+              </>
+            )}
+          >
+            <div className="grid gap-3 md:grid-cols-2">
+              <InfoCard
+                label="Calendar ID"
+                value={maskValue(overview.integrations.googleCalendar.calendarId, visibility.google)}
+              />
+              <InfoCard
+                label="Refresh token"
+                value={overview.integrations.googleCalendar.hasRefreshToken ? 'Disponivel' : 'Nao disponivel'}
+              />
+              <div className="md:col-span-2">
+                <InfoCard
+                  label="Redirect URI"
+                  value={maskValue(overview.environment.googleRedirectUri, visibility.google)}
+                  breakAll
+                />
               </div>
-              <Mail size={18} className="text-rose-gold" />
             </div>
 
-            <div className="mt-4 flex flex-wrap gap-2">
-              <StatusPill ok={overview.integrations.email.configured} label={overview.integrations.email.configured ? 'SMTP pronto' : 'SMTP pendente'} />
-              <StatusPill ok={overview.integrations.email.source === 'database'} label={overview.integrations.email.source === 'database' ? 'Editavel no painel' : 'Lendo do ambiente'} />
+            <div className="mt-5 flex flex-wrap gap-3">
+              <button
+                onClick={() => void handleGoogleConnect()}
+                disabled={googleBusy !== null || !overview.integrations.googleCalendar.configured}
+                className="inline-flex items-center gap-2 rounded-2xl border border-blush-300 bg-white px-4 py-3 text-sm font-medium text-charcoal transition-colors hover:bg-blush disabled:opacity-60 dark:border-charcoal-600 dark:bg-charcoal-800 dark:text-charcoal-100 dark:hover:bg-charcoal-700"
+              >
+                {googleBusy === 'connect' ? <Loader2 size={15} className="animate-spin" /> : <GoogleIcon />}
+                Acessar com sua conta Google
+                <ExternalLink size={14} className="opacity-60" />
+              </button>
+              <button
+                onClick={() => void handleGoogleDisconnect()}
+                disabled={googleBusy !== null || !overview.integrations.googleCalendar.connected}
+                className="inline-flex items-center gap-2 rounded-2xl border border-blush-300 bg-white px-4 py-3 text-sm font-medium text-charcoal transition-colors hover:bg-blush disabled:opacity-60 dark:border-charcoal-600 dark:bg-charcoal-800 dark:text-charcoal-100 dark:hover:bg-charcoal-700"
+              >
+                {googleBusy === 'disconnect' ? <Loader2 size={15} className="animate-spin" /> : <Unlink2 size={15} />}
+                Desconectar Google
+              </button>
             </div>
+          </SectionCard>
 
-            <div className="mt-5 space-y-3 text-sm text-charcoal-500 dark:text-charcoal-400">
-              <p><strong className="text-charcoal dark:text-charcoal-100">Provider:</strong> {overview.integrations.email.provider}</p>
-              <p><strong className="text-charcoal dark:text-charcoal-100">Origem:</strong> {overview.integrations.email.source === 'database' ? 'Painel Administracao' : 'Variaveis do ambiente'}</p>
-              <p><strong className="text-charcoal dark:text-charcoal-100">Senha SMTP:</strong> {overview.integrations.email.passwordConfigured ? 'Configurada' : 'Nao configurada'}</p>
+          <SectionCard
+            eyebrow="Dados de e-mail"
+            title="SMTP, remetente e notificacoes"
+            description="As credenciais de envio ficam organizadas em um unico bloco, com leitura do banco e atualizacao imediata apos salvar."
+            visible={visibility.email}
+            onToggleVisibility={() => toggleSectionVisibility('email')}
+            status={(
+              <>
+                <StatusPill ok={overview.integrations.email.configured} label={overview.integrations.email.configured ? 'SMTP pronto' : 'SMTP pendente'} />
+                <StatusPill ok={overview.integrations.email.source === 'database'} label={overview.integrations.email.source === 'database' ? 'Editavel no painel' : 'Lendo do ambiente'} />
+              </>
+            )}
+          >
+            <div className="grid gap-3 md:grid-cols-2">
+              <InfoCard label="Provider" value={overview.integrations.email.provider} />
+              <InfoCard
+                label="Senha SMTP"
+                value={overview.integrations.email.passwordConfigured ? 'Configurada' : 'Nao configurada'}
+              />
             </div>
 
             <div className="mt-5 grid gap-3">
@@ -427,7 +578,7 @@ export default function AdministracaoPage() {
                     value={emailForm.host}
                     onChange={(event) => updateEmailField('host', event.target.value)}
                     className="w-full rounded-2xl border border-blush-200 bg-white px-4 py-3 text-sm text-charcoal outline-none transition focus:border-rose-gold dark:border-charcoal-700 dark:bg-charcoal-800 dark:text-charcoal-100"
-                    placeholder="smtp.seuprovedor.com"
+                    placeholder={maskValue(overview.integrations.email.host, visibility.email)}
                   />
                 </label>
                 <label className="space-y-2 text-sm">
@@ -448,7 +599,7 @@ export default function AdministracaoPage() {
                     value={emailForm.user}
                     onChange={(event) => updateEmailField('user', event.target.value)}
                     className="w-full rounded-2xl border border-blush-200 bg-white px-4 py-3 text-sm text-charcoal outline-none transition focus:border-rose-gold dark:border-charcoal-700 dark:bg-charcoal-800 dark:text-charcoal-100"
-                    placeholder="usuario@provedor.com"
+                    placeholder={maskValue(overview.integrations.email.user, visibility.email)}
                   />
                 </label>
                 <label className="space-y-2 text-sm">
@@ -471,7 +622,9 @@ export default function AdministracaoPage() {
                   value={emailForm.password}
                   onChange={(event) => updateEmailField('password', event.target.value)}
                   className="w-full rounded-2xl border border-blush-200 bg-white px-4 py-3 text-sm text-charcoal outline-none transition focus:border-rose-gold dark:border-charcoal-700 dark:bg-charcoal-800 dark:text-charcoal-100"
-                  placeholder={overview.integrations.email.passwordConfigured ? 'Deixe em branco para manter a atual' : 'Digite a senha SMTP'}
+                  placeholder={overview.integrations.email.passwordConfigured
+                    ? (visibility.email ? 'Deixe em branco para manter a atual' : '•••••••• senha configurada')
+                    : 'Digite a senha SMTP'}
                 />
               </label>
 
@@ -482,7 +635,7 @@ export default function AdministracaoPage() {
                     value={emailForm.from}
                     onChange={(event) => updateEmailField('from', event.target.value)}
                     className="w-full rounded-2xl border border-blush-200 bg-white px-4 py-3 text-sm text-charcoal outline-none transition focus:border-rose-gold dark:border-charcoal-700 dark:bg-charcoal-800 dark:text-charcoal-100"
-                    placeholder="contato@seudominio.com"
+                    placeholder={maskValue(overview.integrations.email.from, visibility.email)}
                   />
                 </label>
                 <label className="space-y-2 text-sm">
@@ -491,7 +644,7 @@ export default function AdministracaoPage() {
                     value={emailForm.fromName}
                     onChange={(event) => updateEmailField('fromName', event.target.value)}
                     className="w-full rounded-2xl border border-blush-200 bg-white px-4 py-3 text-sm text-charcoal outline-none transition focus:border-rose-gold dark:border-charcoal-700 dark:bg-charcoal-800 dark:text-charcoal-100"
-                    placeholder="Viviani Serena"
+                    placeholder={maskValue(overview.integrations.email.fromName, visibility.email)}
                   />
                 </label>
               </div>
@@ -502,7 +655,7 @@ export default function AdministracaoPage() {
                   value={emailForm.adminEmail}
                   onChange={(event) => updateEmailField('adminEmail', event.target.value)}
                   className="w-full rounded-2xl border border-blush-200 bg-white px-4 py-3 text-sm text-charcoal outline-none transition focus:border-rose-gold dark:border-charcoal-700 dark:bg-charcoal-800 dark:text-charcoal-100"
-                  placeholder="admin@seudominio.com"
+                  placeholder={maskValue(overview.integrations.email.adminEmail, visibility.email)}
                 />
               </label>
             </div>
@@ -521,21 +674,38 @@ export default function AdministracaoPage() {
                 Salvar dados de e-mail
               </button>
             </div>
-          </div>
+          </SectionCard>
+        </div>
 
-          <div className="card-dark rounded-[32px] p-6 shadow-sm">
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-rose-gold">Ambiente</p>
-            <h2 className="mt-2 font-heading text-xl font-semibold text-charcoal dark:text-charcoal-50">
-              Configuracoes sensiveis
-            </h2>
-
-            <div className="mt-5 space-y-3 text-sm text-charcoal-500 dark:text-charcoal-400">
-              <p><strong className="text-charcoal dark:text-charcoal-100">API:</strong> {overview.environment.apiBaseUrl}</p>
-              <p><strong className="text-charcoal dark:text-charcoal-100">CRM:</strong> {overview.environment.crmUrl}</p>
-              <p><strong className="text-charcoal dark:text-charcoal-100">Storage:</strong> {overview.infrastructure.storageDriver}</p>
-              <p><strong className="text-charcoal dark:text-charcoal-100">CORS:</strong> {overview.environment.corsOrigins.length} origem(ns) liberada(s)</p>
+        <div className="space-y-4">
+          <SectionCard
+            eyebrow="Ambiente"
+            title="Configuracoes sensiveis"
+            description="URLs, origem de CORS e driver de storage ficam consolidados em um unico resumo tecnico."
+            visible={visibility.environment}
+            onToggleVisibility={() => toggleSectionVisibility('environment')}
+          >
+            <div className="grid gap-3">
+              <InfoCard
+                label="API"
+                value={maskValue(overview.environment.apiBaseUrl, visibility.environment)}
+                breakAll
+              />
+              <InfoCard
+                label="CRM"
+                value={maskValue(overview.environment.crmUrl, visibility.environment)}
+                breakAll
+              />
+              <InfoCard
+                label="Storage"
+                value={overview.infrastructure.storageDriver}
+              />
+              <InfoCard
+                label="CORS liberado"
+                value={`${overview.environment.corsOrigins.length} origem(ns)`}
+              />
             </div>
-          </div>
+          </SectionCard>
         </div>
       </div>
     </div>
