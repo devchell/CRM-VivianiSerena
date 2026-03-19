@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 import {
   CheckCircle2,
@@ -8,6 +8,8 @@ import {
   Eye,
   EyeOff,
   ExternalLink,
+  Globe2,
+  Layers3,
   Loader2,
   Mail,
   RefreshCw,
@@ -76,33 +78,36 @@ type VisibilityState = Record<VisibilitySection, boolean>
 
 function StatusPill({ ok, label }: { ok: boolean; label: string }) {
   return (
-    <span
-      className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-semibold ${
-        ok
-          ? 'bg-emerald-50 text-emerald-700'
-          : 'bg-amber-50 text-amber-700'
-      }`}
-    >
+    <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-semibold ${ok ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700'}`}>
       {ok ? <CheckCircle2 size={12} /> : <ShieldAlert size={12} />}
       {label}
     </span>
   )
 }
 
-function VisibilityToggle(props: {
-  label: string
-  active: boolean
-  onClick: () => void
-}) {
+function SummaryCard(props: { label: string; value: string; note: string; icon: ReactNode }) {
+  return (
+    <div className="rounded-[28px] border border-blush-200 bg-white/90 p-5 shadow-sm dark:border-charcoal-700 dark:bg-charcoal-900/70">
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-charcoal-400">{props.label}</p>
+          <p className="mt-2 font-heading text-2xl font-bold text-charcoal dark:text-charcoal-50">{props.value}</p>
+          <p className="mt-2 text-sm leading-6 text-charcoal-500 dark:text-charcoal-400">{props.note}</p>
+        </div>
+        <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-cream text-rose-gold ring-1 ring-blush-200 dark:bg-charcoal-800 dark:ring-charcoal-700">
+          {props.icon}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function VisibilityToggle(props: { label: string; active: boolean; onClick: () => void }) {
   return (
     <button
       type="button"
       onClick={props.onClick}
-      className={`inline-flex items-center gap-2 rounded-full border px-3 py-2 text-xs font-semibold transition-colors ${
-        props.active
-          ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
-          : 'border-blush-200 bg-white text-charcoal-500 hover:bg-blush dark:border-charcoal-700 dark:bg-charcoal-800 dark:text-charcoal-300 dark:hover:bg-charcoal-700'
-      }`}
+      className={`inline-flex items-center gap-2 rounded-full border px-3 py-2 text-xs font-semibold transition-colors ${props.active ? 'border-emerald-200 bg-emerald-50 text-emerald-700' : 'border-blush-200 bg-white text-charcoal-500 hover:bg-blush dark:border-charcoal-700 dark:bg-charcoal-800 dark:text-charcoal-300 dark:hover:bg-charcoal-700'}`}
     >
       {props.active ? <Eye size={14} /> : <EyeOff size={14} />}
       {props.label}
@@ -110,28 +115,12 @@ function VisibilityToggle(props: {
   )
 }
 
-function GoogleIcon() {
+function InfoCard(props: { label: string; value: string; breakAll?: boolean; note?: string }) {
   return (
-    <svg viewBox="0 0 24 24" aria-hidden="true" className="h-4 w-4">
-      <path fill="#EA4335" d="M12 10.2v3.9h5.5c-.2 1.2-.9 2.2-1.9 2.9l3.1 2.4c1.8-1.7 2.8-4.1 2.8-6.9 0-.7-.1-1.4-.2-2H12z" />
-      <path fill="#34A853" d="M12 21c2.6 0 4.8-.9 6.4-2.3l-3.1-2.4c-.9.6-2 .9-3.3.9-2.5 0-4.7-1.7-5.4-4H3.4v2.5C5 18.9 8.2 21 12 21z" />
-      <path fill="#4A90E2" d="M6.6 13.2c-.2-.6-.3-1.3-.3-2s.1-1.4.3-2V6.7H3.4C2.8 8 2.5 9.5 2.5 11.2S2.8 14.4 3.4 15.7l3.2-2.5z" />
-      <path fill="#FBBC05" d="M12 5.1c1.4 0 2.7.5 3.7 1.5l2.8-2.8C16.8 2.2 14.6 1.2 12 1.2c-3.8 0-7 2.1-8.6 5.5l3.2 2.5c.7-2.3 2.9-4.1 5.4-4.1z" />
-    </svg>
-  )
-}
-
-function InfoCard(props: {
-  label: string
-  value: string
-  breakAll?: boolean
-}) {
-  return (
-    <div className="rounded-2xl border border-blush-200 bg-cream/70 px-4 py-3 dark:border-charcoal-700 dark:bg-charcoal-800/70">
+    <div className="rounded-2xl border border-blush-200 bg-white px-4 py-3 dark:border-charcoal-700 dark:bg-charcoal-800/70">
       <p className="text-xs font-semibold uppercase tracking-[0.14em] text-charcoal-400">{props.label}</p>
-      <p className={`mt-2 text-sm font-medium text-charcoal dark:text-charcoal-100 ${props.breakAll ? 'break-all' : ''}`}>
-        {props.value}
-      </p>
+      <p className={`mt-2 text-sm font-medium text-charcoal dark:text-charcoal-100 ${props.breakAll ? 'break-all' : ''}`}>{props.value}</p>
+      {props.note ? <p className="mt-2 text-xs leading-5 text-charcoal-400 dark:text-charcoal-500">{props.note}</p> : null}
     </div>
   )
 }
@@ -139,54 +128,41 @@ function InfoCard(props: {
 function SectionCard(props: {
   eyebrow: string
   title: string
-  description?: string
+  description: string
   visible: boolean
-  onToggleVisibility: () => void
-  status?: React.ReactNode
-  children: React.ReactNode
+  onToggle: () => void
+  status?: ReactNode
+  children: ReactNode
 }) {
   return (
-    <div className="card-dark rounded-[32px] p-6 shadow-sm">
+    <section className="rounded-[32px] border border-blush-200 bg-white/90 p-6 shadow-sm dark:border-charcoal-700 dark:bg-charcoal-900/70">
       <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-rose-gold">{props.eyebrow}</p>
-          <h2 className="mt-2 font-heading text-xl font-semibold text-charcoal dark:text-charcoal-50">
-            {props.title}
-          </h2>
-          {props.description ? (
-            <p className="mt-2 max-w-3xl text-sm leading-6 text-charcoal-500 dark:text-charcoal-400">
-              {props.description}
-            </p>
-          ) : null}
+          <h2 className="mt-2 font-heading text-xl font-semibold text-charcoal dark:text-charcoal-50">{props.title}</h2>
+          <p className="mt-2 max-w-3xl text-sm leading-6 text-charcoal-500 dark:text-charcoal-400">{props.description}</p>
         </div>
-
         <div className="flex flex-wrap items-center gap-2">
           {props.status}
-          <VisibilityToggle
-            label={props.visible ? 'Ocultar dados' : 'Exibir dados'}
-            active={props.visible}
-            onClick={props.onToggleVisibility}
-          />
+          <VisibilityToggle label={props.visible ? 'Ocultar dados' : 'Exibir dados'} active={props.visible} onClick={props.onToggle} />
         </div>
       </div>
-
       <div className="mt-5">{props.children}</div>
-    </div>
+    </section>
   )
 }
 
 export default function AdministracaoPage() {
   const { accessToken, isAdmin } = useAuth()
   const searchParams = useSearchParams()
+  const hasLoadedRef = useRef(false)
   const [loading, setLoading] = useState(true)
+  const [refreshing, setRefreshing] = useState(false)
+  const [loadError, setLoadError] = useState<string | null>(null)
   const [overview, setOverview] = useState<AdminOverview | null>(null)
   const [googleBusy, setGoogleBusy] = useState<'connect' | 'disconnect' | null>(null)
   const [emailSaving, setEmailSaving] = useState(false)
-  const [visibility, setVisibility] = useState<VisibilityState>({
-    google: false,
-    email: false,
-    environment: false,
-  })
+  const [visibility, setVisibility] = useState<VisibilityState>({ google: false, email: false, environment: false })
   const [emailForm, setEmailForm] = useState<EmailFormState>({
     host: '',
     port: '587',
@@ -198,57 +174,51 @@ export default function AdministracaoPage() {
     adminEmail: '',
   })
 
-  const headers = useMemo(() => ({
-    Authorization: `Bearer ${accessToken}`,
-    'Content-Type': 'application/json',
-  }), [accessToken])
+  const headers = useMemo(() => ({ Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json' }), [accessToken])
+  const allVisible = useMemo(() => Object.values(visibility).every(Boolean), [visibility])
+  const visibleCount = useMemo(() => Object.values(visibility).filter(Boolean).length, [visibility])
 
-  const allVisible = useMemo(
-    () => Object.values(visibility).every(Boolean),
-    [visibility]
-  )
-
-  const loadOverview = useCallback(async () => {
+  const loadOverview = useCallback(async (mode: 'initial' | 'refresh' = 'refresh') => {
     if (!accessToken) return
+    const fullLoad = mode === 'initial' || !hasLoadedRef.current
+    if (fullLoad) setLoading(true)
+    else setRefreshing(true)
 
-    setLoading(true)
     try {
-      const response = await fetch(`${API_URL}/admin/overview`, {
-        headers: { Authorization: `Bearer ${accessToken}` },
-      })
+      setLoadError(null)
+      const response = await fetch(`${API_URL}/admin/overview`, { headers: { Authorization: `Bearer ${accessToken}` } })
       const payload = await response.json() as { success: boolean; data?: AdminOverview; message?: string }
-
-      if (!response.ok || !payload.success || !payload.data) {
-        throw new Error(payload.message ?? 'Erro ao carregar administracao')
-      }
-
+      if (!response.ok || !payload.success || !payload.data) throw new Error(payload.message ?? 'Erro ao carregar administracao')
+      hasLoadedRef.current = true
       setOverview(payload.data)
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Erro ao carregar administracao')
+      const message = error instanceof Error ? error.message : 'Erro ao carregar administracao'
+      setLoadError(message)
+      toast.error(message)
     } finally {
-      setLoading(false)
+      if (fullLoad) setLoading(false)
+      else setRefreshing(false)
     }
   }, [accessToken])
 
   useEffect(() => {
-    void loadOverview()
+    void loadOverview('initial')
   }, [loadOverview])
 
   useEffect(() => {
     const googleStatus = searchParams.get('google')
     if (googleStatus === 'connected') {
       toast.success('Google Calendar conectado com sucesso')
-      void loadOverview()
+      void loadOverview('refresh')
     }
     if (googleStatus === 'error') {
       toast.error('Nao foi possivel concluir a conexao com o Google Calendar')
-      void loadOverview()
+      void loadOverview('refresh')
     }
   }, [loadOverview, searchParams])
 
   useEffect(() => {
     if (!overview) return
-
     setEmailForm({
       host: overview.integrations.email.host ?? '',
       port: overview.integrations.email.port ?? '587',
@@ -261,20 +231,13 @@ export default function AdministracaoPage() {
     })
   }, [overview])
 
-  function toggleSectionVisibility(section: VisibilitySection) {
-    setVisibility((current) => ({
-      ...current,
-      [section]: !current[section],
-    }))
+  function toggleSection(section: VisibilitySection) {
+    setVisibility((current) => ({ ...current, [section]: !current[section] }))
   }
 
-  function toggleAllVisibility() {
+  function toggleAll() {
     const nextValue = !allVisible
-    setVisibility({
-      google: nextValue,
-      email: nextValue,
-      environment: nextValue,
-    })
+    setVisibility({ google: nextValue, email: nextValue, environment: nextValue })
   }
 
   function updateEmailField<K extends keyof EmailFormState>(field: K, value: EmailFormState[K]) {
@@ -284,26 +247,16 @@ export default function AdministracaoPage() {
   function maskValue(value: string | null | undefined, visible: boolean) {
     if (!value) return 'Nao configurado'
     if (visible) return value
-
-    if (value.length <= 8) {
-      return '••••••••'
-    }
-
-    return `${value.slice(0, 3)}••••••${value.slice(-3)}`
+    if (value.length <= 8) return '********'
+    return `${value.slice(0, 3)}******${value.slice(-3)}`
   }
 
   async function handleGoogleConnect() {
     setGoogleBusy('connect')
     try {
-      const response = await fetch(`${API_URL}/auth/google`, {
-        headers: { Authorization: `Bearer ${accessToken}` },
-      })
+      const response = await fetch(`${API_URL}/auth/google`, { headers: { Authorization: `Bearer ${accessToken}` } })
       const payload = await response.json() as { success: boolean; data?: { authUrl: string }; message?: string }
-
-      if (!response.ok || !payload.success || !payload.data?.authUrl) {
-        throw new Error(payload.message ?? 'Nao foi possivel iniciar a conexao com o Google')
-      }
-
+      if (!response.ok || !payload.success || !payload.data?.authUrl) throw new Error(payload.message ?? 'Nao foi possivel iniciar a conexao com o Google')
       window.location.href = payload.data.authUrl
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Erro ao conectar Google Calendar')
@@ -314,18 +267,11 @@ export default function AdministracaoPage() {
   async function handleGoogleDisconnect() {
     setGoogleBusy('disconnect')
     try {
-      const response = await fetch(`${API_URL}/auth/google`, {
-        method: 'DELETE',
-        headers,
-      })
+      const response = await fetch(`${API_URL}/auth/google`, { method: 'DELETE', headers })
       const payload = await response.json() as { success: boolean; message?: string }
-
-      if (!response.ok || !payload.success) {
-        throw new Error(payload.message ?? 'Erro ao desconectar Google Calendar')
-      }
-
+      if (!response.ok || !payload.success) throw new Error(payload.message ?? 'Erro ao desconectar Google Calendar')
       toast.success(payload.message ?? 'Google Calendar desconectado')
-      await loadOverview()
+      await loadOverview('refresh')
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Erro ao desconectar Google Calendar')
     } finally {
@@ -350,16 +296,11 @@ export default function AdministracaoPage() {
           adminEmail: emailForm.adminEmail.trim(),
         }),
       })
-
       const payload = await response.json() as { success: boolean; message?: string }
-
-      if (!response.ok || !payload.success) {
-        throw new Error(payload.message ?? 'Erro ao salvar dados de e-mail')
-      }
-
+      if (!response.ok || !payload.success) throw new Error(payload.message ?? 'Erro ao salvar dados de e-mail')
       toast.success(payload.message ?? 'Dados de e-mail salvos com sucesso')
       setEmailForm((current) => ({ ...current, password: '' }))
-      await loadOverview()
+      await loadOverview('refresh')
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Erro ao salvar dados de e-mail')
     } finally {
@@ -368,308 +309,125 @@ export default function AdministracaoPage() {
   }
 
   if (!isAdmin) {
-    return (
-      <div className="flex min-h-[320px] items-center justify-center">
-        <div className="text-center">
-          <ShieldAlert size={34} className="mx-auto text-charcoal-300" />
-          <p className="mt-3 text-sm text-charcoal-400">Acesso restrito a administradores.</p>
-        </div>
-      </div>
-    )
+    return <div className="flex min-h-[320px] items-center justify-center text-sm text-charcoal-400">Acesso restrito a administradores.</div>
   }
 
-  if (loading || !overview) {
+  if (loading) {
+    return <div className="flex min-h-[320px] items-center justify-center"><Loader2 size={28} className="animate-spin text-rose-gold" /></div>
+  }
+
+  if (!overview) {
     return (
-      <div className="flex min-h-[320px] items-center justify-center">
-        <Loader2 size={28} className="animate-spin text-rose-gold" />
+      <div className="rounded-3xl border border-red-200 bg-red-50 px-5 py-4 text-sm text-red-700 dark:border-red-900/40 dark:bg-red-950/20 dark:text-red-200">
+        <p className="font-semibold">Nao foi possivel carregar o painel.</p>
+        <p className="mt-1">{loadError ?? 'Erro inesperado.'}</p>
       </div>
     )
   }
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-4 rounded-[32px] border border-blush-200 bg-[radial-gradient(circle_at_top_left,_rgba(201,150,122,0.16),_transparent_36%),linear-gradient(135deg,#fffdfb_0%,#fff7f1_52%,#fffdfb_100%)] px-6 py-6 shadow-[0_28px_80px_-42px_rgba(97,73,54,0.35)] dark:border-charcoal-700 dark:bg-[radial-gradient(circle_at_top_left,_rgba(201,150,122,0.18),_transparent_34%),linear-gradient(135deg,#171412_0%,#1e1a17_52%,#161311_100%)] md:flex-row md:items-end md:justify-between">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.24em] text-rose-gold">Administracao</p>
-          <h1 className="mt-2 font-heading text-3xl font-bold text-charcoal dark:text-charcoal-50">
-            Integracoes, credenciais e configuracoes criticas.
-          </h1>
-          <p className="mt-3 max-w-3xl text-sm leading-6 text-charcoal-500 dark:text-charcoal-400">
-            O painel foi reorganizado para concentrar conexoes externas, dados de e-mail e ambiente com controles de visualizacao por bloco.
-          </p>
-        </div>
-
-        <div className="flex flex-wrap gap-3">
-          <button
-            onClick={() => toggleAllVisibility()}
-            className="inline-flex items-center justify-center gap-2 rounded-2xl border border-blush-300 bg-white px-4 py-3 text-sm font-medium text-charcoal shadow-sm transition-colors hover:bg-blush dark:border-charcoal-600 dark:bg-charcoal-800 dark:text-charcoal-100 dark:hover:bg-charcoal-700"
-          >
-            {allVisible ? <EyeOff size={15} /> : <Eye size={15} />}
-            {allVisible ? 'Ocultar tudo' : 'Mostrar tudo'}
-          </button>
-          <button
-            onClick={() => void loadOverview()}
-            className="inline-flex items-center justify-center gap-2 rounded-2xl border border-blush-300 bg-white px-4 py-3 text-sm font-medium text-charcoal shadow-sm transition-colors hover:bg-blush dark:border-charcoal-600 dark:bg-charcoal-800 dark:text-charcoal-100 dark:hover:bg-charcoal-700"
-          >
-            <RefreshCw size={15} />
-            Atualizar painel
-          </button>
-        </div>
-      </div>
-
-      <div className="grid gap-4 md:grid-cols-3">
-        <div className="card-dark rounded-[28px] p-5 shadow-sm">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-charcoal-400">Banco</p>
-              <p className="mt-2 font-heading text-3xl font-bold text-charcoal dark:text-charcoal-50">
-                {overview.infrastructure.database ? 'OK' : 'Falha'}
-              </p>
-            </div>
-            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-700 ring-1 ring-emerald-100">
-              <Database size={18} />
-            </div>
-          </div>
-        </div>
-
-        <div className="card-dark rounded-[28px] p-5 shadow-sm">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-charcoal-400">Redis</p>
-              <p className="mt-2 font-heading text-3xl font-bold text-charcoal dark:text-charcoal-50">
-                {overview.infrastructure.redis ? 'OK' : 'Falha'}
-              </p>
-            </div>
-            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-sky-50 text-sky-700 ring-1 ring-sky-100">
-              <Server size={18} />
-            </div>
-          </div>
-        </div>
-
-        <div className="card-dark rounded-[28px] p-5 shadow-sm">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-charcoal-400">Uploads</p>
-              <p className="mt-2 font-heading text-3xl font-bold text-charcoal dark:text-charcoal-50">
-                {overview.infrastructure.uploads ? 'OK' : 'Falha'}
-              </p>
-            </div>
-            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-violet-50 text-violet-700 ring-1 ring-violet-100">
-              <ExternalLink size={18} />
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div className="rounded-[28px] border border-blush-200 bg-white/80 p-5 shadow-sm dark:border-charcoal-700 dark:bg-charcoal-900/70">
-        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+      <section className="rounded-[32px] border border-blush-200 bg-[radial-gradient(circle_at_top_left,_rgba(201,150,122,0.16),_transparent_36%),linear-gradient(135deg,#fffdfb_0%,#fff7f1_52%,#fffdfb_100%)] px-6 py-6 shadow-[0_28px_80px_-42px_rgba(97,73,54,0.35)] dark:border-charcoal-700 dark:bg-[radial-gradient(circle_at_top_left,_rgba(201,150,122,0.18),_transparent_34%),linear-gradient(135deg,#171412_0%,#1e1a17_52%,#161311_100%)]">
+        <div className="flex flex-col gap-5 xl:flex-row xl:items-end xl:justify-between">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-rose-gold">Visualizacao</p>
-            <h2 className="mt-2 font-heading text-xl font-semibold text-charcoal dark:text-charcoal-50">
-              Controle rapido dos dados exibidos
-            </h2>
-            <p className="mt-2 text-sm text-charcoal-500 dark:text-charcoal-400">
-              Cada area tem seu proprio controle, e voce tambem pode abrir ou fechar tudo de uma vez.
-            </p>
+            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-rose-gold">Administracao</p>
+            <h1 className="mt-2 font-heading text-3xl font-bold text-charcoal dark:text-charcoal-50">Integracoes, credenciais e ambiente sob controle.</h1>
+            <p className="mt-3 max-w-3xl text-sm leading-6 text-charcoal-500 dark:text-charcoal-400">Refinei a hierarquia visual do painel para separar melhor os dados sensiveis e deixar cada bloco mais facil de operar.</p>
           </div>
-
-          <div className="flex flex-wrap gap-2">
-            <VisibilityToggle
-              label={visibility.google ? 'Google visivel' : 'Google oculto'}
-              active={visibility.google}
-              onClick={() => toggleSectionVisibility('google')}
-            />
-            <VisibilityToggle
-              label={visibility.email ? 'E-mail visivel' : 'E-mail oculto'}
-              active={visibility.email}
-              onClick={() => toggleSectionVisibility('email')}
-            />
-            <VisibilityToggle
-              label={visibility.environment ? 'Ambiente visivel' : 'Ambiente oculto'}
-              active={visibility.environment}
-              onClick={() => toggleSectionVisibility('environment')}
-            />
+          <div className="flex flex-wrap gap-3">
+            <button type="button" onClick={toggleAll} className="inline-flex items-center justify-center gap-2 rounded-2xl border border-blush-300 bg-white px-4 py-3 text-sm font-medium text-charcoal shadow-sm transition-colors hover:bg-blush dark:border-charcoal-600 dark:bg-charcoal-800 dark:text-charcoal-100 dark:hover:bg-charcoal-700">
+              {allVisible ? <EyeOff size={15} /> : <Eye size={15} />}
+              {allVisible ? 'Ocultar tudo' : 'Mostrar tudo'}
+            </button>
+            <button type="button" onClick={() => void loadOverview('refresh')} disabled={refreshing} className="inline-flex items-center justify-center gap-2 rounded-2xl border border-blush-300 bg-white px-4 py-3 text-sm font-medium text-charcoal shadow-sm transition-colors hover:bg-blush disabled:opacity-60 dark:border-charcoal-600 dark:bg-charcoal-800 dark:text-charcoal-100 dark:hover:bg-charcoal-700">
+              {refreshing ? <Loader2 size={15} className="animate-spin" /> : <RefreshCw size={15} />}
+              Atualizar painel
+            </button>
           </div>
         </div>
+        <div className="mt-6 flex flex-wrap items-center gap-2">
+          <StatusPill ok={overview.infrastructure.database} label={overview.infrastructure.database ? 'Banco OK' : 'Banco com falha'} />
+          <StatusPill ok={overview.infrastructure.redis} label={overview.infrastructure.redis ? 'Redis OK' : 'Redis com falha'} />
+          <StatusPill ok={overview.integrations.email.source === 'database'} label={overview.integrations.email.source === 'database' ? 'SMTP no banco' : 'SMTP via ambiente'} />
+          <StatusPill ok={overview.integrations.googleCalendar.connected} label={overview.integrations.googleCalendar.connected ? 'Google conectado' : 'Google pendente'} />
+        </div>
+      </section>
+
+      {loadError ? <div className="rounded-3xl border border-amber-200 bg-amber-50 px-5 py-4 text-sm text-amber-800 dark:border-amber-900/40 dark:bg-amber-950/20 dark:text-amber-100">{loadError}</div> : null}
+
+      <div className="grid gap-4 md:grid-cols-2 2xl:grid-cols-5">
+        <SummaryCard label="Banco" value={overview.infrastructure.database ? 'OK' : 'Falha'} note="Disponibilidade do banco principal." icon={<Database size={18} />} />
+        <SummaryCard label="Redis" value={overview.infrastructure.redis ? 'OK' : 'Falha'} note="Cache e filas auxiliares." icon={<Server size={18} />} />
+        <SummaryCard label="Uploads" value={overview.infrastructure.uploads ? 'OK' : 'Falha'} note={`Driver atual: ${overview.infrastructure.storageDriver}.`} icon={<ExternalLink size={18} />} />
+        <SummaryCard label="Google" value={overview.integrations.googleCalendar.connected ? 'Conectado' : 'Pendente'} note={overview.integrations.googleCalendar.configured ? 'OAuth configurado.' : 'Credenciais OAuth pendentes.'} icon={<Globe2 size={18} />} />
+        <SummaryCard label="Visibilidade" value={`${visibleCount}/3`} note="Blocos com dados visiveis." icon={<Layers3 size={18} />} />
       </div>
+
+      <section className="rounded-[32px] border border-blush-200 bg-white/90 p-6 shadow-sm dark:border-charcoal-700 dark:bg-charcoal-900/70">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-rose-gold">Visibilidade</p>
+            <h2 className="mt-2 font-heading text-xl font-semibold text-charcoal dark:text-charcoal-50">Controle rapido por area</h2>
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-charcoal-500 dark:text-charcoal-400">Cada secao agora tem um controle mais claro para exibicao pontual. O botao global continua no topo para abrir ou fechar tudo.</p>
+          </div>
+          <div className="rounded-2xl border border-blush-200 bg-cream/80 px-4 py-3 text-sm text-charcoal-600 dark:border-charcoal-700 dark:bg-charcoal-800/70 dark:text-charcoal-300">{visibleCount} de 3 blocos visiveis.</div>
+        </div>
+        <div className="mt-5 flex flex-wrap gap-2">
+          <VisibilityToggle label={visibility.google ? 'Google visivel' : 'Google oculto'} active={visibility.google} onClick={() => toggleSection('google')} />
+          <VisibilityToggle label={visibility.email ? 'E-mail visivel' : 'E-mail oculto'} active={visibility.email} onClick={() => toggleSection('email')} />
+          <VisibilityToggle label={visibility.environment ? 'Ambiente visivel' : 'Ambiente oculto'} active={visibility.environment} onClick={() => toggleSection('environment')} />
+        </div>
+      </section>
 
       <div className="grid gap-4 xl:grid-cols-[minmax(0,1.12fr)_minmax(0,0.88fr)]">
         <div className="space-y-4">
-          <SectionCard
-            eyebrow="Google Calendar"
-            title="Sincronizacao da agenda externa"
-            description={overview.integrations.googleCalendar.connected
-              ? `Conectado. ${overview.integrations.googleCalendar.expiresAt ? `Expiracao atual: ${new Date(overview.integrations.googleCalendar.expiresAt).toLocaleString('pt-BR')}.` : 'Sem expiracao exposta pelo token atual.'}`
-              : 'Use o acesso abaixo para entrar com sua conta Google e autorizar a sincronizacao do calendario e de futuras integracoes Google do sistema.'}
-            visible={visibility.google}
-            onToggleVisibility={() => toggleSectionVisibility('google')}
-            status={(
-              <>
-                <StatusPill ok={overview.integrations.googleCalendar.configured} label={overview.integrations.googleCalendar.configured ? 'OAuth configurado' : 'OAuth pendente'} />
-                <StatusPill ok={overview.integrations.googleCalendar.connected} label={overview.integrations.googleCalendar.connected ? 'Conta conectada' : 'Sem conexao'} />
-              </>
-            )}
-          >
+          <SectionCard eyebrow="Google Calendar" title="Sincronizacao da agenda externa" description={overview.integrations.googleCalendar.connected ? (overview.integrations.googleCalendar.expiresAt ? `Conta conectada. Expiracao atual: ${new Date(overview.integrations.googleCalendar.expiresAt).toLocaleString('pt-BR')}.` : 'Conta conectada. O token atual nao expoe expiracao neste retorno.') : 'Use o acesso abaixo para autorizar sua conta Google e preparar a sincronizacao do calendario.'} visible={visibility.google} onToggle={() => toggleSection('google')} status={<><StatusPill ok={overview.integrations.googleCalendar.configured} label={overview.integrations.googleCalendar.configured ? 'OAuth configurado' : 'OAuth pendente'} /><StatusPill ok={overview.integrations.googleCalendar.connected} label={overview.integrations.googleCalendar.connected ? 'Conta conectada' : 'Sem conexao'} /></>}>
+            {!overview.integrations.googleCalendar.configured ? <div className="mb-5 rounded-3xl border border-amber-200 bg-amber-50 px-4 py-4 text-sm text-amber-800 dark:border-amber-900/40 dark:bg-amber-950/20 dark:text-amber-100">O botao de conexao so habilita quando a API tiver client id, secret e redirect URI validos.</div> : null}
             <div className="grid gap-3 md:grid-cols-2">
-              <InfoCard
-                label="Calendar ID"
-                value={maskValue(overview.integrations.googleCalendar.calendarId, visibility.google)}
-              />
-              <InfoCard
-                label="Refresh token"
-                value={overview.integrations.googleCalendar.hasRefreshToken ? 'Disponivel' : 'Nao disponivel'}
-              />
+              <InfoCard label="Calendar ID" value={maskValue(overview.integrations.googleCalendar.calendarId, visibility.google)} note="Identificador usado para sincronizar eventos." />
+              <InfoCard label="Refresh token" value={overview.integrations.googleCalendar.hasRefreshToken ? 'Disponivel' : 'Nao disponivel'} note="Indica se o ambiente consegue renovar a autorizacao." />
               <div className="md:col-span-2">
-                <InfoCard
-                  label="Redirect URI"
-                  value={maskValue(overview.environment.googleRedirectUri, visibility.google)}
-                  breakAll
-                />
+                <InfoCard label="Redirect URI" value={maskValue(overview.environment.googleRedirectUri, visibility.google)} breakAll note="URL usada no retorno do OAuth do Google." />
               </div>
             </div>
-
             <div className="mt-5 flex flex-wrap gap-3">
-              <button
-                onClick={() => void handleGoogleConnect()}
-                disabled={googleBusy !== null || !overview.integrations.googleCalendar.configured}
-                className="inline-flex items-center gap-2 rounded-2xl border border-blush-300 bg-white px-4 py-3 text-sm font-medium text-charcoal transition-colors hover:bg-blush disabled:opacity-60 dark:border-charcoal-600 dark:bg-charcoal-800 dark:text-charcoal-100 dark:hover:bg-charcoal-700"
-              >
-                {googleBusy === 'connect' ? <Loader2 size={15} className="animate-spin" /> : <GoogleIcon />}
+              <button type="button" onClick={() => void handleGoogleConnect()} disabled={googleBusy !== null || !overview.integrations.googleCalendar.configured} className="inline-flex items-center gap-2 rounded-2xl border border-blush-300 bg-white px-4 py-3 text-sm font-medium text-charcoal transition-colors hover:bg-blush disabled:opacity-60 dark:border-charcoal-600 dark:bg-charcoal-800 dark:text-charcoal-100 dark:hover:bg-charcoal-700">
+                {googleBusy === 'connect' ? <Loader2 size={15} className="animate-spin" /> : <Globe2 size={15} />}
                 Acessar com sua conta Google
                 <ExternalLink size={14} className="opacity-60" />
               </button>
-              <button
-                onClick={() => void handleGoogleDisconnect()}
-                disabled={googleBusy !== null || !overview.integrations.googleCalendar.connected}
-                className="inline-flex items-center gap-2 rounded-2xl border border-blush-300 bg-white px-4 py-3 text-sm font-medium text-charcoal transition-colors hover:bg-blush disabled:opacity-60 dark:border-charcoal-600 dark:bg-charcoal-800 dark:text-charcoal-100 dark:hover:bg-charcoal-700"
-              >
+              <button type="button" onClick={() => void handleGoogleDisconnect()} disabled={googleBusy !== null || !overview.integrations.googleCalendar.connected} className="inline-flex items-center gap-2 rounded-2xl border border-blush-300 bg-white px-4 py-3 text-sm font-medium text-charcoal transition-colors hover:bg-blush disabled:opacity-60 dark:border-charcoal-600 dark:bg-charcoal-800 dark:text-charcoal-100 dark:hover:bg-charcoal-700">
                 {googleBusy === 'disconnect' ? <Loader2 size={15} className="animate-spin" /> : <Unlink2 size={15} />}
                 Desconectar Google
               </button>
             </div>
           </SectionCard>
 
-          <SectionCard
-            eyebrow="Dados de e-mail"
-            title="SMTP, remetente e notificacoes"
-            description="As credenciais de envio ficam organizadas em um unico bloco, com leitura do banco e atualizacao imediata apos salvar."
-            visible={visibility.email}
-            onToggleVisibility={() => toggleSectionVisibility('email')}
-            status={(
-              <>
-                <StatusPill ok={overview.integrations.email.configured} label={overview.integrations.email.configured ? 'SMTP pronto' : 'SMTP pendente'} />
-                <StatusPill ok={overview.integrations.email.source === 'database'} label={overview.integrations.email.source === 'database' ? 'Editavel no painel' : 'Lendo do ambiente'} />
-              </>
-            )}
-          >
-            <div className="grid gap-3 md:grid-cols-2">
+          <SectionCard eyebrow="Dados de e-mail" title="SMTP, remetente e notificacoes" description="As credenciais de envio ficam agrupadas em um unico fluxo de manutencao, com leitura do banco e atualizacao imediata apos salvar." visible={visibility.email} onToggle={() => toggleSection('email')} status={<><StatusPill ok={overview.integrations.email.configured} label={overview.integrations.email.configured ? 'SMTP pronto' : 'SMTP pendente'} /><StatusPill ok={overview.integrations.email.source === 'database'} label={overview.integrations.email.source === 'database' ? 'Editavel no painel' : 'Lendo do ambiente'} /></>}>
+            <div className="grid gap-3 md:grid-cols-3">
               <InfoCard label="Provider" value={overview.integrations.email.provider} />
-              <InfoCard
-                label="Senha SMTP"
-                value={overview.integrations.email.passwordConfigured ? 'Configurada' : 'Nao configurada'}
-              />
+              <InfoCard label="Origem" value={overview.integrations.email.source === 'database' ? 'Banco de dados' : 'Variaveis de ambiente'} />
+              <InfoCard label="Senha SMTP" value={overview.integrations.email.passwordConfigured ? 'Configurada' : 'Nao configurada'} />
             </div>
-
             <div className="mt-5 grid gap-3">
               <div className="grid gap-3 md:grid-cols-2">
-                <label className="space-y-2 text-sm">
-                  <span className="font-medium text-charcoal dark:text-charcoal-100">Host SMTP</span>
-                  <input
-                    value={emailForm.host}
-                    onChange={(event) => updateEmailField('host', event.target.value)}
-                    className="w-full rounded-2xl border border-blush-200 bg-white px-4 py-3 text-sm text-charcoal outline-none transition focus:border-rose-gold dark:border-charcoal-700 dark:bg-charcoal-800 dark:text-charcoal-100"
-                    placeholder={maskValue(overview.integrations.email.host, visibility.email)}
-                  />
-                </label>
-                <label className="space-y-2 text-sm">
-                  <span className="font-medium text-charcoal dark:text-charcoal-100">Porta SMTP</span>
-                  <input
-                    value={emailForm.port}
-                    onChange={(event) => updateEmailField('port', event.target.value)}
-                    className="w-full rounded-2xl border border-blush-200 bg-white px-4 py-3 text-sm text-charcoal outline-none transition focus:border-rose-gold dark:border-charcoal-700 dark:bg-charcoal-800 dark:text-charcoal-100"
-                    placeholder="587"
-                  />
-                </label>
+                <label className="space-y-2 text-sm"><span className="font-medium text-charcoal dark:text-charcoal-100">Host SMTP</span><input value={emailForm.host} onChange={(event) => updateEmailField('host', event.target.value)} className="w-full rounded-2xl border border-blush-200 bg-white px-4 py-3 text-sm text-charcoal outline-none transition focus:border-rose-gold dark:border-charcoal-700 dark:bg-charcoal-800 dark:text-charcoal-100" placeholder={maskValue(overview.integrations.email.host, visibility.email)} /></label>
+                <label className="space-y-2 text-sm"><span className="font-medium text-charcoal dark:text-charcoal-100">Porta SMTP</span><input value={emailForm.port} onChange={(event) => updateEmailField('port', event.target.value)} className="w-full rounded-2xl border border-blush-200 bg-white px-4 py-3 text-sm text-charcoal outline-none transition focus:border-rose-gold dark:border-charcoal-700 dark:bg-charcoal-800 dark:text-charcoal-100" placeholder="587" /></label>
               </div>
-
               <div className="grid gap-3 md:grid-cols-2">
-                <label className="space-y-2 text-sm">
-                  <span className="font-medium text-charcoal dark:text-charcoal-100">Usuario SMTP</span>
-                  <input
-                    value={emailForm.user}
-                    onChange={(event) => updateEmailField('user', event.target.value)}
-                    className="w-full rounded-2xl border border-blush-200 bg-white px-4 py-3 text-sm text-charcoal outline-none transition focus:border-rose-gold dark:border-charcoal-700 dark:bg-charcoal-800 dark:text-charcoal-100"
-                    placeholder={maskValue(overview.integrations.email.user, visibility.email)}
-                  />
-                </label>
-                <label className="space-y-2 text-sm">
-                  <span className="font-medium text-charcoal dark:text-charcoal-100">Seguranca</span>
-                  <select
-                    value={emailForm.secure ? 'true' : 'false'}
-                    onChange={(event) => updateEmailField('secure', event.target.value === 'true')}
-                    className="w-full rounded-2xl border border-blush-200 bg-white px-4 py-3 text-sm text-charcoal outline-none transition focus:border-rose-gold dark:border-charcoal-700 dark:bg-charcoal-800 dark:text-charcoal-100"
-                  >
-                    <option value="false">STARTTLS / porta 587</option>
-                    <option value="true">SSL/TLS / porta 465</option>
-                  </select>
-                </label>
+                <label className="space-y-2 text-sm"><span className="font-medium text-charcoal dark:text-charcoal-100">Usuario SMTP</span><input value={emailForm.user} onChange={(event) => updateEmailField('user', event.target.value)} className="w-full rounded-2xl border border-blush-200 bg-white px-4 py-3 text-sm text-charcoal outline-none transition focus:border-rose-gold dark:border-charcoal-700 dark:bg-charcoal-800 dark:text-charcoal-100" placeholder={maskValue(overview.integrations.email.user, visibility.email)} /></label>
+                <label className="space-y-2 text-sm"><span className="font-medium text-charcoal dark:text-charcoal-100">Seguranca</span><select value={emailForm.secure ? 'true' : 'false'} onChange={(event) => updateEmailField('secure', event.target.value === 'true')} className="w-full rounded-2xl border border-blush-200 bg-white px-4 py-3 text-sm text-charcoal outline-none transition focus:border-rose-gold dark:border-charcoal-700 dark:bg-charcoal-800 dark:text-charcoal-100"><option value="false">STARTTLS / porta 587</option><option value="true">SSL/TLS / porta 465</option></select></label>
               </div>
-
-              <label className="space-y-2 text-sm">
-                <span className="font-medium text-charcoal dark:text-charcoal-100">Senha SMTP</span>
-                <input
-                  type="password"
-                  value={emailForm.password}
-                  onChange={(event) => updateEmailField('password', event.target.value)}
-                  className="w-full rounded-2xl border border-blush-200 bg-white px-4 py-3 text-sm text-charcoal outline-none transition focus:border-rose-gold dark:border-charcoal-700 dark:bg-charcoal-800 dark:text-charcoal-100"
-                  placeholder={overview.integrations.email.passwordConfigured
-                    ? (visibility.email ? 'Deixe em branco para manter a atual' : '•••••••• senha configurada')
-                    : 'Digite a senha SMTP'}
-                />
-              </label>
-
+              <label className="space-y-2 text-sm"><span className="font-medium text-charcoal dark:text-charcoal-100">Senha SMTP</span><input type="password" value={emailForm.password} onChange={(event) => updateEmailField('password', event.target.value)} className="w-full rounded-2xl border border-blush-200 bg-white px-4 py-3 text-sm text-charcoal outline-none transition focus:border-rose-gold dark:border-charcoal-700 dark:bg-charcoal-800 dark:text-charcoal-100" placeholder={overview.integrations.email.passwordConfigured ? (visibility.email ? 'Deixe em branco para manter a atual' : '****** senha configurada') : 'Digite a senha SMTP'} /></label>
               <div className="grid gap-3 md:grid-cols-2">
-                <label className="space-y-2 text-sm">
-                  <span className="font-medium text-charcoal dark:text-charcoal-100">E-mail remetente</span>
-                  <input
-                    value={emailForm.from}
-                    onChange={(event) => updateEmailField('from', event.target.value)}
-                    className="w-full rounded-2xl border border-blush-200 bg-white px-4 py-3 text-sm text-charcoal outline-none transition focus:border-rose-gold dark:border-charcoal-700 dark:bg-charcoal-800 dark:text-charcoal-100"
-                    placeholder={maskValue(overview.integrations.email.from, visibility.email)}
-                  />
-                </label>
-                <label className="space-y-2 text-sm">
-                  <span className="font-medium text-charcoal dark:text-charcoal-100">Nome do remetente</span>
-                  <input
-                    value={emailForm.fromName}
-                    onChange={(event) => updateEmailField('fromName', event.target.value)}
-                    className="w-full rounded-2xl border border-blush-200 bg-white px-4 py-3 text-sm text-charcoal outline-none transition focus:border-rose-gold dark:border-charcoal-700 dark:bg-charcoal-800 dark:text-charcoal-100"
-                    placeholder={maskValue(overview.integrations.email.fromName, visibility.email)}
-                  />
-                </label>
+                <label className="space-y-2 text-sm"><span className="font-medium text-charcoal dark:text-charcoal-100">E-mail remetente</span><input value={emailForm.from} onChange={(event) => updateEmailField('from', event.target.value)} className="w-full rounded-2xl border border-blush-200 bg-white px-4 py-3 text-sm text-charcoal outline-none transition focus:border-rose-gold dark:border-charcoal-700 dark:bg-charcoal-800 dark:text-charcoal-100" placeholder={maskValue(overview.integrations.email.from, visibility.email)} /></label>
+                <label className="space-y-2 text-sm"><span className="font-medium text-charcoal dark:text-charcoal-100">Nome do remetente</span><input value={emailForm.fromName} onChange={(event) => updateEmailField('fromName', event.target.value)} className="w-full rounded-2xl border border-blush-200 bg-white px-4 py-3 text-sm text-charcoal outline-none transition focus:border-rose-gold dark:border-charcoal-700 dark:bg-charcoal-800 dark:text-charcoal-100" placeholder={maskValue(overview.integrations.email.fromName, visibility.email)} /></label>
               </div>
-
-              <label className="space-y-2 text-sm">
-                <span className="font-medium text-charcoal dark:text-charcoal-100">E-mail administrativo</span>
-                <input
-                  value={emailForm.adminEmail}
-                  onChange={(event) => updateEmailField('adminEmail', event.target.value)}
-                  className="w-full rounded-2xl border border-blush-200 bg-white px-4 py-3 text-sm text-charcoal outline-none transition focus:border-rose-gold dark:border-charcoal-700 dark:bg-charcoal-800 dark:text-charcoal-100"
-                  placeholder={maskValue(overview.integrations.email.adminEmail, visibility.email)}
-                />
-              </label>
+              <label className="space-y-2 text-sm"><span className="font-medium text-charcoal dark:text-charcoal-100">E-mail administrativo</span><input value={emailForm.adminEmail} onChange={(event) => updateEmailField('adminEmail', event.target.value)} className="w-full rounded-2xl border border-blush-200 bg-white px-4 py-3 text-sm text-charcoal outline-none transition focus:border-rose-gold dark:border-charcoal-700 dark:bg-charcoal-800 dark:text-charcoal-100" placeholder={maskValue(overview.integrations.email.adminEmail, visibility.email)} /></label>
             </div>
-
-            <p className="mt-4 text-xs leading-6 text-charcoal-400">
-              Ao salvar aqui, o sistema passa a usar estes dados imediatamente. Se o campo de senha ficar vazio, a senha SMTP atual sera preservada.
-            </p>
-
-            <div className="mt-4">
-              <button
-                onClick={() => void handleEmailSave()}
-                disabled={emailSaving}
-                className="inline-flex items-center gap-2 rounded-2xl border border-blush-300 bg-white px-4 py-3 text-sm font-medium text-charcoal transition-colors hover:bg-blush disabled:opacity-60 dark:border-charcoal-600 dark:bg-charcoal-800 dark:text-charcoal-100 dark:hover:bg-charcoal-700"
-              >
+            <div className="mt-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+              <p className="text-xs leading-6 text-charcoal-400 dark:text-charcoal-500">Se a senha ficar vazia, o valor atual sera preservado. As alteracoes entram em uso assim que forem salvas.</p>
+              <button type="button" onClick={() => void handleEmailSave()} disabled={emailSaving} className="inline-flex items-center gap-2 rounded-2xl border border-blush-300 bg-white px-4 py-3 text-sm font-medium text-charcoal transition-colors hover:bg-blush disabled:opacity-60 dark:border-charcoal-600 dark:bg-charcoal-800 dark:text-charcoal-100 dark:hover:bg-charcoal-700">
                 {emailSaving ? <Loader2 size={15} className="animate-spin" /> : <Mail size={15} />}
                 Salvar dados de e-mail
               </button>
@@ -678,32 +436,28 @@ export default function AdministracaoPage() {
         </div>
 
         <div className="space-y-4">
-          <SectionCard
-            eyebrow="Ambiente"
-            title="Configuracoes sensiveis"
-            description="URLs, origem de CORS e driver de storage ficam consolidados em um unico resumo tecnico."
-            visible={visibility.environment}
-            onToggleVisibility={() => toggleSectionVisibility('environment')}
-          >
+          <SectionCard eyebrow="Ambiente" title="Configuracoes sensiveis" description="URLs, CORS e storage ficam concentrados em um resumo tecnico mais direto." visible={visibility.environment} onToggle={() => toggleSection('environment')} status={<StatusPill ok={overview.environment.googleClientConfigured} label={overview.environment.googleClientConfigured ? 'Google client ativo' : 'Google client pendente'} />}>
             <div className="grid gap-3">
-              <InfoCard
-                label="API"
-                value={maskValue(overview.environment.apiBaseUrl, visibility.environment)}
-                breakAll
-              />
-              <InfoCard
-                label="CRM"
-                value={maskValue(overview.environment.crmUrl, visibility.environment)}
-                breakAll
-              />
-              <InfoCard
-                label="Storage"
-                value={overview.infrastructure.storageDriver}
-              />
-              <InfoCard
-                label="CORS liberado"
-                value={`${overview.environment.corsOrigins.length} origem(ns)`}
-              />
+              <InfoCard label="API" value={maskValue(overview.environment.apiBaseUrl, visibility.environment)} breakAll />
+              <InfoCard label="CRM" value={maskValue(overview.environment.crmUrl, visibility.environment)} breakAll />
+              <InfoCard label="Google redirect URI" value={maskValue(overview.environment.googleRedirectUri, visibility.environment)} breakAll />
+              <InfoCard label="Storage" value={overview.infrastructure.storageDriver} note="Driver atual usado para uploads." />
+            </div>
+            <div className="mt-5 rounded-3xl border border-blush-200 bg-cream/70 p-4 dark:border-charcoal-700 dark:bg-charcoal-800/60">
+              <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+                <div>
+                  <p className="text-sm font-semibold text-charcoal dark:text-charcoal-50">Origens liberadas em CORS</p>
+                  <p className="mt-1 text-xs leading-5 text-charcoal-500 dark:text-charcoal-400">{overview.environment.corsOrigins.length} origem(ns) configurada(s).</p>
+                </div>
+                <StatusPill ok={visibility.environment} label={visibility.environment ? 'Lista visivel' : 'Lista oculta'} />
+              </div>
+              <div className="mt-4 space-y-2">
+                {visibility.environment ? overview.environment.corsOrigins.map((origin) => (
+                  <div key={origin} className="rounded-2xl border border-blush-200 bg-white px-4 py-3 text-sm font-medium text-charcoal break-all dark:border-charcoal-700 dark:bg-charcoal-900 dark:text-charcoal-100">{origin}</div>
+                )) : (
+                  <div className="rounded-2xl border border-dashed border-blush-300 bg-white px-4 py-3 text-sm text-charcoal-500 dark:border-charcoal-700 dark:bg-charcoal-900 dark:text-charcoal-400">A lista de origens esta oculta. Abra a secao para exibir os valores completos.</div>
+                )}
+              </div>
             </div>
           </SectionCard>
         </div>
