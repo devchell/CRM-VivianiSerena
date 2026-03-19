@@ -64,7 +64,7 @@ jobs:
         run: pnpm --filter @viviani/types build
 
       - name: Build API
-        run: pnpm --filter @viviani/api build
+        run: pnpm --filter @viviani/api db:generate && pnpm --filter @viviani/api build
 
       - name: Build CRM
         run: pnpm --filter @viviani/crm build
