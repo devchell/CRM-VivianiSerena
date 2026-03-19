@@ -6,7 +6,6 @@ import {
   CheckCircle2,
   Database,
   ExternalLink,
-  Link2,
   Loader2,
   Mail,
   RefreshCw,
@@ -67,6 +66,17 @@ function StatusPill({ ok, label }: { ok: boolean; label: string }) {
       {ok ? <CheckCircle2 size={12} /> : <ShieldAlert size={12} />}
       {label}
     </span>
+  )
+}
+
+function GoogleIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true" className="h-4 w-4">
+      <path fill="#EA4335" d="M12 10.2v3.9h5.5c-.2 1.2-.9 2.2-1.9 2.9l3.1 2.4c1.8-1.7 2.8-4.1 2.8-6.9 0-.7-.1-1.4-.2-2H12z" />
+      <path fill="#34A853" d="M12 21c2.6 0 4.8-.9 6.4-2.3l-3.1-2.4c-.9.6-2 .9-3.3.9-2.5 0-4.7-1.7-5.4-4H3.4v2.5C5 18.9 8.2 21 12 21z" />
+      <path fill="#4A90E2" d="M6.6 13.2c-.2-.6-.3-1.3-.3-2s.1-1.4.3-2V6.7H3.4C2.8 8 2.5 9.5 2.5 11.2S2.8 14.4 3.4 15.7l3.2-2.5z" />
+      <path fill="#FBBC05" d="M12 5.1c1.4 0 2.7.5 3.7 1.5l2.8-2.8C16.8 2.2 14.6 1.2 12 1.2c-3.8 0-7 2.1-8.6 5.5l3.2 2.5c.7-2.3 2.9-4.1 5.4-4.1z" />
+    </svg>
   )
 }
 
@@ -240,7 +250,7 @@ export default function AdministracaoPage() {
               </p>
             </div>
             <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-violet-50 text-violet-700 ring-1 ring-violet-100">
-              <Link2 size={18} />
+              <ExternalLink size={18} />
             </div>
           </div>
         </div>
@@ -283,17 +293,18 @@ export default function AdministracaoPage() {
           <p className="mt-4 text-sm text-charcoal-500 dark:text-charcoal-400">
             {overview.integrations.googleCalendar.connected
               ? `Conectado. ${overview.integrations.googleCalendar.expiresAt ? `Expiracao atual: ${new Date(overview.integrations.googleCalendar.expiresAt).toLocaleString('pt-BR')}.` : 'Sem expiracao exposta pelo token atual.'}`
-              : 'Use a conexao abaixo para autorizar uma conta Google pessoal ou profissional e sincronizar agendamentos com o calendario escolhido.'}
+              : 'Use o acesso abaixo para entrar com sua conta Google e autorizar a sincronizacao do calendario e de futuras integracoes Google do sistema.'}
           </p>
 
           <div className="mt-5 flex flex-wrap gap-3">
             <button
               onClick={() => void handleGoogleConnect()}
               disabled={googleBusy !== null || !overview.integrations.googleCalendar.configured}
-              className="inline-flex items-center gap-2 rounded-2xl bg-rose-gold px-4 py-3 text-sm font-medium text-white transition-colors hover:bg-rose-gold/90 disabled:opacity-60"
+              className="inline-flex items-center gap-2 rounded-2xl border border-blush-300 bg-white px-4 py-3 text-sm font-medium text-charcoal transition-colors hover:bg-blush disabled:opacity-60 dark:border-charcoal-600 dark:bg-charcoal-800 dark:text-charcoal-100 dark:hover:bg-charcoal-700"
             >
-              {googleBusy === 'connect' ? <Loader2 size={15} className="animate-spin" /> : <ExternalLink size={15} />}
-              Conectar Google
+              {googleBusy === 'connect' ? <Loader2 size={15} className="animate-spin" /> : <GoogleIcon />}
+              Acessar com sua conta Google
+              <ExternalLink size={14} className="opacity-60" />
             </button>
             <button
               onClick={() => void handleGoogleDisconnect()}
