@@ -104,9 +104,28 @@ model User {
   auditLogs AuditLog[]
   contents  Content[]
   contentVersions   ContentVersion[]
+  emailSettingsUpdates EmailSettings[] @relation("EmailSettingsUpdatedBy")
   notificationReads NotificationRead[]
 
   @@map("users")
+}
+
+model EmailSettings {
+  id                String   @id @default("default")
+  host              String
+  port              Int
+  secure            Boolean  @default(false)
+  user              String   @map("smtp_user")
+  passwordEncrypted String   @map("password_encrypted")
+  fromEmail         String   @map("from_email")
+  fromName          String   @map("from_name")
+  adminEmail        String   @map("admin_email")
+  updatedAt         DateTime @updatedAt @map("updated_at")
+  updatedBy         String   @map("updated_by")
+
+  updatedByUser User @relation("EmailSettingsUpdatedBy", fields: [updatedBy], references: [id])
+
+  @@map("email_settings")
 }
 
 model Lead {

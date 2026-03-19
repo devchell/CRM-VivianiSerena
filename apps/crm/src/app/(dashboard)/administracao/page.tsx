@@ -34,8 +34,12 @@ type AdminOverview = {
       host: string | null
       port: string | null
       secure: boolean
+      user: string | null
       from: string | null
       fromName: string | null
+      adminEmail: string | null
+      source: 'database' | 'environment'
+      passwordConfigured: boolean
     }
   }
   infrastructure: {
@@ -52,6 +56,17 @@ type AdminOverview = {
     googleClientConfigured: boolean
     calendarId: string
   }
+}
+
+type EmailFormState = {
+  host: string
+  port: string
+  secure: boolean
+  user: string
+  password: string
+  from: string
+  fromName: string
+  adminEmail: string
 }
 
 function StatusPill({ ok, label }: { ok: boolean; label: string }) {
@@ -86,6 +101,17 @@ export default function AdministracaoPage() {
   const [loading, setLoading] = useState(true)
   const [overview, setOverview] = useState<AdminOverview | null>(null)
   const [googleBusy, setGoogleBusy] = useState<'connect' | 'disconnect' | null>(null)
+  const [emailSaving, setEmailSaving] = useState(false)
+  const [emailForm, setEmailForm] = useState<EmailFormState>({
+    host: '',
+    port: '587',
+    secure: false,
+    user: '',
+    password: '',
+    from: '',
+    fromName: '',
+    adminEmail: '',
+  })
 
   const headers = useMemo(() => ({
     Authorization: `Bearer ${accessToken}`,
@@ -130,6 +156,21 @@ export default function AdministracaoPage() {
     }
   }, [loadOverview, searchParams])
 
+  useEffect(() => {
+    if (!overview) return
+
+    setEmailForm({
+      host: overview.integrations.email.host ?? '',
+      port: overview.integrations.email.port ?? '587',
+      secure: overview.integrations.email.secure,
+      user: overview.integrations.email.user ?? '',
+      password: '',
+      from: overview.integrations.email.from ?? '',
+      fromName: overview.integrations.email.fromName ?? '',
+      adminEmail: overview.integrations.email.adminEmail ?? '',
+    })
+  }, [overview])
+
   async function handleGoogleConnect() {
     setGoogleBusy('connect')
     try {
@@ -168,6 +209,44 @@ export default function AdministracaoPage() {
       toast.error(error instanceof Error ? error.message : 'Erro ao desconectar Google Calendar')
     } finally {
       setGoogleBusy(null)
+    }
+  }
+
+  function updateEmailField<K extends keyof EmailFormState>(field: K, value: EmailFormState[K]) {
+    setEmailForm((current) => ({ ...current, [field]: value }))
+  }
+
+  async function handleEmailSave() {
+    setEmailSaving(true)
+    try {
+      const response = await fetch(`${API_URL}/admin/email-settings`, {
+        method: 'PUT',
+        headers,
+        body: JSON.stringify({
+          host: emailForm.host.trim(),
+          port: Number(emailForm.port),
+          secure: emailForm.secure,
+          user: emailForm.user.trim(),
+          password: emailForm.password.trim() || undefined,
+          from: emailForm.from.trim(),
+          fromName: emailForm.fromName.trim(),
+          adminEmail: emailForm.adminEmail.trim(),
+        }),
+      })
+
+      const payload = await response.json() as { success: boolean; message?: string }
+
+      if (!response.ok || !payload.success) {
+        throw new Error(payload.message ?? 'Erro ao salvar dados de e-mail')
+      }
+
+      toast.success(payload.message ?? 'Dados de e-mail salvos com sucesso')
+      setEmailForm((current) => ({ ...current, password: '' }))
+      await loadOverview()
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Erro ao salvar dados de e-mail')
+    } finally {
+      setEmailSaving(false)
     }
   }
 
@@ -321,9 +400,9 @@ export default function AdministracaoPage() {
           <div className="card-dark rounded-[32px] p-6 shadow-sm">
             <div className="flex items-start justify-between gap-4">
               <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-rose-gold">E-mail transacional</p>
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-rose-gold">Dados de e-mail</p>
                 <h2 className="mt-2 font-heading text-xl font-semibold text-charcoal dark:text-charcoal-50">
-                  Convites e notificacoes
+                  SMTP, remetente e notificacoes
                 </h2>
               </div>
               <Mail size={18} className="text-rose-gold" />
@@ -331,14 +410,116 @@ export default function AdministracaoPage() {
 
             <div className="mt-4 flex flex-wrap gap-2">
               <StatusPill ok={overview.integrations.email.configured} label={overview.integrations.email.configured ? 'SMTP pronto' : 'SMTP pendente'} />
+              <StatusPill ok={overview.integrations.email.source === 'database'} label={overview.integrations.email.source === 'database' ? 'Editavel no painel' : 'Lendo do ambiente'} />
             </div>
 
             <div className="mt-5 space-y-3 text-sm text-charcoal-500 dark:text-charcoal-400">
               <p><strong className="text-charcoal dark:text-charcoal-100">Provider:</strong> {overview.integrations.email.provider}</p>
-              <p><strong className="text-charcoal dark:text-charcoal-100">Host:</strong> {overview.integrations.email.host ?? 'Nao configurado'}</p>
-              <p><strong className="text-charcoal dark:text-charcoal-100">Porta:</strong> {overview.integrations.email.port ?? 'Nao configurada'}</p>
-              <p><strong className="text-charcoal dark:text-charcoal-100">Seguranca:</strong> {overview.integrations.email.secure ? 'SSL/TLS' : 'STARTTLS/nao seguro'}</p>
-              <p><strong className="text-charcoal dark:text-charcoal-100">Remetente:</strong> {overview.integrations.email.fromName ?? 'Sem nome'} {overview.integrations.email.from ? `<${overview.integrations.email.from}>` : ''}</p>
+              <p><strong className="text-charcoal dark:text-charcoal-100">Origem:</strong> {overview.integrations.email.source === 'database' ? 'Painel Administracao' : 'Variaveis do ambiente'}</p>
+              <p><strong className="text-charcoal dark:text-charcoal-100">Senha SMTP:</strong> {overview.integrations.email.passwordConfigured ? 'Configurada' : 'Nao configurada'}</p>
+            </div>
+
+            <div className="mt-5 grid gap-3">
+              <div className="grid gap-3 md:grid-cols-2">
+                <label className="space-y-2 text-sm">
+                  <span className="font-medium text-charcoal dark:text-charcoal-100">Host SMTP</span>
+                  <input
+                    value={emailForm.host}
+                    onChange={(event) => updateEmailField('host', event.target.value)}
+                    className="w-full rounded-2xl border border-blush-200 bg-white px-4 py-3 text-sm text-charcoal outline-none transition focus:border-rose-gold dark:border-charcoal-700 dark:bg-charcoal-800 dark:text-charcoal-100"
+                    placeholder="smtp.seuprovedor.com"
+                  />
+                </label>
+                <label className="space-y-2 text-sm">
+                  <span className="font-medium text-charcoal dark:text-charcoal-100">Porta SMTP</span>
+                  <input
+                    value={emailForm.port}
+                    onChange={(event) => updateEmailField('port', event.target.value)}
+                    className="w-full rounded-2xl border border-blush-200 bg-white px-4 py-3 text-sm text-charcoal outline-none transition focus:border-rose-gold dark:border-charcoal-700 dark:bg-charcoal-800 dark:text-charcoal-100"
+                    placeholder="587"
+                  />
+                </label>
+              </div>
+
+              <div className="grid gap-3 md:grid-cols-2">
+                <label className="space-y-2 text-sm">
+                  <span className="font-medium text-charcoal dark:text-charcoal-100">Usuario SMTP</span>
+                  <input
+                    value={emailForm.user}
+                    onChange={(event) => updateEmailField('user', event.target.value)}
+                    className="w-full rounded-2xl border border-blush-200 bg-white px-4 py-3 text-sm text-charcoal outline-none transition focus:border-rose-gold dark:border-charcoal-700 dark:bg-charcoal-800 dark:text-charcoal-100"
+                    placeholder="usuario@provedor.com"
+                  />
+                </label>
+                <label className="space-y-2 text-sm">
+                  <span className="font-medium text-charcoal dark:text-charcoal-100">Seguranca</span>
+                  <select
+                    value={emailForm.secure ? 'true' : 'false'}
+                    onChange={(event) => updateEmailField('secure', event.target.value === 'true')}
+                    className="w-full rounded-2xl border border-blush-200 bg-white px-4 py-3 text-sm text-charcoal outline-none transition focus:border-rose-gold dark:border-charcoal-700 dark:bg-charcoal-800 dark:text-charcoal-100"
+                  >
+                    <option value="false">STARTTLS / porta 587</option>
+                    <option value="true">SSL/TLS / porta 465</option>
+                  </select>
+                </label>
+              </div>
+
+              <label className="space-y-2 text-sm">
+                <span className="font-medium text-charcoal dark:text-charcoal-100">Senha SMTP</span>
+                <input
+                  type="password"
+                  value={emailForm.password}
+                  onChange={(event) => updateEmailField('password', event.target.value)}
+                  className="w-full rounded-2xl border border-blush-200 bg-white px-4 py-3 text-sm text-charcoal outline-none transition focus:border-rose-gold dark:border-charcoal-700 dark:bg-charcoal-800 dark:text-charcoal-100"
+                  placeholder={overview.integrations.email.passwordConfigured ? 'Deixe em branco para manter a atual' : 'Digite a senha SMTP'}
+                />
+              </label>
+
+              <div className="grid gap-3 md:grid-cols-2">
+                <label className="space-y-2 text-sm">
+                  <span className="font-medium text-charcoal dark:text-charcoal-100">E-mail remetente</span>
+                  <input
+                    value={emailForm.from}
+                    onChange={(event) => updateEmailField('from', event.target.value)}
+                    className="w-full rounded-2xl border border-blush-200 bg-white px-4 py-3 text-sm text-charcoal outline-none transition focus:border-rose-gold dark:border-charcoal-700 dark:bg-charcoal-800 dark:text-charcoal-100"
+                    placeholder="contato@seudominio.com"
+                  />
+                </label>
+                <label className="space-y-2 text-sm">
+                  <span className="font-medium text-charcoal dark:text-charcoal-100">Nome do remetente</span>
+                  <input
+                    value={emailForm.fromName}
+                    onChange={(event) => updateEmailField('fromName', event.target.value)}
+                    className="w-full rounded-2xl border border-blush-200 bg-white px-4 py-3 text-sm text-charcoal outline-none transition focus:border-rose-gold dark:border-charcoal-700 dark:bg-charcoal-800 dark:text-charcoal-100"
+                    placeholder="Viviani Serena"
+                  />
+                </label>
+              </div>
+
+              <label className="space-y-2 text-sm">
+                <span className="font-medium text-charcoal dark:text-charcoal-100">E-mail administrativo</span>
+                <input
+                  value={emailForm.adminEmail}
+                  onChange={(event) => updateEmailField('adminEmail', event.target.value)}
+                  className="w-full rounded-2xl border border-blush-200 bg-white px-4 py-3 text-sm text-charcoal outline-none transition focus:border-rose-gold dark:border-charcoal-700 dark:bg-charcoal-800 dark:text-charcoal-100"
+                  placeholder="admin@seudominio.com"
+                />
+              </label>
+            </div>
+
+            <p className="mt-4 text-xs leading-6 text-charcoal-400">
+              Ao salvar aqui, o sistema passa a usar estes dados imediatamente. Se o campo de senha ficar vazio, a senha SMTP atual sera preservada.
+            </p>
+
+            <div className="mt-4">
+              <button
+                onClick={() => void handleEmailSave()}
+                disabled={emailSaving}
+                className="inline-flex items-center gap-2 rounded-2xl border border-blush-300 bg-white px-4 py-3 text-sm font-medium text-charcoal transition-colors hover:bg-blush disabled:opacity-60 dark:border-charcoal-600 dark:bg-charcoal-800 dark:text-charcoal-100 dark:hover:bg-charcoal-700"
+              >
+                {emailSaving ? <Loader2 size={15} className="animate-spin" /> : <Mail size={15} />}
+                Salvar dados de e-mail
+              </button>
             </div>
           </div>
 
