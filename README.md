@@ -11,6 +11,7 @@ Monorepo com `landing`, `crm`, `api` e pacotes compartilhados para operacao come
 - Segredos client-side removidos do CRM para publicacao da landing.
 - Google Calendar e Google Business Profile existem no codigo, mas a homologacao auditada em `2026-03-20` segue sem OAuth Google configurado.
 - A pasta [`docs`](D:/VivianeCRM/viviani-serena-platform/docs) continua como base de auditoria e arquitetura.
+- A API agora possui workflow versionado de deploy em homologacao via Render Deploy Hook.
 
 ## Homologacao ativa
 
@@ -157,6 +158,7 @@ Detalhes: [05_SECURITY_BASELINE.md](D:/VivianeCRM/viviani-serena-platform/docs/0
 - producao da API esta desligada no momento
 - publicar `apps/api` em plataforma com processo persistente
 - exemplo de blueprint para Render: [render.yaml](D:/VivianeCRM/viviani-serena-platform/render.yaml)
+- workflow versionado de homologacao da API: [deploy-api-homolog.yml](D:/VivianeCRM/viviani-serena-platform/.github/workflows/deploy-api-homolog.yml)
 - health checks disponiveis:
   - `GET /health/live`
   - `GET /health/ready`
@@ -223,6 +225,8 @@ CRM:
 - [08_DEPLOYMENT_ARCHITECTURE.md](D:/VivianeCRM/viviani-serena-platform/docs/08_DEPLOYMENT_ARCHITECTURE.md)
 - [13_ENVIRONMENT_STRATEGY.md](D:/VivianeCRM/viviani-serena-platform/docs/13_ENVIRONMENT_STRATEGY.md)
 - [14_BOOTSTRAP_RUNBOOK.md](D:/VivianeCRM/viviani-serena-platform/docs/14_BOOTSTRAP_RUNBOOK.md)
+- [17_GOOGLE_INTEGRATIONS_RUNBOOK.md](D:/VivianeCRM/viviani-serena-platform/docs/17_GOOGLE_INTEGRATIONS_RUNBOOK.md)
+- [18_API_DEPLOY_TRACEABILITY.md](D:/VivianeCRM/viviani-serena-platform/docs/18_API_DEPLOY_TRACEABILITY.md)
 - [11_MIGRATION_RUNBOOK.md](D:/VivianeCRM/viviani-serena-platform/docs/11_MIGRATION_RUNBOOK.md)
 - [12_OPERATIONS_AND_MONITORING.md](D:/VivianeCRM/viviani-serena-platform/docs/12_OPERATIONS_AND_MONITORING.md)
 - [16_AUDIT_STATUS_2026-03-20.md](D:/VivianeCRM/viviani-serena-platform/docs/16_AUDIT_STATUS_2026-03-20.md)

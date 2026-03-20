@@ -164,6 +164,7 @@ Opcionais por integracao:
 ## 7. Deploy da API na Render
 
 O repositorio ja possui [render.yaml](./render.yaml), mas voce pode configurar pelo painel.
+Para homologacao rastreavel, o repositorio tambem possui o workflow [deploy-api-homolog.yml](D:/VivianeCRM/viviani-serena-platform/.github/workflows/deploy-api-homolog.yml) e o script [verify-api-deploy.ps1](D:/VivianeCRM/viviani-serena-platform/scripts/verify-api-deploy.ps1).
 
 ### Passos
 
@@ -184,7 +185,7 @@ corepack enable && pnpm install --frozen-lockfile && pnpm --filter @viviani/type
    - `Start Command`:
 
 ```bash
-corepack enable && pnpm --filter @viviani/api start
+APP_VERSION=${RENDER_GIT_COMMIT:-$APP_VERSION} corepack enable && pnpm --filter @viviani/api start
 ```
 
    - `Health Check Path`: `/health/ready`
@@ -220,6 +221,12 @@ Exemplo:
 curl https://api.seudominio.com/health/live
 curl https://api.seudominio.com/health/ready
 curl https://api.seudominio.com/health/deps
+```
+
+Se quiser validar que a versao publicada bate com o commit esperado:
+
+```powershell
+./scripts/verify-api-deploy.ps1 -ApiBaseUrl https://api.seudominio.com -ExpectedVersion <commit_sha>
 ```
 
 ## 8. Deploy da landing na Vercel

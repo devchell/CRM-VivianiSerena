@@ -24,8 +24,20 @@
   - `VERCEL_PROJECT_ID_CRM_HML`
 
 ### API
-- o repositorio nao contem pipeline de deploy da API.
-- a estrategia esperada e branch tracking ou deploy externo pela plataforma do backend.
+- workflow: `.github/workflows/deploy-api-homolog.yml`
+- dispara apos `CI` bem-sucedida em `staging` ou manualmente
+- aciona deploy via Render Deploy Hook
+- valida:
+  - `/health/live`
+  - `/health/ready`
+  - `/health/deps`
+  - `version` publicada no health endpoint
+- opcionalmente valida guards de Google Calendar e Google Business com credenciais de smoke
+- depende de:
+  - `RENDER_DEPLOY_HOOK_API_HML`
+  - `API_HML_BASE_URL`
+  - opcional: `API_HML_SMOKE_ADMIN_EMAIL`
+  - opcional: `API_HML_SMOKE_ADMIN_PASSWORD`
 
 ## Dependencias de runtime
 - PostgreSQL

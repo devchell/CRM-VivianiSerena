@@ -20,6 +20,10 @@ Variaveis principais:
 - `SMTP_USER`
 - `SMTP_PASS`
 - `SMTP_SECURE`
+- `GOOGLE_CLIENT_ID`
+- `GOOGLE_CLIENT_SECRET`
+- `GOOGLE_REDIRECT_URI`
+- `GOOGLE_CALENDAR_ID`
 - `TWILIO_ACCOUNT_SID`
 - `TWILIO_AUTH_TOKEN`
 - `TWILIO_PHONE_NUMBER`
@@ -42,6 +46,10 @@ Variaveis principais:
 - `VERCEL_ORG_ID` em `Variables`
 - `VERCEL_PROJECT_ID_LANDING_HML` em `Variables`
 - `VERCEL_PROJECT_ID_CRM_HML` em `Variables`
+- `RENDER_DEPLOY_HOOK_API_HML` em `Secrets`
+- `API_HML_BASE_URL` em `Variables`
+- `API_HML_SMOKE_ADMIN_EMAIL` em `Secrets`
+- `API_HML_SMOKE_ADMIN_PASSWORD` em `Secrets`
 
 ## Regra operacional
 - qualquer token exposto em conversa, print ou commit deve ser rotacionado;
