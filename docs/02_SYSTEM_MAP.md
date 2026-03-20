@@ -1,63 +1,89 @@
 # 02 System Map
 
+## Data de referencia
+- Atualizado em `2026-03-20`.
+- Reflete o codigo do monorepo em `staging`.
+
 ## Monorepo
 
 ```text
 apps/
-  api/       -> backend principal
-  crm/       -> painel autenticado
-  landing/   -> site publico
+  api/       -> backend principal (Express + Prisma + Redis + Socket.IO)
+  crm/       -> painel autenticado (Next.js 14 + NextAuth)
+  landing/   -> site publico e captura de leads (Next.js 14)
 packages/
-  types/     -> contratos e regras de acesso
-  utils/     -> utilitarios compartilhados
+  types/     -> contratos, perfis, permissoes e tipos de dominio
+  utils/     -> formatacao e utilitarios compartilhados
   ui/        -> componentes compartilhados
-docs/        -> documentacao operacional e tecnica
-.github/     -> CI e deploy de homologacao
+docs/        -> auditoria, operacao e arquitetura
+infra/       -> Docker legados e Nginx de referencia
 ```
 
-## Apps
+## Modulos reais
 
 ### API
-- Stack: `Express`, `Prisma`, `PostgreSQL`, `Redis`, `Socket.IO`.
-- Responsabilidades:
-  - autenticacao e sessao;
-  - autorizacao por permissao;
-  - leads, agenda, financeiro e conteudo;
-  - seguranca, privacidade e auditoria;
-  - integracoes de e-mail, SMS e Google Calendar.
+- Auth, refresh token e 2FA.
+- Leads.
+- Agenda / appointments.
+- Financeiro.
+- Conteudo e uploads.
+- Seguranca e privacidade.
+- Colaboradores e administracao.
+- Analytics e metricas consolidadas.
 
 ### CRM
-- Stack: `Next.js 14`, `NextAuth`, `React`.
-- Responsabilidades:
-  - login e fluxo de 2FA;
-  - operacao de leads, agenda e financeiro;
-  - configuracoes do usuario;
-  - gestao de colaboradores;
-  - consumo das APIs autenticadas.
+- `dashboard`
+- `leads`
+- `agenda`
+- `financeiro`
+- `editar-site`
+- `seguranca`
+- `colaboradores`
+- `administracao`
+- `configuracoes`
 
 ### Landing
-- Stack: `Next.js 14`.
-- Responsabilidades:
-  - pagina publica;
-  - captura de leads;
-  - exibicao do conteudo publicado pelo CMS.
+- Conteudo publicado pelo CMS.
+- Captura publica de leads.
+- Tracking de analytics e web vitals.
+- Exibicao opcional de prova social e reviews do Google Business.
 
-## Pacotes compartilhados
+## Persistencia principal
+- `users`: autenticacao, perfil, modulos e 2FA.
+- `leads`: captura comercial.
+- `appointments`: agenda e referencia opcional ao Google Calendar por `google_event_id`.
+- `financials`: lancamentos financeiros.
+- `contents` e `content_versions`: CMS e historico.
+- `security_events` e `audit_logs`: trilha operacional.
+- `sessions`, `analytics_events`, `web_vitals`: analytics.
+- `consent_logs`: estrutura de LGPD existente, hoje sem uso ativo no fluxo de lead.
 
-### `@viviani/types`
-- Define `UserRole`, `UserProfile`, `AppPermission` e contratos de autenticacao.
-- E a fonte principal das regras de permissao entre API e CRM.
+## Integracoes reais
 
-### `@viviani/utils`
-- Funcoes utilitarias reutilizadas entre apps.
+### Google Calendar
+- Implementacao existe no backend com OAuth, token em Redis, refresh e CRUD de eventos.
+- Rota de autorizacao: `GET /api/v1/auth/google`.
+- Callback: `GET /api/v1/auth/google/callback`.
+- Status atual de homologacao em `2026-03-20`: nao configurado e nao conectado.
 
-### `@viviani/ui`
-- Componentes e primitives compartilhados.
+### Google Business Profile
+- Implementacao existe no backend e reaproveita o mesmo OAuth do Google.
+- Endpoints administrativos:
+  - `GET /api/v1/admin/google-business/locations`
+  - `POST /api/v1/admin/google-business/reviews`
+- Consumo publico: `GET /api/v1/content/site-summary`.
+- Status atual de homologacao em `2026-03-20`: estrutura pronta, mas sem localizacoes vinculadas e sem reviews carregados.
 
-## Infraestrutura prevista no codigo
-- PostgreSQL para dados transacionais.
-- Redis para refresh tokens, estados de 2FA e caches.
-- SMTP para e-mail operacional.
-- Twilio ou simulacao por log para SMS.
-- Vercel para `landing` e `crm` em homologacao.
-- API com deploy fora do workflow do repositorio.
+### Uploads
+- Driver `local` por padrao.
+- Suporte a `s3` implementado via `STORAGE_DRIVER=s3`.
+- Health de uploads exposto em `admin/overview` e `health/deps`.
+
+## Fonte de verdade por modulo
+- Dashboard: `apps/api/src/domain/metrics/service.ts`
+- Leads: `apps/api/src/routes/leads.ts` + tabela `leads`
+- Agenda: `apps/api/src/routes/appointments.ts` + tabela `appointments`
+- Financeiro: `apps/api/src/routes/financials.ts` + tabela `financials`
+- Conteudo da landing: `apps/api/src/routes/content.ts` + `contents`
+- Seguranca: `apps/api/src/routes/security.ts` + `security_events`
+- Colaboradores e administracao: `apps/api/src/routes/users.ts` + `apps/api/src/routes/admin.ts`

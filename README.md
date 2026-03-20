@@ -8,6 +8,7 @@ Monorepo com `landing`, `crm`, `api` e pacotes compartilhados para operacao come
 - Dashboard, financeiro e agenda do CRM agora usam contratos canonicos da API.
 - Landing cria lead em um unico fluxo de persistencia e separa tracking de analytics.
 - Segredos client-side removidos do CRM para publicacao da landing.
+- Google Calendar e Google Business Profile existem no codigo, mas a homologacao auditada em `2026-03-20` segue sem OAuth Google configurado.
 - A pasta [`docs`](D:/VivianeCRM/viviani-serena-platform/docs) continua como base de auditoria e arquitetura.
 
 ## Homologacao ativa
@@ -221,6 +222,7 @@ CRM:
 - [14_BOOTSTRAP_RUNBOOK.md](D:/VivianeCRM/viviani-serena-platform/docs/14_BOOTSTRAP_RUNBOOK.md)
 - [11_MIGRATION_RUNBOOK.md](D:/VivianeCRM/viviani-serena-platform/docs/11_MIGRATION_RUNBOOK.md)
 - [12_OPERATIONS_AND_MONITORING.md](D:/VivianeCRM/viviani-serena-platform/docs/12_OPERATIONS_AND_MONITORING.md)
+- [16_AUDIT_STATUS_2026-03-20.md](D:/VivianeCRM/viviani-serena-platform/docs/16_AUDIT_STATUS_2026-03-20.md)
 - [DEPLOY_CHECKLIST_FINAL.md](D:/VivianeCRM/viviani-serena-platform/DEPLOY_CHECKLIST_FINAL.md)
 
 ## Refatoracao
