@@ -37,10 +37,20 @@ function Invoke-OptionalJson {
       Body = $response.Content
     }
   } catch {
-    $statusCode = [int]$_.Exception.Response.StatusCode
-    $reader = New-Object System.IO.StreamReader($_.Exception.Response.GetResponseStream())
-    $body = $reader.ReadToEnd()
-    $reader.Close()
+    $response = $_.Exception.Response
+    $statusCode = if ($null -ne $response) { [int]$response.StatusCode } else { 0 }
+    $body = $null
+
+    if ($null -ne $response) {
+      if ($response.PSObject.Methods.Name -contains 'GetResponseStream') {
+        $reader = New-Object System.IO.StreamReader($response.GetResponseStream())
+        $body = $reader.ReadToEnd()
+        $reader.Close()
+      } elseif ($null -ne $response.Content) {
+        $body = $response.Content.ReadAsStringAsync().GetAwaiter().GetResult()
+      }
+    }
+
     return @{
       StatusCode = $statusCode
       Body = $body
