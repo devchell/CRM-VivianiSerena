@@ -62,6 +62,7 @@ export function createApp(): Express {
       },
     },
     crossOriginEmbedderPolicy: false,
+    crossOriginResourcePolicy: false,
     hsts: { maxAge: 31536000, includeSubDomains: true, preload: true },
   }))
 
@@ -95,7 +96,11 @@ export function createApp(): Express {
   app.use(requestLogger)
 
   if (getUploadStorageMode() === 'local') {
-    app.use('/uploads', express.static(apiEnv.uploadDir))
+    app.use('/uploads', express.static(apiEnv.uploadDir, {
+      setHeaders: (res) => {
+        res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin')
+      },
+    }))
   }
 
   app.get('/health/live', (_req, res) => {

@@ -742,7 +742,7 @@ export default function EditarSitePage() {
 
       case 'sobre': return (
         <div className="space-y-4">
-          <ImageField section="sobre" fieldKey="photo" label="Foto da Viviani (circular)" />
+          <ImageField section="about" fieldKey="photo" label="Foto da Viviani (circular)" />
           <div>
             <label className={labelCls}>Texto Principal</label>
             <RichTextEditor

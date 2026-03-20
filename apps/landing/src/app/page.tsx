@@ -143,7 +143,7 @@ export default async function HomePage() {
 
   // About bio
   const aboutBio = str(content.about?.bio)
-  const aboutPhoto = asAssetUrl(content.sobre?.photo)
+  const aboutPhoto = asAssetUrl(content.about?.photo)
   const resultsItems = asArray<Record<string, unknown>>(content.services?.results_items).map((item, index) => ({
     id: asString(item.id, `result-${index}`),
     title: asString(item.title),

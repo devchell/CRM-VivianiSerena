@@ -1,4 +1,6 @@
 import { Router } from 'express'
+import bcrypt from 'bcryptjs'
+import { ContentSection, UserRole } from '@prisma/client'
 import { z } from 'zod'
 import { prisma } from '../lib/prisma'
 import { redis } from '../lib/redis'
@@ -117,6 +119,102 @@ adminRouter.put('/email-settings', async (req, res, next) => {
       success: true,
       message: 'Dados de e-mail atualizados com sucesso',
       data: email,
+    })
+  } catch (error) {
+    next(error)
+  }
+})
+
+adminRouter.post('/reset-baseline', async (req, res, next) => {
+  try {
+    if (!req.user) {
+      throw new Error('Sessão inválida')
+    }
+
+    const triggeredBy = req.user.sub
+    const passwordHash = await bcrypt.hash('Teste123', 12)
+
+    const result = await prisma.$transaction(async (tx) => {
+      await tx.notificationRead.deleteMany()
+      await tx.webVital.deleteMany()
+      await tx.analyticsEvent.deleteMany()
+      await tx.session.deleteMany()
+      await tx.appointment.deleteMany()
+      await tx.financial.deleteMany()
+      await tx.consentLog.deleteMany()
+      await tx.lead.deleteMany()
+      await tx.contentVersion.deleteMany()
+      await tx.content.deleteMany()
+      await tx.auditLog.deleteMany()
+      await tx.securityEvent.deleteMany()
+      await tx.user.deleteMany()
+
+      const admin = await tx.user.create({
+        data: {
+          name: 'Viviani Serene',
+          email: 'admin@vivianiserena.com',
+          passwordHash,
+          role: UserRole.ADMIN,
+          allowedModules: [],
+          mustChangePassword: false,
+          twoFactorEnabled: false,
+          twoFactorEmailEnabled: false,
+          twoFactorSmsEnabled: false,
+        },
+      })
+
+      await tx.user.create({
+        data: {
+          name: 'João Vitor',
+          email: 'colaborador@vivianiserena.com',
+          passwordHash,
+          role: UserRole.VIEWER,
+          allowedModules: ['dashboard', 'leads', 'financeiro'],
+          mustChangePassword: false,
+          twoFactorEnabled: false,
+          twoFactorEmailEnabled: false,
+          twoFactorSmsEnabled: false,
+        },
+      })
+
+      const contentEntries = [
+        { section: ContentSection.hero, key: 'title', value: { pt: 'Viviani Serena - Estética Avançada' } },
+        { section: ContentSection.hero, key: 'subtitle', value: { pt: 'Resultados premium com tecnologia e acolhimento.' } },
+        { section: ContentSection.contact, key: 'whatsapp', value: { number: '5511915751770', message: 'Olá! Gostaria de saber mais.' } },
+      ] as const
+
+      for (const entry of contentEntries) {
+        await tx.content.create({
+          data: {
+            ...entry,
+            updatedBy: admin.id,
+          },
+        })
+      }
+
+      await tx.auditLog.create({
+        data: {
+          userId: admin.id,
+          action: 'reset',
+          resource: 'baseline',
+          details: {
+            triggeredBy,
+            preservedEmailSettings: true,
+          },
+        },
+      })
+
+      return {
+        adminEmail: 'admin@vivianiserena.com',
+        collaboratorEmail: 'colaborador@vivianiserena.com',
+        password: 'Teste123',
+      }
+    })
+
+    res.json({
+      success: true,
+      message: 'Banco de homologação resetado para o baseline operacional.',
+      data: result,
     })
   } catch (error) {
     next(error)

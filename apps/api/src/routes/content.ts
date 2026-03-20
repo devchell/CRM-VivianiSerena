@@ -50,6 +50,10 @@ type ContentVersionRecord = {
   user: { id: string; name: string | null; email: string }
 }
 
+function normalizeSectionAlias(section: string): ContentSection {
+  return (section === 'sobre' ? 'about' : section) as ContentSection
+}
+
 function normalizeContentValue(value: unknown): Prisma.InputJsonValue {
   return typeof value === 'object' && value !== null
     ? (value as Prisma.InputJsonValue)
@@ -445,7 +449,7 @@ contentRouter.delete('/upload/:filename', authenticate, authorizePermission('edi
 
 contentRouter.get('/:section/:key/history', authenticate, authorizePermission('editar-site.history'), async (req, res, next) => {
   try {
-    const section = String(req.params.section) as ContentSection
+    const section = normalizeSectionAlias(String(req.params.section))
     const key = String(req.params.key)
     const query = historyQuerySchema.parse(req.query)
     const limit = query.limit ?? 20
@@ -476,7 +480,7 @@ contentRouter.get('/:section/:key/history', authenticate, authorizePermission('e
 
 contentRouter.get('/:section', async (req, res, next) => {
   try {
-    const contents = await prisma.content.findMany({ where: { section: req.params.section as ContentSection } })
+    const contents = await prisma.content.findMany({ where: { section: normalizeSectionAlias(String(req.params.section)) } })
     const result = contents.reduce<Record<string, unknown>>((acc, content) => {
       acc[content.key] = content.value
       return acc
@@ -490,7 +494,7 @@ contentRouter.get('/:section', async (req, res, next) => {
 
 contentRouter.get('/:section/:key', async (req, res, next) => {
   try {
-    const section = String(req.params.section) as ContentSection
+    const section = normalizeSectionAlias(String(req.params.section))
     const key = String(req.params.key)
     const content = await prisma.content.findUnique({ where: { section_key: { section, key } } })
     res.json({ success: true, data: content ? content.value : null })
@@ -502,7 +506,7 @@ contentRouter.get('/:section/:key', async (req, res, next) => {
 contentRouter.put('/:section/:key', authenticate, authorizePermission('editar-site.update'), async (req, res, next) => {
   try {
     const { value } = updateSchema.parse(req.body)
-    const section = String(req.params.section) as ContentSection
+    const section = normalizeSectionAlias(String(req.params.section))
     const key = String(req.params.key)
     if (!req.user) {
       throw new AppError(401, 'Sessão inválida')
@@ -547,7 +551,7 @@ contentRouter.put('/:section/:key', authenticate, authorizePermission('editar-si
 
 contentRouter.delete('/:section/:key', authenticate, authorizePermission('editar-site.delete'), async (req, res, next) => {
   try {
-    const section = String(req.params.section) as ContentSection
+    const section = normalizeSectionAlias(String(req.params.section))
     const key = String(req.params.key)
     if (!req.user) {
       throw new AppError(401, 'Sessão inválida')
