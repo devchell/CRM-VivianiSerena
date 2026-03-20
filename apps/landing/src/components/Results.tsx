@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import Image from 'next/image'
 import { ReactCompareSlider, ReactCompareSliderImage } from 'react-compare-slider'
 import { motion, AnimatePresence, LazyMotion, domAnimation } from 'framer-motion'
@@ -10,6 +10,7 @@ import { trackCTAClick } from '@/lib/analytics'
 import { landingPublicEnv } from '@/lib/public-env'
 
 const API_URL = landingPublicEnv.apiBaseUrl
+const DEFAULT_RESULTS_VIVIANI_IMAGE = 'https://static.wixstatic.com/media/be8b61_97f4d7a9d8ea4a59a06b26cb11a5d22d~mv2.jpg/v1/fill/w_600,h_900,al_c,q_80,usm_0.66_1.00_0.01,enc_avif,quality_auto/be8b61_97f4d7a9d8ea4a59a06b26cb11a5d22d~mv2.jpg'
 
 interface ResultItem {
   id: string
@@ -94,18 +95,27 @@ function ResultCard({ item, index }: { item: ResultItem; index: number }) {
   )
 }
 
-export default function Results({ items }: { items: ResultItem[] }) {
+export default function Results({ items, vivianiPhotoUrl }: { items: ResultItem[]; vivianiPhotoUrl?: string }) {
   const [activeCategory, setActiveCategory] = useState('Todos')
   const [showAll, setShowAll] = useState(false)
+  const [hasCtaImageError, setHasCtaImageError] = useState(false)
   const isMobile = useMediaQuery('(max-width: 767px)')
   const { ref: headerRef, isInView: headerInView } = useInView()
   const { ref: ctaRef, isInView: ctaInView } = useInView({ threshold: 0.2 })
+
+  useEffect(() => {
+    setHasCtaImageError(false)
+  }, [vivianiPhotoUrl])
 
   const categories = ['Todos', ...Array.from(new Set(items.map((item) => item.category).filter(Boolean)))]
   const filtered = activeCategory === 'Todos'
     ? items
     : items.filter((item) => item.category === activeCategory)
   const displayedItems = isMobile && !showAll ? filtered.slice(0, 3) : filtered
+  const normalizedVivianiPhoto = vivianiPhotoUrl ? normalizeImageUrl(vivianiPhotoUrl) : ''
+  const resultsVivianiPhoto = hasCtaImageError || !normalizedVivianiPhoto
+    ? DEFAULT_RESULTS_VIVIANI_IMAGE
+    : normalizedVivianiPhoto
 
   return (
     <LazyMotion features={domAnimation}>
@@ -187,11 +197,12 @@ export default function Results({ items }: { items: ResultItem[] }) {
             <div className="grid items-stretch md:grid-cols-2">
               <div className="relative h-72 min-h-[280px] md:h-auto">
                 <Image
-                  src="https://static.wixstatic.com/media/be8b61_97f4d7a9d8ea4a59a06b26cb11a5d22d~mv2.jpg/v1/fill/w_600,h_900,al_c,q_80,usm_0.66_1.00_0.01,enc_avif,quality_auto/be8b61_97f4d7a9d8ea4a59a06b26cb11a5d22d~mv2.jpg"
+                  src={resultsVivianiPhoto}
                   alt="Viviani Serena - Especialista em remoção a laser"
                   fill
                   className="object-cover object-top"
                   sizes="(max-width: 768px) 100vw, 50vw"
+                  onError={() => setHasCtaImageError(true)}
                 />
               </div>
 

@@ -674,11 +674,40 @@ export default function EditarSitePage() {
     )
   }
 
+  const VivianiPhotoCard = ({
+    section,
+    fieldKey,
+    title,
+    label,
+    description,
+  }: {
+    section: string
+    fieldKey: string
+    title: string
+    label: string
+    description: string
+  }) => (
+    <div className="space-y-3 rounded-xl border border-blush-200 bg-cream p-4 dark:border-charcoal-600 dark:bg-charcoal-700">
+      <div>
+        <p className="text-xs font-medium text-charcoal-600 dark:text-charcoal-300">{title}</p>
+        <p className="text-xs text-charcoal-400 dark:text-charcoal-500">{description}</p>
+      </div>
+      <ImageField section={section} fieldKey={fieldKey} label={label} />
+    </div>
+  )
+
   // ── Section renderers ──────────────────────────────────────────────────────
   const renderSection = (key: SectionKey) => {
     switch (key) {
       case 'hero': return (
         <div className="space-y-4">
+          <VivianiPhotoCard
+            section="hero"
+            fieldKey="background_image"
+            title="Foto da Viviani"
+            label="Foto da Viviani (Início/Hero)"
+            description="Imagem principal exibida na abertura da landing."
+          />
           <ToggleField
             enabled={getBool('hero', 'urgency_badge', 'enabled')}
             onToggle={() => setSubVal('hero', 'urgency_badge', 'enabled', !getBool('hero', 'urgency_badge', 'enabled'))}
@@ -720,7 +749,6 @@ export default function EditarSitePage() {
             label="Link do Botão Principal"
             placeholder="#agendamento"
           />
-          <ImageField section="hero" fieldKey="background_image" label="Imagem de Fundo" />
           <div className="space-y-3 rounded-xl border border-blush-200 bg-cream p-4 dark:border-charcoal-600 dark:bg-charcoal-700">
             <ToggleField
               enabled={getBool('contact', 'social_proof', 'enabled') || !get('contact', 'social_proof')}
@@ -757,7 +785,13 @@ export default function EditarSitePage() {
 
       case 'sobre': return (
         <div className="space-y-4">
-          <ImageField section="about" fieldKey="photo" label="Foto da Viviani (circular)" />
+          <VivianiPhotoCard
+            section="about"
+            fieldKey="photo"
+            title="Foto da Viviani"
+            label="Foto da Viviani (Sobre)"
+            description="Imagem circular exibida na seção Sobre."
+          />
           <div>
             <label className={labelCls}>Texto Principal</label>
             <RichTextEditor
@@ -923,12 +957,13 @@ export default function EditarSitePage() {
 
         return (
           <div className="space-y-4">
-            <div className="space-y-3 rounded-xl border border-blush-200 bg-cream p-4 dark:border-charcoal-600 dark:bg-charcoal-700">
-              <p className="text-xs text-charcoal-500 dark:text-charcoal-400">
-                Foto da Viviani
-              </p>
-              <ImageField section="about" fieldKey="photo" label="Foto da Viviani" />
-            </div>
+            <VivianiPhotoCard
+              section="services"
+              fieldKey="viviani_photo"
+              title="Foto da Viviani"
+              label="Foto da Viviani (Resultados)"
+              description="Imagem do bloco final de chamada para avaliação na seção Resultados."
+            />
 
             {results.map((item, idx) => (
               <div key={item.id || idx} className="space-y-3 rounded-xl border border-blush-200 bg-cream p-4 dark:border-charcoal-600 dark:bg-charcoal-700">

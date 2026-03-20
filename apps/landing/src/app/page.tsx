@@ -144,6 +144,7 @@ export default async function HomePage() {
   // About bio
   const aboutBio = str(content.about?.bio)
   const aboutPhoto = asAssetUrl(content.about?.photo)
+  const resultsVivianiPhoto = asAssetUrl(content.services?.viviani_photo)
   const resultsItems = asArray<Record<string, unknown>>(content.services?.results_items).map((item, index) => ({
     id: asString(item.id, `result-${index}`),
     title: asString(item.title),
@@ -196,7 +197,7 @@ export default async function HomePage() {
         <About bio={aboutBio} photoUrl={aboutPhoto} whatsappNumber={whatsappNumber} />
         <HowItWorks />
         <Services />
-        <Results items={resultsItems} />
+        <Results items={resultsItems} vivianiPhotoUrl={resultsVivianiPhoto} />
         <Testimonials
           manualItems={manualTestimonials}
           googleItems={showGoogleTestimonials ? googleTestimonials : []}
