@@ -7,6 +7,9 @@ import { motion, AnimatePresence, LazyMotion, domAnimation } from 'framer-motion
 import { useMediaQuery } from '@/hooks/useMediaQuery'
 import { useInView } from '@/lib/hooks'
 import { trackCTAClick } from '@/lib/analytics'
+import { landingPublicEnv } from '@/lib/public-env'
+
+const API_URL = landingPublicEnv.apiBaseUrl
 
 interface ResultItem {
   id: string
@@ -17,7 +20,31 @@ interface ResultItem {
   afterImage: string
 }
 
+function normalizeImageUrl(value: string) {
+  const trimmed = value.trim()
+  if (!trimmed) return ''
+  if (trimmed.startsWith('data:image/')) return trimmed
+
+  if (trimmed.startsWith('/')) {
+    return `${API_URL}${trimmed}`
+  }
+
+  try {
+    const parsed = new URL(trimmed)
+    if (['localhost', '127.0.0.1', '0.0.0.0'].includes(parsed.hostname)) {
+      return `${API_URL}${parsed.pathname}${parsed.search}`
+    }
+
+    return trimmed
+  } catch {
+    return `${API_URL}/uploads/${trimmed.replace(/^\/+/, '')}`
+  }
+}
+
 function ComparisonSlider({ item }: { item: ResultItem }) {
+  const beforeImage = normalizeImageUrl(item.beforeImage)
+  const afterImage = normalizeImageUrl(item.afterImage)
+
   return (
     <div style={{ position: 'relative' }} className="w-full aspect-[4/3] overflow-hidden rounded-2xl shadow-md">
       {item.category ? (
@@ -27,8 +54,8 @@ function ComparisonSlider({ item }: { item: ResultItem }) {
       ) : null}
 
       <ReactCompareSlider
-        itemOne={<ReactCompareSliderImage src={item.beforeImage} alt="Antes" style={{ objectFit: 'cover', width: '100%', height: '100%' }} />}
-        itemTwo={<ReactCompareSliderImage src={item.afterImage} alt="Depois" style={{ objectFit: 'cover', width: '100%', height: '100%' }} />}
+        itemOne={<ReactCompareSliderImage src={beforeImage} alt="Antes" style={{ objectFit: 'cover', width: '100%', height: '100%' }} />}
+        itemTwo={<ReactCompareSliderImage src={afterImage} alt="Depois" style={{ objectFit: 'cover', width: '100%', height: '100%' }} />}
         style={{ width: '100%', height: '100%' }}
       />
 
@@ -61,7 +88,7 @@ function ResultCard({ item, index }: { item: ResultItem; index: number }) {
           </div>
         </div>
       ) : (
-        <div className="aspect-[4/3] rounded-2xl bg-blush animate-pulse" />
+        <div className="aspect-[4/3] animate-pulse rounded-2xl bg-blush" />
       )}
     </motion.div>
   )
@@ -92,13 +119,13 @@ export default function Results({ items }: { items: ResultItem[] }) {
             transition={{ duration: 0.6 }}
           >
             <span className="text-sm font-semibold uppercase tracking-[0.2em] text-rose-gold">
-              Transformacoes reais
+              Transformações reais
             </span>
             <h2 id="results-heading" className="heading-lg mt-2 mb-4 text-charcoal">
               Resultados que falam por si
             </h2>
             <p className="mx-auto max-w-xl text-charcoal-500">
-              Arraste o controle sobre cada imagem para comparar o antes e depois.
+              Arraste o controle sobre cada imagem para comparar o antes e o depois.
             </p>
           </motion.div>
 

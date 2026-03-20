@@ -152,6 +152,42 @@ const TextField = memo(function TextField({
   )
 })
 
+interface SelectFieldProps {
+  value: string
+  onChange: (v: string) => void
+  label: string
+  options: Array<{ value: string; label: string }>
+  placeholder?: string
+  className?: string
+}
+
+const SelectField = memo(function SelectField({
+  value,
+  onChange,
+  label,
+  options,
+  placeholder,
+  className,
+}: SelectFieldProps) {
+  return (
+    <div className={className}>
+      <label className={labelCls}>{label}</label>
+      <select
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        className={inputCls}
+      >
+        <option value="">{placeholder ?? 'Selecione uma opção'}</option>
+        {options.map((option) => (
+          <option key={`${option.value}-${option.label}`} value={option.value}>
+            {option.label}
+          </option>
+        ))}
+      </select>
+    </div>
+  )
+})
+
 // ── ToggleField ───────────────────────────────────────────────────────────────
 
 interface ToggleFieldProps {
@@ -229,6 +265,7 @@ export default function EditarSitePage() {
   const [googleLocations, setGoogleLocations] = useState<GoogleBusinessLocation[]>([])
   const [loadingGoogleLocations, setLoadingGoogleLocations] = useState(false)
   const [googleConnecting, setGoogleConnecting] = useState(false)
+  const [newResultCategoryName, setNewResultCategoryName] = useState('')
 
   const hdrs = { Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json' }
 
@@ -407,25 +444,62 @@ export default function EditarSitePage() {
     } catch { toast.error('Erro ao enviar imagem') } finally { setUploading(null) }
   }
 
-  const uploadStandaloneImage = async (file: File) => {
-    if (!accessToken) throw new Error('Sessão expirada')
+  const normalizeImageUrl = useCallback((value: string) => {
+    const trimmed = value.trim()
+    if (!trimmed) return ''
+    if (trimmed.startsWith('data:image/')) return trimmed
 
-    const formData = new FormData()
-    formData.append('file', file)
-
-    const response = await fetch(`${API_URL}/api/v1/content/upload`, {
-      method: 'POST',
-      headers: { Authorization: `Bearer ${accessToken}` },
-      body: formData,
-    })
-
-    if (!response.ok) {
-      throw new Error('Erro ao enviar imagem')
+    if (trimmed.startsWith('/')) {
+      return `${API_URL}${trimmed}`
     }
 
-    const data = await response.json() as { data: { url: string } }
-    return data.data.url
-  }
+    try {
+      const parsed = new URL(trimmed)
+      if (['localhost', '127.0.0.1', '0.0.0.0'].includes(parsed.hostname)) {
+        return `${API_URL}${parsed.pathname}${parsed.search}`
+      }
+
+      return trimmed
+    } catch {
+      return `${API_URL}/uploads/${trimmed.replace(/^\/+/, '')}`
+    }
+  }, [])
+
+  const createInlineResultImage = useCallback(async (file: File) => {
+    if (!file.type.startsWith('image/')) {
+      throw new Error('Selecione um arquivo de imagem válido.')
+    }
+
+    const objectUrl = URL.createObjectURL(file)
+
+    try {
+      const image = await new Promise<HTMLImageElement>((resolve, reject) => {
+        const element = new window.Image()
+        element.onload = () => resolve(element)
+        element.onerror = () => reject(new Error('Não foi possível processar a imagem.'))
+        element.src = objectUrl
+      })
+
+      const maxDimension = 1600
+      const scale = Math.min(1, maxDimension / Math.max(image.width, image.height))
+      const width = Math.max(1, Math.round(image.width * scale))
+      const height = Math.max(1, Math.round(image.height * scale))
+
+      const canvas = document.createElement('canvas')
+      canvas.width = width
+      canvas.height = height
+
+      const context = canvas.getContext('2d')
+      if (!context) {
+        throw new Error('Não foi possível preparar o preview da imagem.')
+      }
+
+      context.drawImage(image, 0, 0, width, height)
+      return canvas.toDataURL('image/webp', 0.84)
+    } finally {
+      URL.revokeObjectURL(objectUrl)
+    }
+  }, [])
 
   const handleConnectGoogleAccount = async () => {
     if (!accessToken) return
@@ -673,6 +747,47 @@ export default function EditarSitePage() {
 
       case 'resultados': {
         const results = getArr<ResultEditorItem>('services', 'results_items')
+        const savedCategories = getArr<string>('services', 'result_categories')
+        const categories = Array.from(new Set([
+          ...savedCategories,
+          ...results.map((item) => item.category).filter(Boolean),
+        ])).filter(Boolean)
+        const categoryOptions = categories.map((category) => ({ value: category, label: category }))
+
+        const handleAddCategory = () => {
+          const normalized = newResultCategoryName.trim()
+          if (!normalized) {
+            toast.error('Informe o nome da categoria.')
+            return
+          }
+
+          if (categories.some((category) => category.toLowerCase() === normalized.toLowerCase())) {
+            toast.error('Essa categoria já existe.')
+            return
+          }
+
+          setVal('services', 'result_categories', [...savedCategories, normalized])
+          setNewResultCategoryName('')
+        }
+
+        const handleRemoveCategory = (categoryToRemove: string) => {
+          setVal(
+            'services',
+            'result_categories',
+            savedCategories.filter((category) => category !== categoryToRemove)
+          )
+
+          setVal(
+            'services',
+            'results_items',
+            results.map((item) => (
+              item.category === categoryToRemove
+                ? { ...item, category: '' }
+                : item
+            ))
+          )
+        }
+
         return (
           <div className="space-y-4">
             {results.map((item, idx) => (
@@ -708,7 +823,8 @@ export default function EditarSitePage() {
                   multiline
                   rows={2}
                 />
-                <TextField
+
+                <SelectField
                   value={item.category}
                   onChange={v => {
                     const updated = [...results]
@@ -716,15 +832,23 @@ export default function EditarSitePage() {
                     setVal('services', 'results_items', updated)
                   }}
                   label="Categoria"
-                  placeholder="Ex: Sobrancelhas"
+                  options={categoryOptions}
+                  placeholder="Selecione uma categoria"
                 />
 
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid gap-3 md:grid-cols-2">
                   <div className="space-y-2">
                     <label className={labelCls}>Antes</label>
                     <div className="relative h-24 overflow-hidden rounded-lg border border-blush-200 bg-white dark:border-charcoal-600 dark:bg-charcoal-800">
                       {item.beforeImage ? (
-                        <Image src={item.beforeImage} alt={`Antes ${item.title || idx + 1}`} fill unoptimized className="object-cover" sizes="14rem" />
+                        <Image
+                          src={normalizeImageUrl(item.beforeImage)}
+                          alt={`Antes ${item.title || idx + 1}`}
+                          fill
+                          unoptimized
+                          className="object-cover"
+                          sizes="14rem"
+                        />
                       ) : (
                         <div className="flex h-full items-center justify-center text-xs text-charcoal-400">Sem imagem</div>
                       )}
@@ -739,12 +863,12 @@ export default function EditarSitePage() {
                           const file = e.target.files?.[0]
                           if (!file) return
                           try {
-                            const imageUrl = await uploadStandaloneImage(file)
+                            const imageUrl = await createInlineResultImage(file)
                             const updated = [...results]
                             updated[idx] = { ...item, beforeImage: imageUrl }
                             setVal('services', 'results_items', updated)
                           } catch {
-                            toast.error('Erro ao enviar imagem do antes')
+                            toast.error('Erro ao preparar a imagem de antes')
                           }
                         }}
                       />
@@ -755,7 +879,14 @@ export default function EditarSitePage() {
                     <label className={labelCls}>Depois</label>
                     <div className="relative h-24 overflow-hidden rounded-lg border border-blush-200 bg-white dark:border-charcoal-600 dark:bg-charcoal-800">
                       {item.afterImage ? (
-                        <Image src={item.afterImage} alt={`Depois ${item.title || idx + 1}`} fill unoptimized className="object-cover" sizes="14rem" />
+                        <Image
+                          src={normalizeImageUrl(item.afterImage)}
+                          alt={`Depois ${item.title || idx + 1}`}
+                          fill
+                          unoptimized
+                          className="object-cover"
+                          sizes="14rem"
+                        />
                       ) : (
                         <div className="flex h-full items-center justify-center text-xs text-charcoal-400">Sem imagem</div>
                       )}
@@ -770,12 +901,12 @@ export default function EditarSitePage() {
                           const file = e.target.files?.[0]
                           if (!file) return
                           try {
-                            const imageUrl = await uploadStandaloneImage(file)
+                            const imageUrl = await createInlineResultImage(file)
                             const updated = [...results]
                             updated[idx] = { ...item, afterImage: imageUrl }
                             setVal('services', 'results_items', updated)
                           } catch {
-                            toast.error('Erro ao enviar imagem do depois')
+                            toast.error('Erro ao preparar a imagem de depois')
                           }
                         }}
                       />
@@ -785,6 +916,50 @@ export default function EditarSitePage() {
               </div>
             ))}
 
+            <div className="space-y-3 rounded-xl border border-blush-200 bg-white p-4 dark:border-charcoal-600 dark:bg-charcoal-800">
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <p className="text-sm font-semibold text-charcoal dark:text-charcoal-100">Categorias de resultados</p>
+                  <p className="text-xs text-charcoal-400">Crie a lista de categorias e depois selecione cada uma nos cards acima.</p>
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-3 md:flex-row md:items-end">
+                <TextField
+                  value={newResultCategoryName}
+                  onChange={setNewResultCategoryName}
+                  label="Criar categoria"
+                  placeholder="Ex.: Sobrancelhas"
+                  className="flex-1"
+                />
+                <button
+                  type="button"
+                  onClick={handleAddCategory}
+                  className="inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-rose-gold px-4 text-sm font-medium text-white transition-colors hover:bg-rose-gold-500"
+                >
+                  <Plus size={14} /> Salvar categoria
+                </button>
+              </div>
+
+              {categories.length > 0 ? (
+                <div className="flex flex-wrap gap-2">
+                  {categories.map((category) => (
+                    <button
+                      key={category}
+                      type="button"
+                      onClick={() => handleRemoveCategory(category)}
+                      className="inline-flex items-center gap-2 rounded-full border border-blush-200 bg-cream px-3 py-1 text-xs font-medium text-charcoal transition-colors hover:border-red-300 hover:text-red-500 dark:border-charcoal-600 dark:bg-charcoal-700 dark:text-charcoal-100"
+                    >
+                      {category}
+                      <X size={12} />
+                    </button>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-xs text-charcoal-400">Nenhuma categoria cadastrada ainda.</p>
+              )}
+            </div>
+
             <button
               type="button"
               onClick={() => setVal('services', 'results_items', [
@@ -793,7 +968,7 @@ export default function EditarSitePage() {
                   id: `result-${Date.now()}`,
                   title: '',
                   text: '',
-                  category: '',
+                  category: categories[0] ?? '',
                   beforeImage: '',
                   afterImage: '',
                 },
