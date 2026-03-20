@@ -26,7 +26,7 @@ Observacoes factuais da auditoria em `2026-03-20`:
 - o blueprint da API precisa incluir `API_BASE_URL`;
 - o exemplo de build/start da API deve usar `corepack enable`;
 - Google Calendar e Google Business existem no codigo, mas a homologacao auditada seguia sem OAuth Google configurado.
-- a API agora possui workflow versionado de deploy em homologacao: `.github/workflows/deploy-api-homolog.yml`
+- a API agora possui job versionado de deploy em homologacao dentro de `.github/workflows/deploy-homolog.yml`
 
 ## Ordem ideal de deploy
 
@@ -174,5 +174,5 @@ Observacoes factuais da auditoria em `2026-03-20`:
 pnpm deploy:check
 pnpm --filter @viviani/api db:migrate:prod
 pnpm --filter @viviani/api start
-gh workflow run "Deploy API Homologation" --ref staging
+gh workflow run "Deploy Homologation" --ref staging
 ```

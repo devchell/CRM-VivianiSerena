@@ -164,7 +164,7 @@ Opcionais por integracao:
 ## 7. Deploy da API na Render
 
 O repositorio ja possui [render.yaml](./render.yaml), mas voce pode configurar pelo painel.
-Para homologacao rastreavel, o repositorio tambem possui o workflow [deploy-api-homolog.yml](D:/VivianeCRM/viviani-serena-platform/.github/workflows/deploy-api-homolog.yml) e o script [verify-api-deploy.ps1](D:/VivianeCRM/viviani-serena-platform/scripts/verify-api-deploy.ps1).
+Para homologacao rastreavel, o repositorio tambem possui o job de API no workflow [deploy-homolog.yml](D:/VivianeCRM/viviani-serena-platform/.github/workflows/deploy-homolog.yml) e o script [verify-api-deploy.ps1](D:/VivianeCRM/viviani-serena-platform/scripts/verify-api-deploy.ps1).
 
 ### Passos
 

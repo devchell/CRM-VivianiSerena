@@ -11,7 +11,7 @@ Monorepo com `landing`, `crm`, `api` e pacotes compartilhados para operacao come
 - Segredos client-side removidos do CRM para publicacao da landing.
 - Google Calendar e Google Business Profile existem no codigo, mas a homologacao auditada em `2026-03-20` segue sem OAuth Google configurado.
 - A pasta [`docs`](D:/VivianeCRM/viviani-serena-platform/docs) continua como base de auditoria e arquitetura.
-- A API agora possui workflow versionado de deploy em homologacao via Render Deploy Hook.
+- A API agora possui job versionado de deploy em homologacao via Render Deploy Hook.
 
 ## Homologacao ativa
 
@@ -158,7 +158,7 @@ Detalhes: [05_SECURITY_BASELINE.md](D:/VivianeCRM/viviani-serena-platform/docs/0
 - producao da API esta desligada no momento
 - publicar `apps/api` em plataforma com processo persistente
 - exemplo de blueprint para Render: [render.yaml](D:/VivianeCRM/viviani-serena-platform/render.yaml)
-- workflow versionado de homologacao da API: [deploy-api-homolog.yml](D:/VivianeCRM/viviani-serena-platform/.github/workflows/deploy-api-homolog.yml)
+- job versionado de homologacao da API no workflow [deploy-homolog.yml](D:/VivianeCRM/viviani-serena-platform/.github/workflows/deploy-homolog.yml)
 - health checks disponiveis:
   - `GET /health/live`
   - `GET /health/ready`

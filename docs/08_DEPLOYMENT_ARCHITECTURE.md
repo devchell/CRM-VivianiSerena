@@ -13,27 +13,22 @@
 
 ### Homologacao
 - workflow: `.github/workflows/deploy-homolog.yml`
-- dispara em `staging`
+- dispara em `staging` ou manualmente
 - publica:
   - `landing` via Vercel
   - `crm` via Vercel
-- depende de:
-  - `VERCEL_TOKEN`
-  - `VERCEL_ORG_ID`
-  - `VERCEL_PROJECT_ID_LANDING_HML`
-  - `VERCEL_PROJECT_ID_CRM_HML`
-
-### API
-- workflow: `.github/workflows/deploy-api-homolog.yml`
-- dispara apos `CI` bem-sucedida em `staging` ou manualmente
-- aciona deploy via Render Deploy Hook
+  - `api` via Render Deploy Hook
 - valida:
   - `/health/live`
   - `/health/ready`
   - `/health/deps`
   - `version` publicada no health endpoint
-- opcionalmente valida guards de Google Calendar e Google Business com credenciais de smoke
+  - guards de Google Calendar e Google Business quando houver credenciais de smoke
 - depende de:
+  - `VERCEL_TOKEN`
+  - `VERCEL_ORG_ID`
+  - `VERCEL_PROJECT_ID_LANDING_HML`
+  - `VERCEL_PROJECT_ID_CRM_HML`
   - `RENDER_DEPLOY_HOOK_API_HML`
   - `API_HML_BASE_URL`
   - opcional: `API_HML_SMOKE_ADMIN_EMAIL`
