@@ -10,6 +10,7 @@ import { landingPublicEnv } from '@/lib/public-env'
 
 const WA_LINK = 'https://wa.link/e2g7ii'
 const API_URL = landingPublicEnv.apiBaseUrl
+const DEFAULT_HERO_IMAGE = 'https://static.wixstatic.com/media/be8b61_9dfb57055aea4d4f9f4c8b5bfdbbea28~mv2.jpg'
 
 function normalizeImageUrl(value?: string) {
   const trimmed = value?.trim()
@@ -169,6 +170,7 @@ export function Hero({
   const containerRef = useRef<HTMLDivElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const [isMounted, setIsMounted] = useState(false)
+  const [hasHeroImageError, setHasHeroImageError] = useState(false)
 
   // Parallax suave
   const { scrollYProgress } = useScroll({ target: containerRef, offset: ['start start', 'end start'] })
@@ -179,6 +181,7 @@ export function Hero({
   useParticles(canvasRef)
 
   useEffect(() => { setIsMounted(true) }, [])
+  useEffect(() => { setHasHeroImageError(false) }, [backgroundImage])
 
   // Monta o link do WhatsApp com número e mensagem da API, ou cai no link fixo
   const waHref = whatsappNumber
@@ -187,7 +190,10 @@ export function Hero({
   const socialProofEnabled = socialProof?.enabled !== false
   const clientsRegistered = socialProof?.clientsRegistered ?? 0
   const publicReviews = socialProof?.publicReviews ?? 0
-  const heroBackgroundSrc = normalizeImageUrl(backgroundImage) || 'https://static.wixstatic.com/media/be8b61_9dfb57055aea4d4f9f4c8b5bfdbbea28~mv2.jpg'
+  const normalizedHeroImage = normalizeImageUrl(backgroundImage)
+  const heroBackgroundSrc = hasHeroImageError || !normalizedHeroImage
+    ? DEFAULT_HERO_IMAGE
+    : normalizedHeroImage
 
   const handleWhatsApp = useCallback((source: string) => {
     trackWhatsAppClick(source)
@@ -232,6 +238,7 @@ export function Hero({
             quality={85}
             className="object-cover object-center scale-105"
             sizes="100vw"
+            onError={() => setHasHeroImageError(true)}
           />
         </m.div>
 

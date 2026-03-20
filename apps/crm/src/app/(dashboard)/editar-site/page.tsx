@@ -9,7 +9,7 @@ import { useAuth } from '@/lib/useAuth'
 import { toast } from 'sonner'
 import {
   ChevronDown, Eye, EyeOff, Upload, X, Check,
-  RefreshCw, Send, History, Plus, ExternalLink, Loader2, Link2, Star,
+  RefreshCw, Send, History, Plus, ExternalLink, Loader2, Link2, Star, Trash2,
 } from 'lucide-react'
 import { RichTextEditor } from '@/components/editor/RichTextEditor'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -447,22 +447,57 @@ export default function EditarSitePage() {
   }
 
   // ── Image upload ───────────────────────────────────────────────────────────
+  const createInlineImage = useCallback(async (
+    file: File,
+    options?: { maxDimension?: number; quality?: number },
+  ) => {
+    if (!file.type.startsWith('image/')) {
+      throw new Error('Selecione um arquivo de imagem valido.')
+    }
+
+    const objectUrl = URL.createObjectURL(file)
+
+    try {
+      const image = await new Promise<HTMLImageElement>((resolve, reject) => {
+        const element = new window.Image()
+        element.onload = () => resolve(element)
+        element.onerror = () => reject(new Error('Nao foi possivel processar a imagem.'))
+        element.src = objectUrl
+      })
+
+      const maxDimension = options?.maxDimension ?? 2200
+      const quality = options?.quality ?? 0.92
+      const scale = Math.min(1, maxDimension / Math.max(image.width, image.height))
+      const width = Math.max(1, Math.round(image.width * scale))
+      const height = Math.max(1, Math.round(image.height * scale))
+
+      const canvas = document.createElement('canvas')
+      canvas.width = width
+      canvas.height = height
+
+      const context = canvas.getContext('2d')
+      if (!context) {
+        throw new Error('Nao foi possivel preparar o preview da imagem.')
+      }
+
+      context.drawImage(image, 0, 0, width, height)
+      return canvas.toDataURL('image/webp', quality)
+    } finally {
+      URL.revokeObjectURL(objectUrl)
+    }
+  }, [])
+
   const handleImageUpload = async (section: string, key: string, file: File) => {
-    if (!accessToken) return
-    const formData = new FormData()
-    formData.append('file', file)
     setUploading(`${section}.${key}`)
     try {
-      const res = await fetch(`${API_URL}/api/v1/content/upload`, {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${accessToken}` },
-        body: formData,
-      })
-      if (!res.ok) throw new Error()
-      const data = await res.json() as { data: { url: string; blur: string } }
-      setVal(section, key, { url: data.data.url, blur: data.data.blur })
-      toast.success('Imagem enviada com sucesso')
-    } catch { toast.error('Erro ao enviar imagem') } finally { setUploading(null) }
+      const imageUrl = await createInlineImage(file, { maxDimension: 2560, quality: 0.95 })
+      setVal(section, key, { url: imageUrl, blur: '' })
+      toast.success('Imagem atualizada com sucesso')
+    } catch {
+      toast.error('Erro ao preparar imagem')
+    } finally {
+      setUploading(null)
+    }
   }
 
   const normalizeImageUrl = useCallback((value: string) => {
@@ -486,41 +521,9 @@ export default function EditarSitePage() {
     }
   }, [])
 
-  const createInlineResultImage = useCallback(async (file: File) => {
-    if (!file.type.startsWith('image/')) {
-      throw new Error('Selecione um arquivo de imagem válido.')
-    }
-
-    const objectUrl = URL.createObjectURL(file)
-
-    try {
-      const image = await new Promise<HTMLImageElement>((resolve, reject) => {
-        const element = new window.Image()
-        element.onload = () => resolve(element)
-        element.onerror = () => reject(new Error('Não foi possível processar a imagem.'))
-        element.src = objectUrl
-      })
-
-      const maxDimension = 1600
-      const scale = Math.min(1, maxDimension / Math.max(image.width, image.height))
-      const width = Math.max(1, Math.round(image.width * scale))
-      const height = Math.max(1, Math.round(image.height * scale))
-
-      const canvas = document.createElement('canvas')
-      canvas.width = width
-      canvas.height = height
-
-      const context = canvas.getContext('2d')
-      if (!context) {
-        throw new Error('Não foi possível preparar o preview da imagem.')
-      }
-
-      context.drawImage(image, 0, 0, width, height)
-      return canvas.toDataURL('image/webp', 0.84)
-    } finally {
-      URL.revokeObjectURL(objectUrl)
-    }
-  }, [])
+  const createInlineResultImage = useCallback(async (file: File) => (
+    createInlineImage(file, { maxDimension: 2200, quality: 0.92 })
+  ), [createInlineImage])
 
   const handleConnectGoogleAccount = async () => {
     if (!accessToken) return
@@ -641,6 +644,18 @@ export default function EditarSitePage() {
                   className="object-cover"
                 />
               </div>
+              <button
+                type="button"
+                aria-label={`Remover ${label}`}
+                onClick={(event) => {
+                  event.preventDefault()
+                  event.stopPropagation()
+                  setVal(section, fieldKey, null)
+                }}
+                className="absolute bottom-2 right-2 z-20 inline-flex h-8 w-8 items-center justify-center rounded-full bg-black/65 text-white transition-colors hover:bg-red-500"
+              >
+                <Trash2 size={14} />
+              </button>
               <div className="absolute inset-0 bg-black/50 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                 <p className="text-white text-xs font-medium">Clique para trocar</p>
               </div>
@@ -908,6 +923,13 @@ export default function EditarSitePage() {
 
         return (
           <div className="space-y-4">
+            <div className="space-y-3 rounded-xl border border-blush-200 bg-cream p-4 dark:border-charcoal-600 dark:bg-charcoal-700">
+              <p className="text-xs text-charcoal-500 dark:text-charcoal-400">
+                Foto da Viviani
+              </p>
+              <ImageField section="about" fieldKey="photo" label="Foto da Viviani" />
+            </div>
+
             {results.map((item, idx) => (
               <div key={item.id || idx} className="space-y-3 rounded-xl border border-blush-200 bg-cream p-4 dark:border-charcoal-600 dark:bg-charcoal-700">
                 <div className="flex items-center justify-between gap-3">
