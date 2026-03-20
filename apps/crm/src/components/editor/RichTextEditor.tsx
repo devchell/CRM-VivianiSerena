@@ -40,7 +40,7 @@ export function RichTextEditor({ value, onChange, placeholder }: RichTextEditorP
   )
 
   return (
-    <div className="border border-blush-300 dark:border-charcoal-600 rounded-lg overflow-hidden bg-white dark:bg-charcoal-700">
+    <div className="relative overflow-hidden rounded-lg border border-blush-300 bg-white dark:border-charcoal-600 dark:bg-charcoal-700">
       {/* Toolbar */}
       <div className="flex items-center gap-0.5 px-2 py-1.5 border-b border-blush-200 dark:border-charcoal-600 bg-cream dark:bg-charcoal-800">
         {toolbarBtn(editor.isActive('bold'), () => editor.chain().focus().toggleBold().run(), 'Negrito', <Bold size={14} />)}
@@ -57,7 +57,9 @@ export function RichTextEditor({ value, onChange, placeholder }: RichTextEditorP
       </div>
       <EditorContent editor={editor} />
       {!editor.getText() && placeholder && (
-        <div className="absolute top-12 left-3 text-charcoal-400 dark:text-charcoal-500 text-sm pointer-events-none">{placeholder}</div>
+        <div className="pointer-events-none absolute left-3 top-[3.15rem] text-sm text-charcoal-400 dark:text-charcoal-500">
+          {placeholder}
+        </div>
       )}
     </div>
   )

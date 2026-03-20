@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { Bell } from 'lucide-react'
+import { crmListShell, crmSoftListItem } from '@/components/ui/listStyles'
 
 interface Notification {
   id: string
@@ -16,10 +17,10 @@ interface Notification {
 function timeAgo(date: string): string {
   const diff = Math.floor((Date.now() - new Date(date).getTime()) / 60000)
   if (diff < 1) return 'agora'
-  if (diff < 60) return `ha ${diff} min`
+  if (diff < 60) return `há ${diff} min`
   const hours = Math.floor(diff / 60)
-  if (hours < 24) return `ha ${hours}h`
-  return `ha ${Math.floor(hours / 24)}d`
+  if (hours < 24) return `há ${hours}h`
+  return `há ${Math.floor(hours / 24)}d`
 }
 
 export function NotificationBell() {
@@ -89,7 +90,7 @@ export function NotificationBell() {
       <button
         onClick={() => setOpen((current) => !current)}
         className="relative rounded-lg p-2 text-charcoal-400 transition-colors hover:bg-blush dark:hover:bg-charcoal-700"
-        aria-label="Notificacoes"
+        aria-label="Notificações"
       >
         <Bell size={18} />
         {unread > 0 ? (
@@ -100,19 +101,19 @@ export function NotificationBell() {
       </button>
 
       {open ? (
-        <div className="absolute right-0 top-full z-50 mt-2 w-80 overflow-hidden rounded-xl border border-[#2a2a2a] bg-[#1e1e1e] shadow-xl">
-          <div className="border-b border-[#2a2a2a] px-4 py-3">
-            <span className="text-sm font-semibold text-[#e5e5e5]">Notificacoes</span>
+        <div className={`${crmListShell} absolute right-0 top-full z-50 mt-2 w-80 overflow-hidden`}>
+          <div className="border-b border-blush-200 bg-[linear-gradient(135deg,rgba(255,251,247,0.98),rgba(255,244,236,0.94))] px-4 py-3 dark:border-charcoal-700 dark:bg-[linear-gradient(135deg,rgba(29,25,22,0.95),rgba(24,21,19,0.9))]">
+            <span className="text-sm font-semibold text-charcoal dark:text-charcoal-100">Notificações</span>
           </div>
-          <div className="max-h-96 overflow-y-auto">
+          <div className="max-h-96 space-y-2 overflow-y-auto p-3">
             {notifications.length === 0 ? (
-              <p className="py-8 text-center text-sm text-[#666]">Sem notificacoes operacionais pendentes.</p>
+              <p className="py-8 text-center text-sm text-charcoal-400 dark:text-charcoal-500">Sem notificações operacionais pendentes.</p>
             ) : (
               notifications.map((notification) => (
-                <div key={notification.id} className={`border-b border-[#2a2a2a] px-4 py-3 last:border-0 ${notification.read ? 'bg-[#1e1e1e]' : 'bg-[#252525]'}`}>
-                  <p className="text-sm font-semibold text-[#e5e5e5]">{notification.title}</p>
-                  <p className="mt-0.5 text-xs text-[#888]">{notification.desc}</p>
-                  <p className="mt-1 text-[10px] text-[#555]">{timeAgo(notification.time)}</p>
+                <div key={notification.id} className={`${crmSoftListItem} ${notification.read ? 'opacity-85' : 'border-rose-gold/30 bg-rose-gold/5 dark:bg-rose-gold/10'}`}>
+                  <p className="text-sm font-semibold text-charcoal dark:text-charcoal-100">{notification.title}</p>
+                  <p className="mt-0.5 text-xs text-charcoal-400 dark:text-charcoal-500">{notification.desc}</p>
+                  <p className="mt-1 text-[10px] text-charcoal-400 dark:text-charcoal-500">{timeAgo(notification.time)}</p>
                 </div>
               ))
             )}

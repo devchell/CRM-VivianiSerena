@@ -4,6 +4,7 @@ import type { ActivityItem } from '@viviani/types'
 import { formatDistanceToNow } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import { Calendar, DollarSign, Shield, Users } from 'lucide-react'
+import { crmSoftListItem } from '@/components/ui/listStyles'
 
 const ICONS = {
   lead: { icon: Users, color: 'text-blue-400 bg-blue-500/10' },
@@ -39,7 +40,7 @@ export function RecentActivity({ items, loading = false }: RecentActivityProps) 
           {items.map((item) => {
             const { icon: Icon, color } = ICONS[item.type]
             return (
-              <div key={item.id} className="flex items-start gap-3">
+              <div key={item.id} className={`${crmSoftListItem} flex items-start gap-3`}>
                 <div className={`flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg ${color}`}>
                   <Icon size={14} />
                 </div>

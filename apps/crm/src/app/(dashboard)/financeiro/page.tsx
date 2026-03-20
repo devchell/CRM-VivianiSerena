@@ -16,12 +16,28 @@ import {
   XAxis,
   YAxis,
 } from 'recharts'
-import { Download, FileText, Pencil, Plus, Trash2, X } from 'lucide-react'
+import { ChevronDown, Download, FileText, Pencil, Plus, Trash2, X } from 'lucide-react'
 import { formatCurrency } from '@viviani/utils'
 import { toast } from 'sonner'
 import { useAuth } from '@/lib/useAuth'
 import { apiFetchJson, buildAuthHeaders } from '@/lib/api-client'
 import { useFinancialColors } from '@/hooks/useFinancialColors'
+import {
+  crmListBody,
+  crmListCell,
+  crmListEmpty,
+  crmListFooter,
+  crmListHeaderCell,
+  crmListRow,
+  crmListSearchInput,
+  crmListSearchWrapper,
+  crmListSelect,
+  crmListSelectIcon,
+  crmListSelectWrapper,
+  crmListShell,
+  crmListTableHead,
+  crmListToolbar,
+} from '@/components/ui/listStyles'
 
 type FinancialRecord = Omit<Financial, 'date'> & { date: string }
 
@@ -239,7 +255,7 @@ export default function FinanceiroPage() {
 
   function handleExportCsv() {
     if (!canExportFinancial) return
-    const header = 'Data,Tipo,Categoria,Descricao,Valor,Recorrente\n'
+    const header = 'Data,Tipo,Categoria,Descrição,Valor,Recorrente\n'
     const rows = filteredTransactions.map((transaction) => {
       return [
         new Date(transaction.date).toLocaleDateString('pt-BR'),
@@ -283,7 +299,7 @@ export default function FinanceiroPage() {
 
     autoTable(doc, {
       startY: ((doc as unknown as { lastAutoTable?: { finalY: number } }).lastAutoTable?.finalY ?? 40) + 10,
-      head: [['Data', 'Tipo', 'Categoria', 'Descricao', 'Valor']],
+      head: [['Data', 'Tipo', 'Categoria', 'Descrição', 'Valor']],
       body: filteredTransactions.slice(0, 100).map((transaction) => [
         new Date(transaction.date).toLocaleDateString('pt-BR'),
         transaction.type === 'income' ? 'Receita' : 'Despesa',
@@ -300,7 +316,7 @@ export default function FinanceiroPage() {
     { label: 'Receita', value: summary?.income ?? 0, color: colors.income.text, background: colors.income.bg },
     { label: 'Despesas', value: summary?.expenses ?? 0, color: colors.expense.text, background: colors.expense.bg },
     { label: 'Lucro', value: summary?.profit ?? 0, color: (summary?.profit ?? 0) >= 0 ? colors.profit.text : colors.expense.text, background: (summary?.profit ?? 0) >= 0 ? colors.profit.bg : colors.expense.bg },
-    { label: 'Ticket medio', value: summary?.averageTicket ?? 0, color: 'var(--color-rose-gold, #C9967A)', background: 'rgba(201,150,122,0.1)' },
+    { label: 'Ticket médio', value: summary?.averageTicket ?? 0, color: 'var(--color-rose-gold, #C9967A)', background: 'rgba(201,150,122,0.1)' },
   ]
 
   return (
@@ -309,9 +325,9 @@ export default function FinanceiroPage() {
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div className="max-w-2xl">
             <p className="text-xs font-semibold uppercase tracking-[0.24em] text-rose-gold">Controle financeiro</p>
-            <h1 className="mt-2 font-heading text-3xl font-bold text-charcoal dark:text-charcoal-50">Fluxo financeiro com leitura rapida, filtros claros e contexto visual melhor.</h1>
+            <h1 className="mt-2 font-heading text-3xl font-bold text-charcoal dark:text-charcoal-50">Fluxo financeiro com leitura rápida, filtros claros e contexto visual melhor.</h1>
             <p className="mt-3 text-sm leading-6 text-charcoal-500 dark:text-charcoal-400">
-              Receitas, despesas e resumos consolidados na mesma base do dashboard, agora com uma camada visual mais limpa para analise diaria.
+              Receitas, despesas e resumos consolidados na mesma base do dashboard, agora com uma camada visual mais limpa para análise diária.
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
@@ -325,7 +341,7 @@ export default function FinanceiroPage() {
             </button>
             <button onClick={() => openCreateModal('income')} disabled={!canCreateFinancial} className="flex items-center gap-2 rounded-2xl bg-rose-gold px-5 py-3 text-sm font-medium text-white shadow-sm transition-colors hover:bg-rose-gold-500 disabled:opacity-50 disabled:cursor-not-allowed">
               <Plus size={16} />
-              Novo lancamento
+              Novo lançamento
             </button>
           </div>
         </div>
@@ -350,7 +366,7 @@ export default function FinanceiroPage() {
       <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
         <div className="card-dark rounded-[32px] p-5 shadow-sm">
           <h3 className="mb-4 font-heading text-sm font-semibold text-charcoal dark:text-charcoal-100">
-            Evolucao mensal
+            Evolução mensal
           </h3>
           {loading ? (
             <div className="h-[240px] animate-pulse rounded-2xl bg-blush-100 dark:bg-charcoal-700/40" />
@@ -391,49 +407,57 @@ export default function FinanceiroPage() {
         </div>
       </div>
 
-      <div className="card-dark overflow-hidden rounded-[32px] shadow-sm">
-        <div className="flex flex-wrap items-center gap-3 border-b border-blush-200 bg-blush/35 px-5 py-4 dark:border-charcoal-700 dark:bg-charcoal-800/60">
-          <input
-            value={search}
-            onChange={(event) => setSearch(event.target.value)}
-            placeholder="Buscar descricao ou categoria"
-            className="min-w-[180px] flex-1 rounded-2xl border border-blush-300 bg-white px-4 py-3 text-sm text-charcoal shadow-sm placeholder-charcoal-400 focus:outline-none focus:ring-2 focus:ring-rose-gold/30 dark:border-charcoal-600 dark:bg-charcoal-700 dark:text-charcoal-100"
-          />
-          <select
-            value={typeFilter}
-            onChange={(event) => setTypeFilter(event.target.value as 'all' | TransactionType)}
-            className="rounded-2xl border border-blush-300 bg-white px-4 py-3 text-sm text-charcoal shadow-sm focus:outline-none dark:border-charcoal-600 dark:bg-charcoal-700 dark:text-charcoal-100"
-          >
-            <option value="all">Todos os tipos</option>
-            <option value="income">Receitas</option>
-            <option value="expense">Despesas</option>
-          </select>
-          <select
-            value={categoryFilter}
-            onChange={(event) => setCategoryFilter(event.target.value)}
-            className="rounded-2xl border border-blush-300 bg-white px-4 py-3 text-sm text-charcoal shadow-sm focus:outline-none dark:border-charcoal-600 dark:bg-charcoal-700 dark:text-charcoal-100"
-          >
-            <option value="all">Todas as categorias</option>
-            {[...categories.income, ...categories.expense].map((category) => (
-              <option key={category.value} value={category.value}>
-                {category.label}
-              </option>
-            ))}
-          </select>
+      <div className={crmListShell}>
+        <div className={crmListToolbar}>
+          <div className={crmListSearchWrapper}>
+            <input
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+              placeholder="Buscar descrição ou categoria"
+              className={crmListSearchInput}
+            />
+          </div>
+          <div className={crmListSelectWrapper}>
+            <select
+              value={typeFilter}
+              onChange={(event) => setTypeFilter(event.target.value as 'all' | TransactionType)}
+              className={crmListSelect}
+            >
+              <option value="all">Todos os tipos</option>
+              <option value="income">Receitas</option>
+              <option value="expense">Despesas</option>
+            </select>
+            <ChevronDown size={16} className={crmListSelectIcon} />
+          </div>
+          <div className={crmListSelectWrapper}>
+            <select
+              value={categoryFilter}
+              onChange={(event) => setCategoryFilter(event.target.value)}
+              className={crmListSelect}
+            >
+              <option value="all">Todas as categorias</option>
+              {[...categories.income, ...categories.expense].map((category) => (
+                <option key={category.value} value={category.value}>
+                  {category.label}
+                </option>
+              ))}
+            </select>
+            <ChevronDown size={16} className={crmListSelectIcon} />
+          </div>
         </div>
 
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
-            <thead className="border-b border-blush-100 bg-blush/30 dark:border-charcoal-700 dark:bg-charcoal-800/40">
+            <thead className={crmListTableHead}>
               <tr>
-                {['Data', 'Tipo', 'Categoria', 'Descricao', 'Valor', ''].map((header) => (
-                  <th key={header} className="px-4 py-3.5 text-left text-[11px] font-semibold uppercase tracking-[0.16em] text-charcoal-400 dark:text-charcoal-400">
+                {['Data', 'Tipo', 'Categoria', 'Descrição', 'Valor', ''].map((header) => (
+                  <th key={header} className={crmListHeaderCell}>
                     {header}
                   </th>
                 ))}
               </tr>
             </thead>
-            <tbody className="divide-y divide-blush-50 dark:divide-charcoal-700/40">
+            <tbody className={crmListBody}>
               {loading ? (
                 Array.from({ length: 5 }).map((_, index) => (
                   <tr key={index}>
@@ -444,31 +468,39 @@ export default function FinanceiroPage() {
                 ))
               ) : pagedTransactions.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-4 py-10 text-center text-sm text-charcoal-400 dark:text-charcoal-500">
-                    Nenhum lancamento encontrado.
+                  <td colSpan={6} className={crmListEmpty}>
+                    Nenhum lançamento encontrado.
                   </td>
                 </tr>
               ) : (
                 pagedTransactions.map((transaction) => (
-                  <tr key={transaction.id} className="group transition-colors hover:bg-blush-50/70 dark:hover:bg-charcoal-700/20">
-                    <td className="px-4 py-3 text-xs text-charcoal-400 dark:text-charcoal-500">
-                      {new Date(transaction.date).toLocaleDateString('pt-BR')}
+                  <tr key={transaction.id} className={crmListRow}>
+                    <td className={crmListCell}>
+                      <span className="text-xs text-charcoal-400 dark:text-charcoal-500">
+                        {new Date(transaction.date).toLocaleDateString('pt-BR')}
+                      </span>
                     </td>
-                    <td className="px-4 py-3">
+                    <td className={crmListCell}>
                       <span className="rounded-full px-2 py-0.5 text-xs font-medium" style={transaction.type === 'income'
                         ? { color: colors.income.text, background: colors.income.bg }
                         : { color: colors.expense.text, background: colors.expense.bg }}>
                         {transaction.type === 'income' ? 'Receita' : 'Despesa'}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-xs text-charcoal-500 dark:text-charcoal-400">
-                      {FINANCIAL_CATEGORY_LABELS[transaction.category]}
+                    <td className={crmListCell}>
+                      <span className="text-xs text-charcoal-500 dark:text-charcoal-400">
+                        {FINANCIAL_CATEGORY_LABELS[transaction.category]}
+                      </span>
                     </td>
-                    <td className="px-4 py-3 text-sm text-charcoal dark:text-charcoal-100">{transaction.description}</td>
-                    <td className="px-4 py-3 text-sm font-semibold" style={{ color: transaction.type === 'income' ? colors.income.text : colors.expense.text }}>
-                      {transaction.type === 'income' ? '+' : '-'}{formatCurrency(transaction.amount)}
+                    <td className={crmListCell}>
+                      <span className="text-sm text-charcoal dark:text-charcoal-100">{transaction.description}</span>
                     </td>
-                    <td className="px-4 py-3">
+                    <td className={crmListCell}>
+                      <span className="text-sm font-semibold" style={{ color: transaction.type === 'income' ? colors.income.text : colors.expense.text }}>
+                        {transaction.type === 'income' ? '+' : '-'}{formatCurrency(transaction.amount)}
+                      </span>
+                    </td>
+                    <td className={crmListCell}>
                       <div className="flex items-center justify-end gap-1 opacity-0 transition-opacity group-hover:opacity-100">
                         <button onClick={() => openEditModal(transaction)} disabled={!canUpdateFinancial} className="rounded-lg p-1.5 text-charcoal-400 transition-colors hover:bg-rose-gold/10 hover:text-rose-gold disabled:opacity-40 disabled:cursor-not-allowed">
                           <Pencil size={13} />
@@ -485,15 +517,15 @@ export default function FinanceiroPage() {
           </table>
         </div>
 
-        <div className="flex items-center justify-between border-t border-blush-100 bg-white/70 px-5 py-3 text-xs text-charcoal-400 dark:border-charcoal-700 dark:bg-charcoal-800/50 dark:text-charcoal-500">
-          <span>{filteredTransactions.length} lancamentos</span>
+        <div className={crmListFooter}>
+          <span>{filteredTransactions.length} lançamentos</span>
           <div className="flex items-center gap-2">
             <button disabled={page === 0} onClick={() => setPage((current) => Math.max(0, current - 1))} className="rounded px-2 py-1 disabled:opacity-30">
               Anterior
             </button>
-            <span>Pagina {page + 1} de {pageCount}</span>
+            <span>Página {page + 1} de {pageCount}</span>
             <button disabled={page >= pageCount - 1} onClick={() => setPage((current) => Math.min(pageCount - 1, current + 1))} className="rounded px-2 py-1 disabled:opacity-30">
-              Proxima
+              Próxima
             </button>
           </div>
         </div>
@@ -504,7 +536,7 @@ export default function FinanceiroPage() {
           <div className="card-dark w-full max-w-lg shadow-2xl">
             <div className="flex items-center justify-between border-b border-blush-200 p-6 dark:border-charcoal-700">
               <h2 className="font-heading text-lg font-semibold text-charcoal dark:text-charcoal-50">
-                {editing ? 'Editar lancamento' : 'Novo lancamento'}
+                {editing ? 'Editar lançamento' : 'Novo lançamento'}
               </h2>
               <button onClick={() => setShowModal(false)} className="text-charcoal-400 transition-colors hover:text-charcoal dark:hover:text-charcoal-100">
                 <X size={20} />
@@ -573,7 +605,7 @@ export default function FinanceiroPage() {
               </div>
 
               <div>
-                <label className="mb-1 block text-xs font-medium text-charcoal-400 dark:text-charcoal-400">Descricao</label>
+                <label className="mb-1 block text-xs font-medium text-charcoal-400 dark:text-charcoal-400">Descrição</label>
                 <input
                   required
                   value={form.description}
@@ -598,7 +630,7 @@ export default function FinanceiroPage() {
                   checked={form.recurring}
                   onChange={(event) => setForm((current) => ({ ...current, recurring: event.target.checked }))}
                 />
-                Lancamento recorrente
+                Lançamento recorrente
               </label>
 
               <div className="flex gap-3 pt-2">

@@ -11,6 +11,22 @@ import { formatDistanceToNow } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import { Search, Download, RefreshCw, ArrowUpDown, ChevronUp, ChevronDown, CircleDot, CheckCircle2, Phone, Star, XCircle } from 'lucide-react'
 import { crmPublicEnv } from '@/lib/public-env'
+import {
+  crmListBody,
+  crmListCell,
+  crmListEmpty,
+  crmListFooter,
+  crmListHeaderCell,
+  crmListRow,
+  crmListSearchInput,
+  crmListSearchWrapper,
+  crmListSelect,
+  crmListSelectIcon,
+  crmListSelectWrapper,
+  crmListShell,
+  crmListTableHead,
+  crmListToolbar,
+} from '@/components/ui/listStyles'
 
 interface Lead {
   id: string
@@ -195,7 +211,7 @@ export function LeadsTable() {
                 </option>
               ))}
             </select>
-            <span className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-current opacity-70">▾</span>
+            <ChevronDown size={12} className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-current opacity-70" />
           </div>
         )
       },
@@ -250,25 +266,28 @@ export function LeadsTable() {
         ))}
       </div>
 
-      <div className="card-dark rounded-[28px] p-4 shadow-sm">
-        <div className="flex flex-wrap items-center gap-3">
-          <div className="relative min-w-[220px] flex-1">
-          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-charcoal-400 pointer-events-none" />
-          <input
-            value={globalFilter}
-            onChange={e => setGlobalFilter(e.target.value)}
-            placeholder="Buscar por nome, email..."
-            className="w-full rounded-2xl border border-blush-300 bg-white/95 py-3 pl-10 pr-4 text-sm text-charcoal shadow-sm placeholder-charcoal-400 focus:outline-none focus:ring-2 focus:ring-rose-gold/30 dark:border-charcoal-600 dark:bg-charcoal-800 dark:text-charcoal-100"
-          />
+      <div className={crmListShell}>
+        <div className={crmListToolbar}>
+          <div className={crmListSearchWrapper}>
+            <Search size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-charcoal-400" />
+            <input
+              value={globalFilter}
+              onChange={e => setGlobalFilter(e.target.value)}
+              placeholder="Buscar por nome ou e-mail"
+              className={crmListSearchInput}
+            />
           </div>
-          <select
-            value={statusFilter}
-            onChange={e => setStatusFilter(e.target.value)}
-            className="rounded-2xl border border-blush-300 bg-white px-4 py-3 text-sm text-charcoal shadow-sm focus:outline-none focus:ring-2 focus:ring-rose-gold/30 dark:border-charcoal-600 dark:bg-charcoal-800 dark:text-charcoal-100"
-          >
-            <option value="">Todos os status</option>
-            {Object.entries(STATUS_CONFIG).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
-          </select>
+          <div className={crmListSelectWrapper}>
+            <select
+              value={statusFilter}
+              onChange={e => setStatusFilter(e.target.value)}
+              className={crmListSelect}
+            >
+              <option value="">Todos os status</option>
+              {Object.entries(STATUS_CONFIG).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
+            </select>
+            <ChevronDown size={16} className={crmListSelectIcon} />
+          </div>
           <button onClick={fetchLeads} className="rounded-2xl border border-blush-300 p-3 text-charcoal-400 transition-colors hover:text-rose-gold dark:border-charcoal-600" title="Atualizar">
             <RefreshCw size={16} className={loading ? 'animate-spin' : ''} />
           </button>
@@ -283,21 +302,21 @@ export function LeadsTable() {
         </div>
       </div>
 
-      <div className="card-dark overflow-hidden rounded-[32px] shadow-sm">
+      <div className={crmListShell}>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
-            <thead className="border-b border-blush-200/80 bg-blush/40 dark:border-charcoal-700 dark:bg-charcoal-800/70">
+            <thead className={crmListTableHead}>
               {table.getHeaderGroups().map(hg => (
                 <tr key={hg.id}>
                   {hg.headers.map(h => (
-                    <th key={h.id} className="px-4 py-3.5 text-left text-[11px] font-semibold uppercase tracking-[0.16em] text-charcoal-400 dark:text-charcoal-400">
+                    <th key={h.id} className={crmListHeaderCell}>
                       {flexRender(h.column.columnDef.header, h.getContext())}
                     </th>
                   ))}
                 </tr>
               ))}
             </thead>
-            <tbody className="divide-y divide-blush-100 dark:divide-charcoal-700/50">
+            <tbody className={crmListBody}>
               {loading ? (
                 <tr>
                   <td colSpan={columns.length} className="px-4 py-12 text-center">
@@ -306,15 +325,15 @@ export function LeadsTable() {
                 </tr>
               ) : table.getRowModel().rows.length === 0 ? (
                 <tr>
-                  <td colSpan={columns.length} className="px-4 py-12 text-center text-charcoal-400 dark:text-charcoal-500 text-sm">
+                  <td colSpan={columns.length} className={crmListEmpty}>
                     Nenhum lead encontrado
                   </td>
                 </tr>
               ) : (
                 table.getRowModel().rows.map(row => (
-                  <tr key={row.id} className="transition-colors hover:bg-blush-50/70 dark:hover:bg-charcoal-700/30">
+                  <tr key={row.id} className={crmListRow}>
                     {row.getVisibleCells().map(cell => (
-                      <td key={cell.id} className="px-4 py-3.5 align-middle">
+                      <td key={cell.id} className={crmListCell}>
                         {flexRender(cell.column.columnDef.cell, cell.getContext())}
                       </td>
                     ))}
@@ -324,7 +343,7 @@ export function LeadsTable() {
             </tbody>
           </table>
         </div>
-        <div className="flex items-center justify-between border-t border-blush-100 bg-white/70 px-4 py-3 text-xs text-charcoal-400 dark:border-charcoal-700 dark:bg-charcoal-800/50 dark:text-charcoal-500">
+        <div className={crmListFooter}>
           <span>{table.getFilteredRowModel().rows.length} leads</span>
           <span>{table.getSelectedRowModel().rows.length} selecionados</span>
         </div>

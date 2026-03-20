@@ -23,6 +23,15 @@ import {
 } from 'lucide-react'
 import { useAuth } from '@/lib/useAuth'
 import { crmPublicEnv } from '@/lib/public-env'
+import {
+  crmListBody,
+  crmListCell,
+  crmListHeaderCell,
+  crmListRow,
+  crmListShell,
+  crmListTableHead,
+  crmListToolbar,
+} from '@/components/ui/listStyles'
 
 const API_URL = crmPublicEnv.apiBaseUrl
 
@@ -77,10 +86,10 @@ const MODULES: Array<{
   description: string
   profiles: UserProfile[]
 }> = [
-  { key: 'dashboard', label: 'Dashboard', description: 'Indicadores e visao geral', profiles: ['COLLABORATOR', 'VIEWER'] },
+  { key: 'dashboard', label: 'Dashboard', description: 'Indicadores e visão geral', profiles: ['COLLABORATOR', 'VIEWER'] },
   { key: 'leads', label: 'Leads', description: 'Pipeline comercial e acompanhamento', profiles: ['COLLABORATOR', 'VIEWER'] },
-  { key: 'agenda', label: 'Agenda', description: 'Agendamentos e calendario', profiles: ['COLLABORATOR', 'VIEWER'] },
-  { key: 'financeiro', label: 'Financeiro', description: 'Lancamentos e relatorios', profiles: ['COLLABORATOR', 'VIEWER'] },
+  { key: 'agenda', label: 'Agenda', description: 'Agendamentos e calendário', profiles: ['COLLABORATOR', 'VIEWER'] },
+  { key: 'financeiro', label: 'Financeiro', description: 'Lançamentos e relatórios', profiles: ['COLLABORATOR', 'VIEWER'] },
 ]
 
 const PROFILE_META: Record<UserProfile, {
@@ -153,8 +162,8 @@ function ConfirmDeleteModal(props: {
           <AlertTriangle size={16} className="text-amber-500 flex-shrink-0 mt-0.5" />
           <p className="text-xs text-amber-700 dark:text-amber-400">
             {props.state.accountStatus === 'ACTIVE'
-              ? 'Este colaborador ja acessou o sistema. A conta sera removida do banco imediatamente.'
-              : 'Esta conta ainda nao foi ativada. O convite pendente e o cadastro serao removidos imediatamente.'}
+              ? 'Este colaborador já acessou o sistema. A conta será removida do banco imediatamente.'
+              : 'Esta conta ainda não foi ativada. O convite pendente e o cadastro serão removidos imediatamente.'}
           </p>
         </div>
 
@@ -317,7 +326,7 @@ export default function ColaboradoresPage() {
       } else if (data.meta?.inviteEmailSent) {
         toast.success('Convite enviado por e-mail')
       } else {
-        toast.warning('Colaborador criado, mas o e-mail falhou. Use o botao "Reenviar e-mail" na aba Inativos.')
+        toast.warning('Colaborador criado, mas o e-mail falhou. Use o botão "Reenviar e-mail" na aba Inativos.')
         setActiveTab('INACTIVE')
       }
 
@@ -376,7 +385,7 @@ export default function ColaboradoresPage() {
       if (data.meta?.inviteEmailSent) {
         toast.success('E-mail reenviado com sucesso')
       } else {
-        toast.warning('O e-mail falhou novamente. Revise o cadastro ou a configuracao SMTP.')
+        toast.warning('O e-mail falhou novamente. Revise o cadastro ou a configuração SMTP.')
       }
 
       await fetchUsers()
@@ -401,7 +410,7 @@ export default function ColaboradoresPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="font-heading text-2xl font-bold text-charcoal dark:text-charcoal-50">Colaboradores</h1>
-          <p className="text-charcoal-400 text-sm mt-1">Perfis disponiveis: Admin, Colaborador e Viewer.</p>
+          <p className="mt-1 text-sm text-charcoal-400">Perfis disponíveis: Admin, Colaborador e Viewer.</p>
         </div>
         <button
           onClick={openCreate}
@@ -433,7 +442,7 @@ export default function ColaboradoresPage() {
         ))}
       </div>
 
-      <div className="card-dark p-2 shadow-sm flex gap-2">
+      <div className={`${crmListToolbar} rounded-[28px] border border-blush-200/80 dark:border-charcoal-700`}>
         {([
           { key: 'ACTIVE', label: `Ativos (${stats.active})` },
           { key: 'INACTIVE', label: `Inativos (${stats.inactive})` },
@@ -452,7 +461,7 @@ export default function ColaboradoresPage() {
         ))}
       </div>
 
-      <div className="card-dark overflow-hidden shadow-sm">
+      <div className={crmListShell}>
         {loading ? (
           <div className="flex items-center justify-center py-16">
             <Loader2 size={24} className="animate-spin text-rose-gold" />
@@ -460,23 +469,23 @@ export default function ColaboradoresPage() {
         ) : visibleUsers.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 text-center">
             <Users size={36} className="text-charcoal-300 mb-3" />
-            <p className="text-charcoal-400 text-sm">
+            <p className="text-sm text-charcoal-400">
               {activeTab === 'ACTIVE' ? 'Nenhum colaborador ativo encontrado.' : 'Nenhum colaborador inativo encontrado.'}
             </p>
           </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
-              <thead className="border-b border-blush-100 dark:border-charcoal-700">
+              <thead className={crmListTableHead}>
                 <tr>
-                  {['Colaborador', 'Perfil', 'Modulos', activeTab === 'ACTIVE' ? 'Ultimo acesso' : 'Status', ''].map((header) => (
-                    <th key={header} className="px-4 py-3 text-left text-xs font-semibold text-charcoal-400 uppercase tracking-wide">
+                  {['Colaborador', 'Perfil', 'Módulos', activeTab === 'ACTIVE' ? 'Último acesso' : 'Status', ''].map((header) => (
+                    <th key={header} className={crmListHeaderCell}>
                       {header}
                     </th>
                   ))}
                 </tr>
               </thead>
-              <tbody className="divide-y divide-blush-50 dark:divide-charcoal-700/40">
+              <tbody className={crmListBody}>
                 {visibleUsers.map((user) => {
                   const meta = PROFILE_META[user.profile]
                   const Icon = meta.icon
@@ -486,8 +495,8 @@ export default function ColaboradoresPage() {
                   const canDeleteUser = user.id !== userId
 
                   return (
-                    <tr key={user.id} className="hover:bg-blush-50 dark:hover:bg-charcoal-700/20 transition-colors">
-                      <td className="px-4 py-3">
+                    <tr key={user.id} className={crmListRow}>
+                      <td className={crmListCell}>
                         <div className="min-w-0">
                           <p className="text-sm font-medium text-charcoal dark:text-charcoal-100 truncate">{user.name ?? 'Sem nome'}</p>
                           <div className="flex items-center gap-1 text-xs text-charcoal-400">
@@ -505,13 +514,13 @@ export default function ColaboradoresPage() {
                           ) : null}
                         </div>
                       </td>
-                      <td className="px-4 py-3">
+                      <td className={crmListCell}>
                         <span className={`inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full ${meta.badge}`}>
                           <Icon size={10} />
                           {meta.label}
                         </span>
                       </td>
-                      <td className="px-4 py-3">
+                      <td className={crmListCell}>
                         {user.profile === 'ADMIN' ? (
                           <span className="text-xs text-charcoal-400">Todos</span>
                         ) : (
@@ -524,12 +533,14 @@ export default function ColaboradoresPage() {
                           </div>
                         )}
                       </td>
-                      <td className="px-4 py-3 text-xs text-charcoal-400">
+                      <td className={crmListCell}>
+                        <span className="text-xs text-charcoal-400">
                         {activeTab === 'ACTIVE'
                           ? new Date(user.lastLogin ?? '').toLocaleDateString('pt-BR')
                           : 'Aguardando primeiro acesso'}
+                        </span>
                       </td>
-                      <td className="px-4 py-3">
+                      <td className={crmListCell}>
                         <div className="flex items-center gap-1 justify-end">
                           <button
                             onClick={() => openEdit(user)}
@@ -596,7 +607,7 @@ export default function ColaboradoresPage() {
                 </h2>
                 {!editing ? (
                   <p className="text-xs text-charcoal-400 mt-0.5">
-                    Se o e-mail falhar, o colaborador ficara em Inativos para ajuste e reenvio.
+                    Se o e-mail falhar, o colaborador ficará em Inativos para ajuste e reenvio.
                   </p>
                 ) : editing.accountStatus === 'INACTIVE' ? (
                   <p className="text-xs text-charcoal-400 mt-0.5">
@@ -674,7 +685,7 @@ export default function ColaboradoresPage() {
 
               {form.profile !== 'ADMIN' ? (
                 <div>
-                  <label className="block text-xs font-medium text-charcoal-400 mb-2">Modulos liberados</label>
+                  <label className="block text-xs font-medium text-charcoal-400 mb-2">Módulos liberados</label>
                   <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
                     {MODULES.map((module) => {
                       const active = form.allowedModules.includes(module.key)
@@ -704,7 +715,7 @@ export default function ColaboradoresPage() {
 
               <div className="rounded-xl border border-blush-200 dark:border-charcoal-700 bg-blush/40 dark:bg-charcoal-800/60 p-4 text-sm text-charcoal-500 dark:text-charcoal-400">
                 {form.profile === 'ADMIN'
-                  ? 'Admin recebe acesso total, incluindo Editar Site, Seguranca e Colaboradores.'
+                  ? 'Admin recebe acesso total, incluindo Editar Site, Segurança e Colaboradores.'
                   : PROFILE_META[form.profile].description}
               </div>
 
@@ -722,7 +733,7 @@ export default function ColaboradoresPage() {
                   className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl bg-rose-gold text-white text-sm font-semibold hover:bg-rose-gold/90 transition-colors disabled:opacity-60"
                 >
                   {saving ? <Loader2 size={14} className="animate-spin" /> : null}
-                  {editing ? 'Salvar alteracoes' : 'Criar colaborador'}
+                  {editing ? 'Salvar alterações' : 'Criar colaborador'}
                 </button>
               </div>
             </form>

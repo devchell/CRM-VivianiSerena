@@ -16,6 +16,16 @@ import {
 import { formatDistanceToNow, format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import { crmPublicEnv } from '@/lib/public-env'
+import {
+  crmListBody,
+  crmListEmpty,
+  crmListRow,
+  crmListSelect,
+  crmListSelectIcon,
+  crmListSelectWrapper,
+  crmListShell,
+  crmListToolbar,
+} from '@/components/ui/listStyles'
 
 const API_URL = crmPublicEnv.apiBaseUrl
 
@@ -586,31 +596,32 @@ export default function SegurancaPage() {
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
 
         {/* Events Timeline */}
-        <div className="xl:col-span-2 card-dark overflow-hidden shadow-sm">
-          <div className="px-6 py-4 border-b border-blush-200 dark:border-charcoal-700 flex items-center justify-between gap-3 flex-wrap">
+        <div className={`xl:col-span-2 ${crmListShell}`}>
+          <div className={crmListToolbar}>
             <div className="flex items-center gap-2">
               <Clock size={16} className="text-charcoal-400" />
               <h3 className="font-heading text-base font-semibold text-charcoal dark:text-charcoal-100">Eventos (últimas 48h)</h3>
             </div>
-            <div className="flex items-center gap-2">
+            <div className={crmListSelectWrapper}>
               <select
                 value={severityFilter}
                 onChange={e => setSeverityFilter(e.target.value)}
-                className="px-2 py-1.5 text-xs rounded-lg border border-blush-300 dark:border-charcoal-600 bg-white dark:bg-charcoal-800 text-charcoal dark:text-charcoal-100 focus:outline-none"
+                className={`${crmListSelect} h-11 min-w-[210px] text-xs`}
               >
-                <option value="">Todas severidades</option>
+                <option value="">Todas as severidades</option>
                 {Object.entries(SEVERITY_CFG).map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
               </select>
+              <ChevronDown size={16} className={crmListSelectIcon} />
             </div>
           </div>
 
-          <div className="divide-y divide-blush-100 dark:divide-charcoal-700/50 max-h-[520px] overflow-y-auto">
+          <div className={`${crmListBody} max-h-[520px] overflow-y-auto`}>
             {loading ? (
               Array.from({ length: 6 }).map((_, i) => (
                 <div key={i} className="h-16 bg-blush-50 dark:bg-charcoal-700/20 animate-pulse m-4 rounded-lg" />
               ))
             ) : events.length === 0 ? (
-              <div className="px-6 py-12 text-center">
+              <div className={crmListEmpty}>
                 <ShieldCheck size={36} className="text-green-400 mx-auto mb-3" />
                 <p className="text-sm font-medium text-charcoal dark:text-charcoal-100">Nenhum evento no período</p>
                 <p className="text-xs text-charcoal-400 mt-1">Tudo está calmo por aqui.</p>
@@ -619,7 +630,7 @@ export default function SegurancaPage() {
               const sev = SEVERITY_CFG[ev.severity] ?? SEVERITY_CFG.low
               const isRecent = new Date(ev.timestamp) > new Date(Date.now() - 3600_000)
               return (
-                <div key={ev.id} className={`px-6 py-4 flex items-start gap-3 transition-colors hover:bg-blush-50 dark:hover:bg-charcoal-700/20 ${isRecent && !ev.resolved ? 'border-l-2 border-l-rose-gold' : ''}`}>
+                <div key={ev.id} className={`px-6 py-4 flex items-start gap-3 ${isRecent && !ev.resolved ? 'border-l-2 border-l-rose-gold bg-rose-gold/5 dark:bg-rose-gold/10' : crmListRow}`}>
                   <div className={`w-2 h-2 rounded-full flex-shrink-0 mt-2 ${sev.dot}`} />
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
