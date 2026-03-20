@@ -1,5 +1,6 @@
 import { Router } from 'express'
 import { z } from 'zod'
+import type { Prisma } from '@prisma/client'
 import type { Server as SocketServer } from 'socket.io'
 import { prisma } from '../lib/prisma'
 import { authenticate, authorizePermission } from '../middleware/authenticate'
@@ -16,51 +17,191 @@ export const leadsRouter: Router = Router()
 
 const LEAD_PRIVACY_POLICY_VERSION = '2026-03-20'
 const LEAD_CONSENT_TEXT = 'Lead enviado voluntariamente pelo formulario publico para contato comercial.'
+const leadSourceSchema = z.enum(['organic', 'instagram', 'facebook', 'google_ads', 'referral', 'whatsapp', 'other'])
+const leadStatusSchema = z.enum(['new', 'contacted', 'qualified', 'converted', 'lost'])
 
 const createLeadSchema = z.object({
   name: z.string().min(2).max(100),
   email: z.string().email(),
   phone: z.string().optional(),
-  source: z.enum(['organic', 'instagram', 'facebook', 'google_ads', 'referral', 'whatsapp', 'other']),
+  source: leadSourceSchema,
   utmSource: z.string().optional(),
   utmMedium: z.string().optional(),
   utmCampaign: z.string().optional(),
+  capturePage: z.string().optional(),
+  referrer: z.string().optional(),
+  sessionId: z.string().optional(),
   notes: z.string().optional(),
-  website: z.string().max(0).optional(), // honeypot — bots fill, humans don't
+  website: z.string().max(0).optional(),
+})
+
+const manualLeadSchema = z.object({
+  name: z.string().min(2).max(100),
+  email: z.string().email(),
+  phone: z.string().optional(),
+  source: leadSourceSchema,
+  sourceDetail: z.string().max(120).optional(),
+  status: leadStatusSchema.optional().default('new'),
+  notes: z.string().optional(),
+  consented: z.boolean().optional().default(false),
 })
 
 const updateLeadSchema = z.object({
   name: z.string().min(2).max(100).optional(),
   email: z.string().email().optional(),
   phone: z.string().optional(),
-  source: z.enum(['organic', 'instagram', 'facebook', 'google_ads', 'referral', 'whatsapp', 'other']).optional(),
-  status: z.enum(['new', 'contacted', 'qualified', 'converted', 'lost']).optional(),
+  source: leadSourceSchema.optional(),
+  sourceDetail: z.string().max(120).optional(),
+  status: leadStatusSchema.optional(),
   notes: z.string().optional(),
+  consentedAt: z.string().datetime().nullable().optional(),
 })
 
-// POST / — public (landing page form submission)
+const leadQuerySchema = z.object({
+  page: z.coerce.number().int().positive().optional().default(1),
+  limit: z.coerce.number().int().positive().max(200).optional().default(20),
+  status: leadStatusSchema.optional(),
+  source: leadSourceSchema.optional(),
+  sourceDetail: z.string().optional(),
+  consented: z.enum(['true', 'false']).optional(),
+  search: z.string().optional(),
+  from: z.string().optional(),
+  to: z.string().optional(),
+})
+
+const leadStatsQuerySchema = leadQuerySchema.extend({
+  days: z.coerce.number().int().positive().optional().default(30),
+})
+
+function normalizeOptionalText(value?: string | null) {
+  const normalized = value?.trim()
+  return normalized ? normalized : null
+}
+
+function resolveConvertedAt(status?: z.infer<typeof leadStatusSchema>) {
+  if (status === undefined) return undefined
+  return status === 'converted' ? new Date() : null
+}
+
+function buildLeadWhere(input: z.infer<typeof leadQuerySchema>): Prisma.LeadWhereInput {
+  const where: Prisma.LeadWhereInput = buildCommercialLeadWhere()
+
+  if (input.status) where.status = input.status
+  if (input.source) where.source = input.source
+  if (input.consented) where.consentedAt = input.consented === 'true' ? { not: null } : null
+  if (input.sourceDetail?.trim()) {
+    where.utmSource = { equals: input.sourceDetail.trim(), mode: 'insensitive' }
+  }
+  if (input.from || input.to) {
+    where.createdAt = {}
+    if (input.from) (where.createdAt as Prisma.DateTimeFilter).gte = new Date(input.from)
+    if (input.to) (where.createdAt as Prisma.DateTimeFilter).lte = new Date(input.to)
+  }
+  if (input.search?.trim()) {
+    const search = input.search.trim()
+    where.OR = [
+      { name: { contains: search, mode: 'insensitive' } },
+      { email: { contains: search, mode: 'insensitive' } },
+      { phone: { contains: search } },
+      { notes: { contains: search, mode: 'insensitive' } },
+    ]
+  }
+
+  return where
+}
+
+function normalizeLeadMutation(data: z.infer<typeof updateLeadSchema>) {
+  const updateData: Record<string, unknown> = {
+    ...data,
+    phone: data.phone === undefined ? undefined : normalizeOptionalText(data.phone),
+    notes: data.notes === undefined ? undefined : normalizeOptionalText(data.notes),
+    utmSource: data.sourceDetail === undefined ? undefined : normalizeOptionalText(data.sourceDetail),
+    consentedAt: data.consentedAt === undefined ? undefined : (data.consentedAt ? new Date(data.consentedAt) : null),
+  }
+
+  delete updateData.sourceDetail
+
+  const convertedAt = resolveConvertedAt(data.status)
+  if (convertedAt !== undefined) updateData.convertedAt = convertedAt
+
+  return updateData
+}
+
+async function getLeadStatsForWhere(where: Prisma.LeadWhereInput) {
+  const [total, converted, byStatus, bySource] = await Promise.all([
+    prisma.lead.count({ where }),
+    prisma.lead.count({ where: { ...where, status: 'converted' } }),
+    prisma.lead.groupBy({ by: ['status'], where, _count: { _all: true } }),
+    prisma.lead.groupBy({ by: ['source'], where, _count: { _all: true } }),
+  ])
+
+  return {
+    total,
+    recent: total,
+    converted,
+    convertedInPeriod: converted,
+    conversionRate: total > 0 ? Math.round((converted / total) * 100) : 0,
+    byStatus,
+    bySource,
+    period: 'filtered',
+  }
+}
+
 leadsRouter.post('/', async (req, res, next) => {
   try {
     const data = createLeadSchema.parse(req.body)
     if (data.website !== undefined && data.website !== '') {
-      return res.json({ success: true }) // silently ignore bot
+      return res.json({ success: true })
     }
+
     const consentedAt = new Date()
     const anonymizedIp = anonymizeIp(req.ip ?? '0.0.0.0')
     const lead = await prisma.$transaction(async (tx) => {
       const createdLead = await tx.lead.create({
         data: {
-          name: data.name,
-          email: data.email,
-          phone: data.phone,
+          name: data.name.trim(),
+          email: data.email.trim().toLowerCase(),
+          phone: normalizeOptionalText(data.phone),
           source: data.source,
-          utmSource: data.utmSource,
-          utmMedium: data.utmMedium,
-          utmCampaign: data.utmCampaign,
-          notes: data.notes,
+          utmSource: normalizeOptionalText(data.utmSource) ?? 'landing_form',
+          utmMedium: normalizeOptionalText(data.utmMedium),
+          utmCampaign: normalizeOptionalText(data.utmCampaign),
+          notes: normalizeOptionalText(data.notes),
           consentedAt,
         },
       })
+
+      const capturePage = normalizeOptionalText(data.capturePage)
+      const referrer = normalizeOptionalText(data.referrer) ?? normalizeOptionalText(req.get('referer'))
+      if (data.sessionId) {
+        const existingSession = await tx.session.findUnique({ where: { id: data.sessionId } })
+        if (existingSession) {
+          const pages = Array.isArray(existingSession.pagesVisited)
+            ? [...(existingSession.pagesVisited as string[])]
+            : []
+          if (capturePage && !pages.includes(capturePage)) pages.push(capturePage)
+
+          await tx.session.update({
+            where: { id: existingSession.id },
+            data: {
+              leadId: createdLead.id,
+              referrer: referrer ?? existingSession.referrer,
+              userAgent: existingSession.userAgent ?? req.get('user-agent') ?? null,
+              pagesVisited: pages,
+            },
+          })
+        }
+      } else if (capturePage || referrer) {
+        await tx.session.create({
+          data: {
+            leadId: createdLead.id,
+            ip: anonymizedIp,
+            userAgent: req.get('user-agent') ?? null,
+            referrer,
+            pagesVisited: capturePage ? [capturePage] : [],
+          },
+        })
+      }
 
       await tx.consentLog.create({
         data: {
@@ -75,50 +216,127 @@ leadsRouter.post('/', async (req, res, next) => {
 
       return createdLead
     })
+
     const io = req.app.get('io') as SocketServer | undefined
-    if (io) io.to('dashboard').emit('new_lead', { id: lead.id, name: lead.name, email: lead.email, phone: lead.phone, source: lead.source, createdAt: lead.createdAt })
-    emailService.newLead({ name: lead.name, email: lead.email, phone: lead.phone ?? undefined, source: lead.source }).catch(() => {})
+    if (io) {
+      io.to('dashboard').emit('new_lead', {
+        id: lead.id,
+        name: lead.name,
+        email: lead.email,
+        phone: lead.phone,
+        source: lead.source,
+        createdAt: lead.createdAt,
+      })
+    }
+    emailService.newLead({
+      name: lead.name,
+      email: lead.email,
+      phone: lead.phone ?? undefined,
+      source: lead.source,
+    }).catch(() => {})
+
     await deletePattern('leads:*')
     await invalidateOperationalMetricCaches()
     return res.status(201).json({ success: true, data: { id: lead.id } })
-  } catch (error) { return next(error) }
+  } catch (error) {
+    return next(error)
+  }
 })
 
-// All routes below require authentication
 leadsRouter.use(authenticate)
+
+leadsRouter.post('/manual', authorizePermission('leads.create'), async (req, res, next) => {
+  try {
+    const data = manualLeadSchema.parse(req.body)
+    if (!req.user) throw new AppError(401, 'Authentication required')
+
+    const consentedAt = data.consented ? new Date() : null
+    const lead = await prisma.$transaction(async (tx) => {
+      const createdLead = await tx.lead.create({
+        data: {
+          name: data.name.trim(),
+          email: data.email.trim().toLowerCase(),
+          phone: normalizeOptionalText(data.phone),
+          source: data.source,
+          utmSource: normalizeOptionalText(data.sourceDetail) ?? 'manual_crm',
+          status: data.status,
+          notes: normalizeOptionalText(data.notes),
+          consentedAt,
+          convertedAt: data.status === 'converted' ? new Date() : null,
+        },
+      })
+
+      if (consentedAt) {
+        await tx.consentLog.create({
+          data: {
+            email: createdLead.email,
+            ipAddress: anonymizeIp(req.ip ?? '0.0.0.0'),
+            policyVersion: LEAD_PRIVACY_POLICY_VERSION,
+            consentText: 'Lead cadastrado manualmente no CRM com consentimento operacional registrado.',
+            consentedAt,
+            channel: 'crm_manual',
+          },
+        })
+      }
+
+      return createdLead
+    })
+
+    await AuditLogger.log({
+      userId: req.user.sub,
+      action: 'CREATE',
+      resource: 'Lead',
+      details: { leadId: lead.id, origin: 'manual_crm', source: lead.source },
+      ip: req.ip,
+    })
+
+    await deletePattern('leads:*')
+    await invalidateOperationalMetricCaches()
+    res.status(201).json({ success: true, data: lead })
+  } catch (error) {
+    next(error)
+  }
+})
 
 leadsRouter.get('/', authorizePermission('leads.view'), async (req, res, next) => {
   try {
-    const { page = 1, limit = 20, status, source, search, from, to } = req.query
-    const skip = (Number(page) - 1) * Number(limit)
-    const where: Record<string, unknown> = buildCommercialLeadWhere()
-    if (status) where.status = status
-    if (source) where.source = source
-    if (from || to) {
-      where.createdAt = {}
-      if (from) (where.createdAt as Record<string, unknown>).gte = new Date(String(from))
-      if (to) (where.createdAt as Record<string, unknown>).lte = new Date(String(to))
-    }
-    if (search) {
-      where.OR = [
-        { name: { contains: String(search), mode: 'insensitive' } },
-        { email: { contains: String(search), mode: 'insensitive' } },
-        { phone: { contains: String(search) } },
-      ]
-    }
+    const query = leadQuerySchema.parse(req.query)
+    const skip = (query.page - 1) * query.limit
+    const where = buildLeadWhere(query)
+
     const [leads, total] = await Promise.all([
-      prisma.lead.findMany({ where, skip, take: Number(limit), orderBy: { createdAt: 'desc' } }),
+      prisma.lead.findMany({ where, skip, take: query.limit, orderBy: { createdAt: 'desc' } }),
       prisma.lead.count({ where }),
     ])
-    res.json({ success: true, data: leads, meta: { total, page: Number(page), limit: Number(limit), totalPages: Math.ceil(total / Number(limit)) } })
-  } catch (error) { next(error) }
+
+    res.json({
+      success: true,
+      data: leads,
+      meta: {
+        total,
+        page: query.page,
+        limit: query.limit,
+        totalPages: Math.ceil(total / query.limit),
+      },
+    })
+  } catch (error) {
+    next(error)
+  }
 })
 
-// GET /stats — analytics for CRM dashboard
 leadsRouter.get('/stats', authorizePermission('leads.view'), async (req, res, next) => {
   try {
-    const { days = 30 } = req.query
-    const metrics = await getLeadMetrics(Number(days) === 30 ? 'last30d' : 'month')
+    const query = leadStatsQuerySchema.parse(req.query)
+    const hasFilters = Boolean(
+      query.status || query.source || query.sourceDetail || query.consented || query.search || query.from || query.to
+    )
+
+    if (hasFilters) {
+      res.json({ success: true, data: await getLeadStatsForWhere(buildLeadWhere(query)) })
+      return
+    }
+
+    const metrics = await getLeadMetrics(query.days === 30 ? 'last30d' : 'month')
     res.json({
       success: true,
       data: {
@@ -129,103 +347,262 @@ leadsRouter.get('/stats', authorizePermission('leads.view'), async (req, res, ne
         conversionRate: metrics.conversionRate,
         byStatus: metrics.byStatus,
         bySource: metrics.bySource,
-        period: String(days) + 'd',
+        period: String(query.days) + 'd',
       },
     })
-  } catch (error) { next(error) }
+  } catch (error) {
+    next(error)
+  }
 })
 
-// GET /export — CSV download
 leadsRouter.get('/export', authorizePermission('leads.export'), async (req, res, next) => {
   try {
-    const { status, from, to } = req.query
-    const where: Record<string, unknown> = buildCommercialLeadWhere()
-    if (status) where.status = status
-    if (from || to) {
-      where.createdAt = {}
-      if (from) (where.createdAt as Record<string, unknown>).gte = new Date(String(from))
-      if (to) (where.createdAt as Record<string, unknown>).lte = new Date(String(to))
-    }
+    const query = leadQuerySchema.parse(req.query)
+    const where = buildLeadWhere(query)
     const leads = await prisma.lead.findMany({
       where,
       orderBy: { createdAt: 'desc' },
-      select: { name: true, email: true, phone: true, source: true, status: true, utmSource: true, utmMedium: true, utmCampaign: true, notes: true, createdAt: true, convertedAt: true },
+      select: {
+        name: true,
+        email: true,
+        phone: true,
+        source: true,
+        status: true,
+        utmSource: true,
+        utmMedium: true,
+        utmCampaign: true,
+        notes: true,
+        consentedAt: true,
+        createdAt: true,
+        convertedAt: true,
+      },
     })
-    const headers = ['Nome', 'Email', 'Telefone', 'Origem', 'Status', 'UTM Source', 'UTM Medium', 'UTM Campaign', 'Notas', 'Criado em', 'Convertido em']
-    const rows = leads.map(l => [
-      l.name, l.email, l.phone ?? '', l.source, l.status,
-      l.utmSource ?? '', l.utmMedium ?? '', l.utmCampaign ?? '', l.notes ?? '',
-      l.createdAt.toISOString(), l.convertedAt?.toISOString() ?? '',
+
+    const headers = [
+      'Nome',
+      'Email',
+      'Telefone',
+      'Origem',
+      'Status',
+      'UTM Source',
+      'UTM Medium',
+      'UTM Campaign',
+      'Consentido em',
+      'Notas',
+      'Criado em',
+      'Convertido em',
+    ]
+    const rows = leads.map((lead) => [
+      lead.name,
+      lead.email,
+      lead.phone ?? '',
+      lead.source,
+      lead.status,
+      lead.utmSource ?? '',
+      lead.utmMedium ?? '',
+      lead.utmCampaign ?? '',
+      lead.consentedAt?.toISOString() ?? '',
+      lead.notes ?? '',
+      lead.createdAt.toISOString(),
+      lead.convertedAt?.toISOString() ?? '',
     ])
-    const escape = (v: string) => '"' + v.replace(/"/g, '""') + '"'
-    const csv = [headers, ...rows].map(row => row.map(cell => escape(String(cell))).join(',')).join('\n')
+    const escape = (value: string) => `"${value.replace(/"/g, '""')}"`
+    const csv = [headers, ...rows].map((row) => row.map((cell) => escape(String(cell))).join(',')).join('\n')
+
     res.setHeader('Content-Type', 'text/csv; charset=utf-8')
-    res.setHeader('Content-Disposition', 'attachment; filename="leads-' + new Date().toISOString().split('T')[0] + '.csv"')
+    res.setHeader('Content-Disposition', `attachment; filename="leads-${new Date().toISOString().split('T')[0]}.csv"`)
     res.send('\uFEFF' + csv)
-  } catch (error) { next(error) }
+  } catch (error) {
+    next(error)
+  }
 })
 
 leadsRouter.get('/:id', authorizePermission('leads.view'), async (req, res, next) => {
   try {
     const leadId = String(req.params.id)
-    const lead = await prisma.lead.findUnique({ where: { id: leadId }, include: { appointments: true, sessions: true } })
+    const lead = await prisma.lead.findUnique({
+      where: { id: leadId },
+      include: {
+        appointments: true,
+        sessions: {
+          orderBy: { createdAt: 'desc' },
+          include: {
+            analyticsEvents: {
+              orderBy: { createdAt: 'desc' },
+              select: { id: true, name: true, category: true, label: true, page: true, createdAt: true },
+            },
+          },
+        },
+      },
+    })
     if (!lead) throw new AppError(404, 'Lead not found')
-    res.json({ success: true, data: lead })
-  } catch (error) { next(error) }
+
+    const consentLogs = await prisma.consentLog.findMany({
+      where: { email: lead.email },
+      orderBy: { consentedAt: 'desc' },
+      select: { id: true, channel: true, policyVersion: true, consentedAt: true, ipAddress: true },
+    })
+
+    const timeline = [
+      {
+        id: `lead:${lead.id}`,
+        type: 'lead_created',
+        title: 'Lead criada',
+        description: `${lead.name} - ${lead.source}`,
+        timestamp: lead.createdAt.toISOString(),
+      },
+      ...consentLogs.map((entry) => ({
+        id: `consent:${entry.id}`,
+        type: 'consent',
+        title: 'Consentimento registrado',
+        description: `${entry.channel} - politica ${entry.policyVersion}`,
+        timestamp: entry.consentedAt.toISOString(),
+      })),
+      ...lead.sessions.flatMap((session) => session.analyticsEvents.map((event) => ({
+        id: `analytics:${event.id}`,
+        type: 'analytics',
+        title: event.name,
+        description: event.page ?? event.label ?? event.category,
+        timestamp: event.createdAt.toISOString(),
+      }))),
+      ...lead.appointments.map((appointment) => ({
+        id: `appointment:${appointment.id}`,
+        type: 'appointment',
+        title: 'Agendamento vinculado',
+        description: `${appointment.serviceType} - ${appointment.status}`,
+        timestamp: appointment.createdAt.toISOString(),
+      })),
+    ].sort((left, right) => new Date(right.timestamp).getTime() - new Date(left.timestamp).getTime())
+
+    res.json({ success: true, data: { ...lead, consentLogs, timeline } })
+  } catch (error) {
+    next(error)
+  }
 })
 
 leadsRouter.put('/:id', authorizePermission('leads.update'), async (req, res, next) => {
   try {
     const leadId = String(req.params.id)
     const data = updateLeadSchema.parse(req.body)
-    const updateData: Record<string, unknown> = { ...data }
-    if (data.status === 'converted') updateData.convertedAt = new Date()
-    const lead = await prisma.lead.update({ where: { id: leadId }, data: updateData })
+    const previousLead = await prisma.lead.findUnique({
+      where: { id: leadId },
+      select: { email: true, consentedAt: true },
+    })
+    if (!previousLead) throw new AppError(404, 'Lead not found')
+
+    const lead = await prisma.lead.update({ where: { id: leadId }, data: normalizeLeadMutation(data) })
+
+    if (!previousLead.consentedAt && lead.consentedAt) {
+      await prisma.consentLog.create({
+        data: {
+          email: previousLead.email,
+          ipAddress: anonymizeIp(req.ip ?? '0.0.0.0'),
+          policyVersion: LEAD_PRIVACY_POLICY_VERSION,
+          consentText: 'Consentimento operacional registrado via edicao manual no CRM.',
+          consentedAt: lead.consentedAt,
+          channel: 'crm_update',
+        },
+      })
+    }
+
+    if (req.user?.sub) {
+      await AuditLogger.log({
+        userId: req.user.sub,
+        action: 'UPDATE',
+        resource: 'Lead',
+        details: { leadId, mode: 'put' },
+        ip: req.ip,
+      })
+    }
+
     await deletePattern('leads:*')
     await invalidateOperationalMetricCaches()
     res.json({ success: true, data: lead })
-  } catch (error) { next(error) }
+  } catch (error) {
+    next(error)
+  }
 })
 
 leadsRouter.patch('/:id', authorizePermission('leads.update'), async (req, res, next) => {
   try {
     const leadId = String(req.params.id)
     const data = updateLeadSchema.parse(req.body)
-    const updateData: Record<string, unknown> = { ...data }
-    if (data.status === 'converted') updateData.convertedAt = new Date()
-    const lead = await prisma.lead.update({ where: { id: leadId }, data: updateData })
+    const previousLead = await prisma.lead.findUnique({
+      where: { id: leadId },
+      select: { email: true, consentedAt: true },
+    })
+    if (!previousLead) throw new AppError(404, 'Lead not found')
+
+    const lead = await prisma.lead.update({ where: { id: leadId }, data: normalizeLeadMutation(data) })
+
+    if (!previousLead.consentedAt && lead.consentedAt) {
+      await prisma.consentLog.create({
+        data: {
+          email: previousLead.email,
+          ipAddress: anonymizeIp(req.ip ?? '0.0.0.0'),
+          policyVersion: LEAD_PRIVACY_POLICY_VERSION,
+          consentText: 'Consentimento operacional registrado via edicao manual no CRM.',
+          consentedAt: lead.consentedAt,
+          channel: 'crm_update',
+        },
+      })
+    }
+
+    if (req.user?.sub) {
+      await AuditLogger.log({
+        userId: req.user.sub,
+        action: 'UPDATE',
+        resource: 'Lead',
+        details: { leadId, mode: 'patch' },
+        ip: req.ip,
+      })
+    }
+
     await deletePattern('leads:*')
     await invalidateOperationalMetricCaches()
     res.json({ success: true, data: lead })
-  } catch (error) { next(error) }
+  } catch (error) {
+    next(error)
+  }
 })
 
 leadsRouter.delete('/:id', authorizePermission('leads.delete'), async (req, res, next) => {
   try {
     const leadId = String(req.params.id)
     await prisma.lead.delete({ where: { id: leadId } })
+
+    if (req.user?.sub) {
+      await AuditLogger.log({
+        userId: req.user.sub,
+        action: 'DELETE',
+        resource: 'Lead',
+        details: { leadId },
+        ip: req.ip,
+      })
+    }
+
     await deletePattern('leads:*')
     await invalidateOperationalMetricCaches()
     res.json({ success: true, message: 'Lead deleted' })
-  } catch (error) { next(error) }
+  } catch (error) {
+    next(error)
+  }
 })
 
-
-// LGPD Art. 18 — Anonimizar dados de um lead (não deleta para preservar métricas)
 leadsRouter.patch('/:id/gdpr', authorizePermission('leads.gdpr'), async (req, res, next) => {
   try {
     const leadId = String(req.params.id)
     const lead = await prisma.lead.findUnique({ where: { id: leadId } })
     if (!lead) throw new AppError(404, 'Lead not found')
     if (lead.anonymized) {
-      res.json({ success: true, message: 'Dados já foram anonimizados anteriormente' })
+      res.json({ success: true, message: 'Dados ja foram anonimizados anteriormente' })
       return
     }
 
     const anonymized = await prisma.lead.update({
       where: { id: leadId },
       data: {
-        name: 'Anônimo',
+        name: 'Anonimo',
         email: `anonimo_${EncryptionService.anonymize(lead.email)}@anonimizado.lgpd`,
         phone: lead.phone ? '**********' : null,
         notes: null,
@@ -250,5 +627,7 @@ leadsRouter.patch('/:id/gdpr', authorizePermission('leads.gdpr'), async (req, re
     await deletePattern('leads:*')
     await invalidateOperationalMetricCaches()
     res.json({ success: true, data: anonymized, message: 'Dados anonimizados com sucesso (LGPD Art. 18)' })
-  } catch (err) { next(err) }
+  } catch (err) {
+    next(err)
+  }
 })

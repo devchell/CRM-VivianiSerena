@@ -7,6 +7,7 @@ import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 import { ArrowLeft, CheckCircle, ChevronRight, Clock, Mail, Phone, User } from 'lucide-react'
 import {
+  getAnalyticsSessionId,
   getUtmParams,
   trackConversion,
   trackLead,
@@ -362,9 +363,12 @@ export function LeadFormSection({ socialProof }: { socialProof?: SocialProofSumm
           email: finalData.email,
           phone: finalData.phone,
           source: mapUtmSourceToLeadSource(utm.utm_source),
-          utmSource: utm.utm_source,
+          utmSource: utm.utm_source ?? 'landing_form',
           utmMedium: utm.utm_medium,
           utmCampaign: utm.utm_campaign,
+          capturePage: typeof window !== 'undefined' ? window.location.pathname : undefined,
+          referrer: typeof document !== 'undefined' ? document.referrer || undefined : undefined,
+          sessionId: getAnalyticsSessionId() ?? undefined,
           notes: `Serviço: ${finalData.service ?? 'nao_informado'} | Período: ${finalData.period ?? 'nao_informado'}`,
           website: '',
         }),

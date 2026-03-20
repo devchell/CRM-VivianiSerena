@@ -28,6 +28,10 @@ function getSessionId(): string | null {
   return window.sessionStorage.getItem(SESSION_STORAGE_KEY)
 }
 
+export function getAnalyticsSessionId(): string | null {
+  return getSessionId()
+}
+
 function setSessionId(value: string) {
   if (typeof window === 'undefined') return
   window.sessionStorage.setItem(SESSION_STORAGE_KEY, value)
