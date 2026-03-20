@@ -14,6 +14,9 @@ import { invalidateOperationalMetricCaches } from '../domain/metrics/cache'
 
 export const leadsRouter: Router = Router()
 
+const LEAD_PRIVACY_POLICY_VERSION = '2026-03-20'
+const LEAD_CONSENT_TEXT = 'Lead enviado voluntariamente pelo formulario publico para contato comercial.'
+
 const createLeadSchema = z.object({
   name: z.string().min(2).max(100),
   email: z.string().email(),
@@ -42,12 +45,35 @@ leadsRouter.post('/', async (req, res, next) => {
     if (data.website !== undefined && data.website !== '') {
       return res.json({ success: true }) // silently ignore bot
     }
-    void anonymizeIp(req.ip ?? '0.0.0.0') // LGPD: never store raw IP
-    const lead = await prisma.lead.create({
-      data: {
-        name: data.name, email: data.email, phone: data.phone, source: data.source,
-        utmSource: data.utmSource, utmMedium: data.utmMedium, utmCampaign: data.utmCampaign, notes: data.notes,
-      },
+    const consentedAt = new Date()
+    const anonymizedIp = anonymizeIp(req.ip ?? '0.0.0.0')
+    const lead = await prisma.$transaction(async (tx) => {
+      const createdLead = await tx.lead.create({
+        data: {
+          name: data.name,
+          email: data.email,
+          phone: data.phone,
+          source: data.source,
+          utmSource: data.utmSource,
+          utmMedium: data.utmMedium,
+          utmCampaign: data.utmCampaign,
+          notes: data.notes,
+          consentedAt,
+        },
+      })
+
+      await tx.consentLog.create({
+        data: {
+          email: createdLead.email,
+          ipAddress: anonymizedIp,
+          policyVersion: LEAD_PRIVACY_POLICY_VERSION,
+          consentText: LEAD_CONSENT_TEXT,
+          consentedAt,
+          channel: 'landing_form',
+        },
+      })
+
+      return createdLead
     })
     const io = req.app.get('io') as SocketServer | undefined
     if (io) io.to('dashboard').emit('new_lead', { id: lead.id, name: lead.name, email: lead.email, phone: lead.phone, source: lead.source, createdAt: lead.createdAt })
@@ -210,10 +236,10 @@ leadsRouter.patch('/:id/gdpr', authorizePermission('leads.gdpr'), async (req, re
       },
     })
 
-    const authReq = req as typeof req & { user?: { id: string } }
-    if (authReq.user?.id) {
+    const authReq = req as typeof req & { user?: { sub: string } }
+    if (authReq.user?.sub) {
       await AuditLogger.log({
-        userId: authReq.user.id,
+        userId: authReq.user.sub,
         action: 'GDPR_ANONYMIZE',
         resource: 'Lead',
         details: { leadId, originalEmail: EncryptionService.anonymize(lead.email) },

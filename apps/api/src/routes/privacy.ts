@@ -17,13 +17,26 @@ privacyRouter.get('/export', async (req, res, next) => {
   try {
     const email = z.string().email().parse(req.query.email)
 
-    const lead = await prisma.lead.findFirst({
-      where: { email },
-      include: {
-        sessions: { select: { ip: true, userAgent: true, referrer: true, createdAt: true } },
-        appointments: { select: { date: true, serviceType: true, status: true, notes: true } },
-      },
-    })
+    const [lead, consentLogs] = await Promise.all([
+      prisma.lead.findFirst({
+        where: { email },
+        include: {
+          sessions: { select: { ip: true, userAgent: true, referrer: true, createdAt: true } },
+          appointments: { select: { date: true, serviceType: true, status: true, notes: true } },
+        },
+      }),
+      prisma.consentLog.findMany({
+        where: { email },
+        orderBy: { consentedAt: 'desc' },
+        select: {
+          channel: true,
+          policyVersion: true,
+          consentText: true,
+          consentedAt: true,
+          ipAddress: true,
+        },
+      }),
+    ])
 
     if (!lead) {
       res.status(404).json({ success: false, error: 'Dados não encontrados para este e-mail' })
@@ -42,7 +55,9 @@ privacyRouter.get('/export', async (req, res, next) => {
         createdAt: lead.createdAt,
         status: lead.status,
         notes: lead.notes,
+        consentedAt: lead.consentedAt,
       },
+      consentLogs,
       sessions: lead.sessions.map(s => ({
         ip: s.ip ? s.ip.split('.').slice(0, 3).concat(['xxx']).join('.') : null, // anonymized
         referrer: s.referrer,
@@ -52,10 +67,10 @@ privacyRouter.get('/export', async (req, res, next) => {
     }
 
     // Log this access
-    const authReq = req as typeof req & { user?: { id: string } }
-    if (authReq.user?.id) {
+    const authReq = req as typeof req & { user?: { sub: string } }
+    if (authReq.user?.sub) {
       await AuditLogger.log({
-        userId: authReq.user.id,
+        userId: authReq.user.sub,
         action: 'EXPORT',
         resource: 'Lead',
         details: { email, leadId: lead.id },

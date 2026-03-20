@@ -5,6 +5,7 @@ import { z } from 'zod'
 import { prisma } from '../lib/prisma'
 import { redis } from '../lib/redis'
 import { authenticate, authorize } from '../middleware/authenticate'
+import { AppError } from '../middleware/errorHandler'
 import { apiEnv } from '../lib/env'
 import { healthcheckUploadStorage } from '../infrastructure/storage'
 import { getEmailSettingsOverview, saveEmailSettings } from '../infrastructure/emailSettings'
@@ -35,6 +36,18 @@ const linkedGoogleLocationSchema = z.object({
 })
 
 adminRouter.use(authenticate, authorize('ADMIN'))
+
+async function requireGoogleBusinessReady() {
+  const status = await getGoogleCalendarConnectionStatus()
+
+  if (!status.configured) {
+    throw new AppError(400, 'Google OAuth nao esta configurado no ambiente')
+  }
+
+  if (!status.connected) {
+    throw new AppError(409, 'Google OAuth nao esta conectado. Autorize a conta no painel de administracao primeiro.')
+  }
+}
 
 adminRouter.get('/overview', async (_req, res, next) => {
   try {
@@ -252,6 +265,7 @@ adminRouter.post('/reset-baseline', async (req, res, next) => {
 
 adminRouter.get('/google-business/locations', async (_req, res, next) => {
   try {
+    await requireGoogleBusinessReady()
     const locations = await listGoogleBusinessLocations()
     res.json({ success: true, data: locations })
   } catch (error) {
@@ -261,6 +275,7 @@ adminRouter.get('/google-business/locations', async (_req, res, next) => {
 
 adminRouter.post('/google-business/reviews', async (req, res, next) => {
   try {
+    await requireGoogleBusinessReady()
     const body = z.object({
       locations: z.array(linkedGoogleLocationSchema).max(25),
     }).parse(req.body)
