@@ -108,6 +108,13 @@ function asString(value: unknown, fallback = '') {
   return typeof value === 'string' ? value : fallback
 }
 
+function asAssetUrl(value: unknown) {
+  if (typeof value === 'string') return value
+
+  const objectValue = asObject(value)
+  return asString(objectValue.url)
+}
+
 function asNumber(value: unknown, fallback = 0) {
   const numeric = Number(value)
   return Number.isFinite(numeric) ? numeric : fallback
@@ -127,6 +134,7 @@ export default async function HomePage() {
   const heroSubtitle = str(content.hero?.subtitle)
   const ctaRaw = content.hero?.cta_primary as { text?: string; url?: string } | undefined
   const heroCta = ctaRaw ? { text: ctaRaw.text, url: ctaRaw.url } : undefined
+  const heroBackgroundImage = asAssetUrl(content.hero?.background_image)
 
   // WhatsApp (número puro: 5511915751770)
   const waRaw = content.contact?.whatsapp as { number?: string; message?: string } | undefined
@@ -135,6 +143,7 @@ export default async function HomePage() {
 
   // About bio
   const aboutBio = str(content.about?.bio)
+  const aboutPhoto = asAssetUrl(content.sobre?.photo)
   const resultsItems = asArray<Record<string, unknown>>(content.services?.results_items).map((item, index) => ({
     id: asString(item.id, `result-${index}`),
     title: asString(item.title),
@@ -179,11 +188,12 @@ export default async function HomePage() {
           title={heroTitle}
           subtitle={heroSubtitle}
           cta={heroCta}
+          backgroundImage={heroBackgroundImage}
           whatsappNumber={whatsappNumber}
           whatsappMessage={whatsappMessage}
           socialProof={siteSummary?.socialProof}
         />
-        <About bio={aboutBio} whatsappNumber={whatsappNumber} />
+        <About bio={aboutBio} photoUrl={aboutPhoto} whatsappNumber={whatsappNumber} />
         <HowItWorks />
         <Services />
         <Results items={resultsItems} />

@@ -6,8 +6,31 @@ import { useScroll, useTransform, LazyMotion, domAnimation, m } from 'framer-mot
 import { ChevronDown, Shield, Award, CheckCircle, Star, Zap } from 'lucide-react'
 import { useCountUp, useInView } from '@/lib/hooks'
 import { trackCTAClick, trackWhatsAppClick } from '@/lib/analytics'
+import { landingPublicEnv } from '@/lib/public-env'
 
 const WA_LINK = 'https://wa.link/e2g7ii'
+const API_URL = landingPublicEnv.apiBaseUrl
+
+function normalizeImageUrl(value?: string) {
+  const trimmed = value?.trim()
+  if (!trimmed) return ''
+  if (trimmed.startsWith('data:image/')) return trimmed
+
+  if (trimmed.startsWith('/')) {
+    return `${API_URL}${trimmed}`
+  }
+
+  try {
+    const parsed = new URL(trimmed)
+    if (['localhost', '127.0.0.1', '0.0.0.0'].includes(parsed.hostname)) {
+      return `${API_URL}${parsed.pathname}${parsed.search}`
+    }
+
+    return trimmed
+  } catch {
+    return `${API_URL}/uploads/${trimmed.replace(/^\/+/, '')}`
+  }
+}
 
 // ─── Particle Canvas ─────────────────────────────────────────────────────────
 // Sistema de partículas ultra-leve, 60fps garantido
@@ -123,6 +146,7 @@ interface HeroProps {
   title?: string
   subtitle?: string
   cta?: { text?: string; url?: string }
+  backgroundImage?: string
   whatsappNumber?: string
   whatsappMessage?: string
   socialProof?: {
@@ -137,6 +161,7 @@ export function Hero({
   title,
   subtitle,
   cta,
+  backgroundImage,
   whatsappNumber,
   whatsappMessage,
   socialProof,
@@ -162,6 +187,7 @@ export function Hero({
   const socialProofEnabled = socialProof?.enabled !== false
   const clientsRegistered = socialProof?.clientsRegistered ?? 0
   const publicReviews = socialProof?.publicReviews ?? 0
+  const heroBackgroundSrc = normalizeImageUrl(backgroundImage) || 'https://static.wixstatic.com/media/be8b61_9dfb57055aea4d4f9f4c8b5bfdbbea28~mv2.jpg'
 
   const handleWhatsApp = useCallback((source: string) => {
     trackWhatsAppClick(source)
@@ -199,7 +225,7 @@ export function Hero({
           style={{ y: imageY }}
         >
           <Image
-            src="https://static.wixstatic.com/media/be8b61_9dfb57055aea4d4f9f4c8b5bfdbbea28~mv2.jpg"
+            src={heroBackgroundSrc}
             alt="Viviani Serena - Especialista em Remoção a Laser em Santo André e São Paulo"
             fill
             priority

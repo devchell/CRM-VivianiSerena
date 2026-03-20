@@ -633,7 +633,7 @@ export default function EditarSitePage() {
             <div className="relative group">
               <div className="relative h-28 w-full overflow-hidden rounded-lg">
                 <Image
-                  src={val.url}
+                  src={normalizeImageUrl(val.url)}
                   alt={label}
                   fill
                   unoptimized

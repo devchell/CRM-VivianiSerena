@@ -1,11 +1,35 @@
 'use client'
 
 import { useRef } from 'react'
+import Image from 'next/image'
 import { motion, useInView } from 'framer-motion'
 import { CheckCircle2, Award, Microscope, Heart } from 'lucide-react'
 import { trackCTAClick, trackWhatsAppClick } from '@/lib/analytics'
+import { landingPublicEnv } from '@/lib/public-env'
 
 const WA_LINK = 'https://wa.link/e2g7ii'
+const API_URL = landingPublicEnv.apiBaseUrl
+
+function normalizeImageUrl(value?: string) {
+  const trimmed = value?.trim()
+  if (!trimmed) return ''
+  if (trimmed.startsWith('data:image/')) return trimmed
+
+  if (trimmed.startsWith('/')) {
+    return `${API_URL}${trimmed}`
+  }
+
+  try {
+    const parsed = new URL(trimmed)
+    if (['localhost', '127.0.0.1', '0.0.0.0'].includes(parsed.hostname)) {
+      return `${API_URL}${parsed.pathname}${parsed.search}`
+    }
+
+    return trimmed
+  } catch {
+    return `${API_URL}/uploads/${trimmed.replace(/^\/+/, '')}`
+  }
+}
 
 const HIGHLIGHTS = [
   {
@@ -46,12 +70,14 @@ const itemVariants = {
 
 interface AboutProps {
   bio?: string
+  photoUrl?: string
   whatsappNumber?: string
 }
 
-export function About({ bio, whatsappNumber }: AboutProps = {}) {
+export function About({ bio, photoUrl, whatsappNumber }: AboutProps = {}) {
   const sectionRef = useRef<HTMLElement>(null)
   const isInView = useInView(sectionRef, { once: true, margin: '-80px' })
+  const aboutPhotoSrc = normalizeImageUrl(photoUrl)
 
   const waHref = whatsappNumber ? `https://wa.me/${whatsappNumber}` : WA_LINK
 
@@ -90,14 +116,24 @@ export function About({ bio, whatsappNumber }: AboutProps = {}) {
               className="relative rounded-3xl overflow-hidden aspect-[4/5] bg-blush shadow-2xl shadow-charcoal/10"
             >
               {/* Placeholder elegante enquanto a foto real não é fornecida */}
-              <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-blush via-cream to-blush">
-                <div className="text-center p-8">
-                  <div className="w-32 h-32 rounded-full bg-rose-gold/20 flex items-center justify-center mx-auto mb-4">
-                    <span className="font-heading text-5xl font-bold text-rose-gold">VS</span>
+              {aboutPhotoSrc ? (
+                <Image
+                  src={aboutPhotoSrc}
+                  alt="Foto de Viviani Serena"
+                  fill
+                  sizes="(max-width: 1024px) 100vw, 40rem"
+                  className="object-cover"
+                />
+              ) : (
+                <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-blush via-cream to-blush">
+                  <div className="text-center p-8">
+                    <div className="w-32 h-32 rounded-full bg-rose-gold/20 flex items-center justify-center mx-auto mb-4">
+                      <span className="font-heading text-5xl font-bold text-rose-gold">VS</span>
+                    </div>
+                    <p className="text-charcoal/50 text-sm">Foto da Viviani Serena</p>
                   </div>
-                  <p className="text-charcoal/50 text-sm">Foto da Viviani Serena</p>
                 </div>
-              </div>
+              )}
 
               {/* Overlay gradiente na base da imagem */}
               <div className="absolute bottom-0 left-0 right-0 h-1/3 bg-gradient-to-t from-charcoal/40 to-transparent" aria-hidden="true" />
