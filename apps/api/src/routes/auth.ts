@@ -93,6 +93,14 @@ function buildAccessContext(user: AccessUser) {
   }
 }
 
+function requireAuthenticatedUser(user: AuthTokenPayload | undefined): AuthTokenPayload {
+  if (!user) {
+    throw new AppError(401, 'Sessão inválida')
+  }
+
+  return user
+}
+
 function resolveTwoFactorSettings(user: TwoFactorPreferencesInput) {
   const emailEnabled = Boolean(user.twoFactorEnabled && user.twoFactorEmailEnabled)
   const smsEnabled = Boolean(user.twoFactorEnabled && user.twoFactorSmsEnabled && user.phone)
@@ -593,8 +601,9 @@ authRouter.post('/logout', authenticate, async (req, res, next) => {
 
 authRouter.get('/me', authenticate, async (req, res, next) => {
   try {
+    const authUser = requireAuthenticatedUser(req.user)
     const user = await prisma.user.findUnique({
-      where: { id: req.user!.sub },
+      where: { id: authUser.sub },
       select: {
         id: true,
         email: true,
@@ -632,6 +641,7 @@ authRouter.get('/me', authenticate, async (req, res, next) => {
 
 authRouter.put('/profile', authenticate, async (req, res, next) => {
   try {
+    const authUser = requireAuthenticatedUser(req.user)
     const { name, email, phone, photoUrl } = profileUpdateSchema.parse(req.body)
     const update: { name?: string; email?: string; phone?: string; photoUrl?: string | null } = {}
 
@@ -641,7 +651,7 @@ authRouter.put('/profile', authenticate, async (req, res, next) => {
     if (photoUrl !== undefined) update.photoUrl = photoUrl
 
     const user = await prisma.user.update({
-      where: { id: req.user!.sub },
+      where: { id: authUser.sub },
       data: update,
       select: {
         id: true,
@@ -655,7 +665,7 @@ authRouter.put('/profile', authenticate, async (req, res, next) => {
 
     await prisma.auditLog.create({
       data: {
-        userId: req.user!.sub,
+        userId: authUser.sub,
         action: 'UPDATE_PROFILE',
         resource: 'auth',
         ip: req.ip ?? null,
@@ -663,7 +673,7 @@ authRouter.put('/profile', authenticate, async (req, res, next) => {
       },
     })
 
-    logger.info('Profile updated', { userId: req.user!.sub })
+    logger.info('Profile updated', { userId: authUser.sub })
     res.json({ success: true, data: user })
   } catch (error) {
     next(error)
@@ -672,9 +682,10 @@ authRouter.put('/profile', authenticate, async (req, res, next) => {
 
 authRouter.put('/password', authenticate, async (req, res, next) => {
   try {
+    const authUser = requireAuthenticatedUser(req.user)
     const { currentPassword, newPassword } = passwordUpdateSchema.parse(req.body)
 
-    const user = await prisma.user.findUnique({ where: { id: req.user!.sub } })
+    const user = await prisma.user.findUnique({ where: { id: authUser.sub } })
     if (!user) {
       throw new AppError(404, 'Usuário não encontrado')
     }
@@ -685,10 +696,10 @@ authRouter.put('/password', authenticate, async (req, res, next) => {
     }
 
     const passwordHash = await bcrypt.hash(newPassword, 12)
-    await prisma.user.update({ where: { id: req.user!.sub }, data: { passwordHash } })
+    await prisma.user.update({ where: { id: authUser.sub }, data: { passwordHash } })
     await prisma.auditLog.create({
       data: {
-        userId: req.user!.sub,
+        userId: authUser.sub,
         action: 'CHANGE_PASSWORD',
         resource: 'auth',
         ip: req.ip ?? null,
@@ -696,7 +707,7 @@ authRouter.put('/password', authenticate, async (req, res, next) => {
       },
     })
 
-    logger.info('Password changed', { userId: req.user!.sub })
+    logger.info('Password changed', { userId: authUser.sub })
     res.json({ success: true, message: 'Senha alterada com sucesso' })
   } catch (error) {
     next(error)
@@ -705,9 +716,10 @@ authRouter.put('/password', authenticate, async (req, res, next) => {
 
 authRouter.put('/2fa/preferences', authenticate, async (req, res, next) => {
   try {
+    const authUser = requireAuthenticatedUser(req.user)
     const body = twoFactorPreferencesSchema.parse(req.body)
     const result = await updateTwoFactorPreferences({
-      userId: req.user!.sub,
+      userId: authUser.sub,
       password: body.password,
       enabled: body.enabled,
       emailEnabled: body.emailEnabled,
@@ -716,7 +728,7 @@ authRouter.put('/2fa/preferences', authenticate, async (req, res, next) => {
     })
 
     logger.info('2FA preferences updated', {
-      userId: req.user!.sub,
+      userId: authUser.sub,
       enabled: result.twoFactorEnabled,
       emailEnabled: result.twoFactorEmailEnabled,
       smsEnabled: result.twoFactorSmsEnabled,
@@ -738,13 +750,14 @@ authRouter.put('/2fa/preferences', authenticate, async (req, res, next) => {
 
 authRouter.post('/2fa/toggle', authenticate, async (req, res, next) => {
   try {
+    const authUser = requireAuthenticatedUser(req.user)
     const { enable, password } = z.object({
       enable: z.boolean(),
       password: z.string().min(1),
     }).parse(req.body)
 
     const result = await updateTwoFactorPreferences({
-      userId: req.user!.sub,
+      userId: authUser.sub,
       password,
       enabled: enable,
       smsEnabled: enable,
@@ -768,11 +781,12 @@ authRouter.post('/2fa/toggle', authenticate, async (req, res, next) => {
 
 authRouter.post('/set-password', authenticate, async (req, res, next) => {
   try {
+    const authUser = requireAuthenticatedUser(req.user)
     const { newPassword } = z.object({
       newPassword: z.string().min(8, 'A senha deve ter no mínimo 8 caracteres'),
     }).parse(req.body)
 
-    const user = await prisma.user.findUnique({ where: { id: req.user!.sub } })
+    const user = await prisma.user.findUnique({ where: { id: authUser.sub } })
     if (!user) {
       throw new AppError(404, 'Usuário não encontrado')
     }
@@ -783,12 +797,12 @@ authRouter.post('/set-password', authenticate, async (req, res, next) => {
 
     const passwordHash = await bcrypt.hash(newPassword, 12)
     await prisma.user.update({
-      where: { id: req.user!.sub },
+      where: { id: authUser.sub },
       data: { passwordHash, mustChangePassword: false },
     })
     await prisma.auditLog.create({
       data: {
-        userId: req.user!.sub,
+        userId: authUser.sub,
         action: 'SET_INITIAL_PASSWORD',
         resource: 'auth',
         ip: req.ip ?? null,
@@ -796,7 +810,7 @@ authRouter.post('/set-password', authenticate, async (req, res, next) => {
       },
     })
 
-    logger.info('Initial password set', { userId: req.user!.sub })
+    logger.info('Initial password set', { userId: authUser.sub })
     res.json({ success: true, message: 'Senha definida com sucesso. Faça login com a nova senha.' })
   } catch (error) {
     next(error)
@@ -805,13 +819,12 @@ authRouter.post('/set-password', authenticate, async (req, res, next) => {
 
 authRouter.get('/google', authenticate, authorize('ADMIN'), async (req, res, next) => {
   try {
+    const authUser = requireAuthenticatedUser(req.user)
     if (!isGoogleCalendarConfigured()) {
       throw new AppError(400, 'Google Calendar não está configurado no ambiente')
     }
 
-    const { googleCalendar } = require('../infrastructure/googleCalendar') as {
-      googleCalendar: import('../infrastructure/googleCalendar').GoogleCalendarService
-    }
+    const { googleCalendar } = await import('../infrastructure/googleCalendar')
     const state = crypto.randomUUID()
     const redirect = resolveGoogleRedirectTarget(
       typeof req.query.redirect === 'string' ? req.query.redirect : undefined
@@ -821,8 +834,8 @@ authRouter.get('/google', authenticate, authorize('ADMIN'), async (req, res, nex
       `google:oauth:state:${state}`,
       600,
       JSON.stringify({
-        userId: req.user!.sub,
-        role: req.user!.role,
+        userId: authUser.sub,
+        role: authUser.role,
         redirect,
       })
     )
@@ -843,7 +856,7 @@ authRouter.get('/google/status', authenticate, authorize('ADMIN'), async (_req, 
   }
 })
 
-authRouter.get('/google/callback', async (req, res, next) => {
+authRouter.get('/google/callback', async (req, res) => {
   let redirectTarget = '/administracao?google=error'
 
   try {

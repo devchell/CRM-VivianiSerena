@@ -139,10 +139,15 @@ export async function saveEmailSettings(
 ): Promise<EmailSettingsOverview> {
   const existing = await loadPersistedSettings()
   const nextPassword = input.password?.trim()
+  const persistedPasswordEncrypted = existing?.passwordEncrypted ?? null
 
-  if (!nextPassword && !existing?.passwordEncrypted) {
+  if (!nextPassword && !persistedPasswordEncrypted) {
     throw new Error('A senha SMTP e obrigatoria no primeiro salvamento.')
   }
+
+  const passwordEncrypted = nextPassword
+    ? EncryptionService.encrypt(nextPassword)
+    : persistedPasswordEncrypted
 
   await prisma.emailSettings.upsert({
     where: { id: SETTINGS_ID },
@@ -152,7 +157,7 @@ export async function saveEmailSettings(
       port: input.port,
       secure: input.secure,
       user: input.user.trim(),
-      passwordEncrypted: EncryptionService.encrypt(nextPassword!),
+      passwordEncrypted,
       fromEmail: input.from.trim(),
       fromName: input.fromName.trim(),
       adminEmail: input.adminEmail.trim(),
@@ -163,9 +168,7 @@ export async function saveEmailSettings(
       port: input.port,
       secure: input.secure,
       user: input.user.trim(),
-      passwordEncrypted: nextPassword
-        ? EncryptionService.encrypt(nextPassword)
-        : existing!.passwordEncrypted,
+      passwordEncrypted,
       fromEmail: input.from.trim(),
       fromName: input.fromName.trim(),
       adminEmail: input.adminEmail.trim(),

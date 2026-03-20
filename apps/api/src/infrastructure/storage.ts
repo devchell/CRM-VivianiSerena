@@ -12,6 +12,14 @@ type StorageMode = 'local' | 's3'
 
 let s3Client: S3Client | null = null
 
+function requireS3Config() {
+  if (!apiEnv.s3) {
+    throw new Error('S3 storage is not configured.')
+  }
+
+  return apiEnv.s3
+}
+
 function getS3Client(): S3Client {
   if (s3Client) {
     return s3Client
@@ -60,8 +68,9 @@ export async function ensureUploadStorageReady(): Promise<void> {
     return
   }
 
+  const s3 = requireS3Config()
   const client = getS3Client()
-  await client.send(new HeadBucketCommand({ Bucket: apiEnv.s3!.bucket }))
+  await client.send(new HeadBucketCommand({ Bucket: s3.bucket }))
 }
 
 export async function uploadFile(params: {
@@ -76,9 +85,10 @@ export async function uploadFile(params: {
     return buildUploadUrl(params.filename)
   }
 
+  const s3 = requireS3Config()
   const client = getS3Client()
   await client.send(new PutObjectCommand({
-    Bucket: apiEnv.s3!.bucket,
+    Bucket: s3.bucket,
     Key: buildStorageKey(params.filename),
     Body: params.buffer,
     ContentType: params.contentType ?? 'application/octet-stream',
@@ -100,9 +110,10 @@ export async function deleteFile(filename: string): Promise<void> {
     return
   }
 
+  const s3 = requireS3Config()
   const client = getS3Client()
   await client.send(new DeleteObjectCommand({
-    Bucket: apiEnv.s3!.bucket,
+    Bucket: s3.bucket,
     Key: buildStorageKey(filename),
   }))
 }

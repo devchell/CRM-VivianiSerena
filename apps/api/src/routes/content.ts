@@ -289,7 +289,11 @@ contentRouter.get('/history', authenticate, authorizePermission('editar-site.his
 contentRouter.post('/history/:id/restore', authenticate, authorizePermission('editar-site.restore'), async (req, res, next) => {
   try {
     const versionId = String(req.params.id)
-    const restoredBy = req.user!.sub
+    if (!req.user) {
+      throw new AppError(401, 'Sessão inválida')
+    }
+
+    const restoredBy = req.user.sub
 
     const sourceVersion = await prisma.contentVersion.findUnique({
       where: { id: versionId },
@@ -500,7 +504,11 @@ contentRouter.put('/:section/:key', authenticate, authorizePermission('editar-si
     const { value } = updateSchema.parse(req.body)
     const section = String(req.params.section) as ContentSection
     const key = String(req.params.key)
-    const updatedBy = req.user!.sub
+    if (!req.user) {
+      throw new AppError(401, 'Sessão inválida')
+    }
+
+    const updatedBy = req.user.sub
     const jsonValue = normalizeContentValue(value)
 
     const content = await prisma.$transaction(async (tx) => {
@@ -541,7 +549,11 @@ contentRouter.delete('/:section/:key', authenticate, authorizePermission('editar
   try {
     const section = String(req.params.section) as ContentSection
     const key = String(req.params.key)
-    const deletedBy = req.user!.sub
+    if (!req.user) {
+      throw new AppError(401, 'Sessão inválida')
+    }
+
+    const deletedBy = req.user.sub
     const existing = await prisma.content.findUnique({
       where: { section_key: { section, key } },
     })

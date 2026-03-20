@@ -19,7 +19,11 @@ notificationsRouter.get('/', authenticate, async (req, res, next) => {
   try {
     const query = querySchema.parse(req.query)
     const limit = query.limit ?? 10
-    const userId = req.user!.sub
+    if (!req.user) {
+      throw new Error('Sessão inválida')
+    }
+
+    const userId = req.user.sub
 
     const [activity, reads] = await Promise.all([
       getRecentActivity(limit),
@@ -50,7 +54,11 @@ notificationsRouter.get('/', authenticate, async (req, res, next) => {
 notificationsRouter.post('/read', authenticate, async (req, res, next) => {
   try {
     const body = markReadSchema.parse(req.body)
-    const userId = req.user!.sub
+    if (!req.user) {
+      throw new Error('Sessão inválida')
+    }
+
+    const userId = req.user.sub
 
     let notificationIds = body.notificationIds ?? []
 

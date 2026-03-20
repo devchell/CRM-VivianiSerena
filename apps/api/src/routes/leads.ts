@@ -42,7 +42,7 @@ leadsRouter.post('/', async (req, res, next) => {
     if (data.website !== undefined && data.website !== '') {
       return res.json({ success: true }) // silently ignore bot
     }
-    const _ip = anonymizeIp(req.ip ?? '0.0.0.0') // LGPD: never store raw IP
+    void anonymizeIp(req.ip ?? '0.0.0.0') // LGPD: never store raw IP
     const lead = await prisma.lead.create({
       data: {
         name: data.name, email: data.email, phone: data.phone, source: data.source,

@@ -90,12 +90,16 @@ adminRouter.get('/overview', async (_req, res, next) => {
 
 adminRouter.put('/email-settings', async (req, res, next) => {
   try {
+    if (!req.user) {
+      throw new Error('Sessão inválida')
+    }
+
     const body = emailSettingsSchema.parse(req.body)
-    const email = await saveEmailSettings(body, req.user!.sub)
+    const email = await saveEmailSettings(body, req.user.sub)
 
     await prisma.auditLog.create({
       data: {
-        userId: req.user!.sub,
+        userId: req.user.sub,
         action: 'update',
         resource: 'email_settings',
         details: {
