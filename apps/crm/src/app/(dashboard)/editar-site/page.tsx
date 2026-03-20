@@ -28,7 +28,7 @@ type SectionKey = 'hero' | 'sobre' | 'resultados' | 'depoimentos'
 
 interface SectionMeta { label: string; icon: string }
 const SECTIONS: [SectionKey, SectionMeta][] = [
-  ['hero',        { label: 'Inicio',       icon: '✨' }],
+  ['hero',        { label: 'Início',       icon: '✨' }],
   ['sobre',       { label: 'Sobre',        icon: '👤' }],
   ['resultados',  { label: 'Resultados',   icon: '📸' }],
   ['depoimentos', { label: 'Depoimentos',  icon: '💬' }],
@@ -255,10 +255,12 @@ const ToggleField = memo(function ToggleField({ enabled, onToggle, label, descri
 // ── Main component ────────────────────────────────────────────────────────────
 
 export default function EditarSitePage() {
-  const { accessToken } = useAuth()
+  const { accessToken, updateSession } = useAuth()
   const { resolvedTheme } = useTheme()
   const iframeRef = useRef<HTMLIFrameElement>(null)
   const saveTimers = useRef<Record<string, ReturnType<typeof setTimeout>>>({})
+  const saveRef = useRef<(section: string, key: string, value: unknown) => Promise<void>>(async () => {})
+  const accessTokenRef = useRef(accessToken)
 
   const [expanded, setExpanded] = useState<SectionKey | null>('hero')
   const [content, setContent] = useState<ContentStore>({})
@@ -279,6 +281,10 @@ export default function EditarSitePage() {
   const [savingResultId, setSavingResultId] = useState<string | null>(null)
 
   const hdrs = { Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json' }
+
+  useEffect(() => {
+    accessTokenRef.current = accessToken
+  }, [accessToken])
 
   // ── Fetch all content ──────────────────────────────────────────────────────
   const fetchContent = useCallback(async () => {
@@ -412,21 +418,42 @@ export default function EditarSitePage() {
     const k = `${section}.${key}`
     clearTimeout(saveTimers.current[k])
     setSaveStatus({ state: 'saving' })
-    saveTimers.current[k] = setTimeout(() => save(section, key, value), 1500)
+    saveTimers.current[k] = setTimeout(() => {
+      void saveRef.current(section, key, value)
+    }, 1500)
   }
 
-  const save = async (section: string, key: string, value: unknown) => {
-    if (!accessToken) {
+  const save = useCallback(async (section: string, key: string, value: unknown) => {
+    const requestSave = (token: string) => fetch(`${API_URL}/api/v1/content/${section}/${key}`, {
+      method: 'PUT',
+      headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ value }),
+    })
+
+    let token = accessTokenRef.current
+    if (!token) {
+      const refreshed = await updateSession()
+      token = (refreshed as { accessToken?: string } | null)?.accessToken ?? ''
+      accessTokenRef.current = token
+    }
+
+    if (!token) {
       setSaveStatus({ state: 'idle' })
-      toast.error('Sessão expirada — faça login novamente')
+      toast.error('Sessão expirada. Faça login novamente.')
       return
     }
+
     try {
-      const res = await fetch(`${API_URL}/api/v1/content/${section}/${key}`, {
-        method: 'PUT',
-        headers: hdrs,
-        body: JSON.stringify({ value }),
-      })
+      let res = await requestSave(token)
+      if (res.status === 401) {
+        const refreshed = await updateSession()
+        const nextToken = (refreshed as { accessToken?: string } | null)?.accessToken ?? ''
+        accessTokenRef.current = nextToken
+        if (nextToken) {
+          res = await requestSave(nextToken)
+        }
+      }
+
       if (!res.ok) {
         const err = await res.json().catch(() => ({})) as { error?: string; message?: string }
         throw new Error(err.error ?? err.message ?? `HTTP ${res.status}`)
@@ -444,7 +471,11 @@ export default function EditarSitePage() {
       setSaveStatus({ state: 'idle' })
       toast.error(err instanceof Error ? err.message : 'Erro ao salvar')
     }
-  }
+  }, [updateSession])
+
+  useEffect(() => {
+    saveRef.current = save
+  }, [save])
 
   // ── Image upload ───────────────────────────────────────────────────────────
   const createInlineImage = useCallback(async (
@@ -452,7 +483,7 @@ export default function EditarSitePage() {
     options?: { maxDimension?: number; quality?: number },
   ) => {
     if (!file.type.startsWith('image/')) {
-      throw new Error('Selecione um arquivo de imagem valido.')
+      throw new Error('Selecione um arquivo de imagem válido.')
     }
 
     const objectUrl = URL.createObjectURL(file)
@@ -461,7 +492,7 @@ export default function EditarSitePage() {
       const image = await new Promise<HTMLImageElement>((resolve, reject) => {
         const element = new window.Image()
         element.onload = () => resolve(element)
-        element.onerror = () => reject(new Error('Nao foi possivel processar a imagem.'))
+        element.onerror = () => reject(new Error('Não foi possível processar a imagem.'))
         element.src = objectUrl
       })
 
@@ -477,7 +508,7 @@ export default function EditarSitePage() {
 
       const context = canvas.getContext('2d')
       if (!context) {
-        throw new Error('Nao foi possivel preparar o preview da imagem.')
+        throw new Error('Não foi possível preparar o preview da imagem.')
       }
 
       context.drawImage(image, 0, 0, width, height)
@@ -494,7 +525,7 @@ export default function EditarSitePage() {
       setVal(section, key, { url: imageUrl, blur: '' })
       toast.success('Imagem atualizada com sucesso')
     } catch {
-      toast.error('Erro ao preparar imagem')
+      toast.error('Erro ao preparar a imagem')
     } finally {
       setUploading(null)
     }
@@ -526,12 +557,31 @@ export default function EditarSitePage() {
   ), [createInlineImage])
 
   const handleConnectGoogleAccount = async () => {
-    if (!accessToken) return
     setGoogleConnecting(true)
     try {
-      const response = await fetch(`${API_URL}/api/v1/auth/google?redirect=${encodeURIComponent('/editar-site?google=connected')}`, {
-        headers: { Authorization: `Bearer ${accessToken}` },
+      let token = accessTokenRef.current
+      if (!token) {
+        const refreshed = await updateSession()
+        token = (refreshed as { accessToken?: string } | null)?.accessToken ?? ''
+        accessTokenRef.current = token
+      }
+      if (!token) {
+        throw new Error('Sessão expirada. Faça login novamente.')
+      }
+
+      let response = await fetch(`${API_URL}/api/v1/auth/google?redirect=${encodeURIComponent('/administracao?google=connected')}`, {
+        headers: { Authorization: `Bearer ${token}` },
       })
+      if (response.status === 401) {
+        const refreshed = await updateSession()
+        const nextToken = (refreshed as { accessToken?: string } | null)?.accessToken ?? ''
+        accessTokenRef.current = nextToken
+        if (nextToken) {
+          response = await fetch(`${API_URL}/api/v1/auth/google?redirect=${encodeURIComponent('/administracao?google=connected')}`, {
+            headers: { Authorization: `Bearer ${nextToken}` },
+          })
+        }
+      }
       const payload = await response.json() as { success: boolean; data?: { authUrl: string }; message?: string }
       if (!response.ok || !payload.success || !payload.data?.authUrl) {
         throw new Error(payload.message ?? 'Não foi possível iniciar a conexão com o Google')
@@ -677,21 +727,16 @@ export default function EditarSitePage() {
   const VivianiPhotoCard = ({
     section,
     fieldKey,
-    title,
     label,
     description,
   }: {
     section: string
     fieldKey: string
-    title: string
     label: string
     description: string
   }) => (
     <div className="space-y-3 rounded-xl border border-blush-200 bg-cream p-4 dark:border-charcoal-600 dark:bg-charcoal-700">
-      <div>
-        <p className="text-xs font-medium text-charcoal-600 dark:text-charcoal-300">{title}</p>
-        <p className="text-xs text-charcoal-400 dark:text-charcoal-500">{description}</p>
-      </div>
+      <p className="text-xs text-charcoal-400 dark:text-charcoal-500">{description}</p>
       <ImageField section={section} fieldKey={fieldKey} label={label} />
     </div>
   )
@@ -704,7 +749,6 @@ export default function EditarSitePage() {
           <VivianiPhotoCard
             section="hero"
             fieldKey="background_image"
-            title="Foto da Viviani"
             label="Foto da Viviani (Início/Hero)"
             description="Imagem principal exibida na abertura da landing."
           />
@@ -785,13 +829,6 @@ export default function EditarSitePage() {
 
       case 'sobre': return (
         <div className="space-y-4">
-          <VivianiPhotoCard
-            section="about"
-            fieldKey="photo"
-            title="Foto da Viviani"
-            label="Foto da Viviani (Sobre)"
-            description="Imagem circular exibida na seção Sobre."
-          />
           <div>
             <label className={labelCls}>Texto Principal</label>
             <RichTextEditor
@@ -960,7 +997,6 @@ export default function EditarSitePage() {
             <VivianiPhotoCard
               section="services"
               fieldKey="viviani_photo"
-              title="Foto da Viviani"
               label="Foto da Viviani (Resultados)"
               description="Imagem do bloco final de chamada para avaliação na seção Resultados."
             />
@@ -1203,7 +1239,7 @@ export default function EditarSitePage() {
             <ToggleField
               enabled={googleEnabled}
               onToggle={() => setSubVal('testimonials', 'display_options', 'googleEnabled', !googleEnabled)}
-              label="Exibir avaliacoes do Google Empresa"
+              label="Exibir avaliações do Google Empresa"
               description="Permite puxar reviews publicos das contas vinculadas do Google Business Profile."
             />
 

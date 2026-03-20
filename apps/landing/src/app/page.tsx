@@ -143,7 +143,6 @@ export default async function HomePage() {
 
   // About bio
   const aboutBio = str(content.about?.bio)
-  const aboutPhoto = asAssetUrl(content.about?.photo)
   const resultsVivianiPhoto = asAssetUrl(content.services?.viviani_photo)
   const resultsItems = asArray<Record<string, unknown>>(content.services?.results_items).map((item, index) => ({
     id: asString(item.id, `result-${index}`),
@@ -194,7 +193,7 @@ export default async function HomePage() {
           whatsappMessage={whatsappMessage}
           socialProof={siteSummary?.socialProof}
         />
-        <About bio={aboutBio} photoUrl={aboutPhoto} whatsappNumber={whatsappNumber} />
+        <About bio={aboutBio} whatsappNumber={whatsappNumber} />
         <HowItWorks />
         <Services />
         <Results items={resultsItems} vivianiPhotoUrl={resultsVivianiPhoto} />

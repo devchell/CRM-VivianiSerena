@@ -130,7 +130,7 @@ export function About({ bio, photoUrl, whatsappNumber }: AboutProps = {}) {
                     <div className="w-32 h-32 rounded-full bg-rose-gold/20 flex items-center justify-center mx-auto mb-4">
                       <span className="font-heading text-5xl font-bold text-rose-gold">VS</span>
                     </div>
-                    <p className="text-charcoal/50 text-sm">Foto da Viviani Serena</p>
+                    <p className="text-charcoal/50 text-sm">Imagem em definição</p>
                   </div>
                 </div>
               )}
