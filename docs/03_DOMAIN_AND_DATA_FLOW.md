@@ -34,9 +34,11 @@
 
 ## Fluxo comercial
 1. Landing envia lead para a API.
-2. CRM lista e atualiza leads.
-3. Leads podem gerar agendamentos.
-4. Eventos de lead e agenda alimentam indicadores.
+2. A API persiste `leads`, `consent_logs` e vincula `sessions` quando houver `sessionId`, `capturePage` ou `referrer`.
+3. CRM lista, cria manualmente e atualiza leads pela API.
+4. Cards operacionais de leads usam `GET /api/v1/leads/stats`; tabela e export usam `GET /api/v1/leads`.
+5. Leads podem gerar agendamentos.
+6. Eventos de lead e agenda alimentam indicadores.
 
 ## Fluxo financeiro
 1. Lancamentos sao criados no CRM.
