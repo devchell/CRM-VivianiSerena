@@ -57,14 +57,14 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Build shared packages
+        run: pnpm --filter @viviani/types build && pnpm --filter @viviani/utils build && pnpm --filter @viviani/ui build
+
       - name: Lint
         run: pnpm lint
 
       - name: Test API
         run: pnpm --filter @viviani/api test
-
-      - name: Build shared packages
-        run: pnpm --filter @viviani/types build && pnpm --filter @viviani/utils build && pnpm --filter @viviani/ui build
 
       - name: Build API
         run: pnpm --filter @viviani/api db:generate && pnpm --filter @viviani/api build
