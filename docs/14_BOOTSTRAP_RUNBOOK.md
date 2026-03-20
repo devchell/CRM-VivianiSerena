@@ -4,13 +4,14 @@
 Subir o projeto localmente com o minimo de atrito.
 
 ## Pre-requisitos
-- Node `20.x`
+- Node `20.20.1`
 - pnpm `8.x`
 - PostgreSQL
 - Redis
 
 ## Passos
 1. Instalar dependencias:
+   - `nvm use`
    - `pnpm install`
 2. Configurar `.env` por app.
 3. Gerar Prisma client:
