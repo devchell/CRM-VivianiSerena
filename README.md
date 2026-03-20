@@ -10,6 +10,7 @@ Monorepo com `landing`, `crm`, `api` e pacotes compartilhados para operacao come
 - Captura publica de lead registra `lead.consentedAt` e `consent_logs` com IP anonimizado.
 - Operacao de leads no CRM usa filtros, cards e exportacao sobre a mesma base canonica de `GET /api/v1/leads` e `GET /api/v1/leads/stats`.
 - CRM agora possui `Leads > Disparos` com segmentacao operacional, rascunhos, limites diarios e historico sobre a mesma base canonica de leads.
+- CRM agora possui conexao oficial de `WhatsApp Business` em `Administracao`, com Embedded Signup, envio pelo backend e webhook de status.
 - Segredos client-side removidos do CRM para publicacao da landing.
 - Google Calendar e Google Business Profile existem no codigo, mas a homologacao auditada em `2026-03-20` segue sem OAuth Google configurado.
 - A pasta [`docs`](D:/VivianeCRM/viviani-serena-platform/docs) continua como base de auditoria e arquitetura.
@@ -102,9 +103,11 @@ pnpm --filter @viviani/landing dev
 - tracking da landing nao cria mais leads paralelos
 - trilha LGPD de leads sai de `POST /api/v1/leads` e `GET /api/v1/privacy/export`
 - disparos operacionais saem de `GET/PUT /api/v1/dispatches/*`
+- canal oficial de WhatsApp sai de `POST /api/v1/admin/whatsapp/connect` e `GET/POST /api/v1/whatsapp/webhook`
 
 Detalhes: [04_SINGLE_SOURCE_OF_TRUTH_PLAN.md](D:/VivianeCRM/viviani-serena-platform/docs/04_SINGLE_SOURCE_OF_TRUTH_PLAN.md)
 Runbook: [20_DISPATCHES_OPERATIONAL_RUNBOOK.md](D:/VivianeCRM/viviani-serena-platform/docs/20_DISPATCHES_OPERATIONAL_RUNBOOK.md)
+WhatsApp: [21_WHATSAPP_CHANNEL_RUNBOOK.md](D:/VivianeCRM/viviani-serena-platform/docs/21_WHATSAPP_CHANNEL_RUNBOOK.md)
 
 ## Seguranca
 
@@ -199,6 +202,11 @@ API:
 - `STORAGE_DRIVER`
 - `UPLOAD_PUBLIC_BASE_URL` when `STORAGE_DRIVER=s3`
 - `S3_REGION`, `S3_BUCKET`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY`
+- `WHATSAPP_APP_ID`
+- `WHATSAPP_APP_SECRET`
+- `WHATSAPP_EMBEDDED_SIGNUP_CONFIG_ID`
+- `WHATSAPP_WEBHOOK_VERIFY_TOKEN`
+- `WHATSAPP_GRAPH_API_VERSION` optional
 
 Landing:
 - `API_BASE_URL`

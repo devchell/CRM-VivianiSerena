@@ -9,6 +9,7 @@ Modulo operacional em `CRM > Leads > Disparos`, usando a mesma base canonica de 
 - limites operacionais em `DispatchSettings` via `audit_logs`
 - historico de campanhas em `DispatchCampaign`
 - historico por destinatario em `DispatchRecipient`
+- receipts do provider em `DispatchReceipt`
 - exportacao CSV da audiencia filtrada
 
 ## Elegibilidade
@@ -33,6 +34,10 @@ WhatsApp:
 - `daily_limit`
 - `provider_failed`
 - `provider_unconfigured`
+- `sent`
+- `delivered`
+- `read`
+- `not_delivered`
 
 ## Limites e protecoes
 
@@ -49,9 +54,9 @@ Email:
 - SMTP ativo em `Configuracoes > Email`
 
 WhatsApp:
-- provider oficial ainda nao integrado neste fluxo
-- o modulo nao simula envio
-- quando nao configurado, registra `provider_unconfigured`
+- usa o canal oficial quando `Administracao > WhatsApp Business` estiver conectado
+- quando nao configurado ou nao conectado, registra `provider_unconfigured`
+- status de entrega e leitura dependem do webhook oficial da Meta
 
 ## Teste rapido
 
@@ -61,4 +66,4 @@ WhatsApp:
 4. Ajustar limites operacionais.
 5. Confirmar o modal de disparo.
 6. Validar `Historico e relatorios`.
-7. Conferir `DispatchCampaign` e `DispatchRecipient` em `audit_logs`.
+7. Conferir `DispatchCampaign`, `DispatchRecipient` e `DispatchReceipt` em `audit_logs`.

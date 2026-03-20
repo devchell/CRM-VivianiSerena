@@ -80,6 +80,17 @@ infra/       -> Docker legados e Nginx de referencia
 - Suporte a `s3` implementado via `STORAGE_DRIVER=s3`.
 - Health de uploads exposto em `admin/overview` e `health/deps`.
 
+### WhatsApp Business
+- Integracao oficial via Meta WhatsApp Business Platform.
+- Conexao do canal feita no CRM por Embedded Signup, sem WhatsApp Web e sem sessao local.
+- Endpoints:
+  - `POST /api/v1/admin/whatsapp/connect`
+  - `DELETE /api/v1/admin/whatsapp/connect`
+  - `GET /api/v1/admin/whatsapp/status`
+  - `GET /api/v1/whatsapp/webhook`
+  - `POST /api/v1/whatsapp/webhook`
+- Envio operacional do modulo `Disparos` usa `phoneNumberId` conectado e registra logs em `DispatchRecipient` / `DispatchReceipt`.
+
 ## Fonte de verdade por modulo
 - Dashboard: `apps/api/src/domain/metrics/service.ts`
 - Leads: `apps/api/src/routes/leads.ts` + tabela `leads`
