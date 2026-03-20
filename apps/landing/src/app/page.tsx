@@ -204,7 +204,7 @@ export default async function HomePage() {
           averageRating={testimonialAverageRating}
           artificialEnabled={showArtificialTestimonials}
         />
-        <TrustSection stats={siteSummary?.trust} socialProof={siteSummary?.socialProof} />
+        <TrustSection stats={siteSummary?.trust} />
         <LeadFormSection socialProof={siteSummary?.socialProof} />
         <FAQ whatsappNumber={whatsappNumber} />
         <LocationSection />

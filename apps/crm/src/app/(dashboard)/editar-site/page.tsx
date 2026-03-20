@@ -796,20 +796,34 @@ export default function EditarSitePage() {
             label="Foto da Viviani (Início/Hero)"
             description="Imagem principal exibida na abertura da landing."
           />
-          <ToggleField
-            enabled={getBool('hero', 'urgency_badge', 'enabled')}
-            onToggle={() => setSubVal('hero', 'urgency_badge', 'enabled', !getBool('hero', 'urgency_badge', 'enabled'))}
-            label="Badge de Urgência"
-            description="Mostrar aviso de vagas limitadas no topo do site"
-          />
-          {getBool('hero', 'urgency_badge', 'enabled') && (
-            <TextField
-              key="urgency-text"
-              value={getStr('hero', 'urgency_badge', 'text')}
-              onChange={v => setSubVal('hero', 'urgency_badge', 'text', v)}
-              label="Texto do badge"
-            />
-          )}
+          {(() => {
+            const urgencyBadge = get('hero', 'urgency_badge')
+            const urgencyBadgeObj = (typeof urgencyBadge === 'object' && urgencyBadge !== null && !Array.isArray(urgencyBadge))
+              ? urgencyBadge as Record<string, unknown>
+              : null
+            const urgencyBadgeEnabled = typeof urgencyBadgeObj?.enabled === 'boolean'
+              ? urgencyBadgeObj.enabled
+              : true
+
+            return (
+              <>
+                <ToggleField
+                  enabled={urgencyBadgeEnabled}
+                  onToggle={() => setSubVal('hero', 'urgency_badge', 'enabled', !urgencyBadgeEnabled)}
+                  label="Badge de Urgência"
+                  description="Mostrar aviso de vagas limitadas no topo do site"
+                />
+                {urgencyBadgeEnabled && (
+                  <TextField
+                    key="urgency-text"
+                    value={getStr('hero', 'urgency_badge', 'text')}
+                    onChange={v => setSubVal('hero', 'urgency_badge', 'text', v)}
+                    label="Texto do badge"
+                  />
+                )}
+              </>
+            )
+          })()}
           <TextField
             key="hero-title"
             value={getStr('hero', 'title', 'pt') || getStr('hero', 'title')}

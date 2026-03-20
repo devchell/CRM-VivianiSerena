@@ -11,15 +11,8 @@ interface Stat {
 }
 
 type TrustStats = {
-  clientsRegistered: number
-  publicReviews: number
   completedAppointments: number
   convertedCases: number
-}
-
-type SocialProofStats = {
-  clientsRegistered: number
-  publicReviews: number
 }
 
 function AnimatedStat({ stat, start }: { stat: Stat; start: boolean }) {
@@ -42,17 +35,13 @@ function AnimatedStat({ stat, start }: { stat: Stat; start: boolean }) {
 
 export default function TrustSection({
   stats,
-  socialProof,
 }: {
   stats?: TrustStats | null
-  socialProof?: SocialProofStats | null
 }) {
   const { ref: sectionRef, isInView } = useInView({ threshold: 0.3 })
   const { ref: headerRef, isInView: headerInView } = useInView()
 
   const statList: Stat[] = [
-    { value: socialProof?.clientsRegistered ?? stats?.clientsRegistered ?? 0, suffix: '', label: 'Clientes registrados' },
-    { value: socialProof?.publicReviews ?? stats?.publicReviews ?? 0, suffix: '', label: 'Avaliações públicas' },
     { value: stats?.completedAppointments ?? 0, suffix: '', label: 'Agendamentos concluídos' },
     { value: stats?.convertedCases ?? 0, suffix: '', label: 'Casos convertidos' },
   ]
@@ -80,7 +69,7 @@ export default function TrustSection({
 
         <div
           ref={sectionRef as React.RefObject<HTMLDivElement>}
-          className="mb-20 grid grid-cols-2 gap-8 md:grid-cols-4"
+          className="mb-20 grid grid-cols-2 gap-8 md:grid-cols-2"
           aria-label="Estatísticas"
         >
           {statList.map((stat, index) => (
