@@ -56,7 +56,7 @@ infra/       -> Docker legados e Nginx de referencia
 - `contents` e `content_versions`: CMS e historico.
 - `security_events` e `audit_logs`: trilha operacional.
 - `sessions`, `analytics_events`, `web_vitals`: analytics.
-- `consent_logs`: estrutura de LGPD existente, hoje sem uso ativo no fluxo de lead.
+- `consent_logs`: trilha LGPD da captura publica de leads.
 
 ## Integracoes reais
 
@@ -72,6 +72,7 @@ infra/       -> Docker legados e Nginx de referencia
   - `GET /api/v1/admin/google-business/locations`
   - `POST /api/v1/admin/google-business/reviews`
 - Consumo publico: `GET /api/v1/content/site-summary`.
+- Quando o OAuth Google nao estiver pronto, os endpoints administrativos falham de forma explicita com `400` (nao configurado) ou `409` (nao conectado).
 - Status atual de homologacao em `2026-03-20`: estrutura pronta, mas sem localizacoes vinculadas e sem reviews carregados.
 
 ### Uploads
@@ -82,6 +83,7 @@ infra/       -> Docker legados e Nginx de referencia
 ## Fonte de verdade por modulo
 - Dashboard: `apps/api/src/domain/metrics/service.ts`
 - Leads: `apps/api/src/routes/leads.ts` + tabela `leads`
+- Consentimento LGPD de leads: `apps/api/src/routes/leads.ts` + `apps/api/src/routes/privacy.ts` + tabela `consent_logs`
 - Agenda: `apps/api/src/routes/appointments.ts` + tabela `appointments`
 - Financeiro: `apps/api/src/routes/financials.ts` + tabela `financials`
 - Conteudo da landing: `apps/api/src/routes/content.ts` + `contents`

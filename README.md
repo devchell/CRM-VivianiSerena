@@ -7,6 +7,7 @@ Monorepo com `landing`, `crm`, `api` e pacotes compartilhados para operacao come
 - `@viviani/types`, `@viviani/api`, `@viviani/crm` e `@viviani/landing` com build verde.
 - Dashboard, financeiro e agenda do CRM agora usam contratos canonicos da API.
 - Landing cria lead em um unico fluxo de persistencia e separa tracking de analytics.
+- Captura publica de lead registra `lead.consentedAt` e `consent_logs` com IP anonimizado.
 - Segredos client-side removidos do CRM para publicacao da landing.
 - Google Calendar e Google Business Profile existem no codigo, mas a homologacao auditada em `2026-03-20` segue sem OAuth Google configurado.
 - A pasta [`docs`](D:/VivianeCRM/viviani-serena-platform/docs) continua como base de auditoria e arquitetura.
@@ -43,7 +44,7 @@ Detalhes: [08_DEPLOYMENT_ARCHITECTURE.md](D:/VivianeCRM/viviani-serena-platform/
 
 ## Pre-requisitos
 
-- Node.js 20+
+- Node.js 20.20.1
 - pnpm 8+
 - acesso ao GitHub
 - contas na Vercel e na Render
@@ -55,6 +56,7 @@ Detalhes: [08_DEPLOYMENT_ARCHITECTURE.md](D:/VivianeCRM/viviani-serena-platform/
 1. Instale dependencias:
 
 ```bash
+nvm use
 pnpm install
 ```
 
@@ -95,6 +97,7 @@ pnpm --filter @viviani/landing dev
 - overview consolidado sai de `GET /api/v1/metrics/overview`
 - dashboard e financeiro do CRM consomem essa camada canonica
 - tracking da landing nao cria mais leads paralelos
+- trilha LGPD de leads sai de `POST /api/v1/leads` e `GET /api/v1/privacy/export`
 
 Detalhes: [04_SINGLE_SOURCE_OF_TRUTH_PLAN.md](D:/VivianeCRM/viviani-serena-platform/docs/04_SINGLE_SOURCE_OF_TRUTH_PLAN.md)
 

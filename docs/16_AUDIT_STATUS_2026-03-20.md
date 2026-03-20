@@ -26,10 +26,16 @@
 - Teste ponta a ponta em homologacao:
   1. criar lead publico em `POST /api/v1/leads`
   2. confirmar leitura em `GET /api/v1/leads?search=<email>`
-  3. confirmar reflexo em `GET /api/v1/content/site-summary`
-  4. limpar com `DELETE /api/v1/leads/:id`
+  3. exportar LGPD em `GET /api/v1/privacy/export?email=<email>`
+  4. confirmar reflexo em `GET /api/v1/content/site-summary`
+  5. limpar com `DELETE /api/v1/leads/:id`
 - Evidencia remota em `2026-03-20`: lead temporario criado, lido no CRM/API e removido com sucesso.
-- Gap real: existe estrutura `consentedAt` / `consent_logs`, mas o fluxo atual de lead nao grava consentimento nem log LGPD.
+- Estado atual do codigo:
+  - `POST /api/v1/leads` grava `lead.consentedAt`
+  - `POST /api/v1/leads` grava `consent_logs` com IP anonimizado e `channel=landing_form`
+  - `GET /api/v1/privacy/export` exporta `consentedAt` e historico de `consent_logs`
+- Correcao estrutural aplicada nesta auditoria:
+  - rotas de LGPD usavam `req.user.id`, mas o auth real expunha `req.user.sub`; isso impedia auditoria de exportacao/anonimizacao
 
 ### Agenda / Google Calendar
 - Implementacao real confirmada:
@@ -57,7 +63,10 @@
   - `linkedLocations=0`
   - `reviewCount=0`
   - OAuth Google ausente no `admin/overview`
-- Conclusao factual: estrutura implementada, mas fluxo nao esta operacional em homologacao no estado atual.
+- Comportamento endurecido no codigo:
+  - `GET /api/v1/admin/google-business/locations` responde `400` se o OAuth Google nao estiver configurado
+  - `GET /api/v1/admin/google-business/locations` responde `409` se o OAuth Google nao estiver conectado
+- Conclusao factual: estrutura implementada, mas fluxo nao esta operacional em homologacao no estado atual por falta de configuracao/vinculo.
 
 ### Dashboard / Leads / Financeiro / Agenda
 - Dashboard e cards principais usam `GET /api/v1/metrics/overview`.
@@ -111,6 +120,22 @@
   - configurar 2FA por e-mail, SMS ou ambos
 
 ## Ajustes locais desta auditoria
+- `package.json`
+  - engine de Node normalizado para `>=20.20.1 <21`
+- `.nvmrc`
+  - Node fixado em `20.20.1`
+- `.node-version`
+  - Node fixado em `20.20.1`
+- `.github/workflows/ci.yml`
+  - CI alinhada para `Node 20.20.1`
+- `.github/workflows/deploy-homolog.yml`
+  - deploy de homologacao alinhado para `Node 20.20.1`
+- `apps/api/src/routes/leads.ts`
+  - captura publica passa a registrar consentimento LGPD
+- `apps/api/src/routes/privacy.ts`
+  - exportacao LGPD inclui `consent_logs` e `consentedAt`
+- `apps/api/src/routes/admin.ts`
+  - Google Business falha com mensagens explicitas quando OAuth nao esta pronto
 - `apps/api/src/infrastructure/googleCalendar.ts`
   - disponibilidade deixa de simular agenda livre sem OAuth conectado
 - `packages/utils/package.json`
@@ -124,5 +149,4 @@
 ## Gaps reais restantes
 - Google Calendar nao esta configurado na homologacao auditada.
 - Google Business/Profile nao esta operacional na homologacao auditada.
-- `consent_logs` e `lead.consentedAt` seguem sem uso no fluxo atual de captura.
 - API continua sem pipeline versionado de deploy equivalente ao workflow de Vercel.
