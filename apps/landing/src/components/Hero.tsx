@@ -125,9 +125,22 @@ interface HeroProps {
   cta?: { text?: string; url?: string }
   whatsappNumber?: string
   whatsappMessage?: string
+  socialProof?: {
+    enabled: boolean
+    clientsRegistered: number
+    publicReviews: number
+  } | null
 }
 
-export function Hero({ urgencyBadge, title, subtitle, cta, whatsappNumber, whatsappMessage }: HeroProps = {}) {
+export function Hero({
+  urgencyBadge,
+  title,
+  subtitle,
+  cta,
+  whatsappNumber,
+  whatsappMessage,
+  socialProof,
+}: HeroProps = {}) {
   const containerRef = useRef<HTMLDivElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const [isMounted, setIsMounted] = useState(false)
@@ -146,6 +159,9 @@ export function Hero({ urgencyBadge, title, subtitle, cta, whatsappNumber, whats
   const waHref = whatsappNumber
     ? `https://wa.me/${whatsappNumber}${whatsappMessage ? `?text=${encodeURIComponent(whatsappMessage)}` : ''}`
     : WA_LINK
+  const socialProofEnabled = socialProof?.enabled !== false
+  const clientsRegistered = socialProof?.clientsRegistered ?? 0
+  const publicReviews = socialProof?.publicReviews ?? 0
 
   const handleWhatsApp = useCallback((source: string) => {
     trackWhatsAppClick(source)
@@ -328,7 +344,7 @@ export function Hero({ urgencyBadge, title, subtitle, cta, whatsappNumber, whats
         </m.div>
 
         {/* ── Badge flutuante: contador de clientes ── */}
-        {isMounted && (
+        {isMounted && socialProofEnabled ? (
           <m.div
             className="absolute bottom-24 right-6 lg:right-16 z-30"
             initial={{ opacity: 0, scale: 0.8, y: 20 }}
@@ -337,14 +353,14 @@ export function Hero({ urgencyBadge, title, subtitle, cta, whatsappNumber, whats
           >
             <div className="glass rounded-2xl px-5 py-4 border border-white/30 shadow-xl shadow-black/20">
               <div className="flex items-center gap-4 divide-x divide-white/20">
-                <AnimatedCounter target={0} suffix="" label="Clientes registrados" />
+                <AnimatedCounter target={clientsRegistered} suffix="" label="Clientes registrados" />
                 <div className="pl-4">
-                  <AnimatedCounter target={0} suffix="" label="Avaliações públicas" />
+                  <AnimatedCounter target={publicReviews} suffix="" label="Avaliações públicas" />
                 </div>
               </div>
             </div>
           </m.div>
-        )}
+        ) : null}
 
         {/* ── Scroll indicator ── */}
         <m.button

@@ -4,6 +4,7 @@ import Image from 'next/image'
 import {
   useState, useEffect, useCallback, useRef, memo,
 } from 'react'
+import type { HTMLAttributes } from 'react'
 import { useAuth } from '@/lib/useAuth'
 import { toast } from 'sonner'
 import {
@@ -92,9 +93,22 @@ interface TextFieldProps {
   multiline?: boolean
   rows?: number
   placeholder?: string
+  className?: string
+  labelClassName?: string
+  inputMode?: HTMLAttributes<HTMLInputElement>['inputMode']
 }
 
-const TextField = memo(function TextField({ value: propValue, onChange, label, multiline, rows = 3, placeholder }: TextFieldProps) {
+const TextField = memo(function TextField({
+  value: propValue,
+  onChange,
+  label,
+  multiline,
+  rows = 3,
+  placeholder,
+  className,
+  labelClassName,
+  inputMode,
+}: TextFieldProps) {
   const [local, setLocal] = useState(propValue)
   const prevProp = useRef(propValue)
   const isComposing = useRef(false)
@@ -114,8 +128,8 @@ const TextField = memo(function TextField({ value: propValue, onChange, label, m
   }
 
   return (
-    <div>
-      <label className={labelCls}>{label}</label>
+    <div className={className}>
+      <label className={labelClassName ?? labelCls}>{label}</label>
       {multiline ? (
         <textarea
           rows={rows}
@@ -129,6 +143,7 @@ const TextField = memo(function TextField({ value: propValue, onChange, label, m
           type="text"
           value={local}
           placeholder={placeholder}
+          inputMode={inputMode}
           onChange={e => handleChange(e.target.value)}
           className={inputCls}
         />
@@ -603,18 +618,24 @@ export default function EditarSitePage() {
               label="Box lateral de prova social"
               description="Controla o card cinza com Clientes registrados e Avaliações públicas ao lado do formulário."
             />
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid gap-3 md:grid-cols-2">
               <TextField
+                className="h-full"
                 value={String(getNum('contact', 'social_proof', 'baseClients'))}
                 onChange={v => setSubVal('contact', 'social_proof', 'baseClients', Number(v) || 0)}
-                label="Base inicial de clientes"
+                label="Clientes iniciais"
+                labelClassName={`${labelCls} min-h-[2.5rem]`}
                 placeholder="0"
+                inputMode="numeric"
               />
               <TextField
+                className="h-full"
                 value={String(getNum('contact', 'social_proof', 'basePublicReviews'))}
                 onChange={v => setSubVal('contact', 'social_proof', 'basePublicReviews', Number(v) || 0)}
-                label="Base inicial de avaliacoes"
+                label="Avaliações iniciais"
+                labelClassName={`${labelCls} min-h-[2.5rem]`}
                 placeholder="0"
+                inputMode="numeric"
               />
             </div>
             <p className="text-xs text-charcoal-400 dark:text-charcoal-500">

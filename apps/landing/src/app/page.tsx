@@ -181,6 +181,7 @@ export default async function HomePage() {
           cta={heroCta}
           whatsappNumber={whatsappNumber}
           whatsappMessage={whatsappMessage}
+          socialProof={siteSummary?.socialProof}
         />
         <About bio={aboutBio} whatsappNumber={whatsappNumber} />
         <HowItWorks />
