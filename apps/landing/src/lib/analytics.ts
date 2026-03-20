@@ -35,7 +35,11 @@ function setSessionId(value: string) {
 
 async function postAnalytics(path: string, payload: Record<string, unknown>) {
   try {
-    const response = await fetch(`${API_BASE_URL}/api/v1/analytics/${path}`, {
+    const endpoint = typeof window === 'undefined'
+      ? `${API_BASE_URL}/api/v1/analytics/${path}`
+      : `/api/track/${path}`
+
+    const response = await fetch(endpoint, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
