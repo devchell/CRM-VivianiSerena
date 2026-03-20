@@ -6,9 +6,18 @@ export const GOOGLE_OAUTH_TOKEN_KEY = 'google:oauth:tokens'
 export const GOOGLE_CALENDAR_SCOPE = 'https://www.googleapis.com/auth/calendar'
 export const GOOGLE_BUSINESS_SCOPE = 'https://www.googleapis.com/auth/business.manage'
 export const GOOGLE_OAUTH_SCOPES = [GOOGLE_CALENDAR_SCOPE, GOOGLE_BUSINESS_SCOPE]
+export const GOOGLE_REQUIRED_ENV_VARS = ['GOOGLE_CLIENT_ID', 'GOOGLE_CLIENT_SECRET', 'GOOGLE_REDIRECT_URI'] as const
 const SLOT_DURATION_MINUTES = 60
 const BUSINESS_HOURS = { start: 9, end: 18 }
 const CALENDAR_ID = process.env.GOOGLE_CALENDAR_ID || 'primary'
+
+type GoogleOAuthTokens = {
+  access_token?: string
+  refresh_token?: string
+  expiry_date?: number
+  scope?: string
+  token_type?: string
+}
 
 function createOAuth2Client(): InstanceType<typeof google.auth.OAuth2> {
   return new google.auth.OAuth2(
@@ -22,20 +31,37 @@ async function persistGoogleTokens(tokens: Record<string, unknown>) {
   await redis.setex(GOOGLE_OAUTH_TOKEN_KEY, 365 * 24 * 60 * 60, JSON.stringify(tokens))
 }
 
+function getMissingGoogleCalendarEnv() {
+  return GOOGLE_REQUIRED_ENV_VARS.filter((name) => !process.env[name]?.trim())
+}
+
+function mergeGoogleTokens(existing: GoogleOAuthTokens, incoming: GoogleOAuthTokens): GoogleOAuthTokens {
+  return {
+    ...existing,
+    ...incoming,
+    refresh_token: incoming.refresh_token ?? existing.refresh_token,
+  }
+}
+
 export async function getAuthenticatedGoogleClient(): Promise<InstanceType<typeof google.auth.OAuth2>> {
+  if (!isGoogleCalendarConfigured()) {
+    throw new Error('Google Calendar not configured. Missing OAuth environment variables.')
+  }
+
   const oauth2Client = createOAuth2Client()
   const tokenData = await redis.get(GOOGLE_OAUTH_TOKEN_KEY)
   if (!tokenData) {
     throw new Error('Google Calendar not connected. Please authorize via OAuth.')
   }
-  const tokens = JSON.parse(tokenData) as { access_token: string; refresh_token: string; expiry_date: number }
+  const tokens = JSON.parse(tokenData) as GoogleOAuthTokens
   oauth2Client.setCredentials(tokens)
 
   // Auto-refresh if near expiry
   if (tokens.expiry_date && tokens.expiry_date - Date.now() < 5 * 60 * 1000) {
     const { credentials } = await oauth2Client.refreshAccessToken()
-    await persistGoogleTokens(credentials as Record<string, unknown>)
-    oauth2Client.setCredentials(credentials)
+    const mergedTokens = mergeGoogleTokens(tokens, credentials as GoogleOAuthTokens)
+    await persistGoogleTokens(mergedTokens as Record<string, unknown>)
+    oauth2Client.setCredentials(mergedTokens)
   }
 
   return oauth2Client
@@ -61,28 +87,34 @@ export function isGoogleCalendarConfigured() {
 
 export async function getGoogleCalendarConnectionStatus() {
   const tokenData = await redis.get(GOOGLE_OAUTH_TOKEN_KEY)
+  const missingConfiguration = getMissingGoogleCalendarEnv()
+  const redirectUri = process.env.GOOGLE_REDIRECT_URI?.trim() ?? null
+  const configured = missingConfiguration.length === 0
 
   if (!tokenData) {
     return {
-      configured: isGoogleCalendarConfigured(),
+      configured,
       connected: false,
       calendarId: CALENDAR_ID,
       expiresAt: null as string | null,
       hasRefreshToken: false,
+      scopes: GOOGLE_OAUTH_SCOPES,
+      redirectUri,
+      missingConfiguration,
     }
   }
 
-  const tokens = JSON.parse(tokenData) as {
-    expiry_date?: number
-    refresh_token?: string
-  }
+  const tokens = JSON.parse(tokenData) as GoogleOAuthTokens
 
   return {
-    configured: isGoogleCalendarConfigured(),
+    configured,
     connected: true,
     calendarId: CALENDAR_ID,
     expiresAt: tokens.expiry_date ? new Date(tokens.expiry_date).toISOString() : null,
     hasRefreshToken: Boolean(tokens.refresh_token),
+    scopes: GOOGLE_OAUTH_SCOPES,
+    redirectUri,
+    missingConfiguration,
   }
 }
 

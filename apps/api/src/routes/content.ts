@@ -6,6 +6,7 @@ import sharp from 'sharp'
 import { Prisma, type ContentSection } from '@prisma/client'
 import { prisma } from '../lib/prisma'
 import { apiEnv } from '../lib/env'
+import { logger } from '../lib/logger'
 import { authenticate, authorizePermission } from '../middleware/authenticate'
 import { AppError } from '../middleware/errorHandler'
 import {
@@ -218,7 +219,11 @@ contentRouter.get('/site-summary', async (_req, res, next) => {
         googleReviewCount = googlePayload.count
         googleAverageRating = googlePayload.averageRating
         googleReviews = googlePayload.reviews
-      } catch {
+      } catch (error) {
+        logger.warn('Google Business reviews unavailable for site summary', {
+          linkedLocations: linkedLocations.length,
+          error: error instanceof Error ? error.message : 'unknown_error',
+        })
         googleReviewCount = 0
         googleAverageRating = null
         googleReviews = []
