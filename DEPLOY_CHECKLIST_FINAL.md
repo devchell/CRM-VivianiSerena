@@ -176,3 +176,8 @@ pnpm --filter @viviani/api db:migrate:prod
 pnpm --filter @viviani/api start
 gh workflow run "Deploy Homologation" --ref staging
 ```
+
+Para cadastrar o hook e disparar a esteira em um passo:
+```powershell
+./scripts/set-api-deploy-hook.ps1 -HookUrl 'https://api.render.com/deploy/...' -DispatchWorkflow -Wait
+```

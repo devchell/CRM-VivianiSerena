@@ -14,6 +14,15 @@ Deixar o deploy da API em homologacao disparavel, verificavel e auditavel a part
 - opcional: `API_HML_SMOKE_ADMIN_EMAIL`
 - opcional: `API_HML_SMOKE_ADMIN_PASSWORD`
 
+## Como obter o deploy hook no Render
+1. Abrir o servico da API no Render.
+2. Ir em `Settings`.
+3. Localizar `Deploy Hook`.
+4. Copiar a URL secreta do hook.
+5. Cadastrar no GitHub como `RENDER_DEPLOY_HOOK_API_HML`.
+
+Referência oficial: https://render.com/docs/deploy-hooks
+
 ## Como o fluxo funciona
 1. O workflow `Deploy Homologation` dispara em `staging` ou manualmente.
 2. O job `deploy-api-hml` dispara o Render Deploy Hook.
@@ -35,6 +44,11 @@ Deixar o deploy da API em homologacao disparavel, verificavel e auditavel a part
 ## Disparo manual
 ```bash
 gh workflow run "Deploy Homologation" --ref staging
+```
+
+## Cadastro rapido do hook
+```powershell
+./scripts/set-api-deploy-hook.ps1 -HookUrl 'https://api.render.com/deploy/...' -DispatchWorkflow -Wait
 ```
 
 ## Verificacao manual local
