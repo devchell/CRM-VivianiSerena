@@ -177,6 +177,12 @@ export class GoogleCalendarService {
   }
 
   async getAvailableSlots(daysAhead = 30): Promise<{ start: Date; end: Date }[]> {
+    const status = await getGoogleCalendarConnectionStatus()
+    if (!status.configured || !status.connected) {
+      logger.warn('Google Calendar availability requested without an active OAuth connection')
+      return []
+    }
+
     const now = new Date()
     const until = new Date(now.getTime() + daysAhead * 24 * 60 * 60 * 1000)
     const events = await this.listEvents(now, until)
