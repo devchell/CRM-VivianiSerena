@@ -9,6 +9,7 @@ Monorepo com `landing`, `crm`, `api` e pacotes compartilhados para operacao come
 - Landing cria lead em um unico fluxo de persistencia e separa tracking de analytics.
 - Captura publica de lead registra `lead.consentedAt` e `consent_logs` com IP anonimizado.
 - Operacao de leads no CRM usa filtros, cards e exportacao sobre a mesma base canonica de `GET /api/v1/leads` e `GET /api/v1/leads/stats`.
+- CRM agora possui `Leads > Disparos` com segmentacao operacional, rascunhos, limites diarios e historico sobre a mesma base canonica de leads.
 - Segredos client-side removidos do CRM para publicacao da landing.
 - Google Calendar e Google Business Profile existem no codigo, mas a homologacao auditada em `2026-03-20` segue sem OAuth Google configurado.
 - A pasta [`docs`](D:/VivianeCRM/viviani-serena-platform/docs) continua como base de auditoria e arquitetura.
@@ -100,8 +101,10 @@ pnpm --filter @viviani/landing dev
 - dashboard e financeiro do CRM consomem essa camada canonica
 - tracking da landing nao cria mais leads paralelos
 - trilha LGPD de leads sai de `POST /api/v1/leads` e `GET /api/v1/privacy/export`
+- disparos operacionais saem de `GET/PUT /api/v1/dispatches/*`
 
 Detalhes: [04_SINGLE_SOURCE_OF_TRUTH_PLAN.md](D:/VivianeCRM/viviani-serena-platform/docs/04_SINGLE_SOURCE_OF_TRUTH_PLAN.md)
+Runbook: [20_DISPATCHES_OPERATIONAL_RUNBOOK.md](D:/VivianeCRM/viviani-serena-platform/docs/20_DISPATCHES_OPERATIONAL_RUNBOOK.md)
 
 ## Seguranca
 
