@@ -63,7 +63,7 @@ export default function LoginPage() {
   const [smsCode, setSmsCode] = useState('')
 
   useEffect(() => {
-    ['/dashboard', '/leads', '/agenda', '/financeiro', '/editar-site', '/seguranca', '/colaboradores'].forEach((route) => {
+    ['/dashboard', '/leads', '/leads/disparos', '/agenda', '/financeiro', '/editar-site', '/seguranca', '/colaboradores'].forEach((route) => {
       router.prefetch(route)
     })
   }, [router])

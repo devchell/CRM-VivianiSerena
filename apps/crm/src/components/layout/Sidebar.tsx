@@ -9,6 +9,7 @@ import {
   LayoutDashboard, Users, Calendar, DollarSign,
   Paintbrush, Shield, Settings, UserCheck, LogOut,
   PanelLeftClose, Menu, Sparkles,
+  Send,
 } from 'lucide-react'
 import { useSidebar } from '@/hooks/useSidebar'
 import { useAuth } from '@/lib/useAuth'
@@ -24,6 +25,7 @@ type NavItem = {
 const NAV_ITEMS: NavItem[] = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, module: 'dashboard' },
   { href: '/leads', label: 'Leads', icon: Users, module: 'leads' },
+  { href: '/leads/disparos', label: 'Disparos', icon: Send, permission: 'leads.broadcast' },
   { href: '/agenda', label: 'Agenda', icon: Calendar, module: 'agenda' },
   { href: '/financeiro', label: 'Financeiro', icon: DollarSign, module: 'financeiro' },
   { href: '/editar-site', label: 'Editar Site', icon: Paintbrush, module: 'editar-site' },

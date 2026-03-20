@@ -8,6 +8,7 @@ import { ThemeToggle } from '@/components/layout/ThemeToggle'
 const breadcrumbs: Record<string, string> = {
   '/dashboard': 'Dashboard',
   '/leads': 'Leads',
+  '/leads/disparos': 'Disparos',
   '/agenda': 'Agenda',
   '/financeiro': 'Financeiro',
   '/editar-site': 'Editar Site',
