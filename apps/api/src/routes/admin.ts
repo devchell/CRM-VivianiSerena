@@ -133,6 +133,7 @@ adminRouter.post('/reset-baseline', async (req, res, next) => {
 
     const triggeredBy = req.user.sub
     const passwordHash = await bcrypt.hash('Teste123', 12)
+    const preservedEmails = ['admin@vivianiserena.com', 'colaborador@vivianiserena.com']
 
     const result = await prisma.$transaction(async (tx) => {
       await tx.notificationRead.deleteMany()
@@ -147,10 +148,27 @@ adminRouter.post('/reset-baseline', async (req, res, next) => {
       await tx.content.deleteMany()
       await tx.auditLog.deleteMany()
       await tx.securityEvent.deleteMany()
-      await tx.user.deleteMany()
+      await tx.user.deleteMany({
+        where: {
+          email: {
+            notIn: preservedEmails,
+          },
+        },
+      })
 
-      const admin = await tx.user.create({
-        data: {
+      const admin = await tx.user.upsert({
+        where: { email: 'admin@vivianiserena.com' },
+        update: {
+          name: 'Viviani Serene',
+          passwordHash,
+          role: UserRole.ADMIN,
+          allowedModules: [],
+          mustChangePassword: false,
+          twoFactorEnabled: false,
+          twoFactorEmailEnabled: false,
+          twoFactorSmsEnabled: false,
+        },
+        create: {
           name: 'Viviani Serene',
           email: 'admin@vivianiserena.com',
           passwordHash,
@@ -163,8 +181,19 @@ adminRouter.post('/reset-baseline', async (req, res, next) => {
         },
       })
 
-      await tx.user.create({
-        data: {
+      await tx.user.upsert({
+        where: { email: 'colaborador@vivianiserena.com' },
+        update: {
+          name: 'João Vitor',
+          passwordHash,
+          role: UserRole.VIEWER,
+          allowedModules: ['dashboard', 'leads', 'financeiro'],
+          mustChangePassword: false,
+          twoFactorEnabled: false,
+          twoFactorEmailEnabled: false,
+          twoFactorSmsEnabled: false,
+        },
+        create: {
           name: 'João Vitor',
           email: 'colaborador@vivianiserena.com',
           passwordHash,
