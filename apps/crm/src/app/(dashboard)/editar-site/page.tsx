@@ -266,6 +266,9 @@ export default function EditarSitePage() {
   const [loadingGoogleLocations, setLoadingGoogleLocations] = useState(false)
   const [googleConnecting, setGoogleConnecting] = useState(false)
   const [newResultCategoryName, setNewResultCategoryName] = useState('')
+  const [resultDrafts, setResultDrafts] = useState<ResultEditorItem[]>([])
+  const [expandedResultIds, setExpandedResultIds] = useState<string[]>([])
+  const [savingResultId, setSavingResultId] = useState<string | null>(null)
 
   const hdrs = { Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json' }
 
@@ -318,6 +321,16 @@ export default function EditarSitePage() {
     const n = Number(v)
     return Number.isFinite(n) ? n : 0
   }, [content])
+
+  useEffect(() => {
+    const rawResults = content.services?.results_items
+    const nextSavedResults = Array.isArray(rawResults) ? rawResults as ResultEditorItem[] : []
+    setResultDrafts((previous) => {
+      const savedIds = new Set(nextSavedResults.map((item) => item.id))
+      const unsavedDrafts = previous.filter((item) => !savedIds.has(item.id))
+      return [...nextSavedResults, ...unsavedDrafts]
+    })
+  }, [content.services?.results_items])
 
   const setVal = useCallback((section: string, key: string, value: unknown) => {
     setContent(prev => ({
@@ -746,13 +759,47 @@ export default function EditarSitePage() {
       )
 
       case 'resultados': {
-        const results = getArr<ResultEditorItem>('services', 'results_items')
+        const savedResults = getArr<ResultEditorItem>('services', 'results_items')
+        const results = resultDrafts
+        const savedResultIds = new Set(savedResults.map((item) => item.id))
         const savedCategories = getArr<string>('services', 'result_categories')
         const categories = Array.from(new Set([
           ...savedCategories,
           ...results.map((item) => item.category).filter(Boolean),
         ])).filter(Boolean)
         const categoryOptions = categories.map((category) => ({ value: category, label: category }))
+
+        const updateDraft = (resultId: string, patch: Partial<ResultEditorItem>) => {
+          setResultDrafts((previous) => previous.map((item) => (
+            item.id === resultId
+              ? { ...item, ...patch }
+              : item
+          )))
+        }
+
+        const handleToggleResult = (resultId: string) => {
+          setExpandedResultIds((previous) => (
+            previous.includes(resultId)
+              ? previous.filter((id) => id !== resultId)
+              : [...previous, resultId]
+          ))
+        }
+
+        const handleCreateResult = () => {
+          const resultId = `result-${Date.now()}`
+          setResultDrafts((previous) => ([
+            ...previous,
+            {
+              id: resultId,
+              title: '',
+              text: '',
+              category: categories[0] ?? '',
+              beforeImage: '',
+              afterImage: '',
+            },
+          ]))
+          setExpandedResultIds((previous) => [...previous, resultId])
+        }
 
         const handleAddCategory = () => {
           const normalized = newResultCategoryName.trim()
@@ -770,22 +817,85 @@ export default function EditarSitePage() {
           setNewResultCategoryName('')
         }
 
-        const handleRemoveCategory = (categoryToRemove: string) => {
-          setVal(
-            'services',
-            'result_categories',
-            savedCategories.filter((category) => category !== categoryToRemove)
-          )
+        const handleRemoveCategory = async (categoryToRemove: string) => {
+          const nextSavedCategories = savedCategories.filter((category) => category !== categoryToRemove)
+          const nextDrafts = results.map((item) => (
+            item.category === categoryToRemove
+              ? { ...item, category: '' }
+              : item
+          ))
 
-          setVal(
-            'services',
-            'results_items',
-            results.map((item) => (
-              item.category === categoryToRemove
-                ? { ...item, category: '' }
-                : item
-            ))
-          )
+          setResultDrafts(nextDrafts)
+          setVal('services', 'result_categories', nextSavedCategories)
+
+          const nextSavedResults = savedResults.map((item) => (
+            item.category === categoryToRemove
+              ? { ...item, category: '' }
+              : item
+          ))
+
+          setContent((previous) => ({
+            ...previous,
+            services: {
+              ...(previous.services ?? {}),
+              results_items: nextSavedResults,
+            },
+          }))
+          await save('services', 'results_items', nextSavedResults)
+        }
+
+        const handleSaveResult = async (resultId: string) => {
+          const draft = results.find((item) => item.id === resultId)
+          if (!draft) return
+
+          if (!draft.title.trim()) {
+            toast.error('Informe o título do resultado.')
+            return
+          }
+
+          if (!draft.beforeImage || !draft.afterImage) {
+            toast.error('Adicione as imagens de antes e depois.')
+            return
+          }
+
+          const nextSavedResults = savedResultIds.has(resultId)
+            ? savedResults.map((item) => (item.id === resultId ? draft : item))
+            : [...savedResults, draft]
+
+          setSavingResultId(resultId)
+          try {
+            setContent((previous) => ({
+              ...previous,
+              services: {
+                ...(previous.services ?? {}),
+                results_items: nextSavedResults,
+              },
+            }))
+            await save('services', 'results_items', nextSavedResults)
+            setExpandedResultIds((previous) => previous.filter((id) => id !== resultId))
+          } finally {
+            setSavingResultId(null)
+          }
+        }
+
+        const handleDeleteResult = async (resultId: string) => {
+          const nextDrafts = results.filter((item) => item.id !== resultId)
+          setResultDrafts(nextDrafts)
+          setExpandedResultIds((previous) => previous.filter((id) => id !== resultId))
+
+          if (!savedResultIds.has(resultId)) {
+            return
+          }
+
+          const nextSavedResults = savedResults.filter((item) => item.id !== resultId)
+          setContent((previous) => ({
+            ...previous,
+            services: {
+              ...(previous.services ?? {}),
+              results_items: nextSavedResults,
+            },
+          }))
+          await save('services', 'results_items', nextSavedResults)
         }
 
         return (
@@ -793,145 +903,178 @@ export default function EditarSitePage() {
             {results.map((item, idx) => (
               <div key={item.id || idx} className="space-y-3 rounded-xl border border-blush-200 bg-cream p-4 dark:border-charcoal-600 dark:bg-charcoal-700">
                 <div className="flex items-center justify-between gap-3">
-                  <p className="text-sm font-semibold text-charcoal dark:text-charcoal-100">Resultado {idx + 1}</p>
                   <button
                     type="button"
-                    onClick={() => setVal('services', 'results_items', results.filter((_, index) => index !== idx))}
+                    onClick={() => handleToggleResult(item.id)}
+                    className="flex min-w-0 flex-1 items-center justify-between gap-3 text-left"
+                  >
+                    <div className="min-w-0">
+                      <p className="text-sm font-semibold text-charcoal dark:text-charcoal-100">Resultado {idx + 1}</p>
+                      <p className="truncate text-xs text-charcoal-400">
+                        {item.title.trim() || 'Rascunho sem título'}
+                        {item.category ? ` • ${item.category}` : ''}
+                      </p>
+                    </div>
+                    <motion.div
+                      animate={{ rotate: expandedResultIds.includes(item.id) ? 0 : -90 }}
+                      transition={{ duration: 0.18 }}
+                    >
+                      <ChevronDown size={14} className="text-charcoal-400" />
+                    </motion.div>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => void handleDeleteResult(item.id)}
                     className="rounded p-1 text-charcoal-400 transition-colors hover:text-red-400"
                   >
                     <X size={13} />
                   </button>
                 </div>
 
-                <TextField
-                  value={item.title}
-                  onChange={v => {
-                    const updated = [...results]
-                    updated[idx] = { ...item, title: v }
-                    setVal('services', 'results_items', updated)
-                  }}
-                  label="Título"
-                />
-                <TextField
-                  value={item.text}
-                  onChange={v => {
-                    const updated = [...results]
-                    updated[idx] = { ...item, text: v }
-                    setVal('services', 'results_items', updated)
-                  }}
-                  label="Texto"
-                  multiline
-                  rows={2}
-                />
-
-                <SelectField
-                  value={item.category}
-                  onChange={v => {
-                    const updated = [...results]
-                    updated[idx] = { ...item, category: v }
-                    setVal('services', 'results_items', updated)
-                  }}
-                  label="Categoria"
-                  options={categoryOptions}
-                  placeholder="Selecione uma categoria"
-                />
-
-                <div className="grid gap-3 md:grid-cols-2">
-                  <div className="space-y-2">
-                    <label className={labelCls}>Antes</label>
-                    <div className="relative h-24 overflow-hidden rounded-lg border border-blush-200 bg-white dark:border-charcoal-600 dark:bg-charcoal-800">
-                      {item.beforeImage ? (
-                        <Image
-                          src={normalizeImageUrl(item.beforeImage)}
-                          alt={`Antes ${item.title || idx + 1}`}
-                          fill
-                          unoptimized
-                          className="object-cover"
-                          sizes="14rem"
-                        />
-                      ) : (
-                        <div className="flex h-full items-center justify-center text-xs text-charcoal-400">Sem imagem</div>
-                      )}
-                    </div>
-                    <label className="flex cursor-pointer items-center justify-center gap-2 rounded-xl border-2 border-dashed border-blush-200 px-3 py-2 text-xs text-charcoal-400 transition-colors hover:border-rose-gold/50 hover:text-rose-gold dark:border-charcoal-600">
-                      <Upload size={14} /> Adicionar imagem
-                      <input
-                        type="file"
-                        accept="image/*"
-                        className="hidden"
-                        onChange={async e => {
-                          const file = e.target.files?.[0]
-                          if (!file) return
-                          try {
-                            const imageUrl = await createInlineResultImage(file)
-                            const updated = [...results]
-                            updated[idx] = { ...item, beforeImage: imageUrl }
-                            setVal('services', 'results_items', updated)
-                          } catch {
-                            toast.error('Erro ao preparar a imagem de antes')
-                          }
-                        }}
+                <AnimatePresence initial={false}>
+                  {expandedResultIds.includes(item.id) ? (
+                    <motion.div
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: 'auto', opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      transition={{ duration: 0.2 }}
+                      className="space-y-3 overflow-hidden border-t border-blush-200 pt-3 dark:border-charcoal-600"
+                    >
+                      <TextField
+                        value={item.title}
+                        onChange={(value) => updateDraft(item.id, { title: value })}
+                        label="Título"
                       />
-                    </label>
-                  </div>
-
-                  <div className="space-y-2">
-                    <label className={labelCls}>Depois</label>
-                    <div className="relative h-24 overflow-hidden rounded-lg border border-blush-200 bg-white dark:border-charcoal-600 dark:bg-charcoal-800">
-                      {item.afterImage ? (
-                        <Image
-                          src={normalizeImageUrl(item.afterImage)}
-                          alt={`Depois ${item.title || idx + 1}`}
-                          fill
-                          unoptimized
-                          className="object-cover"
-                          sizes="14rem"
-                        />
-                      ) : (
-                        <div className="flex h-full items-center justify-center text-xs text-charcoal-400">Sem imagem</div>
-                      )}
-                    </div>
-                    <label className="flex cursor-pointer items-center justify-center gap-2 rounded-xl border-2 border-dashed border-blush-200 px-3 py-2 text-xs text-charcoal-400 transition-colors hover:border-rose-gold/50 hover:text-rose-gold dark:border-charcoal-600">
-                      <Upload size={14} /> Adicionar imagem
-                      <input
-                        type="file"
-                        accept="image/*"
-                        className="hidden"
-                        onChange={async e => {
-                          const file = e.target.files?.[0]
-                          if (!file) return
-                          try {
-                            const imageUrl = await createInlineResultImage(file)
-                            const updated = [...results]
-                            updated[idx] = { ...item, afterImage: imageUrl }
-                            setVal('services', 'results_items', updated)
-                          } catch {
-                            toast.error('Erro ao preparar a imagem de depois')
-                          }
-                        }}
+                      <TextField
+                        value={item.text}
+                        onChange={(value) => updateDraft(item.id, { text: value })}
+                        label="Texto"
+                        multiline
+                        rows={2}
                       />
-                    </label>
-                  </div>
-                </div>
+
+                      <SelectField
+                        value={item.category}
+                        onChange={(value) => updateDraft(item.id, { category: value })}
+                        label="Categoria"
+                        options={categoryOptions}
+                        placeholder="Selecione uma categoria"
+                      />
+
+                      <div className="grid gap-3 md:grid-cols-2">
+                        <div className="space-y-2">
+                          <label className={labelCls}>Antes</label>
+                          <div className="relative h-24 overflow-hidden rounded-lg border border-blush-200 bg-white dark:border-charcoal-600 dark:bg-charcoal-800">
+                            {item.beforeImage ? (
+                              <Image
+                                src={normalizeImageUrl(item.beforeImage)}
+                                alt={`Antes ${item.title || idx + 1}`}
+                                fill
+                                unoptimized
+                                className="object-cover"
+                                sizes="14rem"
+                              />
+                            ) : (
+                              <div className="flex h-full items-center justify-center text-xs text-charcoal-400">Sem imagem</div>
+                            )}
+                          </div>
+                          <label className="flex cursor-pointer items-center justify-center gap-2 rounded-xl border-2 border-dashed border-blush-200 px-3 py-2 text-xs text-charcoal-400 transition-colors hover:border-rose-gold/50 hover:text-rose-gold dark:border-charcoal-600">
+                            <Upload size={14} /> Adicionar imagem
+                            <input
+                              type="file"
+                              accept="image/*"
+                              className="hidden"
+                              onChange={async e => {
+                                const file = e.target.files?.[0]
+                                if (!file) return
+                                try {
+                                  const imageUrl = await createInlineResultImage(file)
+                                  updateDraft(item.id, { beforeImage: imageUrl })
+                                } catch {
+                                  toast.error('Erro ao preparar a imagem de antes')
+                                }
+                              }}
+                            />
+                          </label>
+                        </div>
+
+                        <div className="space-y-2">
+                          <label className={labelCls}>Depois</label>
+                          <div className="relative h-24 overflow-hidden rounded-lg border border-blush-200 bg-white dark:border-charcoal-600 dark:bg-charcoal-800">
+                            {item.afterImage ? (
+                              <Image
+                                src={normalizeImageUrl(item.afterImage)}
+                                alt={`Depois ${item.title || idx + 1}`}
+                                fill
+                                unoptimized
+                                className="object-cover"
+                                sizes="14rem"
+                              />
+                            ) : (
+                              <div className="flex h-full items-center justify-center text-xs text-charcoal-400">Sem imagem</div>
+                            )}
+                          </div>
+                          <label className="flex cursor-pointer items-center justify-center gap-2 rounded-xl border-2 border-dashed border-blush-200 px-3 py-2 text-xs text-charcoal-400 transition-colors hover:border-rose-gold/50 hover:text-rose-gold dark:border-charcoal-600">
+                            <Upload size={14} /> Adicionar imagem
+                            <input
+                              type="file"
+                              accept="image/*"
+                              className="hidden"
+                              onChange={async e => {
+                                const file = e.target.files?.[0]
+                                if (!file) return
+                                try {
+                                  const imageUrl = await createInlineResultImage(file)
+                                  updateDraft(item.id, { afterImage: imageUrl })
+                                } catch {
+                                  toast.error('Erro ao preparar a imagem de depois')
+                                }
+                              }}
+                            />
+                          </label>
+                        </div>
+                      </div>
+
+                      <div className="flex justify-end">
+                        <button
+                          type="button"
+                          onClick={() => void handleSaveResult(item.id)}
+                          disabled={savingResultId === item.id}
+                          className="inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-rose-gold px-4 text-sm font-medium text-white transition-colors hover:bg-rose-gold-500 disabled:cursor-not-allowed disabled:opacity-60"
+                        >
+                          {savingResultId === item.id ? (
+                            <>
+                              <Loader2 size={14} className="animate-spin" /> Salvando...
+                            </>
+                          ) : savedResultIds.has(item.id) ? (
+                            <>
+                              <Check size={14} /> Salvar alterações
+                            </>
+                          ) : (
+                            <>
+                              <Plus size={14} /> Adicionar resultado
+                            </>
+                          )}
+                        </button>
+                      </div>
+                    </motion.div>
+                  ) : null}
+                </AnimatePresence>
               </div>
             ))}
 
-            <div className="space-y-3 rounded-xl border border-blush-200 bg-white p-4 dark:border-charcoal-600 dark:bg-charcoal-800">
-              <div className="flex items-center justify-between gap-3">
-                <div>
-                  <p className="text-sm font-semibold text-charcoal dark:text-charcoal-100">Categorias de resultados</p>
-                  <p className="text-xs text-charcoal-400">Crie a lista de categorias e depois selecione cada uma nos cards acima.</p>
+            <div className="space-y-2 rounded-xl border border-blush-200 bg-white p-3 dark:border-charcoal-600 dark:bg-charcoal-800">
+              <div className="flex flex-col gap-2 md:flex-row md:items-end">
+                <div className="flex-1">
+                  <label className={labelCls}>Criar categoria</label>
+                  <input
+                    type="text"
+                    value={newResultCategoryName}
+                    onChange={(event) => setNewResultCategoryName(event.target.value)}
+                    placeholder="Ex.: Sobrancelhas"
+                    className={inputCls}
+                  />
                 </div>
-              </div>
-
-              <div className="flex flex-col gap-3 md:flex-row md:items-end">
-                <TextField
-                  value={newResultCategoryName}
-                  onChange={setNewResultCategoryName}
-                  label="Criar categoria"
-                  placeholder="Ex.: Sobrancelhas"
-                  className="flex-1"
-                />
                 <button
                   type="button"
                   onClick={handleAddCategory}
@@ -947,8 +1090,8 @@ export default function EditarSitePage() {
                     <button
                       key={category}
                       type="button"
-                      onClick={() => handleRemoveCategory(category)}
-                      className="inline-flex items-center gap-2 rounded-full border border-blush-200 bg-cream px-3 py-1 text-xs font-medium text-charcoal transition-colors hover:border-red-300 hover:text-red-500 dark:border-charcoal-600 dark:bg-charcoal-700 dark:text-charcoal-100"
+                      onClick={() => void handleRemoveCategory(category)}
+                      className="inline-flex items-center gap-2 rounded-full border border-blush-200 bg-cream px-2.5 py-1 text-[11px] font-medium text-charcoal transition-colors hover:border-red-300 hover:text-red-500 dark:border-charcoal-600 dark:bg-charcoal-700 dark:text-charcoal-100"
                     >
                       {category}
                       <X size={12} />
@@ -962,20 +1105,10 @@ export default function EditarSitePage() {
 
             <button
               type="button"
-              onClick={() => setVal('services', 'results_items', [
-                ...results,
-                {
-                  id: `result-${Date.now()}`,
-                  title: '',
-                  text: '',
-                  category: categories[0] ?? '',
-                  beforeImage: '',
-                  afterImage: '',
-                },
-              ])}
+              onClick={handleCreateResult}
               className="flex w-full items-center justify-center gap-2 rounded-xl border-2 border-dashed border-blush-200 py-2.5 text-sm text-charcoal-400 transition-colors hover:border-rose-gold/50 hover:text-rose-gold dark:border-charcoal-600"
             >
-              <Plus size={14} /> Adicionar resultado
+              <Plus size={14} /> Criar novo resultado
             </button>
           </div>
         )
