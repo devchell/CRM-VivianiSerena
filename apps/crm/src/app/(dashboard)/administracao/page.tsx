@@ -13,6 +13,7 @@ import {
   Layers3,
   Loader2,
   Mail,
+  MessageCircle,
   RefreshCw,
   Server,
   ShieldAlert,
@@ -51,6 +52,26 @@ type AdminOverview = {
       source: 'database' | 'environment'
       passwordConfigured: boolean
     }
+    whatsapp: {
+      configured: boolean
+      connected: boolean
+      missingConfiguration: string[]
+      graphApiVersion: string
+      webhookPath: string
+      embeddedSignupReady: boolean
+      displayPhoneNumber: string | null
+      verifiedName: string | null
+      qualityRating: string | null
+      codeVerificationStatus: string | null
+      nameStatus: string | null
+      phoneNumberId: string | null
+      businessAccountId: string | null
+      wabaId: string | null
+      webhookSubscribed: boolean
+      connectedAt: string | null
+      disconnectedAt: string | null
+      lastError: string | null
+    }
   }
   infrastructure: {
     database: boolean
@@ -65,6 +86,10 @@ type AdminOverview = {
     googleRedirectUri: string | null
     googleClientConfigured: boolean
     calendarId: string
+    whatsappAppId: string | null
+    whatsappEmbeddedSignupConfigId: string | null
+    whatsappWebhookPath: string
+    whatsappGraphApiVersion: string
   }
 }
 
@@ -79,8 +104,32 @@ type EmailFormState = {
   adminEmail: string
 }
 
-type VisibilitySection = 'google' | 'email' | 'environment'
+type VisibilitySection = 'google' | 'email' | 'environment' | 'whatsapp'
 type VisibilityState = Record<VisibilitySection, boolean>
+
+type WhatsAppSignupMessage = {
+  type?: string
+  event?: string
+  data?: {
+    phone_number_id?: string
+    waba_id?: string
+    business_account_id?: string
+    app_scoped_user_id?: string
+  }
+}
+
+declare global {
+  interface Window {
+    FB?: {
+      init: (params: Record<string, unknown>) => void
+      login: (
+        callback: (response: { authResponse?: { code?: string } }) => void,
+        options: Record<string, unknown>
+      ) => void
+    }
+    fbAsyncInit?: () => void
+  }
+}
 
 function StatusPill({ ok, label }: { ok: boolean; label: string }) {
   return (
@@ -167,8 +216,11 @@ export default function AdministracaoPage() {
   const [loadError, setLoadError] = useState<string | null>(null)
   const [overview, setOverview] = useState<AdminOverview | null>(null)
   const [googleBusy, setGoogleBusy] = useState<'connect' | 'disconnect' | null>(null)
+  const [whatsappBusy, setWhatsappBusy] = useState<'connect' | 'disconnect' | null>(null)
+  const [metaSdkReady, setMetaSdkReady] = useState(false)
   const [emailSaving, setEmailSaving] = useState(false)
-  const [visibility, setVisibility] = useState<VisibilityState>({ google: false, email: false, environment: false })
+  const [visibility, setVisibility] = useState<VisibilityState>({ google: false, email: false, environment: false, whatsapp: false })
+  const whatsappSignupRef = useRef<Record<string, string | undefined> | null>(null)
   const [emailForm, setEmailForm] = useState<EmailFormState>({
     host: '',
     port: '587',
@@ -212,6 +264,63 @@ export default function AdministracaoPage() {
   }, [loadOverview])
 
   useEffect(() => {
+    if (!overview?.environment.whatsappAppId || !overview.environment.whatsappEmbeddedSignupConfigId) {
+      setMetaSdkReady(false)
+      return
+    }
+
+    const handleMessage = (event: MessageEvent) => {
+      if (event.origin !== 'https://www.facebook.com' && event.origin !== 'https://web.facebook.com') {
+        return
+      }
+
+      let payload: WhatsAppSignupMessage | null = null
+      if (typeof event.data === 'string') {
+        try {
+          payload = JSON.parse(event.data) as WhatsAppSignupMessage
+        } catch {
+          payload = null
+        }
+      } else if (typeof event.data === 'object' && event.data !== null) {
+        payload = event.data as WhatsAppSignupMessage
+      }
+
+      if (payload?.type === 'WA_EMBEDDED_SIGNUP' && payload.event === 'FINISH') {
+        whatsappSignupRef.current = (payload.data as Record<string, string | undefined> | undefined) ?? null
+      }
+    }
+
+    const existing = document.getElementById('meta-facebook-jssdk') as HTMLScriptElement | null
+    if (!existing) {
+      const script = document.createElement('script')
+      script.id = 'meta-facebook-jssdk'
+      script.async = true
+      script.defer = true
+      script.crossOrigin = 'anonymous'
+      script.src = 'https://connect.facebook.net/en_US/sdk.js'
+      document.body.appendChild(script)
+    }
+
+    window.fbAsyncInit = () => {
+      window.FB?.init({
+        appId: overview.environment.whatsappAppId,
+        version: overview.environment.whatsappGraphApiVersion,
+        xfbml: false,
+      })
+      setMetaSdkReady(true)
+    }
+
+    if (window.FB) {
+      window.fbAsyncInit()
+    }
+
+    window.addEventListener('message', handleMessage)
+    return () => {
+      window.removeEventListener('message', handleMessage)
+    }
+  }, [overview])
+
+  useEffect(() => {
     const googleStatus = searchParams.get('google')
     if (googleStatus === 'connected') {
       toast.success('Google Calendar conectado com sucesso')
@@ -243,7 +352,7 @@ export default function AdministracaoPage() {
 
   function toggleAll() {
     const nextValue = !allVisible
-    setVisibility({ google: nextValue, email: nextValue, environment: nextValue })
+    setVisibility({ google: nextValue, whatsapp: nextValue, email: nextValue, environment: nextValue })
   }
 
   function updateEmailField<K extends keyof EmailFormState>(field: K, value: EmailFormState[K]) {
@@ -282,6 +391,81 @@ export default function AdministracaoPage() {
       toast.error(error instanceof Error ? error.message : 'Erro ao desconectar Google Calendar')
     } finally {
       setGoogleBusy(null)
+    }
+  }
+
+  async function handleWhatsappConnect() {
+    if (!overview?.integrations.whatsapp.configured) {
+      toast.error('Configure APP ID, APP SECRET, CONFIG ID e webhook do WhatsApp Business antes de conectar o canal')
+      return
+    }
+
+    if (!metaSdkReady || !window.FB) {
+      toast.error('SDK oficial da Meta ainda nao carregou')
+      return
+    }
+
+    setWhatsappBusy('connect')
+    whatsappSignupRef.current = null
+
+    try {
+      const code = await new Promise<string>((resolve, reject) => {
+        window.FB?.login((response) => {
+          const authCode = response.authResponse?.code
+          if (!authCode) {
+            reject(new Error('Meta nao retornou o codigo de autorizacao do canal'))
+            return
+          }
+          resolve(authCode)
+        }, {
+          config_id: overview.environment.whatsappEmbeddedSignupConfigId,
+          response_type: 'code',
+          override_default_response_type: true,
+          extras: {
+            featureType: 'whatsapp_embedded_signup',
+            sessionInfoVersion: 3,
+          },
+        })
+      })
+      const signupData: Record<string, string | undefined> = whatsappSignupRef.current ?? {}
+
+      const response = await fetch(`${API_URL}/admin/whatsapp/connect`, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({
+          code,
+          phoneNumberId: signupData['phone_number_id'],
+          wabaId: signupData['waba_id'],
+          businessAccountId: signupData['business_account_id'],
+          appScopedUserId: signupData['app_scoped_user_id'],
+        }),
+      })
+      const payload = await response.json() as { success: boolean; message?: string }
+      if (!response.ok || !payload.success) throw new Error(payload.message ?? 'Nao foi possivel conectar o canal oficial do WhatsApp')
+      toast.success(payload.message ?? 'Canal oficial do WhatsApp conectado')
+      await loadOverview('refresh')
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Erro ao conectar WhatsApp Business')
+    } finally {
+      setWhatsappBusy(null)
+    }
+  }
+
+  async function handleWhatsappDisconnect() {
+    setWhatsappBusy('disconnect')
+    try {
+      const response = await fetch(`${API_URL}/admin/whatsapp/connect`, {
+        method: 'DELETE',
+        headers,
+      })
+      const payload = await response.json() as { success: boolean; message?: string }
+      if (!response.ok || !payload.success) throw new Error(payload.message ?? 'Erro ao desconectar canal do WhatsApp')
+      toast.success(payload.message ?? 'Canal oficial do WhatsApp desconectado')
+      await loadOverview('refresh')
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Erro ao desconectar WhatsApp Business')
+    } finally {
+      setWhatsappBusy(null)
     }
   }
 
@@ -356,17 +540,19 @@ export default function AdministracaoPage() {
           <StatusPill ok={overview.infrastructure.redis} label={overview.infrastructure.redis ? 'Redis OK' : 'Redis com falha'} />
           <StatusPill ok={overview.integrations.email.source === 'database'} label={overview.integrations.email.source === 'database' ? 'SMTP no banco' : 'SMTP via ambiente'} />
           <StatusPill ok={overview.integrations.googleCalendar.connected} label={overview.integrations.googleCalendar.connected ? 'Google conectado' : 'Google pendente'} />
+          <StatusPill ok={overview.integrations.whatsapp.connected} label={overview.integrations.whatsapp.connected ? 'WhatsApp conectado' : 'WhatsApp pendente'} />
         </div>
       </section>
 
       {loadError ? <div className="rounded-3xl border border-amber-200 bg-amber-50 px-5 py-4 text-sm text-amber-800 dark:border-amber-900/40 dark:bg-amber-950/20 dark:text-amber-100">{loadError}</div> : null}
 
-      <div className="grid gap-4 md:grid-cols-2 2xl:grid-cols-5">
+      <div className="grid gap-4 md:grid-cols-2 2xl:grid-cols-6">
         <SummaryCard label="Banco" value={overview.infrastructure.database ? 'OK' : 'Falha'} note="Disponibilidade do banco principal." icon={<Database size={18} />} />
         <SummaryCard label="Redis" value={overview.infrastructure.redis ? 'OK' : 'Falha'} note="Cache e filas auxiliares." icon={<Server size={18} />} />
         <SummaryCard label="Uploads" value={overview.infrastructure.uploads ? 'OK' : 'Falha'} note={`Driver atual: ${overview.infrastructure.storageDriver}.`} icon={<ExternalLink size={18} />} />
         <SummaryCard label="Google" value={overview.integrations.googleCalendar.connected ? 'Conectado' : 'Pendente'} note={overview.integrations.googleCalendar.configured ? 'OAuth configurado.' : 'Credenciais OAuth pendentes.'} icon={<Globe2 size={18} />} />
-        <SummaryCard label="Visibilidade" value={`${visibleCount}/3`} note="Blocos com dados visíveis." icon={<Layers3 size={18} />} />
+        <SummaryCard label="WhatsApp" value={overview.integrations.whatsapp.connected ? 'Conectado' : 'Pendente'} note={overview.integrations.whatsapp.configured ? 'Canal oficial pronto para conexao.' : 'App, segredo ou webhook pendentes.'} icon={<MessageCircle size={18} />} />
+        <SummaryCard label="Visibilidade" value={`${visibleCount}/4`} note="Blocos com dados visiveis." icon={<Layers3 size={18} />} />
       </div>
 
       <section className="rounded-[32px] border border-blush-200 bg-white/90 p-6 shadow-sm dark:border-charcoal-700 dark:bg-charcoal-900/70">
@@ -380,6 +566,7 @@ export default function AdministracaoPage() {
         </div>
         <div className="mt-5 flex flex-wrap gap-2">
           <VisibilityToggle label={visibility.google ? 'Google visivel' : 'Google oculto'} active={visibility.google} onClick={() => toggleSection('google')} />
+          <VisibilityToggle label={visibility.whatsapp ? 'WhatsApp visivel' : 'WhatsApp oculto'} active={visibility.whatsapp} onClick={() => toggleSection('whatsapp')} />
           <VisibilityToggle label={visibility.email ? 'E-mail visivel' : 'E-mail oculto'} active={visibility.email} onClick={() => toggleSection('email')} />
           <VisibilityToggle label={visibility.environment ? 'Ambiente visivel' : 'Ambiente oculto'} active={visibility.environment} onClick={() => toggleSection('environment')} />
         </div>
@@ -405,6 +592,38 @@ export default function AdministracaoPage() {
               <button type="button" onClick={() => void handleGoogleDisconnect()} disabled={googleBusy !== null || !overview.integrations.googleCalendar.connected} className="inline-flex items-center gap-2 rounded-2xl border border-blush-300 bg-white px-4 py-3 text-sm font-medium text-charcoal transition-colors hover:bg-blush disabled:opacity-60 dark:border-charcoal-600 dark:bg-charcoal-800 dark:text-charcoal-100 dark:hover:bg-charcoal-700">
                 {googleBusy === 'disconnect' ? <Loader2 size={15} className="animate-spin" /> : <Unlink2 size={15} />}
                 Desconectar Google
+              </button>
+            </div>
+          </SectionCard>
+
+          <SectionCard eyebrow="WhatsApp Business" title="Canal oficial para disparos e status reais" description={overview.integrations.whatsapp.connected ? `Canal conectado no numero ${overview.integrations.whatsapp.displayPhoneNumber ?? 'comercial'} para uso pelo backend/API.` : 'Conecte o numero comercial pelo Embedded Signup oficial da Meta. O CRM nao usa WhatsApp Web nem sessao local.'} visible={visibility.whatsapp} onToggle={() => toggleSection('whatsapp')} status={<><StatusPill ok={overview.integrations.whatsapp.configured} label={overview.integrations.whatsapp.configured ? 'App configurado' : 'App pendente'} /><StatusPill ok={overview.integrations.whatsapp.connected} label={overview.integrations.whatsapp.connected ? 'Canal conectado' : 'Sem conexao'} /></>}>
+            {!overview.integrations.whatsapp.configured ? (
+              <div className="mb-5 rounded-3xl border border-amber-200 bg-amber-50 px-4 py-4 text-sm text-amber-800 dark:border-amber-900/40 dark:bg-amber-950/20 dark:text-amber-100">
+                Faltam variaveis para o canal oficial: {overview.integrations.whatsapp.missingConfiguration.join(', ')}.
+              </div>
+            ) : null}
+            <div className="grid gap-3 md:grid-cols-2">
+              <InfoCard label="Numero comercial" value={maskValue(overview.integrations.whatsapp.displayPhoneNumber, visibility.whatsapp)} note="Numero empresarial conectado ao backend." />
+              <InfoCard label="Nome verificado" value={maskValue(overview.integrations.whatsapp.verifiedName, visibility.whatsapp)} note="Identidade retornada pela Meta para o numero." />
+              <InfoCard label="Phone number ID" value={maskValue(overview.integrations.whatsapp.phoneNumberId, visibility.whatsapp)} breakAll note="Identificador oficial usado para envios pela API." />
+              <InfoCard label="Business account ID" value={maskValue(overview.integrations.whatsapp.businessAccountId, visibility.whatsapp)} breakAll note="Conta empresarial/WABA vinculada no Embedded Signup." />
+              <InfoCard label="Webhook" value={overview.integrations.whatsapp.webhookSubscribed ? 'Inscrito' : 'Pendente'} note={maskValue(overview.environment.whatsappWebhookPath, visibility.whatsapp)} />
+              <InfoCard label="Graph API" value={overview.environment.whatsappGraphApiVersion} note={overview.integrations.whatsapp.qualityRating ? `Qualidade atual: ${overview.integrations.whatsapp.qualityRating}` : 'Versao usada para conexao e envio.'} />
+            </div>
+            {overview.integrations.whatsapp.lastError ? (
+              <div className="mt-4 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-900/40 dark:bg-red-950/20 dark:text-red-200">
+                Ultimo erro: {overview.integrations.whatsapp.lastError}
+              </div>
+            ) : null}
+            <div className="mt-5 flex flex-wrap gap-3">
+              <button type="button" onClick={() => void handleWhatsappConnect()} disabled={whatsappBusy !== null || !overview.integrations.whatsapp.configured} className="inline-flex items-center gap-2 rounded-2xl border border-blush-300 bg-white px-4 py-3 text-sm font-medium text-charcoal transition-colors hover:bg-blush disabled:opacity-60 dark:border-charcoal-600 dark:bg-charcoal-800 dark:text-charcoal-100 dark:hover:bg-charcoal-700">
+                {whatsappBusy === 'connect' ? <Loader2 size={15} className="animate-spin" /> : <MessageCircle size={15} />}
+                Conectar canal oficial
+                <ExternalLink size={14} className="opacity-60" />
+              </button>
+              <button type="button" onClick={() => void handleWhatsappDisconnect()} disabled={whatsappBusy !== null || !overview.integrations.whatsapp.connected} className="inline-flex items-center gap-2 rounded-2xl border border-blush-300 bg-white px-4 py-3 text-sm font-medium text-charcoal transition-colors hover:bg-blush disabled:opacity-60 dark:border-charcoal-600 dark:bg-charcoal-800 dark:text-charcoal-100 dark:hover:bg-charcoal-700">
+                {whatsappBusy === 'disconnect' ? <Loader2 size={15} className="animate-spin" /> : <Unlink2 size={15} />}
+                Desconectar canal
               </button>
             </div>
           </SectionCard>
@@ -456,6 +675,8 @@ export default function AdministracaoPage() {
               <InfoCard label="API" value={maskValue(overview.environment.apiBaseUrl, visibility.environment)} breakAll />
               <InfoCard label="CRM" value={maskValue(overview.environment.crmUrl, visibility.environment)} breakAll />
               <InfoCard label="Google redirect URI" value={maskValue(overview.environment.googleRedirectUri, visibility.environment)} breakAll />
+              <InfoCard label="WhatsApp App ID" value={maskValue(overview.environment.whatsappAppId, visibility.environment)} breakAll />
+              <InfoCard label="WhatsApp Config ID" value={maskValue(overview.environment.whatsappEmbeddedSignupConfigId, visibility.environment)} breakAll />
               <InfoCard label="Storage" value={overview.infrastructure.storageDriver} note="Driver atual usado para uploads." />
             </div>
             <div className="mt-5 rounded-3xl border border-blush-200 bg-cream/70 p-4 dark:border-charcoal-700 dark:bg-charcoal-800/60">
