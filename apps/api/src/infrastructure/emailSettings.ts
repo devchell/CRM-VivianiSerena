@@ -149,6 +149,10 @@ export async function saveEmailSettings(
     ? EncryptionService.encrypt(nextPassword)
     : persistedPasswordEncrypted
 
+  if (!passwordEncrypted) {
+    throw new Error('A senha SMTP e obrigatoria no primeiro salvamento.')
+  }
+
   await prisma.emailSettings.upsert({
     where: { id: SETTINGS_ID },
     create: {
