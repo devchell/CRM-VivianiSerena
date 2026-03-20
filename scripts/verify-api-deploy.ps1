@@ -30,6 +30,14 @@ function Invoke-OptionalJson {
     [hashtable]$Headers = @{}
   )
 
+  if ($PSVersionTable.PSVersion.Major -ge 7) {
+    $response = Invoke-WebRequest -Uri $Url -Headers $Headers -Method Get -UseBasicParsing -SkipHttpErrorCheck
+    return @{
+      StatusCode = [int]$response.StatusCode
+      Body = $response.Content
+    }
+  }
+
   try {
     $response = Invoke-WebRequest -Uri $Url -Headers $Headers -Method Get -UseBasicParsing
     return @{
@@ -41,14 +49,10 @@ function Invoke-OptionalJson {
     $statusCode = if ($null -ne $response) { [int]$response.StatusCode } else { 0 }
     $body = $null
 
-    if ($null -ne $response) {
-      if ($response.PSObject.Methods.Name -contains 'GetResponseStream') {
-        $reader = New-Object System.IO.StreamReader($response.GetResponseStream())
-        $body = $reader.ReadToEnd()
-        $reader.Close()
-      } elseif ($null -ne $response.Content) {
-        $body = $response.Content.ReadAsStringAsync().GetAwaiter().GetResult()
-      }
+    if ($null -ne $response -and ($response.PSObject.Methods.Name -contains 'GetResponseStream')) {
+      $reader = New-Object System.IO.StreamReader($response.GetResponseStream())
+      $body = $reader.ReadToEnd()
+      $reader.Close()
     }
 
     return @{
