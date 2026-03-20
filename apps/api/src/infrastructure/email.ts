@@ -4,6 +4,22 @@ import { getActiveEmailSettings } from './emailSettings'
 
 const WHATSAPP_NUMBER = '5511915751770'
 
+function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;')
+}
+
+function renderRichText(value: string): string {
+  return value
+    .split(/\n{2,}/)
+    .map((block) => `<p>${escapeHtml(block).replace(/\n/g, '<br />')}</p>`)
+    .join('')
+}
+
 function baseTemplate(title: string, content: string): string {
   return `<!DOCTYPE html>
 <html lang="pt-BR">
@@ -184,5 +200,18 @@ export const emailService = {
       </div>
     `
     return sendAdminEmail(`Relatório Semanal - ${params.period}`, baseTemplate('Relatório Financeiro', content))
+  },
+
+  async sendCampaignMessage(params: {
+    to: string
+    subject: string
+    title: string
+    body: string
+  }) {
+    const content = `
+      <span class="badge">Comunicado</span>
+      ${renderRichText(params.body)}
+    `
+    return send(params.to, params.subject, baseTemplate(params.title, content))
   },
 }

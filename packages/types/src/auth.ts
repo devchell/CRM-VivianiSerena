@@ -7,7 +7,7 @@ export const USER_PROFILES = ['ADMIN', 'COLLABORATOR', 'VIEWER'] as const
 
 const MODULE_PERMISSION_ACTIONS = {
   dashboard: ['view'],
-  leads: ['view', 'create', 'update', 'delete', 'export', 'gdpr'],
+  leads: ['view', 'create', 'update', 'delete', 'export', 'gdpr', 'broadcast'],
   agenda: ['view', 'create', 'update', 'delete'],
   financeiro: ['view', 'create', 'update', 'delete', 'export'],
   'editar-site': ['view', 'update', 'delete', 'publish', 'history', 'restore', 'upload'],
@@ -33,6 +33,7 @@ export const APP_PERMISSIONS = [
   'leads.delete',
   'leads.export',
   'leads.gdpr',
+  'leads.broadcast',
   'agenda.view',
   'agenda.create',
   'agenda.update',
@@ -64,7 +65,7 @@ const VIEW_ONLY_PERMISSIONS = new Set<AppPermission>([
 
 const COLLABORATOR_PERMISSION_PRESETS: Record<CrmModule, AppPermission[]> = {
   dashboard: ['dashboard.view'],
-  leads: ['leads.view', 'leads.create', 'leads.update', 'leads.delete', 'leads.export', 'leads.gdpr'],
+  leads: ['leads.view', 'leads.create', 'leads.update', 'leads.delete', 'leads.export', 'leads.gdpr', 'leads.broadcast'],
   agenda: ['agenda.view', 'agenda.create', 'agenda.update', 'agenda.delete'],
   financeiro: ['financeiro.view', 'financeiro.create', 'financeiro.update', 'financeiro.delete', 'financeiro.export'],
   'editar-site': [],
