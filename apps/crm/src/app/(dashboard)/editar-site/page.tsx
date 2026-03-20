@@ -746,6 +746,50 @@ export default function EditarSitePage() {
     switch (key) {
       case 'hero': return (
         <div className="space-y-4">
+          {(() => {
+            const socialProof = get('contact', 'social_proof')
+            const socialProofObj = (typeof socialProof === 'object' && socialProof !== null && !Array.isArray(socialProof))
+              ? socialProof as Record<string, unknown>
+              : null
+            const socialProofEnabled = typeof socialProofObj?.enabled === 'boolean'
+              ? socialProofObj.enabled
+              : true
+
+            return (
+              <div className="space-y-3 rounded-xl border border-blush-200 bg-cream p-4 dark:border-charcoal-600 dark:bg-charcoal-700">
+                <ToggleField
+                  enabled={socialProofEnabled}
+                  onToggle={() => setSubVal('contact', 'social_proof', 'enabled', !socialProofEnabled)}
+                  label="Box lateral de prova social"
+                  description="Controla o card cinza com Clientes registrados e Avaliações públicas ao lado do formulário."
+                />
+                <div className="grid gap-3 md:grid-cols-2">
+                  <TextField
+                    className="h-full"
+                    value={String(getNum('contact', 'social_proof', 'baseClients'))}
+                    onChange={v => setSubVal('contact', 'social_proof', 'baseClients', Number(v) || 0)}
+                    label="Clientes iniciais"
+                    labelClassName={`${labelCls} min-h-[2.5rem]`}
+                    placeholder="0"
+                    inputMode="numeric"
+                  />
+                  <TextField
+                    className="h-full"
+                    value={String(getNum('contact', 'social_proof', 'basePublicReviews'))}
+                    onChange={v => setSubVal('contact', 'social_proof', 'basePublicReviews', Number(v) || 0)}
+                    label="Avaliações iniciais"
+                    labelClassName={`${labelCls} min-h-[2.5rem]`}
+                    placeholder="0"
+                    inputMode="numeric"
+                  />
+                </div>
+                <p className="text-xs text-charcoal-400 dark:text-charcoal-500">
+                  O site soma automaticamente os leads reais cadastrados para atualizar Clientes registrados.
+                </p>
+              </div>
+            )
+          })()}
+
           <VivianiPhotoCard
             section="hero"
             fieldKey="background_image"
@@ -793,37 +837,6 @@ export default function EditarSitePage() {
             label="Link do Botão Principal"
             placeholder="#agendamento"
           />
-          <div className="space-y-3 rounded-xl border border-blush-200 bg-cream p-4 dark:border-charcoal-600 dark:bg-charcoal-700">
-            <ToggleField
-              enabled={getBool('contact', 'social_proof', 'enabled') || !get('contact', 'social_proof')}
-              onToggle={() => setSubVal('contact', 'social_proof', 'enabled', !(getBool('contact', 'social_proof', 'enabled') || !get('contact', 'social_proof')))}
-              label="Box lateral de prova social"
-              description="Controla o card cinza com Clientes registrados e Avaliações públicas ao lado do formulário."
-            />
-            <div className="grid gap-3 md:grid-cols-2">
-              <TextField
-                className="h-full"
-                value={String(getNum('contact', 'social_proof', 'baseClients'))}
-                onChange={v => setSubVal('contact', 'social_proof', 'baseClients', Number(v) || 0)}
-                label="Clientes iniciais"
-                labelClassName={`${labelCls} min-h-[2.5rem]`}
-                placeholder="0"
-                inputMode="numeric"
-              />
-              <TextField
-                className="h-full"
-                value={String(getNum('contact', 'social_proof', 'basePublicReviews'))}
-                onChange={v => setSubVal('contact', 'social_proof', 'basePublicReviews', Number(v) || 0)}
-                label="Avaliações iniciais"
-                labelClassName={`${labelCls} min-h-[2.5rem]`}
-                placeholder="0"
-                inputMode="numeric"
-              />
-            </div>
-            <p className="text-xs text-charcoal-400 dark:text-charcoal-500">
-              O site soma automaticamente os leads reais cadastrados para atualizar Clientes registrados.
-            </p>
-          </div>
         </div>
       )
 

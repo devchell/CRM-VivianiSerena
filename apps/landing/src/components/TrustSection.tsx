@@ -17,6 +17,11 @@ type TrustStats = {
   convertedCases: number
 }
 
+type SocialProofStats = {
+  clientsRegistered: number
+  publicReviews: number
+}
+
 function AnimatedStat({ stat, start }: { stat: Stat; start: boolean }) {
   const { count } = useCountUp(stat.value, 2000, start)
   return (
@@ -34,13 +39,19 @@ function AnimatedStat({ stat, start }: { stat: Stat; start: boolean }) {
   )
 }
 
-export default function TrustSection({ stats }: { stats?: TrustStats | null }) {
+export default function TrustSection({
+  stats,
+  socialProof,
+}: {
+  stats?: TrustStats | null
+  socialProof?: SocialProofStats | null
+}) {
   const { ref: sectionRef, isInView } = useInView({ threshold: 0.3 })
   const { ref: headerRef, isInView: headerInView } = useInView()
 
   const statList: Stat[] = [
-    { value: stats?.clientsRegistered ?? 0, suffix: '', label: 'Clientes registrados' },
-    { value: stats?.publicReviews ?? 0, suffix: '', label: 'Avaliações públicas' },
+    { value: socialProof?.clientsRegistered ?? stats?.clientsRegistered ?? 0, suffix: '', label: 'Clientes registrados' },
+    { value: socialProof?.publicReviews ?? stats?.publicReviews ?? 0, suffix: '', label: 'Avaliações públicas' },
     { value: stats?.completedAppointments ?? 0, suffix: '', label: 'Agendamentos concluídos' },
     { value: stats?.convertedCases ?? 0, suffix: '', label: 'Casos convertidos' },
   ]
