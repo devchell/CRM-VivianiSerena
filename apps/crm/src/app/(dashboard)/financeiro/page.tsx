@@ -26,6 +26,9 @@ import {
   crmListBody,
   crmListCell,
   crmListEmpty,
+  crmFieldSelect,
+  crmFieldSelectIcon,
+  crmFieldSelectWrapper,
   crmListFooter,
   crmListHeaderCell,
   crmListRow,
@@ -568,17 +571,20 @@ export default function FinanceiroPage() {
 
               <div>
                 <label className="mb-1 block text-xs font-medium text-charcoal-400 dark:text-charcoal-400">Categoria</label>
-                <select
-                  value={form.category}
-                  onChange={(event) => setForm((current) => ({ ...current, category: event.target.value as FinancialRecord['category'] }))}
-                  className="w-full rounded-lg border border-blush-300 bg-white px-3 py-2 text-sm text-charcoal focus:outline-none focus:ring-2 focus:ring-rose-gold/40 dark:border-charcoal-600 dark:bg-charcoal-700 dark:text-charcoal-100"
-                >
-                  {categories[form.type].map((category) => (
-                    <option key={category.value} value={category.value}>
-                      {category.label}
-                    </option>
-                  ))}
-                </select>
+                <div className={crmFieldSelectWrapper}>
+                  <select
+                    value={form.category}
+                    onChange={(event) => setForm((current) => ({ ...current, category: event.target.value as FinancialRecord['category'] }))}
+                    className={crmFieldSelect}
+                  >
+                    {categories[form.type].map((category) => (
+                      <option key={category.value} value={category.value}>
+                        {category.label}
+                      </option>
+                    ))}
+                  </select>
+                  <ChevronDown size={16} className={crmFieldSelectIcon} />
+                </div>
               </div>
 
               <div className="grid grid-cols-2 gap-3">

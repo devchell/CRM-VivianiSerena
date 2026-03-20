@@ -9,6 +9,7 @@ import interactionPlugin from '@fullcalendar/interaction'
 import timeGridPlugin from '@fullcalendar/timegrid'
 import {
   CalendarDays,
+  ChevronDown,
   Clock3,
   Dot,
   Plus,
@@ -19,6 +20,11 @@ import {
 import { toast } from 'sonner'
 import { useAuth } from '@/lib/useAuth'
 import { apiFetchJson, buildAuthHeaders } from '@/lib/api-client'
+import {
+  crmFieldSelect,
+  crmFieldSelectIcon,
+  crmFieldSelectWrapper,
+} from '@/components/ui/listStyles'
 
 interface AppointmentsResponse {
   success: true
@@ -578,19 +584,22 @@ export default function AgendaPage() {
                 <label className="mb-1.5 block text-xs font-medium uppercase tracking-[0.12em] text-charcoal-400 dark:text-charcoal-400">
                   Lead
                 </label>
-                <select
-                  required
-                  value={form.leadId}
-                  onChange={(event) => setForm((current) => ({ ...current, leadId: event.target.value }))}
-                  className="w-full rounded-2xl border border-blush-300 bg-white px-4 py-3 text-sm text-charcoal shadow-sm focus:outline-none focus:ring-2 focus:ring-rose-gold/30 dark:border-charcoal-600 dark:bg-charcoal-700 dark:text-charcoal-100"
-                >
-                  <option value="">Selecione um lead</option>
-                  {leadOptions.map((lead) => (
-                    <option key={lead.value} value={lead.value}>
-                      {lead.label}
-                    </option>
-                  ))}
-                </select>
+                <div className={crmFieldSelectWrapper}>
+                  <select
+                    required
+                    value={form.leadId}
+                    onChange={(event) => setForm((current) => ({ ...current, leadId: event.target.value }))}
+                    className={crmFieldSelect}
+                  >
+                    <option value="">Selecione um lead</option>
+                    {leadOptions.map((lead) => (
+                      <option key={lead.value} value={lead.value}>
+                        {lead.label}
+                      </option>
+                    ))}
+                  </select>
+                  <ChevronDown size={16} className={crmFieldSelectIcon} />
+                </div>
                 {!canViewLeads ? (
                   <p className="mt-1 text-[11px] text-charcoal-400 dark:text-charcoal-500">
                     Este perfil precisa de acesso a leads para criar agendamentos.

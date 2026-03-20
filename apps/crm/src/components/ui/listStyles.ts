@@ -1,3 +1,6 @@
+export const crmSelectReset =
+  'appearance-none [appearance:none] [-webkit-appearance:none] [-moz-appearance:none] [background-image:none] bg-[length:0_0] [&::-ms-expand]:hidden'
+
 export const crmListShell =
   'card-dark overflow-hidden rounded-[32px] border border-blush-200/80 shadow-[0_28px_80px_-42px_rgba(97,73,54,0.26)] dark:border-charcoal-700'
 
@@ -12,10 +15,21 @@ export const crmListSearchInput =
 export const crmListSelectWrapper = 'relative min-w-[220px]'
 
 export const crmListSelect =
-  'h-12 w-full appearance-none rounded-2xl border border-blush-300 bg-white/95 px-4 pr-11 text-sm text-charcoal shadow-sm outline-none transition focus:border-rose-gold/40 focus:ring-2 focus:ring-rose-gold/20 dark:border-charcoal-600 dark:bg-charcoal-800 dark:text-charcoal-100'
+  `h-12 w-full rounded-2xl border border-blush-300 bg-white/95 px-4 pr-11 text-sm text-charcoal shadow-sm outline-none transition focus:border-rose-gold/40 focus:ring-2 focus:ring-rose-gold/20 dark:border-charcoal-600 dark:bg-charcoal-800 dark:text-charcoal-100 ${crmSelectReset}`
 
 export const crmListSelectIcon =
   'pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-charcoal-400 dark:text-charcoal-500'
+
+export const crmFieldSelectWrapper = 'relative'
+
+export const crmFieldSelect =
+  `h-12 w-full rounded-2xl border border-blush-300 bg-white px-4 pr-11 text-sm text-charcoal shadow-sm outline-none transition focus:border-rose-gold/40 focus:ring-2 focus:ring-rose-gold/20 dark:border-charcoal-600 dark:bg-charcoal-700 dark:text-charcoal-100 ${crmSelectReset}`
+
+export const crmFieldSelectCompact =
+  `h-10 w-full rounded-xl border border-blush-300 bg-white px-3 pr-10 text-sm text-charcoal shadow-sm outline-none transition focus:border-rose-gold/40 focus:ring-2 focus:ring-rose-gold/20 dark:border-charcoal-600 dark:bg-charcoal-700 dark:text-charcoal-100 ${crmSelectReset}`
+
+export const crmFieldSelectIcon =
+  'pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-charcoal-400 dark:text-charcoal-500'
 
 export const crmListTableHead =
   'border-b border-blush-200/80 bg-[linear-gradient(180deg,rgba(252,243,236,0.88),rgba(255,250,246,0.82))] dark:border-charcoal-700 dark:bg-[linear-gradient(180deg,rgba(35,31,27,0.96),rgba(29,25,22,0.9))]'

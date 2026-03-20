@@ -15,6 +15,11 @@ import { RichTextEditor } from '@/components/editor/RichTextEditor'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useTheme } from 'next-themes'
 import { crmPublicEnv } from '@/lib/public-env'
+import {
+  crmFieldSelect,
+  crmFieldSelectIcon,
+  crmFieldSelectWrapper,
+} from '@/components/ui/listStyles'
 
 const API_URL = crmPublicEnv.apiBaseUrl
 const LANDING_URL = crmPublicEnv.landingUrl
@@ -172,18 +177,21 @@ const SelectField = memo(function SelectField({
   return (
     <div className={className}>
       <label className={labelCls}>{label}</label>
-      <select
-        value={value}
-        onChange={(event) => onChange(event.target.value)}
-        className={inputCls}
-      >
-        <option value="">{placeholder ?? 'Selecione uma opção'}</option>
-        {options.map((option) => (
-          <option key={`${option.value}-${option.label}`} value={option.value}>
-            {option.label}
-          </option>
-        ))}
-      </select>
+      <div className={crmFieldSelectWrapper}>
+        <select
+          value={value}
+          onChange={(event) => onChange(event.target.value)}
+          className={crmFieldSelect}
+        >
+          <option value="">{placeholder ?? 'Selecione uma opção'}</option>
+          {options.map((option) => (
+            <option key={`${option.value}-${option.label}`} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </select>
+        <ChevronDown size={16} className={crmFieldSelectIcon} />
+      </div>
     </div>
   )
 })

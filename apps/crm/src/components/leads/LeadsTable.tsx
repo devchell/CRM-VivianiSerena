@@ -26,6 +26,7 @@ import {
   crmListShell,
   crmListTableHead,
   crmListToolbar,
+  crmSelectReset,
 } from '@/components/ui/listStyles'
 
 interface Lead {
@@ -203,7 +204,7 @@ export function LeadsTable() {
               value={status}
               onChange={e => handleStatusChange(info.row.original.id, e.target.value)}
               disabled={!canUpdateLeads}
-              className={`text-xs font-semibold px-3 py-1.5 rounded-full border border-transparent outline-none cursor-pointer shadow-[0_8px_20px_-18px_rgba(0,0,0,0.6)] backdrop-blur appearance-none pr-7 transition-all duration-150 ${cfg.color}`}
+              className={`text-xs font-semibold px-3 py-1.5 rounded-full border border-transparent outline-none cursor-pointer shadow-[0_8px_20px_-18px_rgba(0,0,0,0.6)] backdrop-blur pr-7 transition-all duration-150 ${crmSelectReset} ${cfg.color}`}
             >
               {Object.entries(STATUS_CONFIG).map(([k, v]) => (
                 <option key={k} value={k} className="bg-white dark:bg-charcoal-900 text-charcoal dark:text-charcoal-100">

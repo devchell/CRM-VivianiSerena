@@ -4,6 +4,7 @@ import { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } fro
 import { useSearchParams } from 'next/navigation'
 import {
   CheckCircle2,
+  ChevronDown,
   Database,
   Eye,
   EyeOff,
@@ -20,6 +21,11 @@ import {
 import { toast } from 'sonner'
 import { useAuth } from '@/lib/useAuth'
 import { crmPublicEnv } from '@/lib/public-env'
+import {
+  crmFieldSelect,
+  crmFieldSelectIcon,
+  crmFieldSelectWrapper,
+} from '@/components/ui/listStyles'
 
 const API_URL = `${crmPublicEnv.apiBaseUrl}/api/v1`
 
@@ -416,7 +422,16 @@ export default function AdministracaoPage() {
               </div>
               <div className="grid gap-3 md:grid-cols-2">
                 <label className="space-y-2 text-sm"><span className="font-medium text-charcoal dark:text-charcoal-100">Usuário SMTP</span><input value={emailForm.user} onChange={(event) => updateEmailField('user', event.target.value)} className="w-full rounded-2xl border border-blush-200 bg-white px-4 py-3 text-sm text-charcoal outline-none transition focus:border-rose-gold dark:border-charcoal-700 dark:bg-charcoal-800 dark:text-charcoal-100" placeholder={maskValue(overview.integrations.email.user, visibility.email)} /></label>
-                <label className="space-y-2 text-sm"><span className="font-medium text-charcoal dark:text-charcoal-100">Seguranca</span><select value={emailForm.secure ? 'true' : 'false'} onChange={(event) => updateEmailField('secure', event.target.value === 'true')} className="w-full rounded-2xl border border-blush-200 bg-white px-4 py-3 text-sm text-charcoal outline-none transition focus:border-rose-gold dark:border-charcoal-700 dark:bg-charcoal-800 dark:text-charcoal-100"><option value="false">STARTTLS / porta 587</option><option value="true">SSL/TLS / porta 465</option></select></label>
+                <label className="space-y-2 text-sm">
+                  <span className="font-medium text-charcoal dark:text-charcoal-100">Segurança</span>
+                  <div className={crmFieldSelectWrapper}>
+                    <select value={emailForm.secure ? 'true' : 'false'} onChange={(event) => updateEmailField('secure', event.target.value === 'true')} className={crmFieldSelect}>
+                      <option value="false">STARTTLS / porta 587</option>
+                      <option value="true">SSL/TLS / porta 465</option>
+                    </select>
+                    <ChevronDown size={16} className={crmFieldSelectIcon} />
+                  </div>
+                </label>
               </div>
               <label className="space-y-2 text-sm"><span className="font-medium text-charcoal dark:text-charcoal-100">Senha SMTP</span><input type="password" value={emailForm.password} onChange={(event) => updateEmailField('password', event.target.value)} className="w-full rounded-2xl border border-blush-200 bg-white px-4 py-3 text-sm text-charcoal outline-none transition focus:border-rose-gold dark:border-charcoal-700 dark:bg-charcoal-800 dark:text-charcoal-100" placeholder={overview.integrations.email.passwordConfigured ? (visibility.email ? 'Deixe em branco para manter a atual' : '****** senha configurada') : 'Digite a senha SMTP'} /></label>
               <div className="grid gap-3 md:grid-cols-2">

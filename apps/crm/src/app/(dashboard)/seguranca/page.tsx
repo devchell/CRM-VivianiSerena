@@ -20,6 +20,9 @@ import {
   crmListBody,
   crmListEmpty,
   crmListRow,
+  crmFieldSelectCompact,
+  crmFieldSelectIcon,
+  crmFieldSelectWrapper,
   crmListSelect,
   crmListSelectIcon,
   crmListSelectWrapper,
@@ -291,13 +294,16 @@ function BlockIpModal({ onClose, onBlock }: {
           </div>
           <div>
             <label className="text-xs font-semibold text-charcoal-400 dark:text-charcoal-500 uppercase tracking-wide block mb-1.5">Duração do Bloqueio</label>
-            <select value={minutes} onChange={e => setMinutes(Number(e.target.value))} className="w-full px-3 py-2.5 rounded-xl border border-blush-300 dark:border-charcoal-600 bg-white dark:bg-charcoal-700 text-charcoal dark:text-charcoal-100 text-sm focus:outline-none focus:ring-2 focus:ring-rose-gold/30">
-              <option value={15}>15 minutos</option>
-              <option value={60}>1 hora</option>
-              <option value={1440}>24 horas</option>
-              <option value={10080}>7 dias</option>
-              <option value={43200}>30 dias</option>
-            </select>
+            <div className={crmFieldSelectWrapper}>
+              <select value={minutes} onChange={e => setMinutes(Number(e.target.value))} className={crmFieldSelectCompact}>
+                <option value={15}>15 minutos</option>
+                <option value={60}>1 hora</option>
+                <option value={1440}>24 horas</option>
+                <option value={10080}>7 dias</option>
+                <option value={43200}>30 dias</option>
+              </select>
+              <ChevronDown size={15} className={crmFieldSelectIcon} />
+            </div>
           </div>
           <div className="flex gap-3 pt-1">
             <button type="button" onClick={onClose} className="flex-1 py-2.5 rounded-xl border border-blush-300 dark:border-charcoal-600 text-charcoal dark:text-charcoal-100 text-sm font-medium hover:bg-blush dark:hover:bg-charcoal-700 transition-colors">Cancelar</button>
