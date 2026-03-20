@@ -24,11 +24,12 @@ type SocialProofStats = {
 
 function AnimatedStat({ stat, start }: { stat: Stat; start: boolean }) {
   const { count } = useCountUp(stat.value, 2000, start)
+  const visibleCount = start ? count : stat.value
   return (
     <div className="text-center">
       <div className="flex items-end justify-center gap-0.5">
         <span className="font-heading text-4xl font-bold leading-none text-rose-gold md:text-5xl">
-          {count}
+          {visibleCount}
         </span>
         <span className="mb-0.5 text-2xl font-bold leading-tight text-rose-gold md:text-3xl">
           {stat.suffix}
