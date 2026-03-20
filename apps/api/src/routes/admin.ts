@@ -11,6 +11,11 @@ import { healthcheckUploadStorage } from '../infrastructure/storage'
 import { getEmailSettingsOverview, saveEmailSettings } from '../infrastructure/emailSettings'
 import { getGoogleCalendarConnectionStatus } from '../infrastructure/googleCalendar'
 import { fetchGoogleBusinessReviews, listGoogleBusinessLocations } from '../infrastructure/googleBusiness'
+import {
+  connectWhatsAppBusinessChannel,
+  disconnectWhatsAppBusinessChannel,
+  getWhatsAppChannelStatus,
+} from '../infrastructure/whatsapp'
 
 export const adminRouter: Router = Router()
 
@@ -35,6 +40,14 @@ const linkedGoogleLocationSchema = z.object({
   address: z.string().optional().default(''),
 })
 
+const whatsappConnectSchema = z.object({
+  code: z.string().min(1),
+  phoneNumberId: z.string().optional(),
+  wabaId: z.string().optional(),
+  businessAccountId: z.string().optional(),
+  appScopedUserId: z.string().optional(),
+})
+
 adminRouter.use(authenticate, authorize('ADMIN'))
 
 async function requireGoogleBusinessReady() {
@@ -51,9 +64,10 @@ async function requireGoogleBusinessReady() {
 
 adminRouter.get('/overview', async (_req, res, next) => {
   try {
-    const [google, uploads] = await Promise.all([
+    const [google, uploads, whatsapp] = await Promise.all([
       getGoogleCalendarConnectionStatus(),
       healthcheckUploadStorage(),
+      getWhatsAppChannelStatus(),
     ])
 
     let database = false
@@ -81,6 +95,7 @@ adminRouter.get('/overview', async (_req, res, next) => {
         integrations: {
           googleCalendar: google,
           email,
+          whatsapp,
         },
         infrastructure: {
           database,
@@ -95,8 +110,63 @@ adminRouter.get('/overview', async (_req, res, next) => {
           googleRedirectUri: process.env.GOOGLE_REDIRECT_URI?.trim() ?? null,
           googleClientConfigured: Boolean(process.env.GOOGLE_CLIENT_ID?.trim()),
           calendarId: process.env.GOOGLE_CALENDAR_ID?.trim() || 'primary',
+          whatsappAppId: apiEnv.whatsappAppId ?? null,
+          whatsappEmbeddedSignupConfigId: apiEnv.whatsappEmbeddedSignupConfigId ?? null,
+          whatsappWebhookPath: whatsapp.webhookPath,
+          whatsappGraphApiVersion: whatsapp.graphApiVersion,
         },
       },
+    })
+  } catch (error) {
+    next(error)
+  }
+})
+
+adminRouter.get('/whatsapp/status', async (_req, res, next) => {
+  try {
+    res.json({ success: true, data: await getWhatsAppChannelStatus() })
+  } catch (error) {
+    next(error)
+  }
+})
+
+adminRouter.post('/whatsapp/connect', async (req, res, next) => {
+  try {
+    if (!req.user?.sub) {
+      throw new AppError(401, 'Sessao invalida')
+    }
+
+    const body = whatsappConnectSchema.parse(req.body)
+    const status = await connectWhatsAppBusinessChannel(body, {
+      userId: req.user.sub,
+      ip: req.ip,
+    })
+
+    res.json({
+      success: true,
+      message: 'Canal oficial do WhatsApp conectado com sucesso',
+      data: status,
+    })
+  } catch (error) {
+    next(error)
+  }
+})
+
+adminRouter.delete('/whatsapp/connect', async (req, res, next) => {
+  try {
+    if (!req.user?.sub) {
+      throw new AppError(401, 'Sessao invalida')
+    }
+
+    const status = await disconnectWhatsAppBusinessChannel({
+      userId: req.user.sub,
+      ip: req.ip,
+    })
+
+    res.json({
+      success: true,
+      message: 'Canal oficial do WhatsApp desconectado',
+      data: status,
     })
   } catch (error) {
     next(error)

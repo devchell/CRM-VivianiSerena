@@ -8,6 +8,7 @@ import { AppError } from '../middleware/errorHandler'
 import { buildCommercialLeadWhere } from '../domain/metrics/service'
 import { emailService } from '../infrastructure/email'
 import { getActiveEmailSettings } from '../infrastructure/emailSettings'
+import { getWhatsAppChannelStatus, sendWhatsAppBusinessMessage } from '../infrastructure/whatsapp'
 
 export const dispatchesRouter: Router = Router()
 dispatchesRouter.use(authenticate)
@@ -216,7 +217,7 @@ async function getHistoricalDispatchLogs() {
   const since = new Date(Date.now() - 180 * 24 * 60 * 60 * 1000)
   return prisma.auditLog.findMany({
     where: {
-      resource: { in: ['DispatchCampaign', 'DispatchRecipient'] },
+      resource: { in: ['DispatchCampaign', 'DispatchRecipient', 'DispatchReceipt'] },
       timestamp: { gte: since },
     },
     orderBy: { timestamp: 'desc' },
@@ -333,7 +334,10 @@ async function buildAudience(filters: AudienceFilters, settings: DispatchSetting
     return acc
   }, {})
 
-  const emailSettings = await getActiveEmailSettings()
+  const [emailSettings, whatsappStatus] = await Promise.all([
+    getActiveEmailSettings(),
+    getWhatsAppChannelStatus(),
+  ])
 
   return {
     rows,
@@ -357,7 +361,7 @@ async function buildAudience(filters: AudienceFilters, settings: DispatchSetting
         ineligible: rows.filter((lead) => lead.whatsappReason !== 'eligible').length,
         reasons: whatsappReasons,
         remainingToday: Math.max(settings.whatsappDailyLimit - sentToday.whatsapp, 0),
-        providerConfigured: false,
+        providerConfigured: whatsappStatus.connected,
       },
     },
     sample: rows.slice(0, 100),
@@ -448,7 +452,7 @@ dispatchesRouter.get('/history', authorizePermission('leads.view'), async (_req,
       .slice(0, 30)
 
     const recipientLogs = logs
-      .filter((entry) => entry.resource === 'DispatchRecipient')
+      .filter((entry) => entry.resource === 'DispatchRecipient' || entry.resource === 'DispatchReceipt')
       .map((entry) => asJsonObject(entry.details))
 
     const bySource = recipientLogs.reduce<Record<string, number>>((acc, item) => {
@@ -623,6 +627,24 @@ dispatchesRouter.post('/send', authorizePermission('leads.broadcast'), async (re
     }
 
     for (const lead of whatsappAllowed) {
+      let providerMessageId: string | null = null
+      let providerFailed = true
+      let providerReason: RecipientReason = 'provider_failed'
+      try {
+        const response = await sendWhatsAppBusinessMessage({
+          to: lead.whatsappE164 ?? '',
+          body: input.draft.whatsappBody,
+        })
+        providerMessageId = response.providerMessageId
+        providerFailed = false
+        providerReason = 'eligible'
+      } catch (error) {
+        providerFailed = true
+        providerReason = error instanceof AppError && error.statusCode === 409
+          ? 'provider_unconfigured'
+          : 'provider_failed'
+      }
+
       const summary = {
         resourceType: 'recipient',
         campaignId,
@@ -630,11 +652,12 @@ dispatchesRouter.post('/send', authorizePermission('leads.broadcast'), async (re
         leadId: lead.id,
         phone: normalizeOptionalText(lead.phone),
         whatsappE164: lead.whatsappE164,
+        providerMessageId,
         source: lead.source,
         leadStatus: lead.status,
         activityState: lead.activityState,
-        reason: 'provider_unconfigured',
-        status: 'provider_failed',
+        reason: providerFailed ? providerReason : 'eligible',
+        status: providerFailed ? 'provider_failed' : 'sent',
         attempted: true,
         sentAt: new Date().toISOString(),
       }
@@ -642,7 +665,7 @@ dispatchesRouter.post('/send', authorizePermission('leads.broadcast'), async (re
       await prisma.auditLog.create({
         data: {
           userId: req.user.sub,
-          action: 'FAILED',
+          action: providerFailed ? 'FAILED' : 'SENT',
           resource: 'DispatchRecipient',
           ip: req.ip,
           details: summary as Prisma.InputJsonObject,
@@ -696,7 +719,7 @@ dispatchesRouter.post('/send', authorizePermission('leads.broadcast'), async (re
         emailBlocked: recipientSummaries.filter((item) => item.channel === 'email' && item.status === 'blocked').length,
         emailFailed: recipientSummaries.filter((item) => item.channel === 'email' && item.status === 'provider_failed').length,
         whatsappEligible: whatsappCandidates.length,
-        whatsappSent: 0,
+        whatsappSent: recipientSummaries.filter((item) => item.channel === 'whatsapp' && item.status === 'sent').length,
         whatsappBlocked: recipientSummaries.filter((item) => item.channel === 'whatsapp' && item.status === 'blocked').length,
         whatsappFailed: recipientSummaries.filter((item) => item.channel === 'whatsapp' && item.status === 'provider_failed').length,
         ineligible: Math.max(audience.summary.totalAudience - reachableLeadIds.size, 0),

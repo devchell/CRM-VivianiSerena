@@ -134,6 +134,11 @@ export const apiEnv = {
   anonymizationSalt: readRequiredEnv('ANONYMIZATION_SALT'),
   landingRevalidateUrl: readOptionalUrl('LANDING_REVALIDATE_URL'),
   revalidateSecret: process.env.REVALIDATE_SECRET?.trim() || undefined,
+  whatsappAppId: readOptionalEnv('WHATSAPP_APP_ID'),
+  whatsappAppSecret: readOptionalEnv('WHATSAPP_APP_SECRET'),
+  whatsappEmbeddedSignupConfigId: readOptionalEnv('WHATSAPP_EMBEDDED_SIGNUP_CONFIG_ID'),
+  whatsappWebhookVerifyToken: readOptionalEnv('WHATSAPP_WEBHOOK_VERIFY_TOKEN'),
+  whatsappGraphApiVersion: readOptionalEnv('WHATSAPP_GRAPH_API_VERSION') || 'v22.0',
   storageDriver,
   uploadDir: process.env.UPLOAD_DIR?.trim() || './uploads',
   uploadPublicBaseUrl:

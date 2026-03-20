@@ -13,6 +13,7 @@ import { usersRouter } from './users'
 import { notificationsRouter } from './notifications'
 import { adminRouter } from './admin'
 import { dispatchesRouter } from './dispatches'
+import { whatsappRouter } from './whatsapp'
 
 export const router: Router = Router()
 
@@ -27,6 +28,7 @@ router.use('/metrics', metricsRouter)
 router.use('/analytics', analyticsRouter)
 router.use('/notifications', notificationsRouter)
 router.use('/dispatches', dispatchesRouter)
+router.use('/whatsapp', whatsappRouter)
 router.use('/security', securityRouter)
 router.use('/privacy', privacyRouter)
 router.use('/admin', adminRouter)

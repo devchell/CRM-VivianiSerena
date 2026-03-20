@@ -2,12 +2,15 @@ import express from 'express'
 import request from 'supertest'
 import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
 import { errorHandler } from '../middleware/errorHandler'
+import { AppError } from '../middleware/errorHandler'
 
 const auditLogFindMany = vi.fn()
 const auditLogCreate = vi.fn()
 const leadFindMany = vi.fn()
 const getActiveEmailSettings = vi.fn()
 const sendCampaignMessage = vi.fn()
+const getWhatsAppChannelStatus = vi.fn()
+const sendWhatsAppBusinessMessage = vi.fn()
 
 let settingsLogs: Array<Record<string, unknown>> = []
 let draftLogs: Array<Record<string, unknown>> = []
@@ -48,6 +51,11 @@ vi.mock('../infrastructure/email', () => ({
   },
 }))
 
+vi.mock('../infrastructure/whatsapp', () => ({
+  getWhatsAppChannelStatus,
+  sendWhatsAppBusinessMessage,
+}))
+
 let dispatchesRouter: typeof import('./dispatches').dispatchesRouter
 
 beforeAll(async () => {
@@ -76,6 +84,8 @@ beforeEach(() => {
   auditLogCreate.mockResolvedValue({ id: 'audit_1' })
   getActiveEmailSettings.mockResolvedValue({ configured: false })
   sendCampaignMessage.mockResolvedValue(true)
+  getWhatsAppChannelStatus.mockResolvedValue({ connected: false })
+  sendWhatsAppBusinessMessage.mockRejectedValue(new AppError(409, 'Canal oficial do WhatsApp nao esta conectado'))
 })
 
 function createApp() {
@@ -253,6 +263,70 @@ describe('POST /dispatches/send', () => {
     })
     expect(sendCampaignMessage).not.toHaveBeenCalled()
     expect(auditLogCreate).toHaveBeenCalledTimes(5)
+  })
+
+  it('uses the official WhatsApp channel when connected', async () => {
+    settingsLogs = [
+      {
+        id: 'settings_1',
+        action: 'UPSERT',
+        resource: 'DispatchSettings',
+        timestamp: new Date('2026-03-20T10:00:00.000Z'),
+        details: {
+          settings: {
+            emailDailyLimit: 5,
+            whatsappDailyLimit: 5,
+            batchSize: 5,
+            pacingMs: 0,
+            inactiveAfterDays: 90,
+          },
+        },
+      },
+    ]
+    getWhatsAppChannelStatus.mockResolvedValue({ connected: true })
+    sendWhatsAppBusinessMessage.mockResolvedValue({ providerMessageId: 'wamid.success' })
+    leadFindMany.mockResolvedValue([
+      {
+        id: 'lead_1',
+        name: 'Ana',
+        email: 'ana@example.com',
+        phone: '11999990000',
+        source: 'instagram',
+        status: 'new',
+        notes: null,
+        utmSource: 'landing_form',
+        consentedAt: new Date('2026-03-20T09:00:00.000Z'),
+        anonymized: false,
+        createdAt: new Date('2026-03-20T12:00:00.000Z'),
+      },
+    ])
+
+    const response = await request(createApp())
+      .post('/send')
+      .send({
+        idempotencyKey: 'dispatch-whatsapp-success',
+        confirm: true,
+        filters: { status: 'new' },
+        draft: {
+          status: 'new',
+          emailEnabled: false,
+          emailSubject: '',
+          emailBody: '',
+          whatsappEnabled: true,
+          whatsappBody: 'Oi!',
+        },
+      })
+
+    expect(response.status).toBe(201)
+    expect(sendWhatsAppBusinessMessage).toHaveBeenCalledWith({
+      to: '+5511999990000',
+      body: 'Oi!',
+    })
+    expect(response.body.data.totals).toMatchObject({
+      whatsappEligible: 1,
+      whatsappSent: 1,
+      whatsappFailed: 0,
+    })
   })
 
   it('returns the previous payload when the idempotency key already exists', async () => {

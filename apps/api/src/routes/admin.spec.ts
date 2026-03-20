@@ -5,6 +5,9 @@ import { errorHandler } from '../middleware/errorHandler'
 
 const getGoogleCalendarConnectionStatus = vi.fn()
 const listGoogleBusinessLocations = vi.fn()
+const getWhatsAppChannelStatus = vi.fn()
+const connectWhatsAppBusinessChannel = vi.fn()
+const disconnectWhatsAppBusinessChannel = vi.fn()
 
 vi.mock('@prisma/client', () => ({
   ContentSection: {
@@ -68,6 +71,12 @@ vi.mock('../infrastructure/googleBusiness', () => ({
   fetchGoogleBusinessReviews: vi.fn(),
 }))
 
+vi.mock('../infrastructure/whatsapp', () => ({
+  getWhatsAppChannelStatus,
+  connectWhatsAppBusinessChannel,
+  disconnectWhatsAppBusinessChannel,
+}))
+
 let adminRouter: typeof import('./admin').adminRouter
 
 beforeAll(async () => {
@@ -88,6 +97,26 @@ beforeAll(async () => {
 
 beforeEach(() => {
   vi.clearAllMocks()
+  getWhatsAppChannelStatus.mockResolvedValue({
+    configured: false,
+    connected: false,
+    missingConfiguration: ['WHATSAPP_APP_ID'],
+    graphApiVersion: 'v22.0',
+    webhookPath: '/api/v1/whatsapp/webhook',
+    embeddedSignupReady: false,
+    displayPhoneNumber: null,
+    verifiedName: null,
+    qualityRating: null,
+    codeVerificationStatus: null,
+    nameStatus: null,
+    phoneNumberId: null,
+    businessAccountId: null,
+    wabaId: null,
+    webhookSubscribed: false,
+    connectedAt: null,
+    disconnectedAt: null,
+    lastError: null,
+  })
 })
 
 describe('GET /admin/google-business/locations', () => {
@@ -123,5 +152,35 @@ describe('GET /admin/google-business/locations', () => {
     expect(response.status).toBe(409)
     expect(response.body.error).toContain('Google OAuth nao esta conectado')
     expect(listGoogleBusinessLocations).not.toHaveBeenCalled()
+  })
+})
+
+describe('POST /admin/whatsapp/connect', () => {
+  it('delegates the official channel connection to the WhatsApp provider flow', async () => {
+    connectWhatsAppBusinessChannel.mockResolvedValue({
+      configured: true,
+      connected: true,
+      displayPhoneNumber: '+55 11 99999-0000',
+    })
+
+    const app = express()
+    app.use(express.json())
+    app.use('/admin', adminRouter)
+    app.use(errorHandler)
+
+    const response = await request(app)
+      .post('/admin/whatsapp/connect')
+      .send({
+        code: 'embedded-code',
+        phoneNumberId: '123',
+        wabaId: '456',
+      })
+
+    expect(response.status).toBe(200)
+    expect(connectWhatsAppBusinessChannel).toHaveBeenCalledWith(expect.objectContaining({
+      code: 'embedded-code',
+      phoneNumberId: '123',
+      wabaId: '456',
+    }), expect.objectContaining({ userId: 'admin_1' }))
   })
 })
