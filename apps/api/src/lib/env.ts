@@ -117,7 +117,11 @@ export const apiEnv = {
   nodeEnv: process.env.NODE_ENV?.trim() || 'production',
   apiHost: process.env.API_HOST?.trim() || '0.0.0.0',
   apiPort: readPort(),
-  appVersion: process.env.NEXT_PUBLIC_APP_VERSION?.trim() || process.env.APP_VERSION?.trim() || '1.0.0',
+  appVersion:
+    process.env.NEXT_PUBLIC_APP_VERSION?.trim()
+    || process.env.APP_VERSION?.trim()
+    || process.env.RENDER_GIT_COMMIT?.trim()
+    || '1.0.0',
   databaseUrl: readRequiredEnv('DATABASE_URL'),
   redisUrl: readRequiredEnv('REDIS_URL'),
   apiBaseUrl: readRequiredUrl('API_BASE_URL'),
