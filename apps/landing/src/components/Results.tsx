@@ -10,7 +10,6 @@ import { trackCTAClick } from '@/lib/analytics'
 import { landingPublicEnv } from '@/lib/public-env'
 
 const API_URL = landingPublicEnv.apiBaseUrl
-const DEFAULT_RESULTS_VIVIANI_IMAGE = 'https://static.wixstatic.com/media/be8b61_97f4d7a9d8ea4a59a06b26cb11a5d22d~mv2.jpg/v1/fill/w_600,h_900,al_c,q_80,usm_0.66_1.00_0.01,enc_avif,quality_auto/be8b61_97f4d7a9d8ea4a59a06b26cb11a5d22d~mv2.jpg'
 
 interface ResultItem {
   id: string
@@ -113,9 +112,7 @@ export default function Results({ items, vivianiPhotoUrl }: { items: ResultItem[
     : items.filter((item) => item.category === activeCategory)
   const displayedItems = isMobile && !showAll ? filtered.slice(0, 3) : filtered
   const normalizedVivianiPhoto = vivianiPhotoUrl ? normalizeImageUrl(vivianiPhotoUrl) : ''
-  const resultsVivianiPhoto = hasCtaImageError || !normalizedVivianiPhoto
-    ? DEFAULT_RESULTS_VIVIANI_IMAGE
-    : normalizedVivianiPhoto
+  const hasVivianiPhoto = Boolean(normalizedVivianiPhoto) && !hasCtaImageError
 
   return (
     <LazyMotion features={domAnimation}>
@@ -196,14 +193,25 @@ export default function Results({ items, vivianiPhotoUrl }: { items: ResultItem[
           >
             <div className="grid items-stretch md:grid-cols-2">
               <div className="relative h-72 min-h-[280px] md:h-auto">
-                <Image
-                  src={resultsVivianiPhoto}
-                  alt="Viviani Serena - Especialista em remoção a laser"
-                  fill
-                  className="object-cover object-top"
-                  sizes="(max-width: 768px) 100vw, 50vw"
-                  onError={() => setHasCtaImageError(true)}
-                />
+                {hasVivianiPhoto ? (
+                  <Image
+                    src={normalizedVivianiPhoto}
+                    alt="Viviani Serena - Especialista em remoção a laser"
+                    fill
+                    className="object-cover object-top"
+                    sizes="(max-width: 768px) 100vw, 50vw"
+                    onError={() => setHasCtaImageError(true)}
+                  />
+                ) : (
+                  <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-blush via-cream to-blush">
+                    <div className="text-center p-8">
+                      <div className="w-24 h-24 rounded-full bg-rose-gold/20 flex items-center justify-center mx-auto mb-3">
+                        <span className="font-heading text-4xl font-bold text-rose-gold">VS</span>
+                      </div>
+                      <p className="text-charcoal/50 text-sm">Imagem em definição</p>
+                    </div>
+                  </div>
+                )}
               </div>
 
               <div className="flex flex-col justify-center p-8 md:p-12">
