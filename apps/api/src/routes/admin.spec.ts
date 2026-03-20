@@ -6,6 +6,17 @@ import { errorHandler } from '../middleware/errorHandler'
 const getGoogleCalendarConnectionStatus = vi.fn()
 const listGoogleBusinessLocations = vi.fn()
 
+vi.mock('@prisma/client', () => ({
+  ContentSection: {
+    hero: 'hero',
+    contact: 'contact',
+  },
+  UserRole: {
+    ADMIN: 'ADMIN',
+    VIEWER: 'VIEWER',
+  },
+}))
+
 vi.mock('../lib/prisma', () => ({
   prisma: {},
 }))
