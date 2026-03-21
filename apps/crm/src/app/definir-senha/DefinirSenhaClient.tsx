@@ -92,7 +92,7 @@ export function DefinirSenhaClient() {
 
   if (status === 'loading') {
     return (
-      <div className="min-h-screen bg-cream dark:bg-charcoal-900 flex items-center justify-center p-4">
+      <div className="min-h-screen bg-cream-200 dark:bg-[#111110] flex items-center justify-center p-4">
         <div className="w-8 h-8 border-2 border-rose-gold border-t-transparent rounded-full animate-spin" />
       </div>
     )
@@ -100,14 +100,14 @@ export function DefinirSenhaClient() {
 
   if (!done && (status !== 'authenticated' || !mustChangePassword)) {
     return (
-      <div className="min-h-screen bg-cream dark:bg-charcoal-900 flex items-center justify-center p-4">
+      <div className="min-h-screen bg-cream-200 dark:bg-[#111110] flex items-center justify-center p-4">
         <div className="w-8 h-8 border-2 border-rose-gold border-t-transparent rounded-full animate-spin" />
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-cream dark:bg-charcoal-900 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-cream-200 dark:bg-[#111110] flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center w-14 h-14 rounded-lg bg-rose-gold/10 border border-rose-gold/20 mb-4">
@@ -135,7 +135,7 @@ export function DefinirSenhaClient() {
           ) : (
             <form onSubmit={handleSubmit} className="space-y-5">
               <div>
-                <label className="block text-xs font-medium text-charcoal-400 dark:text-charcoal-400 mb-1.5">
+                <label className="block text-xs font-medium text-charcoal-400 dark:text-charcoal-300 mb-1.5">
                   Nova senha
                 </label>
                 <div className="relative">
@@ -184,7 +184,7 @@ export function DefinirSenhaClient() {
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-charcoal-400 dark:text-charcoal-400 mb-1.5">
+                <label className="block text-xs font-medium text-charcoal-400 dark:text-charcoal-300 mb-1.5">
                   Confirmar nova senha
                 </label>
                 <div className="relative">

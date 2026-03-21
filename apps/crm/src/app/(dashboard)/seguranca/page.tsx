@@ -117,7 +117,7 @@ function StatusBanner({ status, lastCheck }: { status: 'green' | 'yellow' | 'red
       </div>
       <div className="flex-1 min-w-0">
         <p className={`font-heading text-lg font-bold ${cfg.text}`}>{cfg.msg}</p>
-        <p className="text-sm text-charcoal-500 dark:text-charcoal-400 mt-0.5">{cfg.sub}</p>
+        <p className="text-sm text-charcoal-500 dark:text-charcoal-300 mt-0.5">{cfg.sub}</p>
       </div>
       {lastCheck && (
         <div className="hidden sm:flex items-center gap-1.5 text-xs text-charcoal-400 dark:text-charcoal-500 flex-shrink-0">
@@ -162,7 +162,7 @@ function ChecklistPanel({ items, loading }: { items: ChecklistItem[]; loading: b
       {items.map(item => {
         const isOpen = expanded === item.id
         return (
-          <div key={item.id} className="rounded-md border border-blush-200 dark:border-charcoal-700 overflow-hidden">
+          <div key={item.id} className="rounded-md border border-blush-200 dark:border-[#3a3835] overflow-hidden">
             <button
               onClick={() => setExpanded(isOpen ? null : item.id)}
               className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-blush-50 dark:hover:bg-charcoal-700/30 transition-colors"
@@ -180,7 +180,7 @@ function ChecklistPanel({ items, loading }: { items: ChecklistItem[]; loading: b
             </button>
             {isOpen && (
               <div className="px-4 pb-3 pt-0">
-                <p className="text-xs text-charcoal-500 dark:text-charcoal-400 leading-relaxed">{item.description}</p>
+                <p className="text-xs text-charcoal-500 dark:text-charcoal-300 leading-relaxed">{item.description}</p>
                 {item.id === 'ssl_expiry' && item.daysLeft !== undefined && item.daysLeft <= 30 && (
                   <p className="text-xs text-yellow-400 mt-1 font-medium">⚠️ Renovar em até {item.daysLeft} dias para evitar interrupção.</p>
                 )}
@@ -238,7 +238,7 @@ function EventModal({ event, onClose }: { event: SecurityEvent; onClose: () => v
           {Object.keys(event.details).length > 0 && (
             <div>
               <label className="text-xs font-semibold text-charcoal-400 dark:text-charcoal-500 uppercase tracking-wide">Informações Técnicas</label>
-              <pre className="text-xs text-charcoal-500 dark:text-charcoal-400 mt-1 bg-blush-50 dark:bg-charcoal-700/30 rounded-lg px-3 py-2 overflow-auto max-h-32 whitespace-pre-wrap">
+              <pre className="text-xs text-charcoal-500 dark:text-charcoal-300 mt-1 bg-blush-50 dark:bg-charcoal-700/30 rounded-lg px-3 py-2 overflow-auto max-h-32 whitespace-pre-wrap">
                 {JSON.stringify(event.details, null, 2)}
               </pre>
             </div>
@@ -549,7 +549,7 @@ export default function SegurancaPage() {
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div>
           <h1 className="font-heading text-2xl font-bold text-charcoal dark:text-charcoal-50">Segurança</h1>
-          <p className="text-charcoal-400 dark:text-charcoal-400 mt-1 text-sm">Monitoramento em tempo real · Atualiza a cada 30 segundos</p>
+          <p className="text-charcoal-400 dark:text-charcoal-300 mt-1 text-sm">Monitoramento em tempo real · Atualiza a cada 30 segundos</p>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
           {notifPermission !== 'granted' && (
@@ -744,7 +744,7 @@ export default function SegurancaPage() {
                   return (
                     <div key={t.type}>
                       <div className="flex items-center justify-between mb-1">
-                        <span className="text-xs text-charcoal-500 dark:text-charcoal-400 truncate max-w-[160px]">{humanizeType(t.type).substring(0, 28)}</span>
+                        <span className="text-xs text-charcoal-500 dark:text-charcoal-300 truncate max-w-[160px]">{humanizeType(t.type).substring(0, 28)}</span>
                         <span className="text-xs text-charcoal-400 font-medium ml-2">{t.count}</span>
                       </div>
                       <div className="h-1.5 rounded-full bg-charcoal-100 dark:bg-charcoal-700 overflow-hidden">

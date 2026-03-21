@@ -326,7 +326,7 @@ export function DispatchesPanel() {
 
   if (!canBroadcast && !canView) {
     return (
-      <div className={`${crmListShell} p-8 text-sm text-charcoal-400 dark:text-charcoal-400`}>
+      <div className={`${crmListShell} p-8 text-sm text-charcoal-400 dark:text-charcoal-300`}>
         Este perfil não possui acesso ao módulo de disparos.
       </div>
     )
@@ -334,14 +334,14 @@ export function DispatchesPanel() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between border-b border-blush-200 pb-4 dark:border-charcoal-700">
+      <div className="flex items-center justify-between border-b border-blush-200 pb-4 dark:border-[#3a3835]">
         <h1 className="font-heading text-xl font-semibold text-charcoal dark:text-charcoal-50">Disparos</h1>
         <Link href="/leads" className="rounded border border-blush-300 px-4 py-2 text-sm font-medium text-charcoal-500 transition-colors hover:border-rose-gold/40 hover:text-rose-gold dark:border-charcoal-600 dark:text-charcoal-300">
           Voltar para Leads
         </Link>
       </div>
 
-      <div className={`${crmListToolbar} rounded-lg border border-blush-200/80 dark:border-charcoal-700`}>
+      <div className={`${crmListToolbar} rounded-lg border border-blush-200/80 dark:border-[#3a3835]`}>
         {STATUS_TABS.map((tab) => (
           <button
             key={tab.key}
@@ -368,7 +368,7 @@ export function DispatchesPanel() {
           <div key={card.label} className="card-dark p-5 shadow-sm">
             <div className="flex items-center justify-between gap-3">
               <div>
-                <p className="text-xs text-charcoal-400 dark:text-charcoal-400">{card.label}</p>
+                <p className="text-xs text-charcoal-400 dark:text-charcoal-300">{card.label}</p>
                 <p className="mt-1 font-heading text-3xl font-bold text-charcoal dark:text-charcoal-50">{card.value}</p>
               </div>
               <div className={`flex h-11 w-11 items-center justify-center rounded-lg ${card.tone}`}>
@@ -437,29 +437,29 @@ export function DispatchesPanel() {
 
       <div className="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
         <div className={crmListShell}>
-          <div className="border-b border-blush-200/90 px-5 py-4 dark:border-charcoal-700">
+          <div className="border-b border-blush-200/90 px-5 py-4 dark:border-[#3a3835]">
             <h2 className="font-heading text-xl font-semibold text-charcoal dark:text-charcoal-50">Canais e mensagem</h2>
           </div>
           {draft ? (
             <div className="space-y-5 p-5">
               <div className="grid gap-4 md:grid-cols-2">
-                <div className="rounded-lg border border-blush-200 bg-white/80 p-4 dark:border-charcoal-700 dark:bg-charcoal-800/70">
+                <div className="rounded-lg border border-blush-200 bg-white/80 p-4 dark:border-[#3a3835] dark:bg-charcoal-800/70">
                   <label className="flex items-center gap-2 text-sm font-medium text-charcoal dark:text-charcoal-100">
                     <input type="checkbox" checked={draft.emailEnabled} onChange={(event) => setDraft((current) => current ? { ...current, emailEnabled: event.target.checked } : current)} />
                     Ativar disparo por e-mail
                   </label>
-                  <p className="mt-2 text-xs text-charcoal-400 dark:text-charcoal-400">
+                  <p className="mt-2 text-xs text-charcoal-400 dark:text-charcoal-300">
                     Restante hoje: {audience?.email.remainingToday ?? 0} / {settings?.emailDailyLimit ?? 0} · SMTP {audience?.email.providerConfigured ? 'ok' : 'não configurado'}
                   </p>
                   <input value={draft.emailSubject} onChange={(event) => setDraft((current) => current ? { ...current, emailSubject: event.target.value } : current)} placeholder="Assunto do e-mail" className="mt-4 w-full rounded-md border border-blush-300 bg-white px-3 py-2 text-sm text-charcoal focus:outline-none focus:ring-2 focus:ring-rose-gold/40 dark:border-charcoal-600 dark:bg-charcoal-700 dark:text-charcoal-100" />
                   <textarea rows={8} value={draft.emailBody} onChange={(event) => setDraft((current) => current ? { ...current, emailBody: event.target.value } : current)} placeholder="Mensagem em texto/markdown simples" className="mt-3 w-full rounded-md border border-blush-300 bg-white px-3 py-2 text-sm text-charcoal focus:outline-none focus:ring-2 focus:ring-rose-gold/40 dark:border-charcoal-600 dark:bg-charcoal-700 dark:text-charcoal-100" />
                 </div>
-                <div className="rounded-lg border border-blush-200 bg-white/80 p-4 dark:border-charcoal-700 dark:bg-charcoal-800/70">
+                <div className="rounded-lg border border-blush-200 bg-white/80 p-4 dark:border-[#3a3835] dark:bg-charcoal-800/70">
                   <label className="flex items-center gap-2 text-sm font-medium text-charcoal dark:text-charcoal-100">
                     <input type="checkbox" checked={draft.whatsappEnabled} onChange={(event) => setDraft((current) => current ? { ...current, whatsappEnabled: event.target.checked } : current)} />
                     Ativar disparo por WhatsApp
                   </label>
-                  <p className="mt-2 text-xs text-charcoal-400 dark:text-charcoal-400">
+                  <p className="mt-2 text-xs text-charcoal-400 dark:text-charcoal-300">
                     Restante hoje: {audience?.whatsapp.remainingToday ?? 0} / {settings?.whatsappDailyLimit ?? 0} · Provider {audience?.whatsapp.providerConfigured ? 'ok' : 'pendente'}
                   </p>
                   <textarea rows={12} value={draft.whatsappBody} onChange={(event) => setDraft((current) => current ? { ...current, whatsappBody: event.target.value } : current)} placeholder="Mensagem operacional para WhatsApp" className="mt-4 w-full rounded-md border border-blush-300 bg-white px-3 py-2 text-sm text-charcoal focus:outline-none focus:ring-2 focus:ring-rose-gold/40 dark:border-charcoal-600 dark:bg-charcoal-700 dark:text-charcoal-100" />
@@ -481,7 +481,7 @@ export function DispatchesPanel() {
         </div>
 
         <div className={crmListShell}>
-          <div className="border-b border-blush-200/90 px-5 py-4 dark:border-charcoal-700">
+          <div className="border-b border-blush-200/90 px-5 py-4 dark:border-[#3a3835]">
             <h2 className="font-heading text-xl font-semibold text-charcoal dark:text-charcoal-50">Limites operacionais</h2>
           </div>
           {settings ? (
@@ -519,10 +519,10 @@ export function DispatchesPanel() {
 
       <div className="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
         <div className={crmListShell}>
-          <div className="border-b border-blush-200/90 px-5 py-4 dark:border-charcoal-700">
+          <div className="border-b border-blush-200/90 px-5 py-4 dark:border-[#3a3835]">
             <h2 className="font-heading text-xl font-semibold text-charcoal dark:text-charcoal-50">Prévia da audiência</h2>
           </div>
-          <div className="grid gap-3 border-b border-blush-100 px-5 py-4 text-sm text-charcoal-500 dark:border-charcoal-700 dark:text-charcoal-400 md:grid-cols-2">
+          <div className="grid gap-3 border-b border-blush-100 px-5 py-4 text-sm text-charcoal-500 dark:border-[#3a3835] dark:text-charcoal-300 md:grid-cols-2">
             <div>
               <p className="font-medium text-charcoal dark:text-charcoal-100">E-mail</p>
               <div className="mt-2 flex flex-wrap gap-2">
@@ -576,31 +576,31 @@ export function DispatchesPanel() {
         </div>
 
         <div className={crmListShell}>
-          <div className="border-b border-blush-200/90 px-5 py-4 dark:border-charcoal-700">
+          <div className="border-b border-blush-200/90 px-5 py-4 dark:border-[#3a3835]">
             <h2 className="font-heading text-xl font-semibold text-charcoal dark:text-charcoal-50">Histórico e relatórios</h2>
           </div>
           <div className="space-y-4 p-5">
             <div className="grid gap-3 md:grid-cols-2">
-              <div className="rounded-lg border border-blush-200 bg-white/80 p-4 text-sm dark:border-charcoal-700 dark:bg-charcoal-800/70">
+              <div className="rounded-lg border border-blush-200 bg-white/80 p-4 text-sm dark:border-[#3a3835] dark:bg-charcoal-800/70">
                 <p className="font-medium text-charcoal dark:text-charcoal-100">Por origem</p>
-                <div className="mt-2 space-y-1 text-charcoal-500 dark:text-charcoal-400">
+                <div className="mt-2 space-y-1 text-charcoal-500 dark:text-charcoal-300">
                   {Object.entries(history?.reports.bySource ?? {}).map(([source, count]) => (
                     <p key={source}>{SOURCE_LABELS[source as LeadSourceKey] ?? source}: {count}</p>
                   ))}
                 </div>
               </div>
-              <div className="rounded-lg border border-blush-200 bg-white/80 p-4 text-sm dark:border-charcoal-700 dark:bg-charcoal-800/70">
+              <div className="rounded-lg border border-blush-200 bg-white/80 p-4 text-sm dark:border-[#3a3835] dark:bg-charcoal-800/70">
                 <p className="font-medium text-charcoal dark:text-charcoal-100">Por status</p>
-                <div className="mt-2 space-y-1 text-charcoal-500 dark:text-charcoal-400">
+                <div className="mt-2 space-y-1 text-charcoal-500 dark:text-charcoal-300">
                   {Object.entries(history?.reports.byStatus ?? {}).map(([leadStatus, count]) => (
                     <p key={leadStatus}>{leadStatus}: {count}</p>
                   ))}
                 </div>
               </div>
             </div>
-            <div className="rounded-lg border border-blush-200 bg-white/80 p-4 text-sm dark:border-charcoal-700 dark:bg-charcoal-800/70">
+            <div className="rounded-lg border border-blush-200 bg-white/80 p-4 text-sm dark:border-[#3a3835] dark:bg-charcoal-800/70">
               <p className="font-medium text-charcoal dark:text-charcoal-100">Elegibilidade operacional</p>
-              <div className="mt-2 space-y-1 text-charcoal-500 dark:text-charcoal-400">
+              <div className="mt-2 space-y-1 text-charcoal-500 dark:text-charcoal-300">
                 {Object.entries(history?.reports.byEligibility ?? {}).map(([key, count]) => (
                   <p key={key}>{key}: {count}</p>
                 ))}
@@ -609,9 +609,9 @@ export function DispatchesPanel() {
                 Opt-out: {history?.reports.optOut ?? 0} · Inativos: {history?.reports.inactive ?? 0}
               </p>
             </div>
-            <div className="rounded-lg border border-blush-200 bg-white/80 p-4 text-sm dark:border-charcoal-700 dark:bg-charcoal-800/70">
+            <div className="rounded-lg border border-blush-200 bg-white/80 p-4 text-sm dark:border-[#3a3835] dark:bg-charcoal-800/70">
               <p className="font-medium text-charcoal dark:text-charcoal-100">Por período</p>
-              <div className="mt-2 space-y-1 text-charcoal-500 dark:text-charcoal-400">
+              <div className="mt-2 space-y-1 text-charcoal-500 dark:text-charcoal-300">
                 {Object.entries(history?.reports.byPeriod ?? {}).slice(0, 5).map(([period, count]) => (
                   <p key={period}>{period}: {count}</p>
                 ))}
@@ -620,11 +620,11 @@ export function DispatchesPanel() {
                 ) : null}
               </div>
             </div>
-            <div className="rounded-lg border border-blush-200 bg-white/80 p-4 text-sm dark:border-charcoal-700 dark:bg-charcoal-800/70">
+            <div className="rounded-lg border border-blush-200 bg-white/80 p-4 text-sm dark:border-[#3a3835] dark:bg-charcoal-800/70">
               <p className="font-medium text-charcoal dark:text-charcoal-100">Últimos disparos</p>
-              <div className="mt-2 space-y-2 text-charcoal-500 dark:text-charcoal-400">
+              <div className="mt-2 space-y-2 text-charcoal-500 dark:text-charcoal-300">
                 {(history?.campaigns ?? []).slice(0, 5).map((campaign, index) => (
-                  <div key={String(campaign.campaignId ?? campaign.id ?? `campaign-${index}`)} className="rounded border border-blush-100 px-3 py-2 dark:border-charcoal-700">
+                  <div key={String(campaign.campaignId ?? campaign.id ?? `campaign-${index}`)} className="rounded border border-blush-100 px-3 py-2 dark:border-[#3a3835]">
                     <p className="font-medium text-charcoal dark:text-charcoal-100">{String(campaign.campaignId ?? campaign.id ?? 'campanha')}</p>
                     <p className="text-xs">
                       {String(campaign.createdAt ?? campaign.timestamp ?? '')} · audiência {String((campaign.totals as { totalAudience?: number } | undefined)?.totalAudience ?? 0)}
@@ -643,13 +643,13 @@ export function DispatchesPanel() {
       {showConfirm && audience && draft ? (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm" onClick={(event) => event.target === event.currentTarget && setShowConfirm(false)}>
           <div className="card-dark w-full max-w-xl shadow-2xl">
-            <div className="border-b border-blush-200 px-6 py-5 dark:border-charcoal-700">
+            <div className="border-b border-blush-200 px-6 py-5 dark:border-[#3a3835]">
               <h2 className="font-heading text-xl font-semibold text-charcoal dark:text-charcoal-50">Confirmar disparo</h2>
-              <p className="mt-2 text-sm text-charcoal-400 dark:text-charcoal-400">
+              <p className="mt-2 text-sm text-charcoal-400 dark:text-charcoal-300">
                 Revise a audiência antes de confirmar. O módulo bloqueia double submit pelo idempotency key atual.
               </p>
             </div>
-            <div className="space-y-3 px-6 py-5 text-sm text-charcoal-500 dark:text-charcoal-400">
+            <div className="space-y-3 px-6 py-5 text-sm text-charcoal-500 dark:text-charcoal-300">
               <p>{draft.emailEnabled ? audience.email.eligible : 0} disparos de e-mail aptos</p>
               <p>{draft.whatsappEnabled ? audience.whatsapp.eligible : 0} disparos de WhatsApp aptos</p>
               <p>{audience.fullyIneligible} leads sem nenhum canal apto</p>

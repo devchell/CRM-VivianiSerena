@@ -32,7 +32,7 @@ export function RecentActivity({ items, loading = false }: RecentActivityProps) 
           ))}
         </div>
       ) : items.length === 0 ? (
-        <div className="rounded-lg border border-dashed border-blush-200 px-4 py-8 text-center text-sm text-charcoal-400 dark:border-charcoal-700 dark:text-charcoal-500">
+        <div className="rounded-lg border border-dashed border-blush-200 px-4 py-8 text-center text-sm text-charcoal-400 dark:border-[#3a3835] dark:text-charcoal-500">
           Nenhum evento operacional recente.
         </div>
       ) : (

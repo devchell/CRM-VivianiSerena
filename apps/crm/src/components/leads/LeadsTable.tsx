@@ -456,7 +456,7 @@ export function LeadsTable() {
     {
       accessorKey: 'source',
       header: 'Origem',
-      cell: info => <span className="text-sm text-charcoal-500 dark:text-charcoal-400">{SOURCE_LABELS[info.getValue() as string] ?? info.getValue() as string}</span>,
+      cell: info => <span className="text-sm text-charcoal-500 dark:text-charcoal-300">{SOURCE_LABELS[info.getValue() as string] ?? info.getValue() as string}</span>,
     },
     {
       accessorKey: 'status',
@@ -656,7 +656,7 @@ export function LeadsTable() {
             Exportar CSV
           </button>
         </div>
-        <div className="grid gap-3 border-t border-blush-100 bg-white/70 px-5 py-4 text-xs text-charcoal-400 dark:border-charcoal-700 dark:bg-charcoal-800/40 dark:text-charcoal-400 md:grid-cols-3">
+        <div className="grid gap-3 border-t border-blush-100 bg-white/70 px-5 py-4 text-xs text-charcoal-400 dark:border-[#3a3835] dark:bg-charcoal-800/40 dark:text-charcoal-300 md:grid-cols-3">
           <div>
             <span className="font-semibold uppercase tracking-[0.16em] text-charcoal-500 dark:text-charcoal-300">Fonte de verdade</span>
             <p className="mt-1">Cards e contadores usam `/api/v1/leads/stats`; tabela e export usam os mesmos filtros de `/api/v1/leads`.</p>
@@ -718,19 +718,19 @@ export function LeadsTable() {
                         <tr className="bg-blush/35 dark:bg-charcoal-800/35">
                           <td colSpan={columns.length} className="px-4 py-5">
                             {isDetailLoading ? (
-                              <div className="flex items-center gap-2 text-sm text-charcoal-400 dark:text-charcoal-400">
+                              <div className="flex items-center gap-2 text-sm text-charcoal-400 dark:text-charcoal-300">
                                 <Loader2 size={16} className="animate-spin" />
                                 Carregando rastreabilidade do lead...
                               </div>
                             ) : detail ? (
                               <div className="grid gap-4 lg:grid-cols-[1.2fr_1fr]">
                                 <div className="space-y-4">
-                                  <div className="rounded-lg border border-blush-200 bg-white/80 p-4 dark:border-charcoal-700 dark:bg-charcoal-800/70">
+                                  <div className="rounded-lg border border-blush-200 bg-white/80 p-4 dark:border-[#3a3835] dark:bg-charcoal-800/70">
                                     <div className="flex items-center gap-2 text-sm font-semibold text-charcoal dark:text-charcoal-100">
                                       <ShieldCheck size={16} />
                                       Captura e consentimento
                                     </div>
-                                    <dl className="mt-3 grid gap-2 text-sm text-charcoal-500 dark:text-charcoal-400 md:grid-cols-2">
+                                    <dl className="mt-3 grid gap-2 text-sm text-charcoal-500 dark:text-charcoal-300 md:grid-cols-2">
                                       <div><dt className="text-xs uppercase tracking-[0.16em]">Origem</dt><dd className="mt-1">{SOURCE_LABELS[detail.source] ?? detail.source}</dd></div>
                                       <div><dt className="text-xs uppercase tracking-[0.16em]">Origem detalhada</dt><dd className="mt-1">{detail.utmSource ?? '-'}</dd></div>
                                       <div><dt className="text-xs uppercase tracking-[0.16em]">UTM medium</dt><dd className="mt-1">{detail.utmMedium ?? '-'}</dd></div>
@@ -748,14 +748,14 @@ export function LeadsTable() {
                                       )}
                                     </div>
                                   </div>
-                                  <div className="rounded-lg border border-blush-200 bg-white/80 p-4 dark:border-charcoal-700 dark:bg-charcoal-800/70">
+                                  <div className="rounded-lg border border-blush-200 bg-white/80 p-4 dark:border-[#3a3835] dark:bg-charcoal-800/70">
                                     <div className="flex items-center gap-2 text-sm font-semibold text-charcoal dark:text-charcoal-100">
                                       <CalendarClock size={16} />
                                       Agenda e atividade
                                     </div>
-                                    <div className="mt-3 space-y-2 text-sm text-charcoal-500 dark:text-charcoal-400">
+                                    <div className="mt-3 space-y-2 text-sm text-charcoal-500 dark:text-charcoal-300">
                                       {detail.appointments.length > 0 ? detail.appointments.map((appointment) => (
-                                        <div key={appointment.id} className="rounded border border-blush-100 bg-white/80 px-3 py-2 dark:border-charcoal-700 dark:bg-charcoal-800">
+                                        <div key={appointment.id} className="rounded border border-blush-100 bg-white/80 px-3 py-2 dark:border-[#3a3835] dark:bg-charcoal-800">
                                           {appointment.serviceType} · {appointment.status} · {new Date(appointment.date).toLocaleString('pt-BR')}
                                         </div>
                                       )) : (
@@ -765,11 +765,11 @@ export function LeadsTable() {
                                   </div>
                                 </div>
                                 <div className="space-y-4">
-                                  <div className="rounded-lg border border-blush-200 bg-white/80 p-4 dark:border-charcoal-700 dark:bg-charcoal-800/70">
+                                  <div className="rounded-lg border border-blush-200 bg-white/80 p-4 dark:border-[#3a3835] dark:bg-charcoal-800/70">
                                     <div className="text-sm font-semibold text-charcoal dark:text-charcoal-100">Sessão e entrada</div>
-                                    <div className="mt-3 space-y-3 text-sm text-charcoal-500 dark:text-charcoal-400">
+                                    <div className="mt-3 space-y-3 text-sm text-charcoal-500 dark:text-charcoal-300">
                                       {detail.sessions.length > 0 ? detail.sessions.map((session) => (
-                                        <div key={session.id} className="rounded border border-blush-100 bg-white/80 px-3 py-3 dark:border-charcoal-700 dark:bg-charcoal-800">
+                                        <div key={session.id} className="rounded border border-blush-100 bg-white/80 px-3 py-3 dark:border-[#3a3835] dark:bg-charcoal-800">
                                           <p>Referrer: {session.referrer ?? '-'}</p>
                                           <p className="mt-1">Páginas: {parsePagesVisited(session.pagesVisited).join(', ') || '-'}</p>
                                           <p className="mt-1">Eventos: {session.analyticsEvents.length}</p>
@@ -779,11 +779,11 @@ export function LeadsTable() {
                                       )}
                                     </div>
                                   </div>
-                                  <div className="rounded-lg border border-blush-200 bg-white/80 p-4 dark:border-charcoal-700 dark:bg-charcoal-800/70">
+                                  <div className="rounded-lg border border-blush-200 bg-white/80 p-4 dark:border-[#3a3835] dark:bg-charcoal-800/70">
                                     <div className="text-sm font-semibold text-charcoal dark:text-charcoal-100">Timeline</div>
-                                    <div className="mt-3 space-y-2 text-sm text-charcoal-500 dark:text-charcoal-400">
+                                    <div className="mt-3 space-y-2 text-sm text-charcoal-500 dark:text-charcoal-300">
                                       {detail.timeline.length > 0 ? detail.timeline.slice(0, 8).map((item) => (
-                                        <div key={item.id} className="rounded border border-blush-100 bg-white/80 px-3 py-2 dark:border-charcoal-700 dark:bg-charcoal-800">
+                                        <div key={item.id} className="rounded border border-blush-100 bg-white/80 px-3 py-2 dark:border-[#3a3835] dark:bg-charcoal-800">
                                           <p className="font-medium text-charcoal dark:text-charcoal-100">{item.title}</p>
                                           <p className="mt-1">{item.description ?? '-'}</p>
                                           <p className="mt-1 text-xs">{new Date(item.timestamp).toLocaleString('pt-BR')}</p>
@@ -817,12 +817,12 @@ export function LeadsTable() {
       {showModal ? (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm" onClick={(event) => event.target === event.currentTarget && setShowModal(false)}>
           <div className="card-dark w-full max-w-2xl shadow-2xl">
-            <div className="flex items-center justify-between border-b border-blush-200 p-6 dark:border-charcoal-700">
+            <div className="flex items-center justify-between border-b border-blush-200 p-6 dark:border-[#3a3835]">
               <div>
                 <h2 className="font-heading text-lg font-semibold text-charcoal dark:text-charcoal-50">
                   {editingLead ? 'Editar lead' : 'Cadastrar lead manualmente'}
                 </h2>
-                <p className="mt-1 text-xs text-charcoal-400 dark:text-charcoal-400">
+                <p className="mt-1 text-xs text-charcoal-400 dark:text-charcoal-300">
                   Operação manual usa o mesmo modelo de lead da captura pública, com origem e consentimento rastreáveis.
                 </p>
               </div>
@@ -914,7 +914,7 @@ export function LeadsTable() {
                 />
               </div>
 
-              <label className="flex items-center gap-2 text-sm text-charcoal-500 dark:text-charcoal-400">
+              <label className="flex items-center gap-2 text-sm text-charcoal-500 dark:text-charcoal-300">
                 <input
                   type="checkbox"
                   checked={form.consented}
