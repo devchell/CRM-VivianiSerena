@@ -141,14 +141,14 @@ function StatusPill({ ok, label }: { ok: boolean; label: string }) {
 
 function SummaryCard(props: { label: string; value: string; note: string; icon: ReactNode }) {
   return (
-    <div className="rounded-lg border border-blush-200 bg-white/90 p-5 shadow-sm dark:border-[#3a3835] dark:bg-charcoal-900/70">
+    <div className="rounded-lg border border-blush-200 bg-white/90 p-5 shadow-sm dark:border-[#3a3835] dark:bg-[#111110]/70">
       <div className="flex items-start justify-between gap-4">
         <div>
           <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-charcoal-400">{props.label}</p>
           <p className="mt-2 font-heading text-2xl font-bold text-charcoal dark:text-charcoal-50">{props.value}</p>
           <p className="mt-2 text-sm leading-6 text-charcoal-500 dark:text-charcoal-300">{props.note}</p>
         </div>
-        <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-cream text-rose-gold ring-1 ring-blush-200 dark:bg-charcoal-800 dark:ring-charcoal-700">
+        <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-cream text-rose-gold ring-1 ring-blush-200 dark:bg-[#1c1b1a] dark:ring-charcoal-700">
           {props.icon}
         </div>
       </div>
@@ -161,7 +161,7 @@ function VisibilityToggle(props: { label: string; active: boolean; onClick: () =
     <button
       type="button"
       onClick={props.onClick}
-      className={`inline-flex items-center gap-2 rounded-full border px-3 py-2 text-xs font-semibold transition-colors ${props.active ? 'border-emerald-200 bg-emerald-50 text-emerald-700' : 'border-blush-200 bg-white text-charcoal-500 hover:bg-blush dark:border-[#3a3835] dark:bg-charcoal-800 dark:text-charcoal-300 dark:hover:bg-charcoal-700'}`}
+      className={`inline-flex items-center gap-2 rounded-full border px-3 py-2 text-xs font-semibold transition-colors ${props.active ? 'border-emerald-200 bg-emerald-50 text-emerald-700' : 'border-blush-200 bg-white text-charcoal-500 hover:bg-blush dark:border-[#3a3835] dark:bg-[#1c1b1a] dark:text-charcoal-300 dark:hover:bg-[#252423]'}`}
     >
       {props.active ? <Eye size={14} /> : <EyeOff size={14} />}
       {props.label}
@@ -171,10 +171,10 @@ function VisibilityToggle(props: { label: string; active: boolean; onClick: () =
 
 function InfoCard(props: { label: string; value: string; breakAll?: boolean; note?: string }) {
   return (
-    <div className="rounded-lg border border-blush-200 bg-white px-4 py-3 dark:border-[#3a3835] dark:bg-charcoal-800/70">
+    <div className="rounded-lg border border-blush-200 bg-white px-4 py-3 dark:border-[#3a3835] dark:bg-[#1c1b1a]/70">
       <p className="text-xs font-semibold uppercase tracking-[0.14em] text-charcoal-400">{props.label}</p>
       <p className={`mt-2 text-sm font-medium text-charcoal dark:text-charcoal-100 ${props.breakAll ? 'break-all' : ''}`}>{props.value}</p>
-      {props.note ? <p className="mt-2 text-xs leading-5 text-charcoal-400 dark:text-charcoal-500">{props.note}</p> : null}
+      {props.note ? <p className="mt-2 text-xs leading-5 text-charcoal-400 dark:text-charcoal-300">{props.note}</p> : null}
     </div>
   )
 }
@@ -189,7 +189,7 @@ function SectionCard(props: {
   children: ReactNode
 }) {
   return (
-    <section className="rounded-lg border border-blush-200 bg-white/90 p-6 shadow-sm dark:border-[#3a3835] dark:bg-charcoal-900/70">
+    <section className="rounded-lg border border-blush-200 bg-white/90 p-6 shadow-sm dark:border-[#3a3835] dark:bg-[#111110]/70">
       <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-rose-gold">{props.eyebrow}</p>
@@ -518,11 +518,11 @@ export default function AdministracaoPage() {
       <div className="flex items-center justify-between border-b border-blush-200 pb-4 dark:border-[#3a3835]">
         <h1 className="font-heading text-xl font-semibold text-charcoal dark:text-charcoal-50">Administração</h1>
         <div className="flex flex-wrap gap-2">
-          <button type="button" onClick={toggleAll} className="inline-flex items-center justify-center gap-2 rounded border border-blush-300 bg-white px-4 py-2 text-sm font-medium text-charcoal shadow-sm transition-colors hover:bg-blush dark:border-charcoal-600 dark:bg-charcoal-800 dark:text-charcoal-100 dark:hover:bg-charcoal-700">
+          <button type="button" onClick={toggleAll} className="inline-flex items-center justify-center gap-2 rounded border border-blush-300 bg-white px-4 py-2 text-sm font-medium text-charcoal shadow-sm transition-colors hover:bg-blush dark:border-[#3a3835] dark:bg-[#1c1b1a] dark:text-charcoal-100 dark:hover:bg-[#252423]">
             {allVisible ? <EyeOff size={15} /> : <Eye size={15} />}
             {allVisible ? 'Ocultar tudo' : 'Mostrar tudo'}
           </button>
-          <button type="button" onClick={() => void loadOverview('refresh')} disabled={refreshing} className="inline-flex items-center justify-center gap-2 rounded border border-blush-300 bg-white px-4 py-2 text-sm font-medium text-charcoal shadow-sm transition-colors hover:bg-blush disabled:opacity-60 dark:border-charcoal-600 dark:bg-charcoal-800 dark:text-charcoal-100 dark:hover:bg-charcoal-700">
+          <button type="button" onClick={() => void loadOverview('refresh')} disabled={refreshing} className="inline-flex items-center justify-center gap-2 rounded border border-blush-300 bg-white px-4 py-2 text-sm font-medium text-charcoal shadow-sm transition-colors hover:bg-blush disabled:opacity-60 dark:border-[#3a3835] dark:bg-[#1c1b1a] dark:text-charcoal-100 dark:hover:bg-[#252423]">
             {refreshing ? <Loader2 size={15} className="animate-spin" /> : <RefreshCw size={15} />}
             Atualizar painel
           </button>
@@ -558,12 +558,12 @@ export default function AdministracaoPage() {
               </div>
             </div>
             <div className="mt-5 flex flex-wrap gap-3">
-              <button type="button" onClick={() => void handleGoogleConnect()} disabled={googleBusy !== null || !overview.integrations.googleCalendar.configured} className="inline-flex items-center gap-2 rounded border border-blush-300 bg-white px-4 py-3 text-sm font-medium text-charcoal transition-colors hover:bg-blush disabled:opacity-60 dark:border-charcoal-600 dark:bg-charcoal-800 dark:text-charcoal-100 dark:hover:bg-charcoal-700">
+              <button type="button" onClick={() => void handleGoogleConnect()} disabled={googleBusy !== null || !overview.integrations.googleCalendar.configured} className="inline-flex items-center gap-2 rounded border border-blush-300 bg-white px-4 py-3 text-sm font-medium text-charcoal transition-colors hover:bg-blush disabled:opacity-60 dark:border-[#3a3835] dark:bg-[#1c1b1a] dark:text-charcoal-100 dark:hover:bg-[#252423]">
                 {googleBusy === 'connect' ? <Loader2 size={15} className="animate-spin" /> : <Globe2 size={15} />}
                 Acessar com sua conta Google
                 <ExternalLink size={14} className="opacity-60" />
               </button>
-              <button type="button" onClick={() => void handleGoogleDisconnect()} disabled={googleBusy !== null || !overview.integrations.googleCalendar.connected} className="inline-flex items-center gap-2 rounded border border-blush-300 bg-white px-4 py-3 text-sm font-medium text-charcoal transition-colors hover:bg-blush disabled:opacity-60 dark:border-charcoal-600 dark:bg-charcoal-800 dark:text-charcoal-100 dark:hover:bg-charcoal-700">
+              <button type="button" onClick={() => void handleGoogleDisconnect()} disabled={googleBusy !== null || !overview.integrations.googleCalendar.connected} className="inline-flex items-center gap-2 rounded border border-blush-300 bg-white px-4 py-3 text-sm font-medium text-charcoal transition-colors hover:bg-blush disabled:opacity-60 dark:border-[#3a3835] dark:bg-[#1c1b1a] dark:text-charcoal-100 dark:hover:bg-[#252423]">
                 {googleBusy === 'disconnect' ? <Loader2 size={15} className="animate-spin" /> : <Unlink2 size={15} />}
                 Desconectar Google
               </button>
@@ -590,12 +590,12 @@ export default function AdministracaoPage() {
               </div>
             ) : null}
             <div className="mt-5 flex flex-wrap gap-3">
-              <button type="button" onClick={() => void handleWhatsappConnect()} disabled={whatsappBusy !== null || !overview.integrations.whatsapp.configured} className="inline-flex items-center gap-2 rounded border border-blush-300 bg-white px-4 py-3 text-sm font-medium text-charcoal transition-colors hover:bg-blush disabled:opacity-60 dark:border-charcoal-600 dark:bg-charcoal-800 dark:text-charcoal-100 dark:hover:bg-charcoal-700">
+              <button type="button" onClick={() => void handleWhatsappConnect()} disabled={whatsappBusy !== null || !overview.integrations.whatsapp.configured} className="inline-flex items-center gap-2 rounded border border-blush-300 bg-white px-4 py-3 text-sm font-medium text-charcoal transition-colors hover:bg-blush disabled:opacity-60 dark:border-[#3a3835] dark:bg-[#1c1b1a] dark:text-charcoal-100 dark:hover:bg-[#252423]">
                 {whatsappBusy === 'connect' ? <Loader2 size={15} className="animate-spin" /> : <MessageCircle size={15} />}
                 Conectar canal oficial
                 <ExternalLink size={14} className="opacity-60" />
               </button>
-              <button type="button" onClick={() => void handleWhatsappDisconnect()} disabled={whatsappBusy !== null || !overview.integrations.whatsapp.connected} className="inline-flex items-center gap-2 rounded border border-blush-300 bg-white px-4 py-3 text-sm font-medium text-charcoal transition-colors hover:bg-blush disabled:opacity-60 dark:border-charcoal-600 dark:bg-charcoal-800 dark:text-charcoal-100 dark:hover:bg-charcoal-700">
+              <button type="button" onClick={() => void handleWhatsappDisconnect()} disabled={whatsappBusy !== null || !overview.integrations.whatsapp.connected} className="inline-flex items-center gap-2 rounded border border-blush-300 bg-white px-4 py-3 text-sm font-medium text-charcoal transition-colors hover:bg-blush disabled:opacity-60 dark:border-[#3a3835] dark:bg-[#1c1b1a] dark:text-charcoal-100 dark:hover:bg-[#252423]">
                 {whatsappBusy === 'disconnect' ? <Loader2 size={15} className="animate-spin" /> : <Unlink2 size={15} />}
                 Desconectar canal
               </button>
@@ -610,11 +610,11 @@ export default function AdministracaoPage() {
             </div>
             <div className="mt-5 grid gap-3">
               <div className="grid gap-3 md:grid-cols-2">
-                <label className="space-y-2 text-sm"><span className="font-medium text-charcoal dark:text-charcoal-100">Host SMTP</span><input value={emailForm.host} onChange={(event) => updateEmailField('host', event.target.value)} className="w-full rounded-md border border-blush-200 bg-white px-4 py-3 text-sm text-charcoal outline-none transition focus:border-rose-gold dark:border-[#3a3835] dark:bg-charcoal-800 dark:text-charcoal-100" placeholder={maskValue(overview.integrations.email.host, visibility.email)} /></label>
-                <label className="space-y-2 text-sm"><span className="font-medium text-charcoal dark:text-charcoal-100">Porta SMTP</span><input value={emailForm.port} onChange={(event) => updateEmailField('port', event.target.value)} className="w-full rounded-md border border-blush-200 bg-white px-4 py-3 text-sm text-charcoal outline-none transition focus:border-rose-gold dark:border-[#3a3835] dark:bg-charcoal-800 dark:text-charcoal-100" placeholder="587" /></label>
+                <label className="space-y-2 text-sm"><span className="font-medium text-charcoal dark:text-charcoal-100">Host SMTP</span><input value={emailForm.host} onChange={(event) => updateEmailField('host', event.target.value)} className="w-full rounded-md border border-blush-200 bg-white px-4 py-3 text-sm text-charcoal outline-none transition focus:border-rose-gold dark:border-[#3a3835] dark:bg-[#1c1b1a] dark:text-charcoal-100" placeholder={maskValue(overview.integrations.email.host, visibility.email)} /></label>
+                <label className="space-y-2 text-sm"><span className="font-medium text-charcoal dark:text-charcoal-100">Porta SMTP</span><input value={emailForm.port} onChange={(event) => updateEmailField('port', event.target.value)} className="w-full rounded-md border border-blush-200 bg-white px-4 py-3 text-sm text-charcoal outline-none transition focus:border-rose-gold dark:border-[#3a3835] dark:bg-[#1c1b1a] dark:text-charcoal-100" placeholder="587" /></label>
               </div>
               <div className="grid gap-3 md:grid-cols-2">
-                <label className="space-y-2 text-sm"><span className="font-medium text-charcoal dark:text-charcoal-100">Usuário SMTP</span><input value={emailForm.user} onChange={(event) => updateEmailField('user', event.target.value)} className="w-full rounded-md border border-blush-200 bg-white px-4 py-3 text-sm text-charcoal outline-none transition focus:border-rose-gold dark:border-[#3a3835] dark:bg-charcoal-800 dark:text-charcoal-100" placeholder={maskValue(overview.integrations.email.user, visibility.email)} /></label>
+                <label className="space-y-2 text-sm"><span className="font-medium text-charcoal dark:text-charcoal-100">Usuário SMTP</span><input value={emailForm.user} onChange={(event) => updateEmailField('user', event.target.value)} className="w-full rounded-md border border-blush-200 bg-white px-4 py-3 text-sm text-charcoal outline-none transition focus:border-rose-gold dark:border-[#3a3835] dark:bg-[#1c1b1a] dark:text-charcoal-100" placeholder={maskValue(overview.integrations.email.user, visibility.email)} /></label>
                 <label className="space-y-2 text-sm">
                   <span className="font-medium text-charcoal dark:text-charcoal-100">Segurança</span>
                   <div className={crmFieldSelectWrapper}>
@@ -626,16 +626,16 @@ export default function AdministracaoPage() {
                   </div>
                 </label>
               </div>
-              <label className="space-y-2 text-sm"><span className="font-medium text-charcoal dark:text-charcoal-100">Senha SMTP</span><input type="password" value={emailForm.password} onChange={(event) => updateEmailField('password', event.target.value)} className="w-full rounded-md border border-blush-200 bg-white px-4 py-3 text-sm text-charcoal outline-none transition focus:border-rose-gold dark:border-[#3a3835] dark:bg-charcoal-800 dark:text-charcoal-100" placeholder={overview.integrations.email.passwordConfigured ? (visibility.email ? 'Deixe em branco para manter a atual' : '****** senha configurada') : 'Digite a senha SMTP'} /></label>
+              <label className="space-y-2 text-sm"><span className="font-medium text-charcoal dark:text-charcoal-100">Senha SMTP</span><input type="password" value={emailForm.password} onChange={(event) => updateEmailField('password', event.target.value)} className="w-full rounded-md border border-blush-200 bg-white px-4 py-3 text-sm text-charcoal outline-none transition focus:border-rose-gold dark:border-[#3a3835] dark:bg-[#1c1b1a] dark:text-charcoal-100" placeholder={overview.integrations.email.passwordConfigured ? (visibility.email ? 'Deixe em branco para manter a atual' : '****** senha configurada') : 'Digite a senha SMTP'} /></label>
               <div className="grid gap-3 md:grid-cols-2">
-                <label className="space-y-2 text-sm"><span className="font-medium text-charcoal dark:text-charcoal-100">E-mail remetente</span><input value={emailForm.from} onChange={(event) => updateEmailField('from', event.target.value)} className="w-full rounded-md border border-blush-200 bg-white px-4 py-3 text-sm text-charcoal outline-none transition focus:border-rose-gold dark:border-[#3a3835] dark:bg-charcoal-800 dark:text-charcoal-100" placeholder={maskValue(overview.integrations.email.from, visibility.email)} /></label>
-                <label className="space-y-2 text-sm"><span className="font-medium text-charcoal dark:text-charcoal-100">Nome do remetente</span><input value={emailForm.fromName} onChange={(event) => updateEmailField('fromName', event.target.value)} className="w-full rounded-md border border-blush-200 bg-white px-4 py-3 text-sm text-charcoal outline-none transition focus:border-rose-gold dark:border-[#3a3835] dark:bg-charcoal-800 dark:text-charcoal-100" placeholder={maskValue(overview.integrations.email.fromName, visibility.email)} /></label>
+                <label className="space-y-2 text-sm"><span className="font-medium text-charcoal dark:text-charcoal-100">E-mail remetente</span><input value={emailForm.from} onChange={(event) => updateEmailField('from', event.target.value)} className="w-full rounded-md border border-blush-200 bg-white px-4 py-3 text-sm text-charcoal outline-none transition focus:border-rose-gold dark:border-[#3a3835] dark:bg-[#1c1b1a] dark:text-charcoal-100" placeholder={maskValue(overview.integrations.email.from, visibility.email)} /></label>
+                <label className="space-y-2 text-sm"><span className="font-medium text-charcoal dark:text-charcoal-100">Nome do remetente</span><input value={emailForm.fromName} onChange={(event) => updateEmailField('fromName', event.target.value)} className="w-full rounded-md border border-blush-200 bg-white px-4 py-3 text-sm text-charcoal outline-none transition focus:border-rose-gold dark:border-[#3a3835] dark:bg-[#1c1b1a] dark:text-charcoal-100" placeholder={maskValue(overview.integrations.email.fromName, visibility.email)} /></label>
               </div>
-              <label className="space-y-2 text-sm"><span className="font-medium text-charcoal dark:text-charcoal-100">E-mail administrativo</span><input value={emailForm.adminEmail} onChange={(event) => updateEmailField('adminEmail', event.target.value)} className="w-full rounded-md border border-blush-200 bg-white px-4 py-3 text-sm text-charcoal outline-none transition focus:border-rose-gold dark:border-[#3a3835] dark:bg-charcoal-800 dark:text-charcoal-100" placeholder={maskValue(overview.integrations.email.adminEmail, visibility.email)} /></label>
+              <label className="space-y-2 text-sm"><span className="font-medium text-charcoal dark:text-charcoal-100">E-mail administrativo</span><input value={emailForm.adminEmail} onChange={(event) => updateEmailField('adminEmail', event.target.value)} className="w-full rounded-md border border-blush-200 bg-white px-4 py-3 text-sm text-charcoal outline-none transition focus:border-rose-gold dark:border-[#3a3835] dark:bg-[#1c1b1a] dark:text-charcoal-100" placeholder={maskValue(overview.integrations.email.adminEmail, visibility.email)} /></label>
             </div>
             <div className="mt-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-              <p className="text-xs leading-6 text-charcoal-400 dark:text-charcoal-500">Se a senha ficar vazia, o valor atual será preservado. As alterações entram em uso assim que forem salvas.</p>
-              <button type="button" onClick={() => void handleEmailSave()} disabled={emailSaving} className="inline-flex items-center gap-2 rounded border border-blush-300 bg-white px-4 py-3 text-sm font-medium text-charcoal transition-colors hover:bg-blush disabled:opacity-60 dark:border-charcoal-600 dark:bg-charcoal-800 dark:text-charcoal-100 dark:hover:bg-charcoal-700">
+              <p className="text-xs leading-6 text-charcoal-400 dark:text-charcoal-300">Se a senha ficar vazia, o valor atual será preservado. As alterações entram em uso assim que forem salvas.</p>
+              <button type="button" onClick={() => void handleEmailSave()} disabled={emailSaving} className="inline-flex items-center gap-2 rounded border border-blush-300 bg-white px-4 py-3 text-sm font-medium text-charcoal transition-colors hover:bg-blush disabled:opacity-60 dark:border-[#3a3835] dark:bg-[#1c1b1a] dark:text-charcoal-100 dark:hover:bg-[#252423]">
                 {emailSaving ? <Loader2 size={15} className="animate-spin" /> : <Mail size={15} />}
                 Salvar dados de e-mail
               </button>
@@ -653,7 +653,7 @@ export default function AdministracaoPage() {
               <InfoCard label="WhatsApp Config ID" value={maskValue(overview.environment.whatsappEmbeddedSignupConfigId, visibility.environment)} breakAll />
               <InfoCard label="Storage" value={overview.infrastructure.storageDriver} note="Driver atual usado para uploads." />
             </div>
-            <div className="mt-5 rounded-lg border border-blush-200 bg-cream/70 p-4 dark:border-[#3a3835] dark:bg-charcoal-800/60">
+            <div className="mt-5 rounded-lg border border-blush-200 bg-cream/70 p-4 dark:border-[#3a3835] dark:bg-[#1c1b1a]/60">
               <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
                 <div>
                   <p className="text-sm font-semibold text-charcoal dark:text-charcoal-50">Origens liberadas em CORS</p>
@@ -663,9 +663,9 @@ export default function AdministracaoPage() {
               </div>
               <div className="mt-4 space-y-2">
                 {visibility.environment ? overview.environment.corsOrigins.map((origin) => (
-                  <div key={origin} className="rounded border border-blush-200 bg-white px-4 py-3 text-sm font-medium text-charcoal break-all dark:border-[#3a3835] dark:bg-charcoal-900 dark:text-charcoal-100">{origin}</div>
+                  <div key={origin} className="rounded border border-blush-200 bg-white px-4 py-3 text-sm font-medium text-charcoal break-all dark:border-[#3a3835] dark:bg-[#111110] dark:text-charcoal-100">{origin}</div>
                 )) : (
-                  <div className="rounded border border-dashed border-blush-300 bg-white px-4 py-3 text-sm text-charcoal-500 dark:border-[#3a3835] dark:bg-charcoal-900 dark:text-charcoal-300">A lista de origens está oculta. Abra a seção para exibir os valores completos.</div>
+                  <div className="rounded border border-dashed border-blush-300 bg-white px-4 py-3 text-sm text-charcoal-500 dark:border-[#3a3835] dark:bg-[#111110] dark:text-charcoal-300">A lista de origens está oculta. Abra a seção para exibir os valores completos.</div>
                 )}
               </div>
             </div>

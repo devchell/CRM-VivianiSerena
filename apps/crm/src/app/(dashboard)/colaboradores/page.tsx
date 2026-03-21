@@ -453,7 +453,7 @@ export default function ColaboradoresPage() {
             className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
               activeTab === tab.key
                 ? 'bg-rose-gold text-white'
-                : 'text-charcoal-400 hover:bg-blush dark:hover:bg-charcoal-700'
+                : 'text-charcoal-400 hover:bg-blush dark:hover:bg-[#252423]'
             }`}
           >
             {tab.label}
@@ -526,7 +526,7 @@ export default function ColaboradoresPage() {
                         ) : (
                           <div className="flex flex-wrap gap-1 max-w-[240px]">
                             {user.allowedModules.map((module) => (
-                              <span key={module} className="text-xs px-1.5 py-0.5 rounded bg-charcoal-100 dark:bg-charcoal-700 text-charcoal-500 dark:text-charcoal-300">
+                              <span key={module} className="text-xs px-1.5 py-0.5 rounded bg-charcoal-100 dark:bg-[#252423] text-charcoal-500 dark:text-charcoal-300">
                                 {MODULES.find((item) => item.key === module)?.label ?? module}
                               </span>
                             ))}
@@ -600,7 +600,7 @@ export default function ColaboradoresPage() {
           }}
         >
           <div className="card-dark w-full max-w-3xl shadow-2xl max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between p-6 border-b border-blush-200 dark:border-[#3a3835] sticky top-0 bg-white dark:bg-charcoal-800 z-10">
+            <div className="flex items-center justify-between p-6 border-b border-blush-200 dark:border-[#3a3835] sticky top-0 bg-white dark:bg-[#1c1b1a] z-10">
               <div>
                 <h2 className="font-heading text-lg font-semibold text-charcoal dark:text-charcoal-50">
                   {editing ? 'Editar colaborador' : 'Adicionar colaborador'}
@@ -628,7 +628,7 @@ export default function ColaboradoresPage() {
                     required
                     value={form.name}
                     onChange={(event) => setForm((current) => ({ ...current, name: event.target.value }))}
-                    className="w-full px-3 py-2 text-sm rounded-lg border border-blush-300 dark:border-charcoal-600 bg-white dark:bg-charcoal-700 text-charcoal dark:text-charcoal-100 focus:outline-none focus:ring-2 focus:ring-rose-gold/40"
+                    className="w-full px-3 py-2 text-sm rounded-lg border border-blush-300 dark:border-[#3a3835] bg-white dark:bg-[#252423] text-charcoal dark:text-charcoal-100 focus:outline-none focus:ring-2 focus:ring-rose-gold/40"
                   />
                 </div>
 
@@ -638,7 +638,7 @@ export default function ColaboradoresPage() {
                     type="tel"
                     value={form.phone}
                     onChange={(event) => setForm((current) => ({ ...current, phone: event.target.value }))}
-                    className="w-full px-3 py-2 text-sm rounded-lg border border-blush-300 dark:border-charcoal-600 bg-white dark:bg-charcoal-700 text-charcoal dark:text-charcoal-100 focus:outline-none focus:ring-2 focus:ring-rose-gold/40"
+                    className="w-full px-3 py-2 text-sm rounded-lg border border-blush-300 dark:border-[#3a3835] bg-white dark:bg-[#252423] text-charcoal dark:text-charcoal-100 focus:outline-none focus:ring-2 focus:ring-rose-gold/40"
                   />
                 </div>
               </div>
@@ -651,7 +651,7 @@ export default function ColaboradoresPage() {
                   value={form.email}
                   disabled={Boolean(editing && editing.accountStatus === 'ACTIVE')}
                   onChange={(event) => setForm((current) => ({ ...current, email: event.target.value }))}
-                  className="w-full px-3 py-2 text-sm rounded-lg border border-blush-300 dark:border-charcoal-600 bg-white dark:bg-charcoal-700 text-charcoal dark:text-charcoal-100 focus:outline-none focus:ring-2 focus:ring-rose-gold/40 disabled:opacity-60 disabled:cursor-not-allowed"
+                  className="w-full px-3 py-2 text-sm rounded-lg border border-blush-300 dark:border-[#3a3835] bg-white dark:bg-[#252423] text-charcoal dark:text-charcoal-100 focus:outline-none focus:ring-2 focus:ring-rose-gold/40 disabled:opacity-60 disabled:cursor-not-allowed"
                 />
               </div>
 
@@ -671,7 +671,7 @@ export default function ColaboradoresPage() {
                         className={`p-4 rounded-md border-2 text-left transition-all ${
                           selected
                             ? 'border-rose-gold bg-rose-gold/5'
-                            : 'border-blush-300 dark:border-charcoal-600 hover:border-rose-gold/30'
+                            : 'border-blush-300 dark:border-[#3a3835] hover:border-rose-gold/30'
                         }`}
                       >
                         <Icon size={20} className="mb-2 opacity-70" />
@@ -698,7 +698,7 @@ export default function ColaboradoresPage() {
                           className={`flex items-start gap-2.5 px-3 py-3 rounded-md border text-left transition-all text-sm ${
                             active
                               ? 'border-rose-gold bg-rose-gold/5 text-rose-gold'
-                              : 'border-blush-300 dark:border-charcoal-600 text-charcoal-400 hover:border-rose-gold/30'
+                              : 'border-blush-300 dark:border-[#3a3835] text-charcoal-400 hover:border-rose-gold/30'
                           }`}
                         >
                           {active ? <CheckSquare size={15} className="flex-shrink-0 mt-0.5" /> : <Square size={15} className="flex-shrink-0 mt-0.5" />}
@@ -713,7 +713,7 @@ export default function ColaboradoresPage() {
                 </div>
               ) : null}
 
-              <div className="rounded border border-blush-200 dark:border-[#3a3835] bg-blush/40 dark:bg-charcoal-800/60 p-4 text-sm text-charcoal-500 dark:text-charcoal-300">
+              <div className="rounded border border-blush-200 dark:border-[#3a3835] bg-blush/40 dark:bg-[#1c1b1a]/60 p-4 text-sm text-charcoal-500 dark:text-charcoal-300">
                 {form.profile === 'ADMIN'
                   ? 'Admin recebe acesso total, incluindo Editar Site, Segurança e Colaboradores.'
                   : PROFILE_META[form.profile].description}
@@ -723,7 +723,7 @@ export default function ColaboradoresPage() {
                 <button
                   type="button"
                   onClick={() => setShowModal(false)}
-                  className="flex-1 py-2.5 rounded-md border border-blush-300 dark:border-charcoal-600 text-charcoal-400 text-sm hover:bg-blush dark:hover:bg-charcoal-700 transition-colors"
+                  className="flex-1 py-2.5 rounded-md border border-blush-300 dark:border-[#3a3835] text-charcoal-400 text-sm hover:bg-blush dark:hover:bg-[#252423] transition-colors"
                 >
                   Cancelar
                 </button>

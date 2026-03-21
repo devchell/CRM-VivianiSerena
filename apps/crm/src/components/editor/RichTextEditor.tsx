@@ -33,16 +33,16 @@ export function RichTextEditor({ value, onChange, placeholder }: RichTextEditorP
       type="button"
       title={title}
       onClick={onClick}
-      className={`p-1.5 rounded transition-colors ${active ? 'bg-rose-gold/10 text-rose-gold' : 'text-charcoal-400 hover:text-charcoal dark:hover:text-charcoal-100 hover:bg-blush dark:hover:bg-charcoal-700'}`}
+      className={`p-1.5 rounded transition-colors ${active ? 'bg-rose-gold/10 text-rose-gold' : 'text-charcoal-400 hover:text-charcoal dark:hover:text-charcoal-100 hover:bg-blush dark:hover:bg-[#252423]'}`}
     >
       {icon}
     </button>
   )
 
   return (
-    <div className="relative overflow-hidden rounded-lg border border-blush-300 bg-white dark:border-charcoal-600 dark:bg-charcoal-700">
+    <div className="relative overflow-hidden rounded-lg border border-blush-300 bg-white dark:border-[#3a3835] dark:bg-[#252423]">
       {/* Toolbar */}
-      <div className="flex items-center gap-0.5 px-2 py-1.5 border-b border-blush-200 dark:border-charcoal-600 bg-cream dark:bg-charcoal-800">
+      <div className="flex items-center gap-0.5 px-2 py-1.5 border-b border-blush-200 dark:border-[#3a3835] bg-cream dark:bg-[#1c1b1a]">
         {toolbarBtn(editor.isActive('bold'), () => editor.chain().focus().toggleBold().run(), 'Negrito', <Bold size={14} />)}
         {toolbarBtn(editor.isActive('italic'), () => editor.chain().focus().toggleItalic().run(), 'Itálico', <Italic size={14} />)}
         <div className="w-px h-4 bg-blush-300 dark:bg-charcoal-600 mx-1" />
@@ -57,7 +57,7 @@ export function RichTextEditor({ value, onChange, placeholder }: RichTextEditorP
       </div>
       <EditorContent editor={editor} />
       {!editor.getText() && placeholder && (
-        <div className="pointer-events-none absolute left-3 top-[3.15rem] text-sm text-charcoal-400 dark:text-charcoal-500">
+        <div className="pointer-events-none absolute left-3 top-[3.15rem] text-sm text-charcoal-400 dark:text-charcoal-300">
           {placeholder}
         </div>
       )}

@@ -327,11 +327,11 @@ export default function FinanceiroPage() {
       <div className="flex items-center justify-between border-b border-blush-200 pb-4 dark:border-[#3a3835]">
         <h1 className="font-heading text-xl font-semibold text-charcoal dark:text-charcoal-50">Financeiro</h1>
         <div className="flex flex-wrap items-center gap-2">
-          <button onClick={handleExportCsv} disabled={!canExportFinancial} className="flex items-center gap-1.5 rounded border border-blush-300 bg-white/75 px-4 py-2 text-sm text-charcoal-400 shadow-sm transition-colors hover:text-rose-gold disabled:opacity-50 disabled:cursor-not-allowed dark:border-charcoal-600 dark:bg-charcoal-800/65 dark:text-charcoal-300">
+          <button onClick={handleExportCsv} disabled={!canExportFinancial} className="flex items-center gap-1.5 rounded border border-blush-300 bg-white/75 px-4 py-2 text-sm text-charcoal-400 shadow-sm transition-colors hover:text-rose-gold disabled:opacity-50 disabled:cursor-not-allowed dark:border-[#3a3835] dark:bg-[#1c1b1a]/65 dark:text-charcoal-300">
             <Download size={14} />
             CSV
           </button>
-          <button onClick={() => void handleExportPdf()} disabled={!canExportFinancial} className="flex items-center gap-1.5 rounded border border-blush-300 bg-white/75 px-4 py-2 text-sm text-charcoal-400 shadow-sm transition-colors hover:text-rose-gold disabled:opacity-50 disabled:cursor-not-allowed dark:border-charcoal-600 dark:bg-charcoal-800/65 dark:text-charcoal-300">
+          <button onClick={() => void handleExportPdf()} disabled={!canExportFinancial} className="flex items-center gap-1.5 rounded border border-blush-300 bg-white/75 px-4 py-2 text-sm text-charcoal-400 shadow-sm transition-colors hover:text-rose-gold disabled:opacity-50 disabled:cursor-not-allowed dark:border-[#3a3835] dark:bg-[#1c1b1a]/65 dark:text-charcoal-300">
             <FileText size={14} />
             PDF
           </button>
@@ -364,7 +364,7 @@ export default function FinanceiroPage() {
             Evolução mensal
           </h3>
           {loading ? (
-            <div className="h-[240px] animate-pulse rounded-lg bg-blush-100 dark:bg-charcoal-700/40" />
+            <div className="h-[240px] animate-pulse rounded-lg bg-blush-100 dark:bg-[#252423]/40" />
           ) : (
             <ResponsiveContainer width="100%" height={240}>
               <BarChart data={charts?.monthly ?? []}>
@@ -385,7 +385,7 @@ export default function FinanceiroPage() {
             Despesas por categoria
           </h3>
           {loading ? (
-            <div className="h-[240px] animate-pulse rounded-lg bg-blush-100 dark:bg-charcoal-700/40" />
+            <div className="h-[240px] animate-pulse rounded-lg bg-blush-100 dark:bg-[#252423]/40" />
           ) : (
             <ResponsiveContainer width="100%" height={240}>
               <PieChart>
@@ -457,7 +457,7 @@ export default function FinanceiroPage() {
                 Array.from({ length: 5 }).map((_, index) => (
                   <tr key={index}>
                     <td colSpan={6} className="px-4 py-3">
-                      <div className="h-8 animate-pulse rounded bg-blush-100 dark:bg-charcoal-700/30" />
+                      <div className="h-8 animate-pulse rounded bg-blush-100 dark:bg-[#252423]/30" />
                     </td>
                   </tr>
                 ))
@@ -471,7 +471,7 @@ export default function FinanceiroPage() {
                 pagedTransactions.map((transaction) => (
                   <tr key={transaction.id} className={crmListRow}>
                     <td className={crmListCell}>
-                      <span className="text-xs text-charcoal-400 dark:text-charcoal-500">
+                      <span className="text-xs text-charcoal-400 dark:text-charcoal-300">
                         {new Date(transaction.date).toLocaleDateString('pt-BR')}
                       </span>
                     </td>
@@ -587,7 +587,7 @@ export default function FinanceiroPage() {
                     inputMode="decimal"
                     value={form.amount}
                     onChange={(event) => setForm((current) => ({ ...current, amount: event.target.value }))}
-                    className="w-full rounded-lg border border-blush-300 bg-white px-3 py-2 text-sm text-charcoal focus:outline-none focus:ring-2 focus:ring-rose-gold/40 dark:border-charcoal-600 dark:bg-charcoal-700 dark:text-charcoal-100"
+                    className="w-full rounded-lg border border-blush-300 bg-white px-3 py-2 text-sm text-charcoal focus:outline-none focus:ring-2 focus:ring-rose-gold/40 dark:border-[#3a3835] dark:bg-[#252423] dark:text-charcoal-100"
                   />
                 </div>
                 <div>
@@ -597,7 +597,7 @@ export default function FinanceiroPage() {
                     required
                     value={form.date}
                     onChange={(event) => setForm((current) => ({ ...current, date: event.target.value }))}
-                    className="w-full rounded-lg border border-blush-300 bg-white px-3 py-2 text-sm text-charcoal focus:outline-none focus:ring-2 focus:ring-rose-gold/40 dark:border-charcoal-600 dark:bg-charcoal-700 dark:text-charcoal-100"
+                    className="w-full rounded-lg border border-blush-300 bg-white px-3 py-2 text-sm text-charcoal focus:outline-none focus:ring-2 focus:ring-rose-gold/40 dark:border-[#3a3835] dark:bg-[#252423] dark:text-charcoal-100"
                   />
                 </div>
               </div>
@@ -608,7 +608,7 @@ export default function FinanceiroPage() {
                   required
                   value={form.description}
                   onChange={(event) => setForm((current) => ({ ...current, description: event.target.value }))}
-                  className="w-full rounded-lg border border-blush-300 bg-white px-3 py-2 text-sm text-charcoal focus:outline-none focus:ring-2 focus:ring-rose-gold/40 dark:border-charcoal-600 dark:bg-charcoal-700 dark:text-charcoal-100"
+                  className="w-full rounded-lg border border-blush-300 bg-white px-3 py-2 text-sm text-charcoal focus:outline-none focus:ring-2 focus:ring-rose-gold/40 dark:border-[#3a3835] dark:bg-[#252423] dark:text-charcoal-100"
                 />
               </div>
 
@@ -618,7 +618,7 @@ export default function FinanceiroPage() {
                   value={form.tags}
                   onChange={(event) => setForm((current) => ({ ...current, tags: event.target.value }))}
                   placeholder="Ex: pix, recorrente, parceria"
-                  className="w-full rounded-lg border border-blush-300 bg-white px-3 py-2 text-sm text-charcoal focus:outline-none focus:ring-2 focus:ring-rose-gold/40 dark:border-charcoal-600 dark:bg-charcoal-700 dark:text-charcoal-100"
+                  className="w-full rounded-lg border border-blush-300 bg-white px-3 py-2 text-sm text-charcoal focus:outline-none focus:ring-2 focus:ring-rose-gold/40 dark:border-[#3a3835] dark:bg-[#252423] dark:text-charcoal-100"
                 />
               </div>
 
@@ -632,7 +632,7 @@ export default function FinanceiroPage() {
               </label>
 
               <div className="flex gap-3 pt-2">
-                <button type="button" onClick={() => setShowModal(false)} className="flex-1 rounded-lg border border-blush-300 px-4 py-2 text-sm text-charcoal-400 transition-colors hover:bg-blush dark:border-charcoal-600 dark:hover:bg-charcoal-700">
+                <button type="button" onClick={() => setShowModal(false)} className="flex-1 rounded-lg border border-blush-300 px-4 py-2 text-sm text-charcoal-400 transition-colors hover:bg-blush dark:border-[#3a3835] dark:hover:bg-[#252423]">
                   Cancelar
                 </button>
                 <button type="submit" disabled={submitting} className="flex-1 rounded-lg bg-rose-gold px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-rose-gold-500 disabled:opacity-60">

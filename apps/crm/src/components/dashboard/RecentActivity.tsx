@@ -28,11 +28,11 @@ export function RecentActivity({ items, loading = false }: RecentActivityProps) 
       {loading ? (
         <div className="space-y-3">
           {Array.from({ length: 4 }).map((_, index) => (
-            <div key={index} className="h-12 animate-pulse rounded-md bg-blush-100 dark:bg-charcoal-700/40" />
+            <div key={index} className="h-12 animate-pulse rounded-md bg-blush-100 dark:bg-[#252423]/40" />
           ))}
         </div>
       ) : items.length === 0 ? (
-        <div className="rounded-lg border border-dashed border-blush-200 px-4 py-8 text-center text-sm text-charcoal-400 dark:border-[#3a3835] dark:text-charcoal-500">
+        <div className="rounded-lg border border-dashed border-blush-200 px-4 py-8 text-center text-sm text-charcoal-400 dark:border-[#3a3835] dark:text-charcoal-300">
           Nenhum evento operacional recente.
         </div>
       ) : (
@@ -46,9 +46,9 @@ export function RecentActivity({ items, loading = false }: RecentActivityProps) 
                 </div>
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-medium text-charcoal dark:text-charcoal-100">{item.title}</p>
-                  <p className="truncate text-xs text-charcoal-400 dark:text-charcoal-500">{item.description}</p>
+                  <p className="truncate text-xs text-charcoal-400 dark:text-charcoal-300">{item.description}</p>
                 </div>
-                <span className="whitespace-nowrap text-xs text-charcoal-400 dark:text-charcoal-500">
+                <span className="whitespace-nowrap text-xs text-charcoal-400 dark:text-charcoal-300">
                   {formatDistanceToNow(new Date(item.timestamp), { addSuffix: true, locale: ptBR })}
                 </span>
               </div>

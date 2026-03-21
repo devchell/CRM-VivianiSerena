@@ -120,7 +120,7 @@ function StatusBanner({ status, lastCheck }: { status: 'green' | 'yellow' | 'red
         <p className="text-sm text-charcoal-500 dark:text-charcoal-300 mt-0.5">{cfg.sub}</p>
       </div>
       {lastCheck && (
-        <div className="hidden sm:flex items-center gap-1.5 text-xs text-charcoal-400 dark:text-charcoal-500 flex-shrink-0">
+        <div className="hidden sm:flex items-center gap-1.5 text-xs text-charcoal-400 dark:text-charcoal-300 flex-shrink-0">
           <Clock size={12} />
           Verificado {formatDistanceToNow(lastCheck, { locale: ptBR, addSuffix: true })}
         </div>
@@ -137,9 +137,9 @@ function KpiCard({ icon: Icon, label, value, sub, color, bg }: {
       <div className={`w-9 h-9 rounded-md flex items-center justify-center ${bg} mb-3`}>
         <Icon size={18} className={color} />
       </div>
-      <p className="text-xs text-charcoal-400 dark:text-charcoal-500">{label}</p>
+      <p className="text-xs text-charcoal-400 dark:text-charcoal-300">{label}</p>
       <p className={`font-heading text-2xl font-bold mt-0.5 ${color}`}>{value}</p>
-      {sub && <p className="text-xs text-charcoal-400 dark:text-charcoal-500 mt-0.5">{sub}</p>}
+      {sub && <p className="text-xs text-charcoal-400 dark:text-charcoal-300 mt-0.5">{sub}</p>}
     </div>
   )
 }
@@ -151,7 +151,7 @@ function ChecklistPanel({ items, loading }: { items: ChecklistItem[]; loading: b
     return (
       <div className="space-y-2">
         {Array.from({ length: 6 }).map((_, i) => (
-          <div key={i} className="h-10 rounded-lg bg-charcoal-100 dark:bg-charcoal-700/30 animate-pulse" />
+          <div key={i} className="h-10 rounded-lg bg-charcoal-100 dark:bg-[#252423]/30 animate-pulse" />
         ))}
       </div>
     )
@@ -165,7 +165,7 @@ function ChecklistPanel({ items, loading }: { items: ChecklistItem[]; loading: b
           <div key={item.id} className="rounded-md border border-blush-200 dark:border-[#3a3835] overflow-hidden">
             <button
               onClick={() => setExpanded(isOpen ? null : item.id)}
-              className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-blush-50 dark:hover:bg-charcoal-700/30 transition-colors"
+              className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-blush-50 dark:hover:bg-[#252423]/30 transition-colors"
             >
               {item.ok ? (
                 <CheckCircle2 size={16} className={item.warning ? 'text-yellow-400' : 'text-green-400'} />
@@ -199,53 +199,53 @@ function EventModal({ event, onClose }: { event: SecurityEvent; onClose: () => v
   const sev = SEVERITY_CFG[event.severity]
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-charcoal/60 backdrop-blur-sm" onClick={onClose}>
-      <div className="bg-white dark:bg-charcoal-800 rounded-lg shadow-2xl w-full max-w-lg p-6" onClick={e => e.stopPropagation()}>
+      <div className="bg-white dark:bg-[#1c1b1a] rounded-lg shadow-2xl w-full max-w-lg p-6" onClick={e => e.stopPropagation()}>
         <div className="flex items-start justify-between mb-5">
           <div>
             <h3 className="font-heading text-base font-bold text-charcoal dark:text-charcoal-50">Detalhes do Evento</h3>
             <p className="text-xs text-charcoal-400 mt-0.5">{format(new Date(event.timestamp), "dd/MM/yyyy 'às' HH:mm:ss", { locale: ptBR })}</p>
           </div>
-          <button onClick={onClose} className="p-1.5 rounded-lg text-charcoal-400 hover:bg-blush dark:hover:bg-charcoal-700 transition-colors">
+          <button onClick={onClose} className="p-1.5 rounded-lg text-charcoal-400 hover:bg-blush dark:hover:bg-[#252423] transition-colors">
             <X size={18} />
           </button>
         </div>
 
         <div className="space-y-3">
           <div>
-            <label className="text-xs font-semibold text-charcoal-400 dark:text-charcoal-500 uppercase tracking-wide">Tipo</label>
-            <p className="text-sm text-charcoal dark:text-charcoal-100 mt-1 font-mono bg-blush-50 dark:bg-charcoal-700/30 rounded-lg px-3 py-2">{event.type}</p>
+            <label className="text-xs font-semibold text-charcoal-400 dark:text-charcoal-300 uppercase tracking-wide">Tipo</label>
+            <p className="text-sm text-charcoal dark:text-charcoal-100 mt-1 font-mono bg-blush-50 dark:bg-[#252423]/30 rounded-lg px-3 py-2">{event.type}</p>
           </div>
           <div>
-            <label className="text-xs font-semibold text-charcoal-400 dark:text-charcoal-500 uppercase tracking-wide">Descrição</label>
+            <label className="text-xs font-semibold text-charcoal-400 dark:text-charcoal-300 uppercase tracking-wide">Descrição</label>
             <p className="text-sm text-charcoal dark:text-charcoal-100 mt-1">{humanizeType(event.type)}</p>
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="text-xs font-semibold text-charcoal-400 dark:text-charcoal-500 uppercase tracking-wide">Severidade</label>
+              <label className="text-xs font-semibold text-charcoal-400 dark:text-charcoal-300 uppercase tracking-wide">Severidade</label>
               <span className={`mt-1 inline-flex text-xs px-2 py-0.5 rounded-full font-medium ${sev.color} ${sev.bg}`}>{sev.label}</span>
             </div>
             <div>
-              <label className="text-xs font-semibold text-charcoal-400 dark:text-charcoal-500 uppercase tracking-wide">Status</label>
+              <label className="text-xs font-semibold text-charcoal-400 dark:text-charcoal-300 uppercase tracking-wide">Status</label>
               <p className="text-sm mt-1">{event.resolved ? <span className="text-green-400">Resolvido</span> : <span className="text-orange-400">Pendente</span>}</p>
             </div>
           </div>
           {event.sourceIp && (
             <div>
-              <label className="text-xs font-semibold text-charcoal-400 dark:text-charcoal-500 uppercase tracking-wide">IP de Origem (anonimizado)</label>
-              <p className="text-sm font-mono text-charcoal dark:text-charcoal-100 mt-1 bg-blush-50 dark:bg-charcoal-700/30 rounded-lg px-3 py-2">{event.sourceIp}</p>
+              <label className="text-xs font-semibold text-charcoal-400 dark:text-charcoal-300 uppercase tracking-wide">IP de Origem (anonimizado)</label>
+              <p className="text-sm font-mono text-charcoal dark:text-charcoal-100 mt-1 bg-blush-50 dark:bg-[#252423]/30 rounded-lg px-3 py-2">{event.sourceIp}</p>
             </div>
           )}
           {Object.keys(event.details).length > 0 && (
             <div>
-              <label className="text-xs font-semibold text-charcoal-400 dark:text-charcoal-500 uppercase tracking-wide">Informações Técnicas</label>
-              <pre className="text-xs text-charcoal-500 dark:text-charcoal-300 mt-1 bg-blush-50 dark:bg-charcoal-700/30 rounded-lg px-3 py-2 overflow-auto max-h-32 whitespace-pre-wrap">
+              <label className="text-xs font-semibold text-charcoal-400 dark:text-charcoal-300 uppercase tracking-wide">Informações Técnicas</label>
+              <pre className="text-xs text-charcoal-500 dark:text-charcoal-300 mt-1 bg-blush-50 dark:bg-[#252423]/30 rounded-lg px-3 py-2 overflow-auto max-h-32 whitespace-pre-wrap">
                 {JSON.stringify(event.details, null, 2)}
               </pre>
             </div>
           )}
         </div>
 
-        <button onClick={onClose} className="mt-5 w-full py-2.5 rounded-md bg-blush dark:bg-charcoal-700 text-charcoal dark:text-charcoal-100 text-sm font-medium hover:bg-blush-200 dark:hover:bg-charcoal-600 transition-colors">
+        <button onClick={onClose} className="mt-5 w-full py-2.5 rounded-md bg-blush dark:bg-[#252423] text-charcoal dark:text-charcoal-100 text-sm font-medium hover:bg-blush-200 dark:hover:bg-charcoal-600 transition-colors">
           Fechar
         </button>
       </div>
@@ -274,26 +274,26 @@ function BlockIpModal({ onClose, onBlock }: {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-charcoal/60 backdrop-blur-sm" onClick={onClose}>
-      <div className="bg-white dark:bg-charcoal-800 rounded-lg shadow-2xl w-full max-w-sm p-6" onClick={e => e.stopPropagation()}>
+      <div className="bg-white dark:bg-[#1c1b1a] rounded-lg shadow-2xl w-full max-w-sm p-6" onClick={e => e.stopPropagation()}>
         <div className="flex items-center justify-between mb-5">
           <h3 className="font-heading text-base font-bold text-charcoal dark:text-charcoal-50">Bloquear IP</h3>
-          <button onClick={onClose} className="p-1.5 rounded-lg text-charcoal-400 hover:bg-blush dark:hover:bg-charcoal-700 transition-colors"><X size={18} /></button>
+          <button onClick={onClose} className="p-1.5 rounded-lg text-charcoal-400 hover:bg-blush dark:hover:bg-[#252423] transition-colors"><X size={18} /></button>
         </div>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="text-xs font-semibold text-charcoal-400 dark:text-charcoal-500 uppercase tracking-wide block mb-1.5">Endereço IP</label>
+            <label className="text-xs font-semibold text-charcoal-400 dark:text-charcoal-300 uppercase tracking-wide block mb-1.5">Endereço IP</label>
             <input
               type="text"
               value={ip}
               onChange={e => setIp(e.target.value)}
               placeholder="ex: 192.168.1.100"
-              className="w-full px-3 py-2.5 rounded-md border border-blush-300 dark:border-charcoal-600 bg-white dark:bg-charcoal-700 text-charcoal dark:text-charcoal-100 text-sm focus:outline-none focus:ring-2 focus:ring-rose-gold/30"
+              className="w-full px-3 py-2.5 rounded-md border border-blush-300 dark:border-[#3a3835] bg-white dark:bg-[#252423] text-charcoal dark:text-charcoal-100 text-sm focus:outline-none focus:ring-2 focus:ring-rose-gold/30"
               pattern="^(\d{1,3}\.){3}\d{1,3}$"
               required
             />
           </div>
           <div>
-            <label className="text-xs font-semibold text-charcoal-400 dark:text-charcoal-500 uppercase tracking-wide block mb-1.5">Duração do Bloqueio</label>
+            <label className="text-xs font-semibold text-charcoal-400 dark:text-charcoal-300 uppercase tracking-wide block mb-1.5">Duração do Bloqueio</label>
             <div className={crmFieldSelectWrapper}>
               <select value={minutes} onChange={e => setMinutes(Number(e.target.value))} className={crmFieldSelectCompact}>
                 <option value={15}>15 minutos</option>
@@ -306,7 +306,7 @@ function BlockIpModal({ onClose, onBlock }: {
             </div>
           </div>
           <div className="flex gap-3 pt-1">
-            <button type="button" onClick={onClose} className="flex-1 py-2.5 rounded-md border border-blush-300 dark:border-charcoal-600 text-charcoal dark:text-charcoal-100 text-sm font-medium hover:bg-blush dark:hover:bg-charcoal-700 transition-colors">Cancelar</button>
+            <button type="button" onClick={onClose} className="flex-1 py-2.5 rounded-md border border-blush-300 dark:border-[#3a3835] text-charcoal dark:text-charcoal-100 text-sm font-medium hover:bg-blush dark:hover:bg-[#252423] transition-colors">Cancelar</button>
             <button type="submit" disabled={loading} className="flex-1 py-2.5 rounded-md bg-red-500 text-white text-sm font-medium hover:bg-red-600 disabled:opacity-50 transition-colors flex items-center justify-center gap-2">
               {loading ? <RefreshCw size={14} className="animate-spin" /> : <Lock size={14} />}
               Bloquear
@@ -553,17 +553,17 @@ export default function SegurancaPage() {
         </div>
         <div className="flex items-center gap-2 flex-wrap">
           {notifPermission !== 'granted' && (
-            <button onClick={requestNotifications} className="flex items-center gap-2 text-xs px-3 py-2 rounded-lg border border-blush-300 dark:border-charcoal-600 text-charcoal-400 hover:text-rose-gold hover:border-rose-gold/30 transition-colors">
+            <button onClick={requestNotifications} className="flex items-center gap-2 text-xs px-3 py-2 rounded-lg border border-blush-300 dark:border-[#3a3835] text-charcoal-400 hover:text-rose-gold hover:border-rose-gold/30 transition-colors">
               <Bell size={14} /> Ativar alertas
             </button>
           )}
           <button onClick={() => setShowBlockModal(true)} disabled={!canManageSecurity} className="flex items-center gap-2 text-xs px-3 py-2 rounded-lg border border-red-400/30 text-red-400 hover:bg-red-500/10 transition-colors disabled:opacity-40 disabled:cursor-not-allowed">
             <Lock size={14} /> Bloquear IP
           </button>
-          <button onClick={handleExportPDF} className="flex items-center gap-2 text-xs px-3 py-2 rounded-lg border border-blush-300 dark:border-charcoal-600 text-charcoal-400 hover:text-rose-gold hover:border-rose-gold/30 transition-colors">
+          <button onClick={handleExportPDF} className="flex items-center gap-2 text-xs px-3 py-2 rounded-lg border border-blush-300 dark:border-[#3a3835] text-charcoal-400 hover:text-rose-gold hover:border-rose-gold/30 transition-colors">
             <Download size={14} /> Exportar PDF
           </button>
-          <button onClick={fetchAll} className="p-2 rounded-lg border border-blush-300 dark:border-charcoal-600 text-charcoal-400 hover:text-rose-gold transition-colors">
+          <button onClick={fetchAll} className="p-2 rounded-lg border border-blush-300 dark:border-[#3a3835] text-charcoal-400 hover:text-rose-gold transition-colors">
             <RefreshCw size={14} className={loading ? 'animate-spin' : ''} />
           </button>
         </div>
@@ -624,7 +624,7 @@ export default function SegurancaPage() {
           <div className={`${crmListBody} max-h-[520px] overflow-y-auto`}>
             {loading ? (
               Array.from({ length: 6 }).map((_, i) => (
-                <div key={i} className="h-16 bg-blush-50 dark:bg-charcoal-700/20 animate-pulse m-4 rounded-lg" />
+                <div key={i} className="h-16 bg-blush-50 dark:bg-[#252423]/20 animate-pulse m-4 rounded-lg" />
               ))
             ) : events.length === 0 ? (
               <div className={crmListEmpty}>
@@ -646,11 +646,11 @@ export default function SegurancaPage() {
                     </div>
                     <div className="flex items-center gap-3 mt-0.5 flex-wrap">
                       {ev.sourceIp && (
-                        <span className="flex items-center gap-1 text-xs text-charcoal-400 dark:text-charcoal-500 font-mono">
+                        <span className="flex items-center gap-1 text-xs text-charcoal-400 dark:text-charcoal-300 font-mono">
                           <Globe size={10} />{ev.sourceIp}
                         </span>
                       )}
-                      <span className="text-xs text-charcoal-400 dark:text-charcoal-500">
+                      <span className="text-xs text-charcoal-400 dark:text-charcoal-300">
                         {formatDistanceToNow(new Date(ev.timestamp), { locale: ptBR, addSuffix: true })}
                       </span>
                     </div>
@@ -658,7 +658,7 @@ export default function SegurancaPage() {
                   <div className="flex items-center gap-1.5 flex-shrink-0">
                     <button
                       onClick={() => setSelectedEvent(ev)}
-                      className="text-xs px-2.5 py-1.5 rounded-lg border border-blush-300 dark:border-charcoal-600 text-charcoal-400 hover:text-rose-gold hover:border-rose-gold/30 transition-colors"
+                      className="text-xs px-2.5 py-1.5 rounded-lg border border-blush-300 dark:border-[#3a3835] text-charcoal-400 hover:text-rose-gold hover:border-rose-gold/30 transition-colors"
                     >
                       <Eye size={12} />
                     </button>
@@ -666,7 +666,7 @@ export default function SegurancaPage() {
                       <button
                         onClick={() => handleResolve(ev.id)}
                         disabled={!canManageSecurity}
-                        className="text-xs px-2.5 py-1.5 rounded-lg border border-blush-300 dark:border-charcoal-600 text-charcoal-400 hover:bg-green-500/10 hover:text-green-400 hover:border-green-500/30 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                        className="text-xs px-2.5 py-1.5 rounded-lg border border-blush-300 dark:border-[#3a3835] text-charcoal-400 hover:bg-green-500/10 hover:text-green-400 hover:border-green-500/30 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
                       >
                         <CheckCircle2 size={12} />
                       </button>
@@ -709,7 +709,7 @@ export default function SegurancaPage() {
               </button>
               <button
                 onClick={handleExportPDF}
-                className="w-full flex items-center gap-3 px-4 py-3 rounded-md border border-blush-300 dark:border-charcoal-600 text-charcoal dark:text-charcoal-100 hover:bg-blush-50 dark:hover:bg-charcoal-700/30 transition-colors text-sm"
+                className="w-full flex items-center gap-3 px-4 py-3 rounded-md border border-blush-300 dark:border-[#3a3835] text-charcoal dark:text-charcoal-100 hover:bg-blush-50 dark:hover:bg-[#252423]/30 transition-colors text-sm"
               >
                 <Download size={16} className="text-charcoal-400" />
                 <div className="text-left">
@@ -747,7 +747,7 @@ export default function SegurancaPage() {
                         <span className="text-xs text-charcoal-500 dark:text-charcoal-300 truncate max-w-[160px]">{humanizeType(t.type).substring(0, 28)}</span>
                         <span className="text-xs text-charcoal-400 font-medium ml-2">{t.count}</span>
                       </div>
-                      <div className="h-1.5 rounded-full bg-charcoal-100 dark:bg-charcoal-700 overflow-hidden">
+                      <div className="h-1.5 rounded-full bg-charcoal-100 dark:bg-[#252423] overflow-hidden">
                         <div className="h-full rounded-full bg-rose-gold transition-all" style={{ width: `${pct}%` }} />
                       </div>
                     </div>
@@ -764,10 +764,10 @@ export default function SegurancaPage() {
         <div className="flex items-center gap-2 mb-5">
           <Activity size={16} className="text-rose-gold" />
           <h3 className="font-heading text-base font-semibold text-charcoal dark:text-charcoal-100">Atividade — Últimas 24 horas</h3>
-          <span className="text-xs text-charcoal-400 dark:text-charcoal-500 ml-auto">Volume de acessos por hora</span>
+          <span className="text-xs text-charcoal-400 dark:text-charcoal-300 ml-auto">Volume de acessos por hora</span>
         </div>
         {activityLoading ? (
-          <div className="h-48 rounded-md bg-blush-50 dark:bg-charcoal-700/20 animate-pulse" />
+          <div className="h-48 rounded-md bg-blush-50 dark:bg-[#252423]/20 animate-pulse" />
         ) : (
           <ResponsiveContainer width="100%" height={200}>
             <BarChart data={activity} margin={{ top: 0, right: 0, left: -20, bottom: 0 }}>

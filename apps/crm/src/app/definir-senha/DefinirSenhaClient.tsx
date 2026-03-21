@@ -116,7 +116,7 @@ export function DefinirSenhaClient() {
           <h1 className="font-heading text-2xl font-bold text-charcoal dark:text-charcoal-50">
             Criar sua senha
           </h1>
-          <p className="text-charcoal-400 dark:text-charcoal-500 text-sm mt-2">
+          <p className="text-charcoal-400 dark:text-charcoal-300 text-sm mt-2">
             Você recebeu uma senha temporária por e-mail.
             <br />
             Crie uma nova senha para continuar.
@@ -146,7 +146,7 @@ export function DefinirSenhaClient() {
                     onChange={(event) => setForm((current) => ({ ...current, new: event.target.value }))}
                     placeholder="Mínimo 8 caracteres"
                     required
-                    className="w-full pl-9 pr-10 py-2.5 text-sm rounded-lg border border-blush-300 dark:border-charcoal-600 bg-white dark:bg-charcoal-700 text-charcoal dark:text-charcoal-100 focus:outline-none focus:ring-2 focus:ring-rose-gold/40"
+                    className="w-full pl-9 pr-10 py-2.5 text-sm rounded-lg border border-blush-300 dark:border-[#3a3835] bg-white dark:bg-[#252423] text-charcoal dark:text-charcoal-100 focus:outline-none focus:ring-2 focus:ring-rose-gold/40"
                   />
                   <button
                     type="button"
@@ -171,7 +171,7 @@ export function DefinirSenhaClient() {
                                   : strength === 3
                                     ? 'bg-blue-400'
                                     : 'bg-green-400'
-                              : 'bg-charcoal-200 dark:bg-charcoal-700'
+                              : 'bg-charcoal-200 dark:bg-[#252423]'
                           }`}
                         />
                       ))}
@@ -195,10 +195,10 @@ export function DefinirSenhaClient() {
                     onChange={(event) => setForm((current) => ({ ...current, confirm: event.target.value }))}
                     placeholder="Repita a senha"
                     required
-                    className={`w-full pl-9 pr-10 py-2.5 text-sm rounded-lg border bg-white dark:bg-charcoal-700 text-charcoal dark:text-charcoal-100 focus:outline-none focus:ring-2 focus:ring-rose-gold/40 ${
+                    className={`w-full pl-9 pr-10 py-2.5 text-sm rounded-lg border bg-white dark:bg-[#252423] text-charcoal dark:text-charcoal-100 focus:outline-none focus:ring-2 focus:ring-rose-gold/40 ${
                       form.confirm && form.new !== form.confirm
                         ? 'border-red-400'
-                        : 'border-blush-300 dark:border-charcoal-600'
+                        : 'border-blush-300 dark:border-[#3a3835]'
                     }`}
                   />
                   <button
