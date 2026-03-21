@@ -16,7 +16,6 @@ import {
   Sparkles,
 } from 'lucide-react'
 import { crmPublicEnv } from '@/lib/public-env'
-import { GoogleSignInButton } from '@/components/auth/GoogleSignInButton'
 
 const RAW_API_URL = crmPublicEnv.apiBaseUrl
 const API_URL = RAW_API_URL.endsWith('/api/v1')
@@ -326,56 +325,46 @@ export default function LoginPage() {
             </div>
 
             {step === 'credentials' && (
-              <div className="space-y-4">
-                <form onSubmit={handleCredentials} className="space-y-4">
-                  <div>
-                    <label className="block text-xs font-medium text-charcoal-500 mb-1.5">E-mail</label>
-                    <input
-                      type="email"
-                      value={email}
-                      onChange={(event) => setEmail(event.target.value)}
-                      placeholder="admin@vivianiserena.com"
-                      className={inputClass}
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-medium text-charcoal-500 mb-1.5">Senha</label>
-                    <div className="relative">
-                      <input
-                        type={showPassword ? 'text' : 'password'}
-                        value={password}
-                        onChange={(event) => setPassword(event.target.value)}
-                        placeholder="........"
-                        className={`${inputClass} pr-10`}
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setShowPassword((currentState) => !currentState)}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-charcoal-500 hover:text-charcoal-500 transition-colors"
-                      >
-                        {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-                      </button>
-                    </div>
-                  </div>
-                  {error && <ErrorBox message={error} />}
-                  <button
-                    type="submit"
-                    disabled={isLoading}
-                    className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-rose-gold text-white font-medium text-sm hover:bg-rose-gold/90 disabled:opacity-60 transition-colors mt-2"
-                  >
-                    {isLoading ? <Loader2 size={16} className="animate-spin" /> : <Lock size={16} />}
-                    {isLoading ? 'Verificando...' : 'Entrar'}
-                  </button>
-                </form>
-
-                <div className="flex items-center gap-3">
-                  <div className="flex-1 h-px bg-blush-200" />
-                  <span className="text-xs text-charcoal-400 whitespace-nowrap">ou continue com</span>
-                  <div className="flex-1 h-px bg-blush-200" />
+              <form onSubmit={handleCredentials} className="space-y-4">
+                <div>
+                  <label className="block text-xs font-medium text-charcoal-500 mb-1.5">E-mail</label>
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={(event) => setEmail(event.target.value)}
+                    placeholder="admin@vivianiserena.com"
+                    className={inputClass}
+                  />
                 </div>
-
-                <GoogleSignInButton />
-              </div>
+                <div>
+                  <label className="block text-xs font-medium text-charcoal-500 mb-1.5">Senha</label>
+                  <div className="relative">
+                    <input
+                      type={showPassword ? 'text' : 'password'}
+                      value={password}
+                      onChange={(event) => setPassword(event.target.value)}
+                      placeholder="........"
+                      className={`${inputClass} pr-10`}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword((currentState) => !currentState)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-charcoal-500 hover:text-charcoal-500 transition-colors"
+                    >
+                      {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                    </button>
+                  </div>
+                </div>
+                {error && <ErrorBox message={error} />}
+                <button
+                  type="submit"
+                  disabled={isLoading}
+                  className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-rose-gold text-white font-medium text-sm hover:bg-rose-gold/90 disabled:opacity-60 transition-colors mt-2"
+                >
+                  {isLoading ? <Loader2 size={16} className="animate-spin" /> : <Lock size={16} />}
+                  {isLoading ? 'Verificando...' : 'Entrar'}
+                </button>
+              </form>
             )}
 
             {step === 'email-otp' && (
