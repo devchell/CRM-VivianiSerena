@@ -1,5 +1,6 @@
 import NextAuth from 'next-auth'
 import Credentials from 'next-auth/providers/credentials'
+import Google from 'next-auth/providers/google'
 import { z } from 'zod'
 import {
   inferUserProfile,
@@ -90,7 +91,16 @@ async function refreshAccessToken(refreshToken: string): Promise<{ accessToken: 
 }
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
+  trustHost: true,
   providers: [
+    ...(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET
+      ? [
+          Google({
+            clientId: process.env.GOOGLE_CLIENT_ID,
+            clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+          }),
+        ]
+      : []),
     Credentials({
       name: 'credentials',
       credentials: {
@@ -187,7 +197,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   },
   callbacks: {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    async jwt({ token, user, trigger, session }: any) {
+    async jwt({ token, user, account, trigger, session }: any) {
       if (trigger === 'update' && session?.user) {
         if (session.user.name) token.name = session.user.name
         if (session.user.image !== undefined) token.photoUrl = session.user.image ?? null
@@ -195,6 +205,25 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         if (typeof session.user.profile === 'string') token.profile = session.user.profile
         if (Array.isArray(session.user.permissions)) token.permissions = session.user.permissions
         if (Array.isArray(session.user.allowedModules)) token.allowedModules = session.user.allowedModules
+      }
+
+      if (user && account?.provider === 'google') {
+        const role = toKnownRole(undefined)
+        const allowedModules = resolveAllowedModules(role, [])
+        const profile = inferUserProfile(role, allowedModules)
+        token.name = user.name ?? user.email?.split('@')[0] ?? 'Usuario'
+        token.userId = user.id ?? ''
+        token.role = role
+        token.profile = profile
+        token.permissions = []
+        token.allowedModules = allowedModules
+        token.mustChangePassword = false
+        token.photoUrl = user.image ?? null
+        token.accessToken = ''
+        token.refreshToken = ''
+        token.provider = 'google'
+        token.expiresAt = Date.now() + ACCESS_TOKEN_LIFETIME_MS
+        return token
       }
 
       if (user) {
@@ -245,6 +274,11 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
       if (Date.now() < ((token.expiresAt as number) ?? 0)) {
         return token
+      }
+
+      // Google OAuth users do not have API refresh tokens — extend their session without refresh
+      if (token.provider === 'google') {
+        return { ...token, expiresAt: Date.now() + ACCESS_TOKEN_LIFETIME_MS }
       }
 
       const refreshed = await refreshAccessToken(token.refreshToken as string)
