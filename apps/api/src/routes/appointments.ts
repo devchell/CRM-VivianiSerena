@@ -1,7 +1,7 @@
 import { Router } from 'express'
 import { z } from 'zod'
 import { prisma } from '../lib/prisma'
-import { authenticate } from '../middleware/authenticate'
+import { authenticate, authorizePermission } from '../middleware/authenticate'
 import { AppError } from '../middleware/errorHandler'
 import { googleCalendar } from '../infrastructure/googleCalendar'
 import { emailService } from '../infrastructure/email'
@@ -10,15 +10,16 @@ import { invalidateOperationalMetricCaches } from '../domain/metrics/cache'
 export const appointmentsRouter: Router = Router()
 appointmentsRouter.use(authenticate)
 
+const DEFAULT_APPOINTMENT_DURATION_MINUTES = 60
+
 const schema = z.object({
   leadId: z.string(),
   date: z.string().datetime(),
   serviceType: z.enum(['coaching_individual', 'coaching_group', 'workshop', 'mentoring', 'consultation']),
   notes: z.string().optional(),
-  duration: z.number().min(30).max(240).optional().default(60),
 })
 
-appointmentsRouter.get('/', async (req, res, next) => {
+appointmentsRouter.get('/', authorizePermission('agenda.view'), async (req, res, next) => {
   try {
     const { from, to, status } = req.query
     const where: Record<string, unknown> = {}
@@ -42,7 +43,9 @@ appointmentsRouter.get('/', async (req, res, next) => {
         leadEmail: appointment.lead.email,
         leadPhone: appointment.lead.phone,
         startTime: appointment.date.toISOString(),
-        endTime: new Date(appointment.date.getTime() + 60 * 60 * 1000).toISOString(),
+        endTime: new Date(
+          appointment.date.getTime() + DEFAULT_APPOINTMENT_DURATION_MINUTES * 60 * 1000
+        ).toISOString(),
         serviceType: appointment.serviceType,
         status: appointment.status,
         notes: appointment.notes,
@@ -51,21 +54,23 @@ appointmentsRouter.get('/', async (req, res, next) => {
   } catch (error) { next(error) }
 })
 
-appointmentsRouter.get('/availability', async (_req, res, next) => {
+appointmentsRouter.get('/availability', authorizePermission('agenda.view'), async (_req, res, next) => {
   try {
     const slots = await googleCalendar.getAvailableSlots(30)
     res.json({ success: true, data: slots })
   } catch (error) { next(error) }
 })
 
-appointmentsRouter.post('/', async (req, res, next) => {
+appointmentsRouter.post('/', authorizePermission('agenda.create'), async (req, res, next) => {
   try {
     const data = schema.parse(req.body)
     const lead = await prisma.lead.findUnique({ where: { id: data.leadId }, select: { name: true, email: true } })
     if (!lead) throw new AppError(404, 'Lead not found')
 
     const startDate = new Date(data.date)
-    const endDate = new Date(startDate.getTime() + (data.duration ?? 60) * 60 * 1000)
+    const endDate = new Date(
+      startDate.getTime() + DEFAULT_APPOINTMENT_DURATION_MINUTES * 60 * 1000
+    )
 
     const calEvent = await googleCalendar.createEvent({
       summary: data.serviceType.replace(/_/g, ' ') + ' - ' + lead.name,
@@ -86,14 +91,15 @@ appointmentsRouter.post('/', async (req, res, next) => {
   } catch (error) { next(error) }
 })
 
-appointmentsRouter.patch('/:id', async (req, res, next) => {
+appointmentsRouter.patch('/:id', authorizePermission('agenda.update'), async (req, res, next) => {
   try {
+    const appointmentId = String(req.params.id)
     const data = schema.partial().parse(req.body)
-    const existing = await prisma.appointment.findUnique({ where: { id: req.params.id } })
+    const existing = await prisma.appointment.findUnique({ where: { id: appointmentId } })
     if (!existing) throw new AppError(404, 'Appointment not found')
 
     const appointment = await prisma.appointment.update({
-      where: { id: req.params.id },
+      where: { id: appointmentId },
       data: data.date ? { ...data, date: new Date(data.date) } : data,
     })
 
@@ -106,16 +112,17 @@ appointmentsRouter.patch('/:id', async (req, res, next) => {
   } catch (error) { next(error) }
 })
 
-appointmentsRouter.delete('/:id', async (req, res, next) => {
+appointmentsRouter.delete('/:id', authorizePermission('agenda.delete'), async (req, res, next) => {
   try {
-    const existing = await prisma.appointment.findUnique({ where: { id: req.params.id } })
+    const appointmentId = String(req.params.id)
+    const existing = await prisma.appointment.findUnique({ where: { id: appointmentId } })
     if (!existing) throw new AppError(404, 'Appointment not found')
 
     if (existing.googleEventId) {
       await googleCalendar.deleteEvent(existing.googleEventId)
     }
 
-    await prisma.appointment.delete({ where: { id: req.params.id } })
+    await prisma.appointment.delete({ where: { id: appointmentId } })
     await invalidateOperationalMetricCaches()
     res.json({ success: true, message: 'Appointment deleted' })
   } catch (error) { next(error) }

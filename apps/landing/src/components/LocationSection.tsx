@@ -76,7 +76,7 @@ export default function LocationSection() {
               transition={{ duration: 0.5, delay: i * 0.15 }}
             >
               {/* Icon */}
-              <div className="w-12 h-12 bg-blush rounded-full flex items-center justify-center mb-5 group-hover:bg-rose-gold transition-colors duration-300">
+              <div className="w-12 h-12 bg-blush rounded-md flex items-center justify-center mb-5 group-hover:bg-rose-gold transition-colors duration-300">
                 <MapPin className="w-5 h-5 text-rose-gold group-hover:text-white transition-colors duration-300" aria-hidden="true" />
               </div>
 
@@ -131,7 +131,7 @@ export default function LocationSection() {
             className="inline-flex items-center gap-3 text-charcoal hover:text-rose-gold transition-colors group"
             onClick={() => trackCTAClick('phone_click', 'location')}
           >
-            <div className="w-10 h-10 bg-blush rounded-full flex items-center justify-center group-hover:bg-rose-gold transition-colors">
+            <div className="w-10 h-10 bg-blush rounded-md flex items-center justify-center group-hover:bg-rose-gold transition-colors">
               <Phone className="w-4 h-4 text-rose-gold group-hover:text-white transition-colors" aria-hidden="true" />
             </div>
             <span className="text-lg font-semibold">(11) 91575-1770</span>

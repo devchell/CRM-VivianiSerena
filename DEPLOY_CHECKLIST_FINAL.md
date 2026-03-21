@@ -22,6 +22,12 @@ O backend nao deve ir para Vercel neste estado porque depende de:
 
 Arquivo de exemplo para deploy da API em Render: [render.yaml](D:/VivianeCRM/viviani-serena-platform/render.yaml)
 
+Observacoes factuais da auditoria em `2026-03-20`:
+- o blueprint da API precisa incluir `API_BASE_URL`;
+- o exemplo de build/start da API deve usar `corepack enable`;
+- Google Calendar e Google Business existem no codigo, mas a homologacao auditada seguia sem OAuth Google configurado.
+- a API agora possui job versionado de deploy em homologacao dentro de `.github/workflows/deploy-homolog.yml`
+
 ## Ordem ideal de deploy
 
 1. Provisionar PostgreSQL, Redis e storage.
@@ -168,4 +174,10 @@ Arquivo de exemplo para deploy da API em Render: [render.yaml](D:/VivianeCRM/viv
 pnpm deploy:check
 pnpm --filter @viviani/api db:migrate:prod
 pnpm --filter @viviani/api start
+gh workflow run "Deploy Homologation" --ref staging
+```
+
+Para cadastrar o hook e disparar a esteira em um passo:
+```powershell
+./scripts/set-api-deploy-hook.ps1 -HookUrl 'https://api.render.com/deploy/...' -DispatchWorkflow -Wait
 ```

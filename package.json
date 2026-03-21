@@ -30,7 +30,7 @@
   },
   "packageManager": "pnpm@8.15.4",
   "engines": {
-    "node": "20.x",
+    "node": ">=20.20.1 <21",
     "pnpm": ">=8.0.0"
   },
   "workspaces": [

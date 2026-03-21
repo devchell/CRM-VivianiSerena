@@ -10,18 +10,71 @@ concurrency:
   group: deploy-homolog-${{ github.ref }}
   cancel-in-progress: true
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
+
 jobs:
-  deploy-landing-hml:
-    if: ${{ secrets.VERCEL_TOKEN != '' }}
+  preflight:
     runs-on: ubuntu-latest
+    outputs:
+      has_vercel_token: ${{ steps.check.outputs.has_vercel_token }}
+      has_render_hook: ${{ steps.check.outputs.has_render_hook }}
+      has_api_base_url: ${{ steps.check.outputs.has_api_base_url }}
+      has_admin_smoke: ${{ steps.check.outputs.has_admin_smoke }}
+    steps:
+      - name: Check Vercel token
+        id: check
+        shell: bash
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          RENDER_DEPLOY_HOOK_API_HML: ${{ secrets.RENDER_DEPLOY_HOOK_API_HML }}
+          API_HML_BASE_URL: ${{ vars.API_HML_BASE_URL }}
+          API_HML_SMOKE_ADMIN_EMAIL: ${{ secrets.API_HML_SMOKE_ADMIN_EMAIL }}
+          API_HML_SMOKE_ADMIN_PASSWORD: ${{ secrets.API_HML_SMOKE_ADMIN_PASSWORD }}
+        run: |
+          if [[ -n "${VERCEL_TOKEN}" ]]; then
+            echo "has_vercel_token=true" >> "${GITHUB_OUTPUT}"
+          else
+            echo "has_vercel_token=false" >> "${GITHUB_OUTPUT}"
+            echo "VERCEL_TOKEN secret not configured; skipping Vercel deploy jobs."
+          fi
+
+          if [[ -n "${RENDER_DEPLOY_HOOK_API_HML}" ]]; then
+            echo "has_render_hook=true" >> "${GITHUB_OUTPUT}"
+          else
+            echo "has_render_hook=false" >> "${GITHUB_OUTPUT}"
+            echo "RENDER_DEPLOY_HOOK_API_HML secret not configured; skipping API deploy job."
+          fi
+
+          if [[ -n "${API_HML_BASE_URL}" ]]; then
+            echo "has_api_base_url=true" >> "${GITHUB_OUTPUT}"
+          else
+            echo "has_api_base_url=false" >> "${GITHUB_OUTPUT}"
+            echo "API_HML_BASE_URL variable not configured; skipping API health verification."
+          fi
+
+          if [[ -n "${API_HML_SMOKE_ADMIN_EMAIL}" && -n "${API_HML_SMOKE_ADMIN_PASSWORD}" ]]; then
+            echo "has_admin_smoke=true" >> "${GITHUB_OUTPUT}"
+          else
+            echo "has_admin_smoke=false" >> "${GITHUB_OUTPUT}"
+            echo "Admin smoke secrets not configured; API job will verify only public health/version."
+          fi
+
+  deploy-landing-hml:
+    needs: preflight
+    if: ${{ needs.preflight.outputs.has_vercel_token == 'true' }}
+    runs-on: ubuntu-latest
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
-          node-version: 20
+          node-version: 20.20.1
+          package-manager-cache: false
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
@@ -31,38 +84,45 @@ jobs:
       - name: Install Vercel CLI
         run: npm install --global vercel@latest
 
+      - name: Install workspace dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build shared packages
+        run: pnpm --filter @viviani/types build && pnpm --filter @viviani/utils build && pnpm --filter @viviani/ui build
+
       - name: Pull Vercel config
-        working-directory: apps/landing
         env:
           VERCEL_ORG_ID: ${{ vars.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ vars.VERCEL_PROJECT_ID_LANDING_HML }}
         run: vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
 
       - name: Build landing
-        working-directory: apps/landing
         env:
           VERCEL_ORG_ID: ${{ vars.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ vars.VERCEL_PROJECT_ID_LANDING_HML }}
         run: vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
 
       - name: Deploy landing
-        working-directory: apps/landing
         env:
           VERCEL_ORG_ID: ${{ vars.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ vars.VERCEL_PROJECT_ID_LANDING_HML }}
         run: vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }}
 
   deploy-crm-hml:
-    if: ${{ secrets.VERCEL_TOKEN != '' }}
+    needs: preflight
+    if: ${{ needs.preflight.outputs.has_vercel_token == 'true' }}
     runs-on: ubuntu-latest
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
-          node-version: 20
+          node-version: 20.20.1
+          package-manager-cache: false
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
@@ -72,23 +132,63 @@ jobs:
       - name: Install Vercel CLI
         run: npm install --global vercel@latest
 
+      - name: Install workspace dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build shared packages
+        run: pnpm --filter @viviani/types build && pnpm --filter @viviani/utils build && pnpm --filter @viviani/ui build
+
       - name: Pull Vercel config
-        working-directory: apps/crm
         env:
           VERCEL_ORG_ID: ${{ vars.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ vars.VERCEL_PROJECT_ID_CRM_HML }}
         run: vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
 
       - name: Build CRM
-        working-directory: apps/crm
         env:
           VERCEL_ORG_ID: ${{ vars.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ vars.VERCEL_PROJECT_ID_CRM_HML }}
         run: vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
 
       - name: Deploy CRM
-        working-directory: apps/crm
         env:
           VERCEL_ORG_ID: ${{ vars.VERCEL_ORG_ID }}
           VERCEL_PROJECT_ID: ${{ vars.VERCEL_PROJECT_ID_CRM_HML }}
         run: vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }}
+
+  deploy-api-hml:
+    needs: preflight
+    if: ${{ needs.preflight.outputs.has_render_hook == 'true' && needs.preflight.outputs.has_api_base_url == 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Trigger Render deploy
+        shell: bash
+        env:
+          RENDER_DEPLOY_HOOK_API_HML: ${{ secrets.RENDER_DEPLOY_HOOK_API_HML }}
+        run: |
+          curl --fail --show-error --silent -X POST "${RENDER_DEPLOY_HOOK_API_HML}"
+
+      - name: Verify deployed API
+        shell: pwsh
+        env:
+          API_HML_BASE_URL: ${{ vars.API_HML_BASE_URL }}
+          DEPLOY_SHA: ${{ github.sha }}
+          API_HML_SMOKE_ADMIN_EMAIL: ${{ secrets.API_HML_SMOKE_ADMIN_EMAIL }}
+          API_HML_SMOKE_ADMIN_PASSWORD: ${{ secrets.API_HML_SMOKE_ADMIN_PASSWORD }}
+        run: |
+          $params = @{
+            ApiBaseUrl = $env:API_HML_BASE_URL
+            ExpectedVersion = $env:DEPLOY_SHA
+            MaxAttempts = 60
+            DelaySeconds = 10
+          }
+
+          if ($env:API_HML_SMOKE_ADMIN_EMAIL -and $env:API_HML_SMOKE_ADMIN_PASSWORD) {
+            $params.AdminEmail = $env:API_HML_SMOKE_ADMIN_EMAIL
+            $params.AdminPassword = $env:API_HML_SMOKE_ADMIN_PASSWORD
+          }
+
+          ./scripts/verify-api-deploy.ps1 @params

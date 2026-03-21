@@ -16,12 +16,31 @@ import {
   XAxis,
   YAxis,
 } from 'recharts'
-import { Download, FileText, Pencil, Plus, Trash2, X } from 'lucide-react'
+import { ChevronDown, Download, FileText, Pencil, Plus, Trash2, X } from 'lucide-react'
 import { formatCurrency } from '@viviani/utils'
 import { toast } from 'sonner'
 import { useAuth } from '@/lib/useAuth'
 import { apiFetchJson, buildAuthHeaders } from '@/lib/api-client'
 import { useFinancialColors } from '@/hooks/useFinancialColors'
+import {
+  crmListBody,
+  crmListCell,
+  crmListEmpty,
+  crmFieldSelect,
+  crmFieldSelectIcon,
+  crmFieldSelectWrapper,
+  crmListFooter,
+  crmListHeaderCell,
+  crmListRow,
+  crmListSearchInput,
+  crmListSearchWrapper,
+  crmListSelect,
+  crmListSelectIcon,
+  crmListSelectWrapper,
+  crmListShell,
+  crmListTableHead,
+  crmListToolbar,
+} from '@/components/ui/listStyles'
 
 type FinancialRecord = Omit<Financial, 'date'> & { date: string }
 
@@ -65,8 +84,12 @@ function defaultForm(type: TransactionType = 'income'): FormState {
 }
 
 export default function FinanceiroPage() {
-  const { accessToken } = useAuth()
+  const { accessToken, hasPermission } = useAuth()
   const colors = useFinancialColors()
+  const canCreateFinancial = hasPermission('financeiro.create')
+  const canUpdateFinancial = hasPermission('financeiro.update')
+  const canDeleteFinancial = hasPermission('financeiro.delete')
+  const canExportFinancial = hasPermission('financeiro.export')
   const [transactions, setTransactions] = useState<FinancialRecord[]>([])
   const [summary, setSummary] = useState<FinancialSummary | null>(null)
   const [charts, setCharts] = useState<FinancialCharts | null>(null)
@@ -104,7 +127,7 @@ export default function FinanceiroPage() {
       })
       .catch((error) => {
         if (!active) return
-        toast.error(error instanceof Error ? error.message : 'Nao foi possivel carregar o financeiro.')
+        toast.error(error instanceof Error ? error.message : 'Não foi possível carregar o financeiro.')
       })
       .finally(() => {
         if (active) setLoading(false)
@@ -141,12 +164,14 @@ export default function FinanceiroPage() {
   const pagedTransactions = filteredTransactions.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE)
 
   function openCreateModal(type: TransactionType = 'income') {
+    if (!canCreateFinancial) return
     setEditing(null)
     setForm(defaultForm(type))
     setShowModal(true)
   }
 
   function openEditModal(transaction: FinancialRecord) {
+    if (!canUpdateFinancial) return
     setEditing(transaction)
     setForm({
       type: transaction.type,
@@ -182,7 +207,7 @@ export default function FinanceiroPage() {
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
-    if (!accessToken) return
+    if (!accessToken || (editing ? !canUpdateFinancial : !canCreateFinancial)) return
 
     setSubmitting(true)
     try {
@@ -197,7 +222,7 @@ export default function FinanceiroPage() {
       }
 
       if (!payload.amount || Number.isNaN(payload.amount)) {
-        throw new Error('Informe um valor valido.')
+        throw new Error('Informe um valor válido.')
       }
 
       await apiFetchJson(editing ? `/api/v1/financials/${editing.id}` : '/api/v1/financials', {
@@ -208,16 +233,16 @@ export default function FinanceiroPage() {
 
       await refreshFinancialData()
       setShowModal(false)
-      toast.success(editing ? 'Lancamento atualizado.' : 'Lancamento criado.')
+      toast.success(editing ? 'Lançamento atualizado.' : 'Lançamento criado.')
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Erro ao salvar lancamento.')
+      toast.error(error instanceof Error ? error.message : 'Erro ao salvar lançamento.')
     } finally {
       setSubmitting(false)
     }
   }
 
   async function handleDelete(transactionId: string) {
-    if (!accessToken) return
+    if (!accessToken || !canDeleteFinancial) return
 
     try {
       await apiFetchJson(`/api/v1/financials/${transactionId}`, {
@@ -225,14 +250,15 @@ export default function FinanceiroPage() {
         headers: buildAuthHeaders(accessToken),
       })
       await refreshFinancialData()
-      toast.success('Lancamento removido.')
+      toast.success('Lançamento removido.')
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Erro ao remover lancamento.')
+      toast.error(error instanceof Error ? error.message : 'Erro ao remover lançamento.')
     }
   }
 
   function handleExportCsv() {
-    const header = 'Data,Tipo,Categoria,Descricao,Valor,Recorrente\n'
+    if (!canExportFinancial) return
+    const header = 'Data,Tipo,Categoria,Descrição,Valor,Recorrente\n'
     const rows = filteredTransactions.map((transaction) => {
       return [
         new Date(transaction.date).toLocaleDateString('pt-BR'),
@@ -240,7 +266,7 @@ export default function FinanceiroPage() {
         FINANCIAL_CATEGORY_LABELS[transaction.category],
         `"${transaction.description.replace(/"/g, '""')}"`,
         transaction.amount.toFixed(2),
-        transaction.recurring ? 'Sim' : 'Nao',
+        transaction.recurring ? 'Sim' : 'Não',
       ].join(',')
     })
     const blob = new Blob(['\ufeff' + header + rows.join('\n')], { type: 'text/csv;charset=utf-8' })
@@ -253,18 +279,19 @@ export default function FinanceiroPage() {
   }
 
   async function handleExportPdf() {
+    if (!canExportFinancial) return
     const { default: jsPDF } = await import('jspdf')
     const { default: autoTable } = await import('jspdf-autotable')
     const doc = new jsPDF()
 
     doc.setFontSize(16)
-    doc.text('Relatorio financeiro', 14, 18)
+    doc.text('Relatório financeiro', 14, 18)
     doc.setFontSize(10)
     doc.text(`Gerado em ${new Date().toLocaleDateString('pt-BR')}`, 14, 25)
 
     autoTable(doc, {
       startY: 32,
-      head: [['Receita', 'Despesas', 'Lucro', 'Ticket medio']],
+      head: [['Receita', 'Despesas', 'Lucro', 'Ticket médio']],
       body: [[
         formatCurrency(summary?.income ?? 0),
         formatCurrency(summary?.expenses ?? 0),
@@ -275,7 +302,7 @@ export default function FinanceiroPage() {
 
     autoTable(doc, {
       startY: ((doc as unknown as { lastAutoTable?: { finalY: number } }).lastAutoTable?.finalY ?? 40) + 10,
-      head: [['Data', 'Tipo', 'Categoria', 'Descricao', 'Valor']],
+      head: [['Data', 'Tipo', 'Categoria', 'Descrição', 'Valor']],
       body: filteredTransactions.slice(0, 100).map((transaction) => [
         new Date(transaction.date).toLocaleDateString('pt-BR'),
         transaction.type === 'income' ? 'Receita' : 'Despesa',
@@ -292,44 +319,39 @@ export default function FinanceiroPage() {
     { label: 'Receita', value: summary?.income ?? 0, color: colors.income.text, background: colors.income.bg },
     { label: 'Despesas', value: summary?.expenses ?? 0, color: colors.expense.text, background: colors.expense.bg },
     { label: 'Lucro', value: summary?.profit ?? 0, color: (summary?.profit ?? 0) >= 0 ? colors.profit.text : colors.expense.text, background: (summary?.profit ?? 0) >= 0 ? colors.profit.bg : colors.expense.bg },
-    { label: 'Ticket medio', value: summary?.averageTicket ?? 0, color: 'var(--color-rose-gold, #C9967A)', background: 'rgba(201,150,122,0.1)' },
+    { label: 'Ticket médio', value: summary?.averageTicket ?? 0, color: 'var(--color-rose-gold, #C9967A)', background: 'rgba(201,150,122,0.1)' },
   ]
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="font-heading text-2xl font-bold text-charcoal dark:text-charcoal-50">Financeiro</h1>
-          <p className="mt-1 text-sm text-charcoal-400 dark:text-charcoal-400">
-            Lancamentos e indicadores consolidados a partir da mesma fonte de verdade do dashboard.
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          <button onClick={handleExportCsv} className="flex items-center gap-1.5 rounded-lg border border-blush-300 px-3 py-2 text-sm text-charcoal-400 transition-colors hover:text-rose-gold dark:border-charcoal-600 dark:text-charcoal-400">
+      <div className="flex items-center justify-between border-b border-blush-200 pb-4 dark:border-charcoal-700">
+        <h1 className="font-heading text-xl font-semibold text-charcoal dark:text-charcoal-50">Financeiro</h1>
+        <div className="flex flex-wrap items-center gap-2">
+          <button onClick={handleExportCsv} disabled={!canExportFinancial} className="flex items-center gap-1.5 rounded border border-blush-300 bg-white/75 px-4 py-2 text-sm text-charcoal-400 shadow-sm transition-colors hover:text-rose-gold disabled:opacity-50 disabled:cursor-not-allowed dark:border-charcoal-600 dark:bg-charcoal-800/65 dark:text-charcoal-400">
             <Download size={14} />
             CSV
           </button>
-          <button onClick={() => void handleExportPdf()} className="flex items-center gap-1.5 rounded-lg border border-blush-300 px-3 py-2 text-sm text-charcoal-400 transition-colors hover:text-rose-gold dark:border-charcoal-600 dark:text-charcoal-400">
+          <button onClick={() => void handleExportPdf()} disabled={!canExportFinancial} className="flex items-center gap-1.5 rounded border border-blush-300 bg-white/75 px-4 py-2 text-sm text-charcoal-400 shadow-sm transition-colors hover:text-rose-gold disabled:opacity-50 disabled:cursor-not-allowed dark:border-charcoal-600 dark:bg-charcoal-800/65 dark:text-charcoal-400">
             <FileText size={14} />
             PDF
           </button>
-          <button onClick={() => openCreateModal('income')} className="flex items-center gap-2 rounded-lg bg-rose-gold px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-rose-gold-500">
+          <button onClick={() => openCreateModal('income')} disabled={!canCreateFinancial} className="flex items-center gap-2 rounded bg-rose-gold px-5 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-rose-gold-500 disabled:opacity-50 disabled:cursor-not-allowed">
             <Plus size={16} />
-            Novo lancamento
+            Novo lançamento
           </button>
         </div>
       </div>
 
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         {kpis.map((kpi) => (
-          <div key={kpi.label} className="card-dark p-5 shadow-sm">
-            <div className="mb-3 flex h-9 w-9 items-center justify-center rounded-xl" style={{ background: kpi.background }}>
+          <div key={kpi.label} className="card-dark rounded-lg p-5 shadow-sm">
+            <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-lg" style={{ background: kpi.background }}>
               <span className="text-sm font-semibold" style={{ color: kpi.color }}>
                 R$
               </span>
             </div>
-            <p className="text-xs font-medium text-charcoal-400 dark:text-charcoal-400">{kpi.label}</p>
-            <p className="mt-1 font-heading text-xl font-bold text-charcoal dark:text-charcoal-50">
+            <p className="text-[11px] font-medium uppercase tracking-[0.16em] text-charcoal-400 dark:text-charcoal-400">{kpi.label}</p>
+            <p className="mt-1 font-heading text-2xl font-bold text-charcoal dark:text-charcoal-50">
               {loading ? '...' : formatCurrency(kpi.value)}
             </p>
           </div>
@@ -337,12 +359,12 @@ export default function FinanceiroPage() {
       </div>
 
       <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
-        <div className="card-dark p-5 shadow-sm">
+        <div className="card-dark rounded-lg p-5 shadow-sm">
           <h3 className="mb-4 font-heading text-sm font-semibold text-charcoal dark:text-charcoal-100">
-            Evolucao mensal
+            Evolução mensal
           </h3>
           {loading ? (
-            <div className="h-[240px] animate-pulse rounded-2xl bg-blush-100 dark:bg-charcoal-700/40" />
+            <div className="h-[240px] animate-pulse rounded-lg bg-blush-100 dark:bg-charcoal-700/40" />
           ) : (
             <ResponsiveContainer width="100%" height={240}>
               <BarChart data={charts?.monthly ?? []}>
@@ -358,12 +380,12 @@ export default function FinanceiroPage() {
           )}
         </div>
 
-        <div className="card-dark p-5 shadow-sm">
+        <div className="card-dark rounded-lg p-5 shadow-sm">
           <h3 className="mb-4 font-heading text-sm font-semibold text-charcoal dark:text-charcoal-100">
             Despesas por categoria
           </h3>
           {loading ? (
-            <div className="h-[240px] animate-pulse rounded-2xl bg-blush-100 dark:bg-charcoal-700/40" />
+            <div className="h-[240px] animate-pulse rounded-lg bg-blush-100 dark:bg-charcoal-700/40" />
           ) : (
             <ResponsiveContainer width="100%" height={240}>
               <PieChart>
@@ -380,49 +402,57 @@ export default function FinanceiroPage() {
         </div>
       </div>
 
-      <div className="card-dark overflow-hidden shadow-sm">
-        <div className="flex flex-wrap items-center gap-3 border-b border-blush-200 px-5 py-4 dark:border-charcoal-700">
-          <input
-            value={search}
-            onChange={(event) => setSearch(event.target.value)}
-            placeholder="Buscar descricao ou categoria"
-            className="min-w-[180px] flex-1 rounded-lg border border-blush-300 bg-white px-3 py-2 text-sm text-charcoal placeholder-charcoal-400 focus:outline-none focus:ring-2 focus:ring-rose-gold/40 dark:border-charcoal-600 dark:bg-charcoal-700 dark:text-charcoal-100"
-          />
-          <select
-            value={typeFilter}
-            onChange={(event) => setTypeFilter(event.target.value as 'all' | TransactionType)}
-            className="rounded-lg border border-blush-300 bg-white px-3 py-2 text-sm text-charcoal focus:outline-none dark:border-charcoal-600 dark:bg-charcoal-700 dark:text-charcoal-100"
-          >
-            <option value="all">Todos os tipos</option>
-            <option value="income">Receitas</option>
-            <option value="expense">Despesas</option>
-          </select>
-          <select
-            value={categoryFilter}
-            onChange={(event) => setCategoryFilter(event.target.value)}
-            className="rounded-lg border border-blush-300 bg-white px-3 py-2 text-sm text-charcoal focus:outline-none dark:border-charcoal-600 dark:bg-charcoal-700 dark:text-charcoal-100"
-          >
-            <option value="all">Todas as categorias</option>
-            {[...categories.income, ...categories.expense].map((category) => (
-              <option key={category.value} value={category.value}>
-                {category.label}
-              </option>
-            ))}
-          </select>
+      <div className={crmListShell}>
+        <div className={crmListToolbar}>
+          <div className={crmListSearchWrapper}>
+            <input
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+              placeholder="Buscar descrição ou categoria"
+              className={crmListSearchInput}
+            />
+          </div>
+          <div className={crmListSelectWrapper}>
+            <select
+              value={typeFilter}
+              onChange={(event) => setTypeFilter(event.target.value as 'all' | TransactionType)}
+              className={crmListSelect}
+            >
+              <option value="all">Todos os tipos</option>
+              <option value="income">Receitas</option>
+              <option value="expense">Despesas</option>
+            </select>
+            <ChevronDown size={16} className={crmListSelectIcon} />
+          </div>
+          <div className={crmListSelectWrapper}>
+            <select
+              value={categoryFilter}
+              onChange={(event) => setCategoryFilter(event.target.value)}
+              className={crmListSelect}
+            >
+              <option value="all">Todas as categorias</option>
+              {[...categories.income, ...categories.expense].map((category) => (
+                <option key={category.value} value={category.value}>
+                  {category.label}
+                </option>
+              ))}
+            </select>
+            <ChevronDown size={16} className={crmListSelectIcon} />
+          </div>
         </div>
 
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
-            <thead className="border-b border-blush-100 dark:border-charcoal-700">
+            <thead className={crmListTableHead}>
               <tr>
-                {['Data', 'Tipo', 'Categoria', 'Descricao', 'Valor', ''].map((header) => (
-                  <th key={header} className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-charcoal-400 dark:text-charcoal-400">
+                {['Data', 'Tipo', 'Categoria', 'Descrição', 'Valor', ''].map((header) => (
+                  <th key={header} className={crmListHeaderCell}>
                     {header}
                   </th>
                 ))}
               </tr>
             </thead>
-            <tbody className="divide-y divide-blush-50 dark:divide-charcoal-700/40">
+            <tbody className={crmListBody}>
               {loading ? (
                 Array.from({ length: 5 }).map((_, index) => (
                   <tr key={index}>
@@ -433,36 +463,44 @@ export default function FinanceiroPage() {
                 ))
               ) : pagedTransactions.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-4 py-10 text-center text-sm text-charcoal-400 dark:text-charcoal-500">
-                    Nenhum lancamento encontrado.
+                  <td colSpan={6} className={crmListEmpty}>
+                    Nenhum lançamento encontrado.
                   </td>
                 </tr>
               ) : (
                 pagedTransactions.map((transaction) => (
-                  <tr key={transaction.id} className="group transition-colors hover:bg-blush-50 dark:hover:bg-charcoal-700/20">
-                    <td className="px-4 py-3 text-xs text-charcoal-400 dark:text-charcoal-500">
-                      {new Date(transaction.date).toLocaleDateString('pt-BR')}
+                  <tr key={transaction.id} className={crmListRow}>
+                    <td className={crmListCell}>
+                      <span className="text-xs text-charcoal-400 dark:text-charcoal-500">
+                        {new Date(transaction.date).toLocaleDateString('pt-BR')}
+                      </span>
                     </td>
-                    <td className="px-4 py-3">
+                    <td className={crmListCell}>
                       <span className="rounded-full px-2 py-0.5 text-xs font-medium" style={transaction.type === 'income'
                         ? { color: colors.income.text, background: colors.income.bg }
                         : { color: colors.expense.text, background: colors.expense.bg }}>
                         {transaction.type === 'income' ? 'Receita' : 'Despesa'}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-xs text-charcoal-500 dark:text-charcoal-400">
-                      {FINANCIAL_CATEGORY_LABELS[transaction.category]}
+                    <td className={crmListCell}>
+                      <span className="text-xs text-charcoal-500 dark:text-charcoal-400">
+                        {FINANCIAL_CATEGORY_LABELS[transaction.category]}
+                      </span>
                     </td>
-                    <td className="px-4 py-3 text-sm text-charcoal dark:text-charcoal-100">{transaction.description}</td>
-                    <td className="px-4 py-3 text-sm font-semibold" style={{ color: transaction.type === 'income' ? colors.income.text : colors.expense.text }}>
-                      {transaction.type === 'income' ? '+' : '-'}{formatCurrency(transaction.amount)}
+                    <td className={crmListCell}>
+                      <span className="text-sm text-charcoal dark:text-charcoal-100">{transaction.description}</span>
                     </td>
-                    <td className="px-4 py-3">
+                    <td className={crmListCell}>
+                      <span className="text-sm font-semibold" style={{ color: transaction.type === 'income' ? colors.income.text : colors.expense.text }}>
+                        {transaction.type === 'income' ? '+' : '-'}{formatCurrency(transaction.amount)}
+                      </span>
+                    </td>
+                    <td className={crmListCell}>
                       <div className="flex items-center justify-end gap-1 opacity-0 transition-opacity group-hover:opacity-100">
-                        <button onClick={() => openEditModal(transaction)} className="rounded-lg p-1.5 text-charcoal-400 transition-colors hover:bg-rose-gold/10 hover:text-rose-gold">
+                        <button onClick={() => openEditModal(transaction)} disabled={!canUpdateFinancial} className="rounded-lg p-1.5 text-charcoal-400 transition-colors hover:bg-rose-gold/10 hover:text-rose-gold disabled:opacity-40 disabled:cursor-not-allowed">
                           <Pencil size={13} />
                         </button>
-                        <button onClick={() => void handleDelete(transaction.id)} className="rounded-lg p-1.5 text-charcoal-400 transition-colors hover:bg-red-500/10 hover:text-red-500">
+                        <button onClick={() => void handleDelete(transaction.id)} disabled={!canDeleteFinancial} className="rounded-lg p-1.5 text-charcoal-400 transition-colors hover:bg-red-500/10 hover:text-red-500 disabled:opacity-40 disabled:cursor-not-allowed">
                           <Trash2 size={13} />
                         </button>
                       </div>
@@ -474,15 +512,15 @@ export default function FinanceiroPage() {
           </table>
         </div>
 
-        <div className="flex items-center justify-between border-t border-blush-100 px-5 py-3 text-xs text-charcoal-400 dark:border-charcoal-700 dark:text-charcoal-500">
-          <span>{filteredTransactions.length} lancamentos</span>
+        <div className={crmListFooter}>
+          <span>{filteredTransactions.length} lançamentos</span>
           <div className="flex items-center gap-2">
             <button disabled={page === 0} onClick={() => setPage((current) => Math.max(0, current - 1))} className="rounded px-2 py-1 disabled:opacity-30">
               Anterior
             </button>
-            <span>Pagina {page + 1} de {pageCount}</span>
+            <span>Página {page + 1} de {pageCount}</span>
             <button disabled={page >= pageCount - 1} onClick={() => setPage((current) => Math.min(pageCount - 1, current + 1))} className="rounded px-2 py-1 disabled:opacity-30">
-              Proxima
+              Próxima
             </button>
           </div>
         </div>
@@ -493,7 +531,7 @@ export default function FinanceiroPage() {
           <div className="card-dark w-full max-w-lg shadow-2xl">
             <div className="flex items-center justify-between border-b border-blush-200 p-6 dark:border-charcoal-700">
               <h2 className="font-heading text-lg font-semibold text-charcoal dark:text-charcoal-50">
-                {editing ? 'Editar lancamento' : 'Novo lancamento'}
+                {editing ? 'Editar lançamento' : 'Novo lançamento'}
               </h2>
               <button onClick={() => setShowModal(false)} className="text-charcoal-400 transition-colors hover:text-charcoal dark:hover:text-charcoal-100">
                 <X size={20} />
@@ -511,7 +549,7 @@ export default function FinanceiroPage() {
                       type,
                       category: FINANCIAL_CATEGORIES_BY_TYPE[type][0].value,
                     }))}
-                    className="rounded-xl border-2 px-4 py-3 text-sm font-semibold transition-all"
+                    className="rounded border-2 px-4 py-3 text-sm font-semibold transition-all"
                     style={form.type === type ? {
                       borderColor: type === 'income' ? colors.income.border : colors.expense.border,
                       background: type === 'income' ? colors.income.bg : colors.expense.bg,
@@ -525,17 +563,20 @@ export default function FinanceiroPage() {
 
               <div>
                 <label className="mb-1 block text-xs font-medium text-charcoal-400 dark:text-charcoal-400">Categoria</label>
-                <select
-                  value={form.category}
-                  onChange={(event) => setForm((current) => ({ ...current, category: event.target.value as FinancialRecord['category'] }))}
-                  className="w-full rounded-lg border border-blush-300 bg-white px-3 py-2 text-sm text-charcoal focus:outline-none focus:ring-2 focus:ring-rose-gold/40 dark:border-charcoal-600 dark:bg-charcoal-700 dark:text-charcoal-100"
-                >
-                  {categories[form.type].map((category) => (
-                    <option key={category.value} value={category.value}>
-                      {category.label}
-                    </option>
-                  ))}
-                </select>
+                <div className={crmFieldSelectWrapper}>
+                  <select
+                    value={form.category}
+                    onChange={(event) => setForm((current) => ({ ...current, category: event.target.value as FinancialRecord['category'] }))}
+                    className={crmFieldSelect}
+                  >
+                    {categories[form.type].map((category) => (
+                      <option key={category.value} value={category.value}>
+                        {category.label}
+                      </option>
+                    ))}
+                  </select>
+                  <ChevronDown size={16} className={crmFieldSelectIcon} />
+                </div>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
@@ -562,7 +603,7 @@ export default function FinanceiroPage() {
               </div>
 
               <div>
-                <label className="mb-1 block text-xs font-medium text-charcoal-400 dark:text-charcoal-400">Descricao</label>
+                <label className="mb-1 block text-xs font-medium text-charcoal-400 dark:text-charcoal-400">Descrição</label>
                 <input
                   required
                   value={form.description}
@@ -587,7 +628,7 @@ export default function FinanceiroPage() {
                   checked={form.recurring}
                   onChange={(event) => setForm((current) => ({ ...current, recurring: event.target.checked }))}
                 />
-                Lancamento recorrente
+                Lançamento recorrente
               </label>
 
               <div className="flex gap-3 pt-2">

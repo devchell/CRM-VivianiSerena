@@ -1,11 +1,35 @@
 'use client'
 
 import { useRef } from 'react'
+import Image from 'next/image'
 import { motion, useInView } from 'framer-motion'
 import { CheckCircle2, Award, Microscope, Heart } from 'lucide-react'
 import { trackCTAClick, trackWhatsAppClick } from '@/lib/analytics'
+import { landingPublicEnv } from '@/lib/public-env'
 
 const WA_LINK = 'https://wa.link/e2g7ii'
+const API_URL = landingPublicEnv.apiBaseUrl
+
+function normalizeImageUrl(value?: string) {
+  const trimmed = value?.trim()
+  if (!trimmed) return ''
+  if (trimmed.startsWith('data:image/')) return trimmed
+
+  if (trimmed.startsWith('/')) {
+    return `${API_URL}${trimmed}`
+  }
+
+  try {
+    const parsed = new URL(trimmed)
+    if (['localhost', '127.0.0.1', '0.0.0.0'].includes(parsed.hostname)) {
+      return `${API_URL}${parsed.pathname}${parsed.search}`
+    }
+
+    return trimmed
+  } catch {
+    return `${API_URL}/uploads/${trimmed.replace(/^\/+/, '')}`
+  }
+}
 
 const HIGHLIGHTS = [
   {
@@ -26,7 +50,7 @@ const HIGHLIGHTS = [
 ]
 
 const ACHIEVEMENTS = [
-  'Mais de 500 clientes atendidos com sucesso',
+  'Base operacional reiniciada para novos registros',
   'Especialização em pigmentos de micropigmentação',
   'Protocolos adaptados a todos os fototipos de pele',
   'Atendimento em Santo André e São Paulo',
@@ -46,12 +70,14 @@ const itemVariants = {
 
 interface AboutProps {
   bio?: string
+  photoUrl?: string
   whatsappNumber?: string
 }
 
-export function About({ bio, whatsappNumber }: AboutProps = {}) {
+export function About({ bio, photoUrl, whatsappNumber }: AboutProps = {}) {
   const sectionRef = useRef<HTMLElement>(null)
   const isInView = useInView(sectionRef, { once: true, margin: '-80px' })
+  const aboutPhotoSrc = normalizeImageUrl(photoUrl)
 
   const waHref = whatsappNumber ? `https://wa.me/${whatsappNumber}` : WA_LINK
 
@@ -87,17 +113,27 @@ export function About({ bio, whatsappNumber }: AboutProps = {}) {
             {/* Foto principal */}
             <motion.div
               variants={itemVariants}
-              className="relative rounded-3xl overflow-hidden aspect-[4/5] bg-blush shadow-2xl shadow-charcoal/10"
+              className="relative rounded-lg overflow-hidden aspect-[4/5] bg-blush shadow-2xl shadow-charcoal/10"
             >
               {/* Placeholder elegante enquanto a foto real não é fornecida */}
-              <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-blush via-cream to-blush">
-                <div className="text-center p-8">
-                  <div className="w-32 h-32 rounded-full bg-rose-gold/20 flex items-center justify-center mx-auto mb-4">
-                    <span className="font-heading text-5xl font-bold text-rose-gold">VS</span>
+              {aboutPhotoSrc ? (
+                <Image
+                  src={aboutPhotoSrc}
+                  alt="Foto de Viviani Serena"
+                  fill
+                  sizes="(max-width: 1024px) 100vw, 40rem"
+                  className="object-cover"
+                />
+              ) : (
+                <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-blush via-cream to-blush">
+                  <div className="text-center p-8">
+                    <div className="w-32 h-32 rounded-full bg-rose-gold/20 flex items-center justify-center mx-auto mb-4">
+                      <span className="font-heading text-5xl font-bold text-rose-gold">VS</span>
+                    </div>
+                    <p className="text-charcoal/50 text-sm">Imagem em definição</p>
                   </div>
-                  <p className="text-charcoal/50 text-sm">Foto da Viviani Serena</p>
                 </div>
-              </div>
+              )}
 
               {/* Overlay gradiente na base da imagem */}
               <div className="absolute bottom-0 left-0 right-0 h-1/3 bg-gradient-to-t from-charcoal/40 to-transparent" aria-hidden="true" />
@@ -106,10 +142,10 @@ export function About({ bio, whatsappNumber }: AboutProps = {}) {
             {/* Badge flutuante: experiência */}
             <motion.div
               variants={itemVariants}
-              className="absolute -bottom-6 -right-4 lg:-right-8 glass rounded-2xl px-6 py-5 border border-blush shadow-xl"
+              className="absolute -bottom-6 -right-4 lg:-right-8 glass rounded-lg px-6 py-5 border border-blush shadow-xl"
             >
               <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-xl bg-rose-gold flex items-center justify-center flex-shrink-0">
+                <div className="w-12 h-12 rounded-md bg-rose-gold flex items-center justify-center flex-shrink-0">
                   <Award className="text-white" size={22} aria-hidden="true" />
                 </div>
                 <div>
@@ -122,7 +158,7 @@ export function About({ bio, whatsappNumber }: AboutProps = {}) {
             {/* Badge flutuante: ANVISA */}
             <motion.div
               variants={itemVariants}
-              className="absolute -top-4 -right-4 lg:right-4 glass rounded-xl px-4 py-3 border border-blush shadow-lg"
+              className="absolute -top-4 -right-4 lg:right-4 glass rounded-md px-4 py-3 border border-blush shadow-lg"
             >
               <div className="flex items-center gap-2">
                 <div className="w-2 h-2 rounded-full bg-sage animate-pulse" aria-hidden="true" />

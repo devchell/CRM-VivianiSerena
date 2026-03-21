@@ -100,5 +100,4 @@ export interface CreateAppointmentDto {
   date: string
   serviceType: ServiceType
   notes?: string
-  duration?: number
 }

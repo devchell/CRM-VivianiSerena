@@ -16,7 +16,7 @@ const config: Config = {
         sage: { DEFAULT: '#8B9E8A', 400: '#8B9E8A', 500: '#6E836D' },
       },
       fontFamily: {
-        heading: ['var(--font-playfair)', ...defaultTheme.fontFamily.serif],
+        heading: ['var(--font-inter)', ...defaultTheme.fontFamily.sans],
         body: ['var(--font-inter)', ...defaultTheme.fontFamily.sans],
         sans: ['var(--font-inter)', ...defaultTheme.fontFamily.sans],
       },

@@ -1,72 +1,73 @@
 'use client'
 
-import { useSession, signOut } from 'next-auth/react'
-import { usePathname, useRouter } from 'next/navigation'
-import { useMemo, useEffect } from 'react'
 import Link from 'next/link'
+import { signOut } from 'next-auth/react'
+import { usePathname, useRouter } from 'next/navigation'
+import { useEffect, useMemo } from 'react'
+import type { AppPermission, CrmModule } from '@viviani/types'
 import {
   LayoutDashboard, Users, Calendar, DollarSign,
   Paintbrush, Shield, Settings, UserCheck, LogOut,
-  PanelLeftClose, PanelLeftOpen, Menu, Sparkles,
+  PanelLeftClose, Menu, Sparkles,
+  Send, Building2,
 } from 'lucide-react'
 import { useSidebar } from '@/hooks/useSidebar'
+import { useAuth } from '@/lib/useAuth'
 
 type NavItem = {
   href: string
   label: string
   icon: React.ElementType
-  module?: string // módulo necessário; admin ignora
+  module?: string
+  permission?: string
+  exact?: boolean
 }
 
 const NAV_ITEMS: NavItem[] = [
-  { href: '/dashboard',     label: 'Dashboard',     icon: LayoutDashboard, module: 'dashboard' },
-  { href: '/leads',         label: 'Leads',         icon: Users,           module: 'leads' },
-  { href: '/agenda',        label: 'Agenda',        icon: Calendar,        module: 'agenda' },
-  { href: '/financeiro',    label: 'Financeiro',    icon: DollarSign,      module: 'financeiro' },
-  { href: '/editar-site',   label: 'Editar Site',   icon: Paintbrush,      module: 'editar-site' },
-  { href: '/seguranca',     label: 'Segurança',     icon: Shield,          module: 'seguranca' },
-  { href: '/colaboradores', label: 'Colaboradores', icon: UserCheck,       module: 'admin-only' },
+  { href: '/dashboard',    label: 'Dashboard',    icon: LayoutDashboard, module: 'dashboard',   exact: true },
+  { href: '/leads',        label: 'Leads',        icon: Users,           module: 'leads',        exact: true },
+  { href: '/leads/disparos', label: 'Disparos',   icon: Send,            permission: 'leads.broadcast', exact: true },
+  { href: '/agenda',       label: 'Agenda',       icon: Calendar,        module: 'agenda',       exact: true },
+  { href: '/financeiro',   label: 'Financeiro',   icon: DollarSign,      module: 'financeiro',   exact: true },
+  { href: '/editar-site',  label: 'Editar Site',  icon: Paintbrush,      module: 'editar-site',  exact: true },
+  { href: '/seguranca',    label: 'Segurança',    icon: Shield,          module: 'seguranca',    exact: true },
+  { href: '/colaboradores',label: 'Colaboradores',icon: UserCheck,       permission: 'users.manage', exact: true },
+  { href: '/administracao',label: 'Administração',icon: Building2,       permission: 'users.manage', exact: true },
 ]
 
+function getRoleLabel(profile: string | null, isAdmin: boolean) {
+  if (isAdmin || profile === 'ADMIN') return 'Administrador'
+  if (profile === 'COLLABORATOR') return 'Colaborador'
+  return 'Viewer'
+}
+
 function Sidebar() {
-  const { data: session, status } = useSession()
+  const { collapsed, toggle, mobileOpen, closeMobile } = useSidebar()
   const pathname = usePathname()
   const router = useRouter()
-  const { collapsed, toggle, mobileOpen, toggleMobile, closeMobile } = useSidebar()
+  const { isAdmin, userName, profile, canAccessModule, hasPermission } = useAuth()
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const rawUser = (session?.user ?? {}) as any
-  const role: string = typeof rawUser.role === 'string' ? rawUser.role : 'user'
-  const isAdmin = role === 'admin' || role === 'ADMIN'
-  const allowedModules: string[] = Array.isArray(rawUser.allowedModules) ? rawUser.allowedModules : []
-  const userName = (() => {
-    const name = (rawUser.name ?? '').toString().trim()
-    if (name) return name
-    return 'Usuário'
-  })()
-  const roleLabel = isAdmin ? 'Administrador' : 'Colaborador'
+  const roleLabel = getRoleLabel(profile, isAdmin)
 
   const visibleItems = useMemo(() => {
-    return NAV_ITEMS.filter(item => {
-      if (!item.module) return true
-      if (item.module === 'admin-only') return isAdmin
-      return isAdmin || (Array.isArray(allowedModules) && allowedModules.includes(item.module))
+    return NAV_ITEMS.filter((item) => {
+      if (item.permission) return hasPermission(item.permission as AppPermission)
+      if (item.module) return canAccessModule(item.module as CrmModule)
+      return true
     })
-  }, [isAdmin, allowedModules])
+  }, [canAccessModule, hasPermission])
 
-  // Prefetch de todas as rotas do menu para primeira navegação mais rápida após F5
   useEffect(() => {
-    NAV_ITEMS.forEach(item => router.prefetch(item.href))
+    NAV_ITEMS.forEach((item) => router.prefetch(item.href))
   }, [router])
 
   const navContent = (
     <>
-      {/* Header */}
       <div className="flex items-center h-16 px-3 border-b border-[#e7e1d9] bg-white dark:bg-[#141414] dark:border-charcoal-800 flex-shrink-0 transition-colors duration-200">
         {collapsed ? (
           <button
             onClick={toggle}
-            className="inline-flex items-center justify-center w-11 h-11 rounded-xl text-[#c58b62] dark:text-[#d8b898] hover:bg-[#f0e8de] dark:hover:bg-[#272421] transition-all duration-200 hover:scale-[1.04] active:scale-[0.98]"
+            className="inline-flex items-center justify-center w-11 h-11 rounded-md text-[#c58b62] dark:text-[#d8b898] hover:bg-[#f0e8de] dark:hover:bg-[#272421] transition-all duration-200 hover:scale-[1.04] active:scale-[0.98]"
             aria-label="Expandir menu"
           >
             <Sparkles size={20} />
@@ -90,12 +91,14 @@ function Sidebar() {
         )}
       </div>
 
-      {/* Nav */}
       <nav className="flex-1 overflow-y-auto overflow-x-hidden py-4 px-3 space-y-1 bg-white dark:bg-[#0f0f0f] transition-opacity duration-200 ease-out">
-        {visibleItems.map(({ href, label, icon: Icon }) => {
-          const active = pathname === href || (pathname?.startsWith(href + '/') ?? false)
+        {visibleItems.map(({ href, label, icon: Icon, exact }) => {
+          const active = exact
+            ? pathname === href
+            : pathname === href || (pathname?.startsWith(href + '/') ?? false)
           const collapsedClasses = collapsed ? 'justify-center gap-0' : 'gap-3'
           const hoverShift = collapsed ? '' : 'hover:translate-x-1'
+
           return (
             <Link key={href} href={href} prefetch onClick={closeMobile}>
               <div
@@ -120,11 +123,10 @@ function Sidebar() {
         })}
       </nav>
 
-      {/* Footer */}
       <div className="border-t border-[#e7e1d9] dark:border-charcoal-800 bg-white dark:bg-[#0f0f0f] flex-shrink-0">
         {collapsed ? (
           <div className="flex flex-col items-center gap-2 p-3">
-            <Link href="/configuracoes" title={`${userName} — ${roleLabel} — Configurações`}>
+            <Link href="/configuracoes" title={`${userName} - ${roleLabel} - Configurações`}>
               <div className="w-9 h-9 rounded-lg bg-[#f7efe6] hover:bg-[#f1e3d6] border border-[#eadfd2] dark:bg-[#2a2622] dark:hover:bg-[#322c26] dark:border-[#3a332c] flex items-center justify-center transition-colors group">
                 <Settings size={16} className="text-[#9c8c7a] dark:text-[#d8b898] group-hover:text-[#c58b62] transition-colors" />
               </div>
@@ -145,7 +147,7 @@ function Sidebar() {
               </div>
             </Link>
             <div className="flex-1 min-w-0">
-              <p className="text-[#56493d] dark:text-[#e6d7c6] text-sm font-semibold truncate leading-tight">{userName}</p>
+              <p className="text-[#56493d] dark:text-[#e6d7c6] text-sm font-semibold truncate leading-tight">{userName || 'Usuário'}</p>
               <p className="text-[#9c8c7a] dark:text-[#c6b29b] text-[11px] truncate leading-tight">{roleLabel}</p>
             </div>
             <button
@@ -163,17 +165,8 @@ function Sidebar() {
 
   const width = collapsed ? 72 : 240
 
-  if (status === 'loading') {
-    return (
-      <aside style={{ width, minWidth: width }} className="h-screen bg-white border-r border-[#e7e1d9] flex items-center justify-center">
-        <div className="w-6 h-6 border-2 border-[#c58b62] border-t-transparent rounded-full animate-spin" />
-      </aside>
-    )
-  }
-
   return (
     <>
-      {/* Desktop */}
       <aside
         style={{ width, minWidth: width }}
         className="h-screen hidden lg:flex flex-col bg-white dark:bg-[#0f0f0f] border-r border-[#e7e1d9] dark:border-charcoal-800 shadow-sm transition-[width] duration-300 ease-in-out"
@@ -181,7 +174,6 @@ function Sidebar() {
         {navContent}
       </aside>
 
-      {/* Mobile trigger (shown via Header's button) */}
       {mobileOpen && (
         <div className="lg:hidden fixed inset-0 z-50">
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={closeMobile} />

@@ -7,6 +7,7 @@ import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 import { ArrowLeft, CheckCircle, ChevronRight, Clock, Mail, Phone, User } from 'lucide-react'
 import {
+  getAnalyticsSessionId,
   getUtmParams,
   trackConversion,
   trackLead,
@@ -21,38 +22,44 @@ const API_BASE_URL = landingPublicEnv.apiBaseUrl
 
 const step1Schema = z.object({
   name: z.string().min(2, 'Nome deve ter pelo menos 2 caracteres').max(80),
-  email: z.string().email('Informe um e-mail valido').max(120),
-  phone: z.string().min(10, 'Telefone invalido').max(20).regex(/^[\d\s()+-]+$/, 'Formato invalido'),
+  email: z.string().email('Informe um e-mail válido').max(120),
+  phone: z.string().min(10, 'Telefone inválido').max(20).regex(/^[\d\s()+-]+$/, 'Formato inválido'),
 })
 
 const step2Schema = z.object({
   service: z.enum(['sobrancelhas', 'labios_eyeliner', 'capilar', 'tatuagens', 'nao_sei'], {
-    required_error: 'Selecione um servico',
+    required_error: 'Selecione um serviço',
   }),
 })
 
 const step3Schema = z.object({
   period: z.enum(['manha', 'tarde', 'qualquer'], {
-    required_error: 'Selecione um periodo',
+    required_error: 'Selecione um período',
   }),
 })
 
 type Step1Data = z.infer<typeof step1Schema>
 type Step2Data = z.infer<typeof step2Schema>
 type Step3Data = z.infer<typeof step3Schema>
+type SocialProofSummary = {
+  enabled: boolean
+  clientsRegistered: number
+  publicReviews: number
+  averageRating: number | null
+}
 
 const SERVICE_OPTIONS = [
   { value: 'sobrancelhas', label: 'Sobrancelhas micropigmentadas', emoji: 'S' },
-  { value: 'labios_eyeliner', label: 'Labios / Eyeliner', emoji: 'L' },
-  { value: 'capilar', label: 'Micropigmentacao capilar', emoji: 'C' },
+  { value: 'labios_eyeliner', label: 'Lábios / Eyeliner', emoji: 'L' },
+  { value: 'capilar', label: 'Micropigmentação capilar', emoji: 'C' },
   { value: 'tatuagens', label: 'Tatuagens', emoji: 'T' },
-  { value: 'nao_sei', label: 'Nao sei ao certo', emoji: '?' },
+  { value: 'nao_sei', label: 'Não sei ao certo', emoji: '?' },
 ] as const
 
 const PERIOD_OPTIONS = [
-  { value: 'manha', label: 'Manha', sub: '9h as 12h' },
-  { value: 'tarde', label: 'Tarde', sub: '13h as 18h' },
-  { value: 'qualquer', label: 'Qualquer horario', sub: 'Sem preferencia' },
+  { value: 'manha', label: 'Manhã', sub: '9h às 12h' },
+  { value: 'tarde', label: 'Tarde', sub: '13h às 18h' },
+  { value: 'qualquer', label: 'Qualquer horário', sub: 'Sem preferência' },
 ] as const
 
 function mapUtmSourceToLeadSource(utmSource?: string) {
@@ -81,7 +88,7 @@ function ProgressBar({ step }: { step: number }) {
     <div className="mb-8" role="progressbar" aria-valuenow={step} aria-valuemin={1} aria-valuemax={3}>
       <div className="mb-2 flex justify-between text-xs text-charcoal/50">
         <span>Passo {step} de 3</span>
-        <span>{Math.round(percent)}% concluido</span>
+        <span>{Math.round(percent)}% concluído</span>
       </div>
       <div className="h-1.5 overflow-hidden rounded-full bg-blush">
         <motion.div
@@ -119,7 +126,7 @@ function Step1({ onNext }: { onNext: (data: Step1Data) => void }) {
         <h3 className="font-heading text-xl font-bold text-charcoal">Vamos nos conhecer?</h3>
       </div>
       <p className="mb-6 pl-[3.25rem] text-sm text-charcoal/60">
-        Preencha seus dados para eu entrar em contato e organizar sua avaliacao gratuita.
+        Preencha seus dados para eu entrar em contato e organizar sua avaliação gratuita.
       </p>
 
       <form onSubmit={handleSubmit((data) => {
@@ -142,7 +149,7 @@ function Step1({ onNext }: { onNext: (data: Step1Data) => void }) {
                   id={field.id}
                   type={field.type}
                   autoComplete={field.autoComplete}
-                  className={`h-12 w-full rounded-xl border bg-white pl-11 pr-4 text-charcoal placeholder:text-charcoal/40 transition-all focus:outline-none focus:ring-2 focus:ring-rose-gold ${
+                  className={`h-12 w-full rounded-md border bg-white pl-11 pr-4 text-charcoal placeholder:text-charcoal/40 transition-all focus:outline-none focus:ring-2 focus:ring-rose-gold ${
                     error ? 'border-red-400 focus:ring-red-400' : 'border-blush focus:border-transparent'
                   }`}
                   {...register(field.id)}
@@ -178,9 +185,9 @@ function Step2({ onNext, onBack }: { onNext: (data: Step2Data) => void; onBack: 
         <div className="step-circle h-10 w-10 border-rose-gold bg-rose-gold text-base text-white">
           <span className="text-sm font-bold">2</span>
         </div>
-        <h3 className="font-heading text-xl font-bold text-charcoal">Qual regiao deseja tratar?</h3>
+        <h3 className="font-heading text-xl font-bold text-charcoal">Qual região deseja tratar?</h3>
       </div>
-      <p className="mb-6 pl-[3.25rem] text-sm text-charcoal/60">Selecione a opcao que melhor descreve seu caso.</p>
+      <p className="mb-6 pl-[3.25rem] text-sm text-charcoal/60">Selecione a opção que melhor descreve seu caso.</p>
 
       <form onSubmit={handleSubmit((data) => {
         trackLeadFormStep(2, data.service)
@@ -192,13 +199,13 @@ function Step2({ onNext, onBack }: { onNext: (data: Step2Data) => void; onBack: 
               key={option.value}
               type="button"
               onClick={() => setValue('service', option.value, { shouldValidate: true })}
-              className={`flex w-full items-center gap-3 rounded-xl border-2 px-4 py-3.5 text-left transition-all ${
+              className={`flex w-full items-center gap-3 rounded-md border-2 px-4 py-3.5 text-left transition-all ${
                 selected === option.value
                   ? 'border-rose-gold bg-rose-gold/5 text-charcoal'
                   : 'border-blush bg-white text-charcoal/70 hover:border-rose-gold/40 hover:bg-blush/30'
               }`}
             >
-              <span className="flex h-7 w-7 items-center justify-center rounded-full bg-cream text-sm font-semibold text-rose-gold">
+              <span className="flex h-7 w-7 items-center justify-center rounded bg-cream text-sm font-semibold text-rose-gold">
                 {option.emoji}
               </span>
               <span className="text-sm font-medium">{option.label}</span>
@@ -247,10 +254,10 @@ function Step3({
         <div className="step-circle h-10 w-10 border-rose-gold bg-rose-gold text-base text-white">
           <Clock size={18} />
         </div>
-        <h3 className="font-heading text-xl font-bold text-charcoal">Qual o melhor horario?</h3>
+        <h3 className="font-heading text-xl font-bold text-charcoal">Qual é o melhor horário?</h3>
       </div>
       <p className="mb-6 pl-[3.25rem] text-sm text-charcoal/60">
-        Vou entrar em contato para confirmar um horario que funcione para voce.
+        Vou entrar em contato para confirmar um horário que funcione para você.
       </p>
 
       <form onSubmit={handleSubmit(onSubmit)} noValidate>
@@ -260,7 +267,7 @@ function Step3({
               key={option.value}
               type="button"
               onClick={() => setValue('period', option.value, { shouldValidate: true })}
-              className={`flex flex-col items-center gap-1 rounded-xl border-2 px-2 py-4 text-center transition-all ${
+              className={`flex flex-col items-center gap-1 rounded-md border-2 px-2 py-4 text-center transition-all ${
                 selected === option.value
                   ? 'border-rose-gold bg-rose-gold/5 text-charcoal'
                   : 'border-blush bg-white text-charcoal/70 hover:border-rose-gold/40'
@@ -279,7 +286,7 @@ function Step3({
             <ArrowLeft size={18} />
           </button>
           <button type="submit" disabled={isLoading} className="btn-primary flex-1">
-            {isLoading ? 'Enviando...' : 'Solicitar Avaliacao Gratuita'}
+            {isLoading ? 'Enviando...' : 'Solicitar Avaliação Gratuita'}
             {!isLoading ? <CheckCircle size={18} /> : null}
           </button>
         </div>
@@ -298,12 +305,12 @@ function SuccessScreen({ name }: { name: string }) {
 
   return (
     <motion.div key="success" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.5 }} className="py-4 text-center">
-      <div className="mx-auto mb-5 flex h-20 w-20 items-center justify-center rounded-full bg-sage/15">
+      <div className="mx-auto mb-5 flex h-20 w-20 items-center justify-center rounded bg-sage/15">
         <CheckCircle className="text-sage" size={40} />
       </div>
       <h3 className="mb-3 font-heading text-2xl font-bold text-charcoal">Recebido, {firstName}!</h3>
       <p className="mx-auto mb-6 max-w-xs text-sm leading-relaxed text-charcoal/65">
-        Vou analisar seu caso e entrar em contato em ate <strong className="text-charcoal">24 horas</strong>.
+        Vou analisar seu caso e entrar em contato em até <strong className="text-charcoal">24 horas</strong>.
       </p>
       <button onClick={handleWhatsApp} className="btn-primary mx-auto" aria-label="Falar pelo WhatsApp">
         Falar no WhatsApp agora
@@ -312,12 +319,16 @@ function SuccessScreen({ name }: { name: string }) {
   )
 }
 
-export function LeadFormSection() {
+export function LeadFormSection({ socialProof }: { socialProof?: SocialProofSummary | null }) {
   const [step, setStep] = useState(1)
   const [isLoading, setIsLoading] = useState(false)
   const [isSuccess, setIsSuccess] = useState(false)
   const [formData, setFormData] = useState<Partial<Step1Data & Step2Data & Step3Data>>({})
   const sectionRef = useRef<HTMLElement>(null)
+  const proofEnabled = socialProof?.enabled !== false
+  const clientsRegistered = socialProof?.clientsRegistered ?? 0
+  const publicReviews = socialProof?.publicReviews ?? 0
+  const averageRating = socialProof?.averageRating ?? 5
 
   const handleStep1 = useCallback((data: Step1Data) => {
     setFormData((previous) => ({ ...previous, ...data }))
@@ -352,16 +363,19 @@ export function LeadFormSection() {
           email: finalData.email,
           phone: finalData.phone,
           source: mapUtmSourceToLeadSource(utm.utm_source),
-          utmSource: utm.utm_source,
+          utmSource: utm.utm_source ?? 'landing_form',
           utmMedium: utm.utm_medium,
           utmCampaign: utm.utm_campaign,
-          notes: `Servico: ${finalData.service ?? 'nao_informado'} | Periodo: ${finalData.period ?? 'nao_informado'}`,
+          capturePage: typeof window !== 'undefined' ? window.location.pathname : undefined,
+          referrer: typeof document !== 'undefined' ? document.referrer || undefined : undefined,
+          sessionId: getAnalyticsSessionId() ?? undefined,
+          notes: `Serviço: ${finalData.service ?? 'nao_informado'} | Período: ${finalData.period ?? 'nao_informado'}`,
           website: '',
         }),
       }).then(async (response) => {
         if (!response.ok) {
           const payload = await response.json().catch(() => ({}))
-          throw new Error(payload?.error ?? 'Nao foi possivel enviar seus dados.')
+          throw new Error(payload?.error ?? 'Não foi possível enviar seus dados.')
         }
       })
 
@@ -381,21 +395,21 @@ export function LeadFormSection() {
           <motion.div initial={{ opacity: 0, x: -24 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true, margin: '-80px' }} transition={{ duration: 0.6 }}>
             <span className="section-label">
               <span className="h-px w-6 bg-rose-gold" aria-hidden="true" />
-              Avaliacao Gratuita
+              Avaliação Gratuita
             </span>
             <h2 id="contact-heading" className="heading-lg mb-6 text-balance text-charcoal">
               De o primeiro passo para <span className="text-rose-gold">renovar sua pele</span>
             </h2>
             <p className="mb-8 text-lg leading-relaxed text-charcoal/65">
-              A avaliacao e gratuita, sem compromisso e pode ser feita presencialmente em Santo Andre ou por videochamada.
+              A avaliação é gratuita, sem compromisso, e pode ser feita presencialmente em Santo André ou por videochamada.
             </p>
 
             <ul className="mb-8 space-y-4">
               {[
-                'Diagnostico do seu pigmento e fototipo de pele',
-                'Estimativa de sessoes e investimento necessario',
+                'Diagnóstico do seu pigmento e fototipo de pele',
+                'Estimativa de sessões e investimento necessário',
                 'Protocolo personalizado para o seu caso',
-                'Possibilidade de seguir pelo WhatsApp apos a avaliacao',
+                'Possibilidade de seguir pelo WhatsApp após a avaliação',
               ].map((item) => (
                 <li key={item} className="flex items-start gap-3">
                   <CheckCircle className="mt-0.5 flex-shrink-0 text-rose-gold" size={18} />
@@ -404,30 +418,45 @@ export function LeadFormSection() {
               ))}
             </ul>
 
-            <div className="flex items-center gap-4 rounded-xl border border-blush bg-white p-4">
-              <div className="flex -space-x-2" aria-hidden="true">
-                {['AC', 'RM', 'FL'].map((initials) => (
-                  <div key={initials} className="flex h-9 w-9 items-center justify-center rounded-full border-2 border-white bg-rose-gold text-xs font-bold text-white">
-                    {initials}
+            {proofEnabled ? (
+              <div className="rounded-md border border-blush bg-white p-4">
+                <div className="flex items-center gap-4">
+                  <div className="flex -space-x-2" aria-hidden="true">
+                    {['VS', 'LG', 'GL'].map((initials) => (
+                      <div key={initials} className="flex h-9 w-9 items-center justify-center rounded-full border-2 border-white bg-rose-gold text-xs font-bold text-white">
+                        {initials}
+                      </div>
+                    ))}
                   </div>
-                ))}
-              </div>
-              <div>
-                <div className="text-xs text-yellow-400" aria-label="5 estrelas">
-                  ***** 
+                  <div>
+                    <div className="text-xs text-yellow-400" aria-label={`${averageRating} estrelas`}>
+                      {'*'.repeat(Math.max(1, Math.round(averageRating)))}
+                    </div>
+                    <p className="mt-0.5 text-xs text-charcoal/60">
+                      Prova social configurada no painel
+                    </p>
+                  </div>
                 </div>
-                <p className="mt-0.5 text-xs text-charcoal/60">
-                  <strong className="text-charcoal">+500 clientes</strong> ja confiaram no processo
-                </p>
+
+                <div className="mt-4 grid grid-cols-2 gap-3">
+                  <div className="rounded-lg bg-cream px-3 py-3">
+                    <p className="text-lg font-bold text-charcoal">{clientsRegistered}</p>
+                    <p className="mt-1 text-xs text-charcoal/60">Clientes registrados</p>
+                  </div>
+                  <div className="rounded-lg bg-cream px-3 py-3">
+                    <p className="text-lg font-bold text-charcoal">{publicReviews}</p>
+                    <p className="mt-1 text-xs text-charcoal/60">Avaliações públicas</p>
+                  </div>
+                </div>
               </div>
-            </div>
+            ) : null}
           </motion.div>
 
           <motion.div initial={{ opacity: 0, x: 24 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true, margin: '-80px' }} transition={{ duration: 0.6, delay: 0.15 }}>
             <div className="card p-8 shadow-xl shadow-charcoal/6">
               <div className="mb-6 flex items-center justify-between">
                 <h3 className="font-heading text-lg font-bold text-charcoal">
-                  {isSuccess ? 'Solicitacao enviada!' : 'Solicitar Avaliacao Gratuita'}
+                  {isSuccess ? 'Solicitação enviada!' : 'Solicitar Avaliação Gratuita'}
                 </h3>
                 {!isSuccess ? (
                   <span className="badge border border-rose-gold/20 bg-rose-gold/10 text-xs text-rose-gold">
@@ -440,7 +469,7 @@ export function LeadFormSection() {
 
               <AnimatePresence mode="wait">
                 {isSuccess ? (
-                  <SuccessScreen key="success" name={formData.name ?? 'voce'} />
+                  <SuccessScreen key="success" name={formData.name ?? 'você'} />
                 ) : step === 1 ? (
                   <Step1 key="step1" onNext={handleStep1} />
                 ) : step === 2 ? (
@@ -452,7 +481,7 @@ export function LeadFormSection() {
 
               {!isSuccess ? (
                 <p className="mt-6 text-center text-xs text-charcoal/40">
-                  Seus dados sao confidenciais e usados apenas para contato.
+                  Seus dados são confidenciais e usados apenas para contato.
                 </p>
               ) : null}
             </div>

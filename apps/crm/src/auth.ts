@@ -1,16 +1,82 @@
 import NextAuth from 'next-auth'
 import Credentials from 'next-auth/providers/credentials'
 import { z } from 'zod'
-import { crmServerEnv } from './lib/server-env'
+import {
+  inferUserProfile,
+  resolveAllowedModules,
+  type AppPermission,
+  type UserProfile,
+  type UserRole,
+} from '@viviani/types'
 
-const API_BASE = crmServerEnv.apiBaseUrl
+const ACCESS_TOKEN_LIFETIME_MS = 14 * 60 * 1000
 
-// Access token dura 15min — renovamos 1 minuto antes do vencimento
-const ACCESS_TOKEN_LIFETIME_MS = 14 * 60 * 1000 // 14 min
+type KnownRole = UserRole
+
+type ApiAuthUser = {
+  id: string
+  name?: string | null
+  email: string
+  role: string
+  profile?: UserProfile
+  permissions?: AppPermission[]
+  allowedModules?: string[]
+  mustChangePassword?: boolean
+  photoUrl?: string | null
+}
+
+function getApiBaseUrl(): string {
+  const value = process.env.API_BASE_URL?.trim() || process.env.NEXT_PUBLIC_API_URL?.trim()
+
+  if (!value) {
+    throw new Error('[auth] Missing API_BASE_URL or NEXT_PUBLIC_API_URL')
+  }
+
+  let parsed: URL
+  try {
+    parsed = new URL(value)
+  } catch {
+    throw new Error(`[auth] Invalid API URL: ${value}`)
+  }
+
+  if (['localhost', '127.0.0.1', '0.0.0.0'].includes(parsed.hostname)) {
+    throw new Error('[env] API_BASE_URL must not point to localhost in this deployment model')
+  }
+
+  return value.replace(/\/+$/, '')
+}
+
+function toKnownRole(value: string | undefined): KnownRole {
+  return value === 'ADMIN' || value === 'MANAGER' || value === 'VIEWER'
+    ? value
+    : 'VIEWER'
+}
+
+function normalizeAuthUser(user: ApiAuthUser) {
+  const role = toKnownRole(user.role)
+  const permissions = Array.isArray(user.permissions) ? user.permissions : []
+  const allowedModules = Array.isArray(user.allowedModules)
+    ? user.allowedModules
+    : resolveAllowedModules(role, permissions)
+  const profile = user.profile ?? inferUserProfile(role, permissions.length > 0 ? permissions : allowedModules)
+
+  return {
+    id: user.id,
+    name: user.name ?? null,
+    email: user.email,
+    role,
+    profile,
+    permissions,
+    allowedModules,
+    mustChangePassword: user.mustChangePassword ?? false,
+    photoUrl: user.photoUrl ?? null,
+  }
+}
 
 async function refreshAccessToken(refreshToken: string): Promise<{ accessToken: string; refreshToken: string } | null> {
   try {
-    const res = await fetch(`${API_BASE}/api/v1/auth/refresh`, {
+    const apiBaseUrl = getApiBaseUrl()
+    const res = await fetch(`${apiBaseUrl}/api/v1/auth/refresh`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ refreshToken }),
@@ -24,6 +90,7 @@ async function refreshAccessToken(refreshToken: string): Promise<{ accessToken: 
 }
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
+  trustHost: true,
   providers: [
     Credentials({
       name: 'credentials',
@@ -33,12 +100,13 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         twoFactorSessionToken: { label: '2FA Session Token', type: 'text' },
       },
       async authorize(credentials) {
-        // ── Conclusão de fluxo 2FA ──
+        const apiBaseUrl = getApiBaseUrl()
+
         if (credentials?.twoFactorSessionToken) {
           const parsed = z.object({ twoFactorSessionToken: z.string() }).safeParse(credentials)
           if (!parsed.success) return null
 
-          const res = await fetch(`${API_BASE}/api/v1/auth/login`, {
+          const res = await fetch(`${apiBaseUrl}/api/v1/auth/login`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -47,88 +115,69 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
               twoFactorSessionToken: parsed.data.twoFactorSessionToken,
             }),
           })
+
           if (!res.ok) {
             const errBody = await res.text().catch(() => '')
             console.error('[auth] 2FA login failed:', res.status, errBody)
             return null
           }
-          const data = (await res.json()) as {
+
+          const data = await res.json() as {
             data: {
-              user: {
-                id: string
-                name?: string
-                email: string
-                role: string
-                mustChangePassword?: boolean
-                allowedModules?: string[]
-                photoUrl?: string | null
-              }
+              user: ApiAuthUser
               accessToken: string
               refreshToken: string
             }
           }
+
+          const user = normalizeAuthUser(data.data.user)
           return {
-            id: data.data.user.id,
-            name: data.data.user.name ?? null,
-            email: data.data.user.email,
-            role: data.data.user.role,
-            mustChangePassword: data.data.user.mustChangePassword ?? false,
-            allowedModules: Array.isArray(data.data.user.allowedModules) ? data.data.user.allowedModules : [],
-            photoUrl: data.data.user.photoUrl ?? null,
+            ...user,
             accessToken: data.data.accessToken,
             refreshToken: data.data.refreshToken,
           }
         }
 
-        // ── Login normal ──
         const parsed = z.object({
           email: z.string().email(),
           password: z.string().min(8),
         }).safeParse(credentials)
+
         if (!parsed.success) {
           console.error('[auth] Zod validation failed:', parsed.error.flatten())
           return null
         }
 
-        const res = await fetch(`${API_BASE}/api/v1/auth/login`, {
+        const res = await fetch(`${apiBaseUrl}/api/v1/auth/login`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(parsed.data),
         })
+
         if (!res.ok) {
           const errBody = await res.text().catch(() => '')
           console.error('[auth] Login API error:', res.status, errBody)
           return null
         }
 
-        const data = (await res.json()) as {
+        const data = await res.json() as {
           data: {
             requiresTwoFactor?: boolean
-            user?: {
-              id: string
-              name?: string
-              email: string
-              role: string
-              mustChangePassword?: boolean
-              allowedModules?: string[]
-              photoUrl?: string | null
-            }
+            user?: ApiAuthUser
             accessToken?: string
             refreshToken?: string
           }
         }
 
-        // Se requer 2FA, o NextAuth não consegue retornar — a página de login trata isso diretamente
-        if (data.data?.requiresTwoFactor) return null
+        if (data.data?.requiresTwoFactor || !data.data.user || !data.data.accessToken || !data.data.refreshToken) {
+          return null
+        }
 
-        const u = data.data.user! as { id: string; name?: string; email: string; role: string; mustChangePassword?: boolean; allowedModules?: string[]; photoUrl?: string | null }
+        const user = normalizeAuthUser(data.data.user)
         return {
-          id: u.id, name: u.name ?? null, email: u.email, role: u.role,
-          mustChangePassword: u.mustChangePassword ?? false,
-          allowedModules: Array.isArray(u.allowedModules) ? u.allowedModules : [],
-          photoUrl: u.photoUrl ?? null,
-          accessToken: data.data.accessToken!,
-          refreshToken: data.data.refreshToken!,
+          ...user,
+          accessToken: data.data.accessToken,
+          refreshToken: data.data.refreshToken,
         }
       },
     }),
@@ -140,43 +189,54 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   callbacks: {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     async jwt({ token, user, trigger, session }: any) {
-
-      // ── Fluxo A: update() chamado pelo cliente (ex: salvar perfil) ──
       if (trigger === 'update' && session?.user) {
         if (session.user.name) token.name = session.user.name
         if (session.user.image !== undefined) token.photoUrl = session.user.image ?? null
-        // Permitir atualizar allowedModules e role via update()
-        if (Array.isArray(session.user.allowedModules)) token.allowedModules = session.user.allowedModules
         if (typeof session.user.role === 'string') token.role = session.user.role
+        if (typeof session.user.profile === 'string') token.profile = session.user.profile
+        if (Array.isArray(session.user.permissions)) token.permissions = session.user.permissions
+        if (Array.isArray(session.user.allowedModules)) token.allowedModules = session.user.allowedModules
       }
 
-      // ── Fluxo B: Login inicial — armazena tokens e define quando expira ──
       if (user) {
-        const u = user as { name?: string | null; role: string; accessToken: string; refreshToken: string; mustChangePassword?: boolean; allowedModules?: string[]; photoUrl?: string | null }
-        token.name = u.name ?? token.email?.split('@')[0] ?? 'Usuario'
-        token.role = u.role ?? 'user'
-        token.accessToken = u.accessToken
-        token.refreshToken = u.refreshToken
-        token.mustChangePassword = u.mustChangePassword ?? false
-        token.allowedModules = Array.isArray(u.allowedModules) ? u.allowedModules : []
-        token.photoUrl = u.photoUrl ?? null
+        const currentUser = user as ApiAuthUser & {
+          accessToken: string
+          refreshToken: string
+        }
+        const normalized = normalizeAuthUser(currentUser)
+
+        token.name = normalized.name ?? token.email?.split('@')[0] ?? 'Usuário'
+        token.userId = normalized.id
+        token.role = normalized.role
+        token.profile = normalized.profile
+        token.permissions = normalized.permissions
+        token.allowedModules = normalized.allowedModules
+        token.mustChangePassword = normalized.mustChangePassword
+        token.photoUrl = normalized.photoUrl
+        token.accessToken = currentUser.accessToken
+        token.refreshToken = currentUser.refreshToken
         token.expiresAt = Date.now() + ACCESS_TOKEN_LIFETIME_MS
         return token
       }
 
-      // ── Fluxo C: Blindagem de campos — roda ANTES do check de expiração ──
-      // Garante que campos SEMPRE existam, mesmo em tokens de sessões antigas
       token.name = typeof token.name === 'string' && token.name.length > 0
         ? token.name
-        : (typeof token.email === 'string' ? token.email.split('@')[0] : 'Usuario')
+        : (typeof token.email === 'string' ? token.email.split('@')[0] : 'Usuário')
 
-      token.role = typeof token.role === 'string' && token.role.length > 0
-        ? token.role
-        : 'user'
+      const role = toKnownRole(typeof token.role === 'string' ? token.role : undefined)
+      token.role = role
+
+      token.permissions = Array.isArray(token.permissions)
+        ? token.permissions
+        : []
 
       token.allowedModules = Array.isArray(token.allowedModules)
         ? token.allowedModules
-        : []
+        : resolveAllowedModules(role, token.permissions)
+
+      token.profile = typeof token.profile === 'string'
+        ? token.profile
+        : inferUserProfile(role, token.permissions.length > 0 ? token.permissions : token.allowedModules)
 
       token.mustChangePassword = typeof token.mustChangePassword === 'boolean'
         ? token.mustChangePassword
@@ -184,67 +244,60 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
       token.photoUrl = token.photoUrl ?? null
 
-      // Token ainda válido
       if (Date.now() < ((token.expiresAt as number) ?? 0)) {
         return token
       }
 
-      // ── Fluxo D: Access token expirou — tenta renovar ──
+
       const refreshed = await refreshAccessToken(token.refreshToken as string)
       if (!refreshed) {
         return { ...token, error: 'RefreshAccessTokenError' }
       }
 
-      // Buscar dados COMPLETOS do usuário após refresh (não apenas nome)
       let updatedName = token.name as string
-      let updatedRole = token.role as string
+      let updatedRole = role
+      let updatedProfile = token.profile as UserProfile | undefined
+      let updatedPermissions: AppPermission[] = Array.isArray(token.permissions)
+        ? [...token.permissions]
+        : []
       let updatedModules: string[] = Array.isArray(token.allowedModules)
-        ? (token.allowedModules as string[])
+        ? [...token.allowedModules]
         : []
       let updatedPhoto: string | null = typeof token.photoUrl === 'string'
         ? token.photoUrl
         : null
-      let updatedMustChange: boolean = typeof token.mustChangePassword === 'boolean'
-        ? (token.mustChangePassword as boolean)
+      let updatedMustChange = typeof token.mustChangePassword === 'boolean'
+        ? token.mustChangePassword
         : false
 
       try {
-        const res = await fetch(`${API_BASE}/api/v1/auth/me`, {
+        const apiBaseUrl = getApiBaseUrl()
+        const res = await fetch(`${apiBaseUrl}/api/v1/auth/me`, {
           headers: { Authorization: `Bearer ${refreshed.accessToken}` },
         })
+
         if (res.ok) {
           const json = await res.json()
-          // A API pode retornar { data: { ... } } ou { ... } diretamente
-          const u = json?.data ?? json ?? {}
-
-          if (typeof u.name === 'string' && u.name.length > 0) {
-            updatedName = u.name
-          }
-          if (typeof u.role === 'string' && u.role.length > 0) {
-            updatedRole = u.role
-          }
-          if (Array.isArray(u.allowedModules)) {
-            updatedModules = u.allowedModules.filter(
-              (m: unknown): m is string => typeof m === 'string'
-            )
-          }
-          if (u.photoUrl !== undefined) {
-            updatedPhoto = typeof u.photoUrl === 'string' ? u.photoUrl : null
-          }
-          if (typeof u.mustChangePassword === 'boolean') {
-            updatedMustChange = u.mustChangePassword
-          }
+          const currentUser = normalizeAuthUser((json?.data ?? json ?? {}) as ApiAuthUser)
+          updatedName = currentUser.name ?? updatedName
+          updatedRole = currentUser.role
+          updatedProfile = currentUser.profile
+          updatedPermissions = currentUser.permissions
+          updatedModules = currentUser.allowedModules
+          updatedPhoto = currentUser.photoUrl
+          updatedMustChange = currentUser.mustChangePassword
         }
       } catch {
-        // Se a API falhar, mantém os valores do token atual
-        // Os fallbacks da blindagem acima já garantem que nada é undefined
+        // Keep the token values when the refresh companion request fails.
       }
 
       return {
         ...token,
         name: updatedName,
         role: updatedRole,
-        allowedModules: Array.isArray(updatedModules) ? updatedModules : [],
+        profile: updatedProfile,
+        permissions: updatedPermissions,
+        allowedModules: updatedModules,
         photoUrl: updatedPhoto,
         mustChangePassword: updatedMustChange,
         accessToken: refreshed.accessToken,
@@ -256,26 +309,35 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     async session({ session, token }: any) {
-      // Blindagem: garantir que session.user SEMPRE existe
       if (!session) session = { user: {} }
       if (!session.user) session.user = {}
 
-      // Cada campo verificado individualmente com typeof — nunca confia no spread
       session.user.name = typeof token.name === 'string' && token.name.length > 0
         ? token.name
-        : (typeof session.user.email === 'string'
-          ? session.user.email.split('@')[0]
-          : 'Usuario')
+        : (typeof session.user.email === 'string' ? session.user.email.split('@')[0] : 'Usuário')
+
+      session.user.id = typeof token.userId === 'string' && token.userId.length > 0
+        ? token.userId
+        : (typeof token.sub === 'string' ? token.sub : '')
 
       session.user.role = typeof token.role === 'string' && token.role.length > 0
         ? token.role
-        : 'user'
+        : 'VIEWER'
 
-      // Cópia nova do array com [...] para evitar referência compartilhada
-      // que o NextAuth v5 beta pode corromper durante serialização
+      session.user.profile = typeof token.profile === 'string'
+        ? token.profile
+        : inferUserProfile(
+            toKnownRole(session.user.role),
+            Array.isArray(token.permissions) ? token.permissions : (Array.isArray(token.allowedModules) ? token.allowedModules : [])
+          )
+
+      session.user.permissions = Array.isArray(token.permissions)
+        ? [...token.permissions]
+        : []
+
       session.user.allowedModules = Array.isArray(token.allowedModules)
         ? [...token.allowedModules]
-        : []
+        : resolveAllowedModules(toKnownRole(session.user.role), session.user.permissions)
 
       session.user.mustChangePassword = typeof token.mustChangePassword === 'boolean'
         ? token.mustChangePassword

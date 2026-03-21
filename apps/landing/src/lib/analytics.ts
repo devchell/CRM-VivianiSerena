@@ -1,5 +1,7 @@
 'use client'
 
+import { landingPublicEnv } from './public-env'
+
 declare global {
   interface Window {
     gtag?: (...args: unknown[]) => void
@@ -7,7 +9,56 @@ declare global {
   }
 }
 
-const GA_ID = process.env.NEXT_PUBLIC_GA_ID ?? 'G-XXXXXXXXXX'
+const GA_ID = process.env.NEXT_PUBLIC_GA_ID?.trim() || null
+const API_BASE_URL = landingPublicEnv.apiBaseUrl
+const SESSION_STORAGE_KEY = 'vs_analytics_session_id'
+
+export type WebVitalRating = 'good' | 'needs-improvement' | 'poor'
+
+export interface WebVitalMetric {
+  name: string
+  value: number
+  rating: WebVitalRating
+  id: string
+  navigationType: string
+}
+
+function getSessionId(): string | null {
+  if (typeof window === 'undefined') return null
+  return window.sessionStorage.getItem(SESSION_STORAGE_KEY)
+}
+
+export function getAnalyticsSessionId(): string | null {
+  return getSessionId()
+}
+
+function setSessionId(value: string) {
+  if (typeof window === 'undefined') return
+  window.sessionStorage.setItem(SESSION_STORAGE_KEY, value)
+}
+
+async function postAnalytics(path: string, payload: Record<string, unknown>) {
+  try {
+    const endpoint = typeof window === 'undefined'
+      ? `${API_BASE_URL}/api/v1/analytics/${path}`
+      : `/api/track/${path}`
+
+    const response = await fetch(endpoint, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+      keepalive: true,
+    })
+
+    if (!response.ok) {
+      return null
+    }
+
+    return await response.json() as { success: boolean; data?: { sessionId?: string } }
+  } catch {
+    return null
+  }
+}
 
 export function getUtmParams(): Record<string, string> {
   if (typeof window === 'undefined') return {}
@@ -31,19 +82,44 @@ export function getUtmParams(): Record<string, string> {
 }
 
 function gtag(...args: unknown[]) {
-  if (typeof window === 'undefined') return
+  if (typeof window === 'undefined' || !GA_ID) return
   window.dataLayer = window.dataLayer ?? []
   window.dataLayer.push(args)
 }
 
-export function trackPageView(url: string) {
+export async function trackPageView(url: string) {
   gtag('config', GA_ID, { page_path: url })
+
+  const payload = await postAnalytics('pageview', {
+    page: url,
+    referrer: typeof document !== 'undefined' ? document.referrer || undefined : undefined,
+    duration: 0,
+    sessionId: getSessionId() ?? undefined,
+    utmSource: getUtmParams().utm_source,
+    utmMedium: getUtmParams().utm_medium,
+    utmCampaign: getUtmParams().utm_campaign,
+  })
+
+  const sessionId = payload?.data?.sessionId
+  if (sessionId) {
+    setSessionId(sessionId)
+  }
 }
 
 export function trackEvent(eventName: string, params?: Record<string, string | number | boolean>) {
   gtag('event', eventName, {
     ...params,
-    send_to: GA_ID,
+    send_to: GA_ID ?? undefined,
+  })
+
+  void postAnalytics('event', {
+    name: eventName,
+    category: typeof params?.event_category === 'string' ? params.event_category : 'engagement',
+    label: typeof params?.event_label === 'string' ? params.event_label : undefined,
+    value: typeof params?.value === 'number' ? params.value : undefined,
+    page: typeof window !== 'undefined' ? window.location.pathname : undefined,
+    sessionId: getSessionId() ?? undefined,
+    payload: params ?? {},
   })
 }
 
@@ -52,6 +128,8 @@ export function trackCTAClick(ctaName: string, location: string) {
     cta_name: ctaName,
     cta_location: location,
     page_section: location,
+    event_category: 'engagement',
+    event_label: ctaName,
   })
 }
 
@@ -125,16 +203,6 @@ export function trackFaqOpen(question: string) {
   })
 }
 
-export type WebVitalRating = 'good' | 'needs-improvement' | 'poor'
-
-export interface WebVitalMetric {
-  name: string
-  value: number
-  rating: WebVitalRating
-  id: string
-  navigationType: string
-}
-
 export function reportWebVital(metric: WebVitalMetric) {
   trackEvent('web_vitals', {
     event_category: 'Web Vitals',
@@ -150,7 +218,10 @@ export function reportWebVital(metric: WebVitalMetric) {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       ...metric,
+      page: typeof window !== 'undefined' ? window.location.pathname : '',
+      sessionId: getSessionId() ?? undefined,
       url: typeof window !== 'undefined' ? window.location.href : '',
     }),
+    keepalive: true,
   }).catch(() => null)
 }

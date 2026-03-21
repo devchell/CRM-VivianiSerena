@@ -2,12 +2,36 @@
 
 import { useRef, useEffect, useCallback, useState } from 'react'
 import Image from 'next/image'
-import { motion, useScroll, useTransform, LazyMotion, domAnimation, m } from 'framer-motion'
+import { useScroll, useTransform, LazyMotion, domAnimation, m } from 'framer-motion'
 import { ChevronDown, Shield, Award, CheckCircle, Star, Zap } from 'lucide-react'
 import { useCountUp, useInView } from '@/lib/hooks'
 import { trackCTAClick, trackWhatsAppClick } from '@/lib/analytics'
+import { landingPublicEnv } from '@/lib/public-env'
 
 const WA_LINK = 'https://wa.link/e2g7ii'
+const API_URL = landingPublicEnv.apiBaseUrl
+const DEFAULT_HERO_IMAGE = 'https://static.wixstatic.com/media/be8b61_9dfb57055aea4d4f9f4c8b5bfdbbea28~mv2.jpg'
+
+function normalizeImageUrl(value?: string) {
+  const trimmed = value?.trim()
+  if (!trimmed) return ''
+  if (trimmed.startsWith('data:image/')) return trimmed
+
+  if (trimmed.startsWith('/')) {
+    return `${API_URL}${trimmed}`
+  }
+
+  try {
+    const parsed = new URL(trimmed)
+    if (['localhost', '127.0.0.1', '0.0.0.0'].includes(parsed.hostname)) {
+      return `${API_URL}${parsed.pathname}${parsed.search}`
+    }
+
+    return trimmed
+  } catch {
+    return `${API_URL}/uploads/${trimmed.replace(/^\/+/, '')}`
+  }
+}
 
 // ─── Particle Canvas ─────────────────────────────────────────────────────────
 // Sistema de partículas ultra-leve, 60fps garantido
@@ -123,14 +147,30 @@ interface HeroProps {
   title?: string
   subtitle?: string
   cta?: { text?: string; url?: string }
+  backgroundImage?: string
   whatsappNumber?: string
   whatsappMessage?: string
+  socialProof?: {
+    enabled: boolean
+    clientsRegistered: number
+    publicReviews: number
+  } | null
 }
 
-export function Hero({ urgencyBadge, title, subtitle, cta, whatsappNumber, whatsappMessage }: HeroProps = {}) {
+export function Hero({
+  urgencyBadge,
+  title,
+  subtitle,
+  cta,
+  backgroundImage,
+  whatsappNumber,
+  whatsappMessage,
+  socialProof,
+}: HeroProps = {}) {
   const containerRef = useRef<HTMLDivElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const [isMounted, setIsMounted] = useState(false)
+  const [hasHeroImageError, setHasHeroImageError] = useState(false)
 
   // Parallax suave
   const { scrollYProgress } = useScroll({ target: containerRef, offset: ['start start', 'end start'] })
@@ -141,11 +181,19 @@ export function Hero({ urgencyBadge, title, subtitle, cta, whatsappNumber, whats
   useParticles(canvasRef)
 
   useEffect(() => { setIsMounted(true) }, [])
+  useEffect(() => { setHasHeroImageError(false) }, [backgroundImage])
 
   // Monta o link do WhatsApp com número e mensagem da API, ou cai no link fixo
   const waHref = whatsappNumber
     ? `https://wa.me/${whatsappNumber}${whatsappMessage ? `?text=${encodeURIComponent(whatsappMessage)}` : ''}`
     : WA_LINK
+  const socialProofEnabled = socialProof?.enabled !== false
+  const clientsRegistered = socialProof?.clientsRegistered ?? 0
+  const publicReviews = socialProof?.publicReviews ?? 0
+  const normalizedHeroImage = normalizeImageUrl(backgroundImage)
+  const heroBackgroundSrc = hasHeroImageError || !normalizedHeroImage
+    ? DEFAULT_HERO_IMAGE
+    : normalizedHeroImage
 
   const handleWhatsApp = useCallback((source: string) => {
     trackWhatsAppClick(source)
@@ -183,13 +231,14 @@ export function Hero({ urgencyBadge, title, subtitle, cta, whatsappNumber, whats
           style={{ y: imageY }}
         >
           <Image
-            src="https://static.wixstatic.com/media/be8b61_9dfb57055aea4d4f9f4c8b5bfdbbea28~mv2.jpg"
+            src={heroBackgroundSrc}
             alt="Viviani Serena - Especialista em Remoção a Laser em Santo André e São Paulo"
             fill
             priority
             quality={85}
             className="object-cover object-center scale-105"
             sizes="100vw"
+            onError={() => setHasHeroImageError(true)}
           />
         </m.div>
 
@@ -290,7 +339,7 @@ export function Hero({ urgencyBadge, title, subtitle, cta, whatsappNumber, whats
                 className="btn-primary text-base px-8 py-4 shadow-xl shadow-rose-gold/30 relative overflow-hidden group"
                 aria-label="Agendar avaliação gratuita pelo WhatsApp"
               >
-                <span className="absolute inset-0 bg-white/10 translate-y-full group-hover:translate-y-0 transition-transform duration-300 rounded-full" aria-hidden="true" />
+                <span className="absolute inset-0 bg-white/10 translate-y-full group-hover:translate-y-0 transition-transform duration-300 rounded" aria-hidden="true" />
                 <svg viewBox="0 0 24 24" className="w-5 h-5 fill-current" aria-hidden="true">
                   <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
                 </svg>
@@ -328,23 +377,23 @@ export function Hero({ urgencyBadge, title, subtitle, cta, whatsappNumber, whats
         </m.div>
 
         {/* ── Badge flutuante: contador de clientes ── */}
-        {isMounted && (
+        {isMounted && socialProofEnabled ? (
           <m.div
             className="absolute bottom-24 right-6 lg:right-16 z-30"
             initial={{ opacity: 0, scale: 0.8, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.9, type: 'spring', stiffness: 200 }}
           >
-            <div className="glass rounded-2xl px-5 py-4 border border-white/30 shadow-xl shadow-black/20">
+            <div className="glass rounded-lg px-5 py-4 border border-white/30 shadow-xl shadow-black/20">
               <div className="flex items-center gap-4 divide-x divide-white/20">
-                <AnimatedCounter target={500} suffix="+" label="Clientes Atendidos" />
+                <AnimatedCounter target={clientsRegistered} suffix="" label="Clientes registrados" />
                 <div className="pl-4">
-                  <AnimatedCounter target={98} suffix="%" label="Satisfação" />
+                  <AnimatedCounter target={publicReviews} suffix="" label="Avaliações públicas" />
                 </div>
               </div>
             </div>
           </m.div>
-        )}
+        ) : null}
 
         {/* ── Scroll indicator ── */}
         <m.button

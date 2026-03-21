@@ -13,7 +13,7 @@ interface StatsCardsProps {
 export function StatsCards({ overview, loading = false }: StatsCardsProps) {
   const cards = [
     {
-      title: 'Leads no periodo',
+      title: 'Leads no período',
       value: overview?.leads.createdInPeriod ?? 0,
       helper: `${overview?.leads.total ?? 0} leads totais`,
       icon: Users,
@@ -23,21 +23,21 @@ export function StatsCards({ overview, loading = false }: StatsCardsProps) {
     {
       title: 'Agendamentos ativos',
       value: overview?.appointments.upcoming ?? 0,
-      helper: `${overview?.appointments.scheduledInPeriod ?? 0} no periodo`,
+      helper: `${overview?.appointments.scheduledInPeriod ?? 0} no período`,
       icon: Calendar,
       tone: 'text-rose-gold bg-rose-gold/10 dark:bg-rose-gold/20',
       format: 'number' as const,
     },
     {
-      title: 'Conversao de leads',
+      title: 'Conversão de leads',
       value: overview?.leads.conversionRate ?? 0,
-      helper: `${overview?.leads.convertedInPeriod ?? 0} convertidos no periodo`,
+      helper: `${overview?.leads.convertedInPeriod ?? 0} convertidos no período`,
       icon: TrendingUp,
       tone: 'text-sage bg-sage/10 dark:bg-sage/20',
       format: 'percent' as const,
     },
     {
-      title: 'Receita do periodo',
+      title: 'Receita do período',
       value: overview?.financial.income ?? 0,
       helper: `Lucro: ${formatCurrency(overview?.financial.profit ?? 0)}`,
       icon: DollarSign,
@@ -53,7 +53,7 @@ export function StatsCards({ overview, loading = false }: StatsCardsProps) {
         return (
           <div key={card.title} className="card-dark p-6 shadow-sm">
             <div className="mb-4 flex items-start justify-between">
-              <div className={`flex h-10 w-10 items-center justify-center rounded-xl ${card.tone}`}>
+              <div className={`flex h-10 w-10 items-center justify-center rounded-md ${card.tone}`}>
                 <Icon size={20} />
               </div>
             </div>

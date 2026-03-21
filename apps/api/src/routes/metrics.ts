@@ -1,11 +1,12 @@
 import { Router } from 'express'
 import { z } from 'zod'
-import { authenticate } from '../middleware/authenticate'
+import { authenticate, authorizePermission } from '../middleware/authenticate'
 import { getCache, setCache, CACHE_TTL } from '../lib/redis'
 import { getMetricsOverview } from '../domain/metrics/service'
 
 export const metricsRouter: Router = Router()
 metricsRouter.use(authenticate)
+metricsRouter.use(authorizePermission('dashboard.view'))
 
 metricsRouter.get('/overview', async (req, res, next) => {
   try {

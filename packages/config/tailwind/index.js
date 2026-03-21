@@ -61,7 +61,7 @@ module.exports = {
         },
       },
       fontFamily: {
-        heading: ['var(--font-playfair)', ...defaultTheme.fontFamily.serif],
+        heading: ['var(--font-inter)', ...defaultTheme.fontFamily.sans],
         body: ['var(--font-inter)', ...defaultTheme.fontFamily.sans],
         sans: ['var(--font-inter)', ...defaultTheme.fontFamily.sans],
       },

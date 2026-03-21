@@ -1,4 +1,5 @@
 import type { DefaultSession } from 'next-auth'
+import type { AppPermission, UserProfile } from '@viviani/types'
 
 declare module 'next-auth' {
   interface Session extends DefaultSession {
@@ -11,6 +12,8 @@ declare module 'next-auth' {
       image?: string | null
       role: string
       allowedModules: string[]
+      profile?: UserProfile
+      permissions?: AppPermission[]
       mustChangePassword?: boolean
       photoUrl?: string | null
     }
@@ -20,6 +23,8 @@ declare module 'next-auth' {
     id: string
     role: string
     allowedModules: string[]
+    profile?: UserProfile
+    permissions?: AppPermission[]
     mustChangePassword?: boolean
     photoUrl?: string | null
     accessToken?: string
@@ -29,8 +34,11 @@ declare module 'next-auth' {
 
 declare module '@auth/core/jwt' {
   interface JWT {
+    userId?: string
     role?: string
     allowedModules?: string[]
+    profile?: UserProfile
+    permissions?: AppPermission[]
     mustChangePassword?: boolean
     photoUrl?: string | null
     accessToken?: string

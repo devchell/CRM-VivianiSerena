@@ -3,7 +3,7 @@ import { z } from 'zod'
 import type { Prisma } from '@prisma/client'
 import { prisma } from '../lib/prisma'
 import { redis } from '../lib/redis'
-import { authenticate } from '../middleware/authenticate'
+import { authenticate, authorizePermission } from '../middleware/authenticate'
 import { getCache, setCache, CACHE_TTL } from '../lib/redis'
 import { IpBlocklist } from '../infrastructure/security/IpBlocklist'
 import { logger } from '../lib/logger'
@@ -11,10 +11,48 @@ import { logger } from '../lib/logger'
 export const securityRouter: Router = Router()
 securityRouter.use(authenticate)
 
+const SECURITY_STATS_CACHE_KEY = 'security:stats'
+const SECURITY_ACTIVITY_CACHE_KEY = 'security:activity'
+
+async function invalidateSecurityCaches() {
+  await Promise.allSettled([
+    redis.del(SECURITY_STATS_CACHE_KEY),
+    redis.del(SECURITY_ACTIVITY_CACHE_KEY),
+  ])
+}
+
+function emitSecurityAlert(
+  req: { app: { get: (key: string) => unknown } },
+  event: {
+    id: string
+    type: string
+    severity: string
+    sourceIp?: string | null
+    details?: unknown
+    resolved?: boolean
+    timestamp?: Date
+  }
+) {
+  const io = req.app.get('io') as {
+    emit?: (channel: string, payload: Record<string, unknown>) => void
+  } | undefined
+
+  io?.emit?.('security_alert', {
+    id: event.id,
+    type: event.type,
+    severity: event.severity,
+    sourceIp: event.sourceIp ?? null,
+    details: event.details ?? {},
+    resolved: event.resolved ?? false,
+    timestamp: event.timestamp?.toISOString() ?? new Date().toISOString(),
+    message: `${event.type}:${event.severity}`,
+  })
+}
+
 // ─── Events ─────────────────────────────────────────────────────────────────
 
 // GET /security/events — últimas 48h ou 7d
-securityRouter.get('/events', async (req, res, next) => {
+securityRouter.get('/events', authorizePermission('seguranca.view'), async (req, res, next) => {
   try {
     const { severity, resolved, limit = 100, hours = 48 } = req.query
     const since = new Date(Date.now() - Number(hours) * 60 * 60 * 1000)
@@ -32,7 +70,7 @@ securityRouter.get('/events', async (req, res, next) => {
 })
 
 // POST /security/events — registrar evento
-securityRouter.post('/events', async (req, res, next) => {
+securityRouter.post('/events', authorizePermission('seguranca.manage'), async (req, res, next) => {
   try {
     const schema = z.object({
       type: z.string(),
@@ -49,26 +87,30 @@ securityRouter.post('/events', async (req, res, next) => {
         details: (data.details ?? {}) as Prisma.InputJsonObject,
       },
     })
+    await invalidateSecurityCaches()
+    emitSecurityAlert(req, event)
     res.status(201).json({ success: true, data: event })
   } catch (err) { next(err) }
 })
 
 // PATCH /security/events/:id/resolve
-securityRouter.patch('/events/:id/resolve', async (req, res, next) => {
+securityRouter.patch('/events/:id/resolve', authorizePermission('seguranca.manage'), async (req, res, next) => {
   try {
     const event = await prisma.securityEvent.update({
-      where: { id: req.params.id },
+      where: { id: String(req.params.id) },
       data: { resolved: true },
     })
+    await invalidateSecurityCaches()
+    emitSecurityAlert(req, event)
     res.json({ success: true, data: event })
   } catch (err) { next(err) }
 })
 
 // ─── Stats ───────────────────────────────────────────────────────────────────
 
-securityRouter.get('/stats', async (_req, res, next) => {
+securityRouter.get('/stats', authorizePermission('seguranca.view'), async (_req, res, next) => {
   try {
-    const cached = await getCache('security:stats')
+    const cached = await getCache(SECURITY_STATS_CACHE_KEY)
     if (cached) { res.json({ success: true, data: cached }); return }
 
     const since7d = new Date(Date.now() - 7 * 86400_000)
@@ -91,16 +133,16 @@ securityRouter.get('/stats', async (_req, res, next) => {
       byType: byType.slice(0, 10).map(t => ({ type: t.type, count: t._count._all })),
     }
 
-    await setCache('security:stats', data, CACHE_TTL.SHORT)
+    await setCache(SECURITY_STATS_CACHE_KEY, data, CACHE_TTL.SHORT)
     res.json({ success: true, data })
   } catch (err) { next(err) }
 })
 
 // ─── 24h Activity (hourly breakdown) ────────────────────────────────────────
 
-securityRouter.get('/activity', async (_req, res, next) => {
+securityRouter.get('/activity', authorizePermission('seguranca.view'), async (_req, res, next) => {
   try {
-    const cached = await getCache('security:activity')
+    const cached = await getCache(SECURITY_ACTIVITY_CACHE_KEY)
     if (cached) { res.json({ success: true, data: cached }); return }
 
     const since = new Date(Date.now() - 24 * 60 * 60 * 1000)
@@ -123,21 +165,21 @@ securityRouter.get('/activity', async (_req, res, next) => {
       hours.push({ hour: label, blocked, total: inBucket.length })
     }
 
-    await setCache('security:activity', hours, 300)
+    await setCache(SECURITY_ACTIVITY_CACHE_KEY, hours, 300)
     res.json({ success: true, data: hours })
   } catch (err) { next(err) }
 })
 
 // ─── IP Blocklist ────────────────────────────────────────────────────────────
 
-securityRouter.get('/blocked-ips', async (_req, res, next) => {
+securityRouter.get('/blocked-ips', authorizePermission('seguranca.view'), async (_req, res, next) => {
   try {
     const ips = await IpBlocklist.getAll()
     res.json({ success: true, data: ips })
   } catch (err) { next(err) }
 })
 
-securityRouter.post('/block-ip', async (req, res, next) => {
+securityRouter.post('/block-ip', authorizePermission('seguranca.manage'), async (req, res, next) => {
   try {
     const { ip, ttlMinutes = 60, reason = 'manual' } = z.object({
       ip: z.string().ip(),
@@ -147,7 +189,7 @@ securityRouter.post('/block-ip', async (req, res, next) => {
 
     await IpBlocklist.block(ip, Number(ttlMinutes) * 60, reason)
 
-    await prisma.securityEvent.create({
+    const event = await prisma.securityEvent.create({
       data: {
         type: 'IP_MANUALLY_BLOCKED',
         severity: 'medium',
@@ -157,20 +199,23 @@ securityRouter.post('/block-ip', async (req, res, next) => {
     })
 
     logger.info('IP manually blocked', { ip, ttlMinutes, reason })
+    await invalidateSecurityCaches()
+    emitSecurityAlert(req, event)
     res.json({ success: true, message: `IP ${ip} bloqueado por ${ttlMinutes} minutos` })
   } catch (err) { next(err) }
 })
 
-securityRouter.delete('/block-ip/:ip', async (req, res, next) => {
+securityRouter.delete('/block-ip/:ip', authorizePermission('seguranca.manage'), async (req, res, next) => {
   try {
-    await IpBlocklist.unblock(req.params.ip)
-    res.json({ success: true, message: `IP ${req.params.ip} desbloqueado` })
+    const ip = String(req.params.ip)
+    await IpBlocklist.unblock(ip)
+    res.json({ success: true, message: `IP ${ip} desbloqueado` })
   } catch (err) { next(err) }
 })
 
 // ─── Test Alert ──────────────────────────────────────────────────────────────
 
-securityRouter.post('/test-alert', async (req, res, next) => {
+securityRouter.post('/test-alert', authorizePermission('seguranca.manage'), async (req, res, next) => {
   try {
     const event = await prisma.securityEvent.create({
       data: {
@@ -181,7 +226,8 @@ securityRouter.post('/test-alert', async (req, res, next) => {
       },
     })
 
-    // Socket emit handled by server.ts io instance watching security_events table
+    await invalidateSecurityCaches()
+    emitSecurityAlert(req, event)
 
     res.json({ success: true, data: event })
   } catch (err) { next(err) }
@@ -189,7 +235,7 @@ securityRouter.post('/test-alert', async (req, res, next) => {
 
 // ─── Checklist Status ────────────────────────────────────────────────────────
 
-securityRouter.get('/checklist', async (_req, res, next) => {
+securityRouter.get('/checklist', authorizePermission('seguranca.view'), async (_req, res, next) => {
   try {
     const redisOk = await redis.ping().then(() => true).catch(() => false)
     const sslExpiry = process.env.SSL_CERT_EXPIRY_DAYS ? parseInt(process.env.SSL_CERT_EXPIRY_DAYS, 10) : 90

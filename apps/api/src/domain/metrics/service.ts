@@ -297,7 +297,7 @@ async function getAppointmentMetrics(periodKey: 'month' | 'last30d' = 'month') {
   }
 }
 
-async function getRecentActivity(limit = 10): Promise<ActivityItem[]> {
+export async function getRecentActivity(limit = 10): Promise<ActivityItem[]> {
   const [leads, appointments, financials, securityEvents] = await Promise.all([
     prisma.lead.findMany({
       where: buildCommercialLeadWhere(),
