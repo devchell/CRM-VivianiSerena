@@ -756,20 +756,16 @@ export default function EditarSitePage() {
                 />
                 <div className="grid gap-3 md:grid-cols-2">
                   <TextField
-                    className="h-full"
                     value={String(getNum('contact', 'social_proof', 'baseClients'))}
                     onChange={v => setSubVal('contact', 'social_proof', 'baseClients', Number(v) || 0)}
                     label="Clientes iniciais"
-                    labelClassName={`${labelCls} min-h-[2.5rem]`}
                     placeholder="0"
                     inputMode="numeric"
                   />
                   <TextField
-                    className="h-full"
                     value={String(getNum('contact', 'social_proof', 'basePublicReviews'))}
                     onChange={v => setSubVal('contact', 'social_proof', 'basePublicReviews', Number(v) || 0)}
                     label="Avaliações iniciais"
-                    labelClassName={`${labelCls} min-h-[2.5rem]`}
                     placeholder="0"
                     inputMode="numeric"
                   />
