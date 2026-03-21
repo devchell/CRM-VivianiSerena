@@ -201,7 +201,7 @@ function SectionCard(props: {
           <VisibilityToggle label={props.visible ? 'Ocultar dados' : 'Exibir dados'} active={props.visible} onClick={props.onToggle} />
         </div>
       </div>
-      <div className="mt-5">{props.children}</div>
+      {props.visible && <div className="mt-5">{props.children}</div>}
     </section>
   )
 }
