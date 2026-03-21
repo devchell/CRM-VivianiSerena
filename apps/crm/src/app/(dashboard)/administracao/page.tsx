@@ -10,7 +10,6 @@ import {
   EyeOff,
   ExternalLink,
   Globe2,
-  Layers3,
   Loader2,
   Mail,
   MessageCircle,
@@ -234,7 +233,6 @@ export default function AdministracaoPage() {
 
   const headers = useMemo(() => ({ Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json' }), [accessToken])
   const allVisible = useMemo(() => Object.values(visibility).every(Boolean), [visibility])
-  const visibleCount = useMemo(() => Object.values(visibility).filter(Boolean).length, [visibility])
 
   const loadOverview = useCallback(async (mode: 'initial' | 'refresh' = 'refresh') => {
     if (!accessToken) return
@@ -546,25 +544,7 @@ export default function AdministracaoPage() {
         <SummaryCard label="Uploads" value={overview.infrastructure.uploads ? 'OK' : 'Falha'} note={`Driver atual: ${overview.infrastructure.storageDriver}.`} icon={<ExternalLink size={18} />} />
         <SummaryCard label="Google" value={overview.integrations.googleCalendar.connected ? 'Conectado' : 'Pendente'} note={overview.integrations.googleCalendar.configured ? 'OAuth configurado.' : 'Credenciais OAuth pendentes.'} icon={<Globe2 size={18} />} />
         <SummaryCard label="WhatsApp" value={overview.integrations.whatsapp.connected ? 'Conectado' : 'Pendente'} note={overview.integrations.whatsapp.configured ? 'Canal oficial pronto para conexão.' : 'App, segredo ou webhook pendentes.'} icon={<MessageCircle size={18} />} />
-        <SummaryCard label="Visibilidade" value={`${visibleCount}/4`} note="Blocos com dados visíveis." icon={<Layers3 size={18} />} />
       </div>
-
-      <section className="rounded-lg border border-blush-200 bg-white/90 p-6 shadow-sm dark:border-charcoal-700 dark:bg-charcoal-900/70">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-rose-gold">Visibilidade</p>
-            <h2 className="mt-2 font-heading text-xl font-semibold text-charcoal dark:text-charcoal-50">Controle rápido por área</h2>
-            <p className="mt-2 max-w-2xl text-sm leading-6 text-charcoal-500 dark:text-charcoal-400">Cada seção agora tem um controle mais claro para exibição pontual. O botão global continua no topo para abrir ou fechar tudo.</p>
-          </div>
-          <div className="rounded-lg border border-blush-200 bg-cream/80 px-4 py-3 text-sm text-charcoal-600 dark:border-charcoal-700 dark:bg-charcoal-800/70 dark:text-charcoal-300">{visibleCount} de 3 blocos visíveis.</div>
-        </div>
-        <div className="mt-5 flex flex-wrap gap-2">
-          <VisibilityToggle label={visibility.google ? 'Google visível' : 'Google oculto'} active={visibility.google} onClick={() => toggleSection('google')} />
-          <VisibilityToggle label={visibility.whatsapp ? 'WhatsApp visível' : 'WhatsApp oculto'} active={visibility.whatsapp} onClick={() => toggleSection('whatsapp')} />
-          <VisibilityToggle label={visibility.email ? 'E-mail visível' : 'E-mail oculto'} active={visibility.email} onClick={() => toggleSection('email')} />
-          <VisibilityToggle label={visibility.environment ? 'Ambiente visível' : 'Ambiente oculto'} active={visibility.environment} onClick={() => toggleSection('environment')} />
-        </div>
-      </section>
 
       <div className="grid gap-4 xl:grid-cols-[minmax(0,1.12fr)_minmax(0,0.88fr)]">
         <div className="space-y-4">
