@@ -87,7 +87,7 @@ const inputCls = [
   'focus:outline-none focus:ring-2 focus:ring-rose-gold/50 focus:border-rose-gold/50',
 ].join(' ')
 
-const labelCls = 'block text-xs font-medium text-charcoal-500 dark:text-charcoal-400 mb-1.5'
+const labelCls = 'block text-xs font-medium text-charcoal-500 dark:text-charcoal-300 mb-1.5'
 
 // ── TextField ─────────────────────────────────────────────────────────────────
 
@@ -241,7 +241,7 @@ const ToggleField = memo(function ToggleField({ enabled, onToggle, label, descri
         'flex items-center gap-1.5 px-4 py-1.5 text-xs font-medium border-t',
         enabled
           ? 'text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/20 border-green-100 dark:border-green-900/30'
-          : 'text-charcoal-400 dark:text-charcoal-500 bg-blush/50 dark:bg-charcoal-800 border-blush-200 dark:border-charcoal-700',
+          : 'text-charcoal-400 dark:text-charcoal-500 bg-blush/50 dark:bg-charcoal-800 border-blush-200 dark:border-[#3a3835]',
       ].join(' ')}>
         {enabled
           ? <><Eye size={11} className="flex-shrink-0" /> Visível no site</>
@@ -715,7 +715,7 @@ export default function EditarSitePage() {
               {isUp
                 ? <Loader2 size={24} className="mx-auto text-rose-gold animate-spin mb-2" />
                 : <Upload size={24} className="mx-auto text-charcoal-300 dark:text-charcoal-600 mb-2" />}
-              <p className="text-xs text-charcoal-400 dark:text-charcoal-400">{isUp ? 'Enviando...' : 'Arraste ou clique para enviar'}</p>
+              <p className="text-xs text-charcoal-400 dark:text-charcoal-300">{isUp ? 'Enviando...' : 'Arraste ou clique para enviar'}</p>
               <p className="text-xs text-charcoal-400 dark:text-charcoal-500 mt-1">JPG, PNG ou WebP • até 10MB</p>
             </div>
           )}
@@ -1459,8 +1459,8 @@ export default function EditarSitePage() {
   if (loading) {
     return (
       <div className="flex h-[calc(100vh-64px-48px)] gap-0 -m-6 overflow-hidden">
-        <div className="w-96 flex-shrink-0 border-r border-blush-200 dark:border-charcoal-700 bg-white dark:bg-charcoal-800 flex flex-col">
-          <div className="px-5 py-4 border-b border-blush-200 dark:border-charcoal-700 flex items-center justify-between">
+        <div className="w-96 flex-shrink-0 border-r border-blush-200 dark:border-[#3a3835] bg-white dark:bg-charcoal-800 flex flex-col">
+          <div className="px-5 py-4 border-b border-blush-200 dark:border-[#3a3835] flex items-center justify-between">
             <div className="space-y-1.5">
               <div className="h-4 w-24 bg-blush-200 dark:bg-charcoal-700 rounded animate-pulse" />
               <div className="h-3 w-16 bg-blush-200 dark:bg-charcoal-700 rounded animate-pulse" />
@@ -1484,10 +1484,10 @@ export default function EditarSitePage() {
   return (
     <div className="flex h-[calc(100vh-64px-48px)] gap-0 -m-6 overflow-hidden">
       {/* ── Left Panel ───────────────────────────────────────────────────── */}
-      <div className={`w-96 flex-shrink-0 flex flex-col border-r border-blush-200 dark:border-charcoal-700 bg-white dark:bg-charcoal-900${resolvedTheme === 'dark' ? ' dark' : ''}`}>
+      <div className={`w-96 flex-shrink-0 flex flex-col border-r border-blush-200 dark:border-[#3a3835] bg-white dark:bg-charcoal-900${resolvedTheme === 'dark' ? ' dark' : ''}`}>
 
         {/* Panel header */}
-        <div className="px-5 py-4 border-b border-blush-200 dark:border-charcoal-700 bg-cream dark:bg-charcoal-800 flex items-center justify-between">
+        <div className="px-5 py-4 border-b border-blush-200 dark:border-[#3a3835] bg-cream dark:bg-charcoal-800 flex items-center justify-between">
           <div>
             <h2 className="font-heading text-base font-semibold text-charcoal dark:text-charcoal-50">Editar Site</h2>
             <div className="flex items-center gap-1.5 mt-0.5">
@@ -1522,7 +1522,7 @@ export default function EditarSitePage() {
         {/* Section accordion */}
         <div className="flex-1 overflow-y-auto">
           {SECTIONS.map(([key, meta]) => (
-            <div key={key} className="border-b border-blush-100 dark:border-charcoal-700">
+            <div key={key} className="border-b border-blush-100 dark:border-[#3a3835]">
               <button
                 onClick={() => setExpanded(prev => prev === key ? null : key)}
                 className={`w-full flex items-center gap-3 px-5 py-3.5 text-left transition-colors ${
@@ -1566,7 +1566,7 @@ export default function EditarSitePage() {
 
       {/* ── Right: iframe preview ─────────────────────────────────────── */}
       <div className="flex-1 flex flex-col bg-cream dark:bg-charcoal-900">
-        <div className="h-10 flex items-center justify-between px-4 bg-cream dark:bg-charcoal-800 border-b border-blush-200 dark:border-charcoal-700">
+        <div className="h-10 flex items-center justify-between px-4 bg-cream dark:bg-charcoal-800 border-b border-blush-200 dark:border-[#3a3835]">
           <div className="flex items-center gap-2">
             <div className="w-3 h-3 rounded-full bg-red-400" />
             <div className="w-3 h-3 rounded-full bg-yellow-400" />
@@ -1600,18 +1600,18 @@ export default function EditarSitePage() {
       {/* ── Publish Modal ─────────────────────────────────────────────── */}
       {showPublishModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
-          <div className="bg-white dark:bg-charcoal-900 border border-blush-200 dark:border-charcoal-700 rounded-lg w-full max-w-sm shadow-2xl p-8 text-center">
+          <div className="bg-white dark:bg-charcoal-900 border border-blush-200 dark:border-[#3a3835] rounded-lg w-full max-w-sm shadow-2xl p-8 text-center">
             <div className="w-14 h-14 bg-rose-gold/10 rounded-lg flex items-center justify-center mx-auto mb-4">
               <Send size={24} className="text-rose-gold" />
             </div>
             <h3 className="font-heading text-lg font-bold text-charcoal dark:text-charcoal-50 mb-2">Publicar Alterações</h3>
-            <p className="text-sm text-charcoal-500 dark:text-charcoal-400 mb-6">
+            <p className="text-sm text-charcoal-500 dark:text-charcoal-300 mb-6">
               Suas alterações ficarão visíveis para todos os visitantes do site.
             </p>
             <div className="flex gap-3">
               <button
                 onClick={() => setShowPublishModal(false)}
-                className="flex-1 px-4 py-2.5 rounded-md border border-blush-200 dark:border-charcoal-600 text-charcoal-500 dark:text-charcoal-400 text-sm hover:bg-blush dark:hover:bg-charcoal-700 transition-colors"
+                className="flex-1 px-4 py-2.5 rounded-md border border-blush-200 dark:border-charcoal-600 text-charcoal-500 dark:text-charcoal-300 text-sm hover:bg-blush dark:hover:bg-charcoal-700 transition-colors"
               >Cancelar</button>
               <button
                 onClick={handlePublish}
@@ -1628,8 +1628,8 @@ export default function EditarSitePage() {
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4"
           onClick={e => e.target === e.currentTarget && setShowHistory(false)}
         >
-          <div className="bg-white dark:bg-charcoal-900 border border-blush-200 dark:border-charcoal-700 rounded-lg w-full max-w-md shadow-2xl max-h-[70vh] overflow-y-auto">
-            <div className="flex items-center justify-between p-6 border-b border-blush-200 dark:border-charcoal-700 sticky top-0 bg-white dark:bg-charcoal-900">
+          <div className="bg-white dark:bg-charcoal-900 border border-blush-200 dark:border-[#3a3835] rounded-lg w-full max-w-md shadow-2xl max-h-[70vh] overflow-y-auto">
+            <div className="flex items-center justify-between p-6 border-b border-blush-200 dark:border-[#3a3835] sticky top-0 bg-white dark:bg-charcoal-900">
               <h3 className="font-heading text-base font-semibold text-charcoal dark:text-charcoal-50">Versões Anteriores</h3>
               <button onClick={() => setShowHistory(false)} className="text-charcoal-400 hover:text-charcoal dark:hover:text-charcoal-200 transition-colors"><X size={18} /></button>
             </div>
@@ -1651,7 +1651,7 @@ export default function EditarSitePage() {
                   <button
                     onClick={() => handleRestoreHistory(h)}
                     disabled={restoringHistoryId === h.id}
-                    className="text-xs px-3 py-1.5 rounded-lg border border-blush-200 dark:border-charcoal-600 text-charcoal-500 dark:text-charcoal-400 hover:bg-rose-gold/10 hover:text-rose-gold hover:border-rose-gold/30 transition-colors whitespace-nowrap disabled:opacity-60"
+                    className="text-xs px-3 py-1.5 rounded-lg border border-blush-200 dark:border-charcoal-600 text-charcoal-500 dark:text-charcoal-300 hover:bg-rose-gold/10 hover:text-rose-gold hover:border-rose-gold/30 transition-colors whitespace-nowrap disabled:opacity-60"
                   >
                     {restoringHistoryId === h.id ? 'Restaurando...' : 'Restaurar'}
                   </button>

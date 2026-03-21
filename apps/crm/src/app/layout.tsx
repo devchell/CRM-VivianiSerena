@@ -35,7 +35,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="pt-BR" className={inter.variable} suppressHydrationWarning>
-      <body className="min-h-screen bg-cream dark:bg-charcoal-900 font-body text-charcoal dark:text-charcoal-50 antialiased">
+      <body className="min-h-screen bg-cream-200 dark:bg-[#111110] font-body text-charcoal dark:text-[#ECEAE6] antialiased">
         <Providers>
           {children}
           <Toaster position="top-right" richColors />

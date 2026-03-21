@@ -324,14 +324,14 @@ export default function FinanceiroPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between border-b border-blush-200 pb-4 dark:border-charcoal-700">
+      <div className="flex items-center justify-between border-b border-blush-200 pb-4 dark:border-[#3a3835]">
         <h1 className="font-heading text-xl font-semibold text-charcoal dark:text-charcoal-50">Financeiro</h1>
         <div className="flex flex-wrap items-center gap-2">
-          <button onClick={handleExportCsv} disabled={!canExportFinancial} className="flex items-center gap-1.5 rounded border border-blush-300 bg-white/75 px-4 py-2 text-sm text-charcoal-400 shadow-sm transition-colors hover:text-rose-gold disabled:opacity-50 disabled:cursor-not-allowed dark:border-charcoal-600 dark:bg-charcoal-800/65 dark:text-charcoal-400">
+          <button onClick={handleExportCsv} disabled={!canExportFinancial} className="flex items-center gap-1.5 rounded border border-blush-300 bg-white/75 px-4 py-2 text-sm text-charcoal-400 shadow-sm transition-colors hover:text-rose-gold disabled:opacity-50 disabled:cursor-not-allowed dark:border-charcoal-600 dark:bg-charcoal-800/65 dark:text-charcoal-300">
             <Download size={14} />
             CSV
           </button>
-          <button onClick={() => void handleExportPdf()} disabled={!canExportFinancial} className="flex items-center gap-1.5 rounded border border-blush-300 bg-white/75 px-4 py-2 text-sm text-charcoal-400 shadow-sm transition-colors hover:text-rose-gold disabled:opacity-50 disabled:cursor-not-allowed dark:border-charcoal-600 dark:bg-charcoal-800/65 dark:text-charcoal-400">
+          <button onClick={() => void handleExportPdf()} disabled={!canExportFinancial} className="flex items-center gap-1.5 rounded border border-blush-300 bg-white/75 px-4 py-2 text-sm text-charcoal-400 shadow-sm transition-colors hover:text-rose-gold disabled:opacity-50 disabled:cursor-not-allowed dark:border-charcoal-600 dark:bg-charcoal-800/65 dark:text-charcoal-300">
             <FileText size={14} />
             PDF
           </button>
@@ -350,7 +350,7 @@ export default function FinanceiroPage() {
                 R$
               </span>
             </div>
-            <p className="text-[11px] font-medium uppercase tracking-[0.16em] text-charcoal-400 dark:text-charcoal-400">{kpi.label}</p>
+            <p className="text-[11px] font-medium uppercase tracking-[0.16em] text-charcoal-400 dark:text-charcoal-300">{kpi.label}</p>
             <p className="mt-1 font-heading text-2xl font-bold text-charcoal dark:text-charcoal-50">
               {loading ? '...' : formatCurrency(kpi.value)}
             </p>
@@ -483,7 +483,7 @@ export default function FinanceiroPage() {
                       </span>
                     </td>
                     <td className={crmListCell}>
-                      <span className="text-xs text-charcoal-500 dark:text-charcoal-400">
+                      <span className="text-xs text-charcoal-500 dark:text-charcoal-300">
                         {FINANCIAL_CATEGORY_LABELS[transaction.category]}
                       </span>
                     </td>
@@ -529,7 +529,7 @@ export default function FinanceiroPage() {
       {showModal ? (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm" onClick={(event) => event.target === event.currentTarget && setShowModal(false)}>
           <div className="card-dark w-full max-w-lg shadow-2xl">
-            <div className="flex items-center justify-between border-b border-blush-200 p-6 dark:border-charcoal-700">
+            <div className="flex items-center justify-between border-b border-blush-200 p-6 dark:border-[#3a3835]">
               <h2 className="font-heading text-lg font-semibold text-charcoal dark:text-charcoal-50">
                 {editing ? 'Editar lançamento' : 'Novo lançamento'}
               </h2>
@@ -562,7 +562,7 @@ export default function FinanceiroPage() {
               </div>
 
               <div>
-                <label className="mb-1 block text-xs font-medium text-charcoal-400 dark:text-charcoal-400">Categoria</label>
+                <label className="mb-1 block text-xs font-medium text-charcoal-400 dark:text-charcoal-300">Categoria</label>
                 <div className={crmFieldSelectWrapper}>
                   <select
                     value={form.category}
@@ -581,7 +581,7 @@ export default function FinanceiroPage() {
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="mb-1 block text-xs font-medium text-charcoal-400 dark:text-charcoal-400">Valor</label>
+                  <label className="mb-1 block text-xs font-medium text-charcoal-400 dark:text-charcoal-300">Valor</label>
                   <input
                     required
                     inputMode="decimal"
@@ -591,7 +591,7 @@ export default function FinanceiroPage() {
                   />
                 </div>
                 <div>
-                  <label className="mb-1 block text-xs font-medium text-charcoal-400 dark:text-charcoal-400">Data</label>
+                  <label className="mb-1 block text-xs font-medium text-charcoal-400 dark:text-charcoal-300">Data</label>
                   <input
                     type="date"
                     required
@@ -603,7 +603,7 @@ export default function FinanceiroPage() {
               </div>
 
               <div>
-                <label className="mb-1 block text-xs font-medium text-charcoal-400 dark:text-charcoal-400">Descrição</label>
+                <label className="mb-1 block text-xs font-medium text-charcoal-400 dark:text-charcoal-300">Descrição</label>
                 <input
                   required
                   value={form.description}
@@ -613,7 +613,7 @@ export default function FinanceiroPage() {
               </div>
 
               <div>
-                <label className="mb-1 block text-xs font-medium text-charcoal-400 dark:text-charcoal-400">Tags</label>
+                <label className="mb-1 block text-xs font-medium text-charcoal-400 dark:text-charcoal-300">Tags</label>
                 <input
                   value={form.tags}
                   onChange={(event) => setForm((current) => ({ ...current, tags: event.target.value }))}
@@ -622,7 +622,7 @@ export default function FinanceiroPage() {
                 />
               </div>
 
-              <label className="flex items-center gap-2 text-sm text-charcoal-500 dark:text-charcoal-400">
+              <label className="flex items-center gap-2 text-sm text-charcoal-500 dark:text-charcoal-300">
                 <input
                   type="checkbox"
                   checked={form.recurring}

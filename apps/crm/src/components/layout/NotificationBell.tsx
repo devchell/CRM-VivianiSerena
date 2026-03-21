@@ -102,7 +102,7 @@ export function NotificationBell() {
 
       {open ? (
         <div className={`${crmListShell} absolute right-0 top-full z-50 mt-2 w-80 overflow-hidden`}>
-          <div className="border-b border-blush-200 bg-[linear-gradient(135deg,rgba(255,251,247,0.98),rgba(255,244,236,0.94))] px-4 py-3 dark:border-charcoal-700 dark:bg-[linear-gradient(135deg,rgba(29,25,22,0.95),rgba(24,21,19,0.9))]">
+          <div className="border-b border-blush-200 bg-[linear-gradient(135deg,rgba(255,251,247,0.98),rgba(255,244,236,0.94))] px-4 py-3 dark:border-[#3a3835] dark:bg-[linear-gradient(135deg,rgba(29,25,22,0.95),rgba(24,21,19,0.9))]">
             <span className="text-sm font-semibold text-charcoal dark:text-charcoal-100">Notificações</span>
           </div>
           <div className="max-h-96 space-y-2 overflow-y-auto p-3">

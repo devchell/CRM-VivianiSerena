@@ -62,7 +62,7 @@
 
 @layer base {
   html { scroll-behavior: smooth; }
-  body { @apply bg-cream text-charcoal dark:bg-charcoal-900 dark:text-charcoal-50 transition-colors duration-200; }
+  body { @apply bg-cream-200 text-charcoal dark:bg-[#111110] dark:text-[#ECEAE6] transition-colors duration-200; }
   h1, h2, h3, h4, h5, h6 { @apply font-heading; }
 }
 
@@ -74,10 +74,10 @@
     @apply bg-rose-gold/10 text-rose-gold dark:bg-rose-gold/20 dark:text-rose-gold-300;
   }
   .card-dark {
-    @apply bg-white dark:bg-charcoal-800 border border-blush-200 dark:border-charcoal-700 rounded-xl;
+    @apply bg-white dark:bg-[#1c1b1a] border border-blush-300 dark:border-[#3a3835] rounded-xl;
   }
   .input-dark {
-    @apply bg-white dark:bg-charcoal-800 border-blush-300 dark:border-charcoal-600 text-charcoal dark:text-charcoal-50 placeholder-charcoal-400 dark:placeholder-charcoal-500;
+    @apply bg-white dark:bg-[#252423] border-blush-300 dark:border-[#3a3835] text-charcoal dark:text-[#ECEAE6] placeholder-charcoal-400 dark:placeholder-[#706b65];
   }
 }
 

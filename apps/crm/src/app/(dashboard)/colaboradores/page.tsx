@@ -442,7 +442,7 @@ export default function ColaboradoresPage() {
         ))}
       </div>
 
-      <div className={`${crmListToolbar} rounded-lg border border-blush-200/80 dark:border-charcoal-700`}>
+      <div className={`${crmListToolbar} rounded-lg border border-blush-200/80 dark:border-[#3a3835]`}>
         {([
           { key: 'ACTIVE', label: `Ativos (${stats.active})` },
           { key: 'INACTIVE', label: `Inativos (${stats.inactive})` },
@@ -526,7 +526,7 @@ export default function ColaboradoresPage() {
                         ) : (
                           <div className="flex flex-wrap gap-1 max-w-[240px]">
                             {user.allowedModules.map((module) => (
-                              <span key={module} className="text-xs px-1.5 py-0.5 rounded bg-charcoal-100 dark:bg-charcoal-700 text-charcoal-500 dark:text-charcoal-400">
+                              <span key={module} className="text-xs px-1.5 py-0.5 rounded bg-charcoal-100 dark:bg-charcoal-700 text-charcoal-500 dark:text-charcoal-300">
                                 {MODULES.find((item) => item.key === module)?.label ?? module}
                               </span>
                             ))}
@@ -600,7 +600,7 @@ export default function ColaboradoresPage() {
           }}
         >
           <div className="card-dark w-full max-w-3xl shadow-2xl max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between p-6 border-b border-blush-200 dark:border-charcoal-700 sticky top-0 bg-white dark:bg-charcoal-800 z-10">
+            <div className="flex items-center justify-between p-6 border-b border-blush-200 dark:border-[#3a3835] sticky top-0 bg-white dark:bg-charcoal-800 z-10">
               <div>
                 <h2 className="font-heading text-lg font-semibold text-charcoal dark:text-charcoal-50">
                   {editing ? 'Editar colaborador' : 'Adicionar colaborador'}
@@ -713,7 +713,7 @@ export default function ColaboradoresPage() {
                 </div>
               ) : null}
 
-              <div className="rounded border border-blush-200 dark:border-charcoal-700 bg-blush/40 dark:bg-charcoal-800/60 p-4 text-sm text-charcoal-500 dark:text-charcoal-400">
+              <div className="rounded border border-blush-200 dark:border-[#3a3835] bg-blush/40 dark:bg-charcoal-800/60 p-4 text-sm text-charcoal-500 dark:text-charcoal-300">
                 {form.profile === 'ADMIN'
                   ? 'Admin recebe acesso total, incluindo Editar Site, Segurança e Colaboradores.'
                   : PROFILE_META[form.profile].description}

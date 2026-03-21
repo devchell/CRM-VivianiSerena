@@ -57,7 +57,7 @@ export function StatsCards({ overview, loading = false }: StatsCardsProps) {
                 <Icon size={20} />
               </div>
             </div>
-            <p className="text-sm font-medium text-charcoal-400 dark:text-charcoal-400">{card.title}</p>
+            <p className="text-sm font-medium text-charcoal-400 dark:text-charcoal-300">{card.title}</p>
             <div className="mt-1 font-heading text-2xl font-bold text-charcoal dark:text-charcoal-50">
               {loading ? (
                 <div className="h-8 w-28 animate-pulse rounded bg-blush-100 dark:bg-charcoal-700/40" />

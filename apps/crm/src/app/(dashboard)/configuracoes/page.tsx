@@ -39,7 +39,7 @@ type TwoFactorDraft = {
 }
 
 const inputClass = 'w-full px-3 py-2 text-sm rounded-lg border border-blush-300 dark:border-charcoal-600 bg-white dark:bg-charcoal-700 text-charcoal dark:text-charcoal-100 focus:outline-none focus:ring-2 focus:ring-rose-gold/40'
-const labelClass = 'block text-xs font-medium text-charcoal-400 dark:text-charcoal-400 mb-1'
+const labelClass = 'block text-xs font-medium text-charcoal-400 dark:text-charcoal-300 mb-1'
 
 function toTwoFactorDraft(profile: Pick<SettingsUserProfile, 'twoFactorEnabled' | 'twoFactorEmailEnabled' | 'twoFactorSmsEnabled'>): TwoFactorDraft {
   return {
@@ -303,7 +303,7 @@ export default function ConfiguracoesPage() {
     <div className="space-y-6">
       <div>
         <h1 className="font-heading text-2xl font-bold text-charcoal dark:text-charcoal-50">Configurações</h1>
-        <p className="text-charcoal-400 dark:text-charcoal-400 mt-1 text-sm">Gerencie sua conta e preferências</p>
+        <p className="text-charcoal-400 dark:text-charcoal-300 mt-1 text-sm">Gerencie sua conta e preferências</p>
       </div>
 
       <div className="flex flex-col lg:flex-row gap-6">
@@ -318,7 +318,7 @@ export default function ConfiguracoesPage() {
                   className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
                     activeTab === tab.key
                       ? 'bg-rose-gold/10 text-rose-gold'
-                      : 'text-charcoal-400 dark:text-charcoal-400 hover:bg-blush dark:hover:bg-charcoal-700'
+                      : 'text-charcoal-400 dark:text-charcoal-300 hover:bg-blush dark:hover:bg-charcoal-700'
                   }`}
                 >
                   <Icon size={16} />
@@ -332,7 +332,7 @@ export default function ConfiguracoesPage() {
         <div className="flex-1 card-dark shadow-sm">
           {activeTab === 'profile' && (
             <div className="p-6 space-y-5">
-              <h2 className="font-heading text-base font-semibold text-charcoal dark:text-charcoal-100 pb-4 border-b border-blush-200 dark:border-charcoal-700">
+              <h2 className="font-heading text-base font-semibold text-charcoal dark:text-charcoal-100 pb-4 border-b border-blush-200 dark:border-[#3a3835]">
                 Informações do Perfil
               </h2>
 
@@ -352,7 +352,7 @@ export default function ConfiguracoesPage() {
                   type="email"
                   value={profileForm.email}
                   readOnly
-                  className="w-full px-3 py-2 text-sm rounded-lg border border-blush-300 dark:border-charcoal-700 bg-blush/30 dark:bg-charcoal-800 text-charcoal-400 dark:text-charcoal-500 cursor-not-allowed"
+                  className="w-full px-3 py-2 text-sm rounded-lg border border-blush-300 dark:border-[#3a3835] bg-blush/30 dark:bg-charcoal-800 text-charcoal-400 dark:text-charcoal-500 cursor-not-allowed"
                 />
                 <p className="text-xs text-charcoal-400 dark:text-charcoal-500 mt-1">
                   Alterar o e-mail afeta o acesso ao sistema.
@@ -387,7 +387,7 @@ export default function ConfiguracoesPage() {
           {activeTab === 'security' && (
             <div className="p-6 space-y-8">
               <div className="space-y-4">
-                <h2 className="font-heading text-base font-semibold text-charcoal dark:text-charcoal-100 pb-4 border-b border-blush-200 dark:border-charcoal-700">
+                <h2 className="font-heading text-base font-semibold text-charcoal dark:text-charcoal-100 pb-4 border-b border-blush-200 dark:border-[#3a3835]">
                   Alterar Senha
                 </h2>
 
@@ -428,11 +428,11 @@ export default function ConfiguracoesPage() {
               </div>
 
               <div className="space-y-4">
-                <h2 className="font-heading text-base font-semibold text-charcoal dark:text-charcoal-100 pb-4 border-b border-blush-200 dark:border-charcoal-700">
+                <h2 className="font-heading text-base font-semibold text-charcoal dark:text-charcoal-100 pb-4 border-b border-blush-200 dark:border-[#3a3835]">
                   Autenticação de 2 Fatores
                 </h2>
 
-                <div className="rounded-md border border-blush-200 dark:border-charcoal-700 p-4 flex items-start gap-4">
+                <div className="rounded-md border border-blush-200 dark:border-[#3a3835] p-4 flex items-start gap-4">
                   <div className={`mt-0.5 p-2 rounded ${twoFaDraft.enabled ? 'bg-green-100 dark:bg-green-900/30' : 'bg-charcoal-100 dark:bg-charcoal-700'}`}>
                     {twoFaDraft.enabled
                       ? <ShieldCheck size={20} className="text-green-600 dark:text-green-400" />
@@ -504,7 +504,7 @@ export default function ConfiguracoesPage() {
                   </div>
                 )}
 
-                <div className="rounded-md border border-blush-200 dark:border-charcoal-700 bg-blush/40 dark:bg-charcoal-800/60 p-4 text-sm text-charcoal-500 dark:text-charcoal-400">
+                <div className="rounded-md border border-blush-200 dark:border-[#3a3835] bg-blush/40 dark:bg-charcoal-800/60 p-4 text-sm text-charcoal-500 dark:text-charcoal-300">
                   Se celular e e-mail ficarem desligados, o 2FA será desativado automaticamente.
                 </div>
 
@@ -526,10 +526,10 @@ export default function ConfiguracoesPage() {
 
           {activeTab === 'theme' && (
             <div className="p-6 space-y-6">
-              <h2 className="font-heading text-base font-semibold text-charcoal dark:text-charcoal-100 pb-4 border-b border-blush-200 dark:border-charcoal-700">
+              <h2 className="font-heading text-base font-semibold text-charcoal dark:text-charcoal-100 pb-4 border-b border-blush-200 dark:border-[#3a3835]">
                 Aparência
               </h2>
-              <p className="text-sm text-charcoal-500 dark:text-charcoal-400">Escolha o tema da interface</p>
+              <p className="text-sm text-charcoal-500 dark:text-charcoal-300">Escolha o tema da interface</p>
               <div className="grid grid-cols-2 gap-4 max-w-sm">
                 {[
                   { value: 'light', label: 'Claro', desc: 'Interface clara com tons creme' },
