@@ -384,7 +384,7 @@ export function Hero({
             animate={{ opacity: 1, scale: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.9, type: 'spring', stiffness: 200 }}
           >
-            <div className="glass rounded-2xl px-5 py-4 border border-white/30 shadow-xl shadow-black/20">
+            <div className="glass rounded-lg px-5 py-4 border border-white/30 shadow-xl shadow-black/20">
               <div className="flex items-center gap-4 divide-x divide-white/20">
                 <AnimatedCounter target={clientsRegistered} suffix="" label="Clientes registrados" />
                 <div className="pl-4">

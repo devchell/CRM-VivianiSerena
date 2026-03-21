@@ -46,7 +46,7 @@ function ComparisonSlider({ item }: { item: ResultItem }) {
   const afterImage = normalizeImageUrl(item.afterImage)
 
   return (
-    <div style={{ position: 'relative' }} className="w-full aspect-[4/3] overflow-hidden rounded-2xl shadow-md">
+    <div style={{ position: 'relative' }} className="w-full aspect-[4/3] overflow-hidden rounded-lg shadow-md">
       {item.category ? (
         <span className="pointer-events-none absolute left-3 top-3 z-20 rounded-full bg-rose-gold/90 px-3 py-1 text-xs font-medium text-white">
           {item.category}
@@ -88,7 +88,7 @@ function ResultCard({ item, index }: { item: ResultItem; index: number }) {
           </div>
         </div>
       ) : (
-        <div className="aspect-[4/3] animate-pulse rounded-2xl bg-blush" />
+        <div className="aspect-[4/3] animate-pulse rounded-lg bg-blush" />
       )}
     </motion.div>
   )
@@ -171,7 +171,7 @@ export default function Results({ items, vivianiPhotoUrl }: { items: ResultItem[
           </AnimatePresence>
 
           {filtered.length === 0 ? (
-            <div className="rounded-2xl border border-blush-300 bg-white px-6 py-8 text-center text-sm text-charcoal-400">
+            <div className="rounded-lg border border-blush-300 bg-white px-6 py-8 text-center text-sm text-charcoal-400">
               Nenhum resultado configurado para esta categoria ainda.
             </div>
           ) : null}
@@ -186,7 +186,7 @@ export default function Results({ items, vivianiPhotoUrl }: { items: ResultItem[
 
           <motion.div
             ref={ctaRef as React.RefObject<HTMLDivElement>}
-            className="mt-16 overflow-hidden rounded-3xl border border-blush-200 bg-white shadow-lg"
+            className="mt-16 overflow-hidden rounded-lg border border-blush-200 bg-white shadow-lg"
             initial={{ opacity: 0, y: 40 }}
             animate={ctaInView ? { opacity: 1, y: 0 } : {}}
             transition={{ duration: 0.7, ease: 'easeOut' }}
@@ -231,7 +231,7 @@ export default function Results({ items, vivianiPhotoUrl }: { items: ResultItem[
                   target="_blank"
                   rel="noopener noreferrer"
                   onClick={() => trackCTAClick('results_cta_viviani', 'results')}
-                  className="mt-8 inline-flex items-center gap-2.5 self-start rounded-xl bg-rose-gold px-8 py-3.5 font-semibold text-white shadow-md transition-all hover:bg-rose-gold-500 hover:shadow-lg"
+                  className="mt-8 inline-flex items-center gap-2.5 self-start rounded-md bg-rose-gold px-8 py-3.5 font-semibold text-white shadow-md transition-all hover:bg-rose-gold-500 hover:shadow-lg"
                 >
                   Agendar Avaliação Gratuita
                 </a>

@@ -113,7 +113,7 @@ export function About({ bio, photoUrl, whatsappNumber }: AboutProps = {}) {
             {/* Foto principal */}
             <motion.div
               variants={itemVariants}
-              className="relative rounded-3xl overflow-hidden aspect-[4/5] bg-blush shadow-2xl shadow-charcoal/10"
+              className="relative rounded-lg overflow-hidden aspect-[4/5] bg-blush shadow-2xl shadow-charcoal/10"
             >
               {/* Placeholder elegante enquanto a foto real não é fornecida */}
               {aboutPhotoSrc ? (
@@ -142,7 +142,7 @@ export function About({ bio, photoUrl, whatsappNumber }: AboutProps = {}) {
             {/* Badge flutuante: experiência */}
             <motion.div
               variants={itemVariants}
-              className="absolute -bottom-6 -right-4 lg:-right-8 glass rounded-2xl px-6 py-5 border border-blush shadow-xl"
+              className="absolute -bottom-6 -right-4 lg:-right-8 glass rounded-lg px-6 py-5 border border-blush shadow-xl"
             >
               <div className="flex items-center gap-4">
                 <div className="w-12 h-12 rounded-xl bg-rose-gold flex items-center justify-center flex-shrink-0">
@@ -158,7 +158,7 @@ export function About({ bio, photoUrl, whatsappNumber }: AboutProps = {}) {
             {/* Badge flutuante: ANVISA */}
             <motion.div
               variants={itemVariants}
-              className="absolute -top-4 -right-4 lg:right-4 glass rounded-xl px-4 py-3 border border-blush shadow-lg"
+              className="absolute -top-4 -right-4 lg:right-4 glass rounded-md px-4 py-3 border border-blush shadow-lg"
             >
               <div className="flex items-center gap-2">
                 <div className="w-2 h-2 rounded-full bg-sage animate-pulse" aria-hidden="true" />

@@ -107,7 +107,7 @@ export default function TrustSection({
           transition={{ duration: 0.6, delay: 0.4 }}
           aria-label="Certificações e regulamentações"
         >
-          <div className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-5 py-3">
+          <div className="flex items-center gap-2 rounded-md border border-white/10 bg-white/5 px-5 py-3">
             <div className="flex h-8 w-8 items-center justify-center rounded-full bg-green-500" aria-hidden="true">
               <svg viewBox="0 0 24 24" className="h-4 w-4 fill-none stroke-current stroke-2 text-white">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -119,7 +119,7 @@ export default function TrustSection({
             </div>
           </div>
 
-          <div className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-5 py-3">
+          <div className="flex items-center gap-2 rounded-md border border-white/10 bg-white/5 px-5 py-3">
             <div className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-500" aria-hidden="true">
               <svg viewBox="0 0 24 24" className="h-4 w-4 fill-none stroke-current stroke-2 text-white">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4" />
@@ -131,7 +131,7 @@ export default function TrustSection({
             </div>
           </div>
 
-          <div className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-5 py-3">
+          <div className="flex items-center gap-2 rounded-md border border-white/10 bg-white/5 px-5 py-3">
             <div className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-full bg-rose-gold/30" aria-hidden="true">
               <Image
                 src="https://static.wixstatic.com/media/be8b61_e40ffe7813494f6c9a3246a4852c92a8~mv2.png"

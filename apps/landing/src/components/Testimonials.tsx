@@ -29,14 +29,14 @@ const ARTIFICIAL_TESTIMONIALS: TestimonialItem[] = [
     id: 'artificial-2',
     name: 'Paciente em acompanhamento',
     city: 'São Paulo, SP',
-    service: 'Despigmentacao labial',
+    service: 'Despigmentação labial',
     text: 'A experiência foi segura e transparente. As expectativas foram alinhadas desde a primeira avaliação.',
     stars: 5,
     source: 'artificial',
   },
   {
     id: 'artificial-3',
-    name: 'Caso de remocao',
+    name: 'Caso de remoção',
     city: 'São Bernardo do Campo, SP',
     service: 'Remoção de tatuagem',
     text: 'O plano de tratamento ficou objetivo e o ambiente transmite bastante confiança durante todo o processo.',
@@ -69,7 +69,7 @@ function TestimonialCard({ item, featured }: { item: TestimonialItem; featured?:
 
   return (
     <div
-      className={`relative rounded-2xl border p-7 transition-all duration-300 ${
+      className={`relative rounded-lg border p-7 transition-all duration-300 ${
         featured
           ? 'border-rose-gold/40 bg-gradient-to-br from-rose-gold/10 to-blush shadow-xl'
           : 'border-stone-100 bg-white shadow-sm'

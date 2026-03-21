@@ -140,7 +140,7 @@ export default function FAQ({ whatsappNumber }: FAQProps = {}) {
                 <Accordion.Item value={item.id} className="group">
                   <Accordion.Header>
                     <Accordion.Trigger
-                      className={`w-full flex items-center justify-between gap-4 text-left px-6 py-5 rounded-2xl font-medium transition-all duration-200 ${
+                      className={`w-full flex items-center justify-between gap-4 text-left px-6 py-5 rounded-lg font-medium transition-all duration-200 ${
                         openItem === item.id
                           ? 'bg-rose-gold text-white shadow-md'
                           : 'bg-white text-charcoal border border-stone-100 hover:border-rose-gold/30 hover:shadow-sm'
@@ -159,7 +159,7 @@ export default function FAQ({ whatsappNumber }: FAQProps = {}) {
                   </Accordion.Header>
 
                   <Accordion.Content className="overflow-hidden data-[state=open]:animate-accordion-down data-[state=closed]:animate-accordion-up">
-                    <div className="px-6 py-5 text-charcoal-600 text-sm leading-relaxed border border-t-0 border-stone-100 rounded-b-2xl bg-white">
+                    <div className="px-6 py-5 text-charcoal-600 text-sm leading-relaxed border border-t-0 border-stone-100 rounded-b-lg bg-white">
                       {item.answer}
                     </div>
                   </Accordion.Content>
@@ -170,7 +170,7 @@ export default function FAQ({ whatsappNumber }: FAQProps = {}) {
 
           {/* Bottom CTA */}
           <motion.div
-            className="mt-12 text-center p-8 bg-blush rounded-2xl border border-rose-gold/20"
+            className="mt-12 text-center p-8 bg-blush rounded-lg border border-rose-gold/20"
             initial={{ opacity: 0, y: 20 }}
             animate={isInView ? { opacity: 1, y: 0 } : {}}
             transition={{ duration: 0.6, delay: 0.5 }}

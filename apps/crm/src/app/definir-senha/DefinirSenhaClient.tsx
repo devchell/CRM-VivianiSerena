@@ -48,12 +48,12 @@ export function DefinirSenhaClient() {
     event.preventDefault()
 
     if (form.new !== form.confirm) {
-      toast.error('As senhas nao coincidem')
+      toast.error('As senhas não coincidem')
       return
     }
 
     if (form.new.length < 8) {
-      toast.error('Minimo de 8 caracteres')
+      toast.error('Mínimo de 8 caracteres')
       return
     }
 
@@ -81,7 +81,7 @@ export function DefinirSenhaClient() {
       }
 
       setDone(true)
-      toast.success('Senha criada. Faca login com a nova senha.')
+      toast.success('Senha criada. Faça login com a nova senha.')
       setTimeout(() => signOut({ callbackUrl: '/login' }), 2500)
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Erro ao definir senha')
@@ -110,14 +110,14 @@ export function DefinirSenhaClient() {
     <div className="min-h-screen bg-cream dark:bg-charcoal-900 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-rose-gold/10 border border-rose-gold/20 mb-4">
+          <div className="inline-flex items-center justify-center w-14 h-14 rounded-lg bg-rose-gold/10 border border-rose-gold/20 mb-4">
             <Sparkles size={24} className="text-rose-gold" />
           </div>
           <h1 className="font-heading text-2xl font-bold text-charcoal dark:text-charcoal-50">
             Criar sua senha
           </h1>
           <p className="text-charcoal-400 dark:text-charcoal-500 text-sm mt-2">
-            Voce recebeu uma senha temporaria por e-mail.
+            Você recebeu uma senha temporária por e-mail.
             <br />
             Crie uma nova senha para continuar.
           </p>
@@ -144,7 +144,7 @@ export function DefinirSenhaClient() {
                     type={show.new ? 'text' : 'password'}
                     value={form.new}
                     onChange={(event) => setForm((current) => ({ ...current, new: event.target.value }))}
-                    placeholder="Minimo 8 caracteres"
+                    placeholder="Mínimo 8 caracteres"
                     required
                     className="w-full pl-9 pr-10 py-2.5 text-sm rounded-lg border border-blush-300 dark:border-charcoal-600 bg-white dark:bg-charcoal-700 text-charcoal dark:text-charcoal-100 focus:outline-none focus:ring-2 focus:ring-rose-gold/40"
                   />
@@ -177,7 +177,7 @@ export function DefinirSenhaClient() {
                       ))}
                     </div>
                     <p className="text-xs text-charcoal-400">
-                      {['', 'Fraca', 'Razoavel', 'Boa', 'Forte'][strength]}
+                      {['', 'Fraca', 'Razoável', 'Boa', 'Forte'][strength]}
                     </p>
                   </div>
                 )}
@@ -210,14 +210,14 @@ export function DefinirSenhaClient() {
                   </button>
                 </div>
                 {form.confirm && form.new !== form.confirm && (
-                  <p className="text-xs text-red-400 mt-1">As senhas nao coincidem</p>
+                  <p className="text-xs text-red-400 mt-1">As senhas não coincidem</p>
                 )}
               </div>
 
               <button
                 type="submit"
                 disabled={saving || !accessToken || form.new !== form.confirm || form.new.length < 8}
-                className="w-full flex items-center justify-center gap-2 py-2.5 bg-rose-gold text-white rounded-xl text-sm font-semibold hover:bg-rose-gold/90 transition-colors disabled:opacity-60"
+                className="w-full flex items-center justify-center gap-2 py-2.5 bg-rose-gold text-white rounded-md text-sm font-semibold hover:bg-rose-gold/90 transition-colors disabled:opacity-60"
               >
                 {saving ? <Loader2 size={16} className="animate-spin" /> : <CheckCircle size={16} />}
                 Criar senha e entrar

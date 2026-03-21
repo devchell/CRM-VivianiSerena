@@ -142,14 +142,14 @@ function StatusPill({ ok, label }: { ok: boolean; label: string }) {
 
 function SummaryCard(props: { label: string; value: string; note: string; icon: ReactNode }) {
   return (
-    <div className="rounded-[28px] border border-blush-200 bg-white/90 p-5 shadow-sm dark:border-charcoal-700 dark:bg-charcoal-900/70">
+    <div className="rounded-lg border border-blush-200 bg-white/90 p-5 shadow-sm dark:border-charcoal-700 dark:bg-charcoal-900/70">
       <div className="flex items-start justify-between gap-4">
         <div>
           <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-charcoal-400">{props.label}</p>
           <p className="mt-2 font-heading text-2xl font-bold text-charcoal dark:text-charcoal-50">{props.value}</p>
           <p className="mt-2 text-sm leading-6 text-charcoal-500 dark:text-charcoal-400">{props.note}</p>
         </div>
-        <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-cream text-rose-gold ring-1 ring-blush-200 dark:bg-charcoal-800 dark:ring-charcoal-700">
+        <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-cream text-rose-gold ring-1 ring-blush-200 dark:bg-charcoal-800 dark:ring-charcoal-700">
           {props.icon}
         </div>
       </div>
@@ -172,7 +172,7 @@ function VisibilityToggle(props: { label: string; active: boolean; onClick: () =
 
 function InfoCard(props: { label: string; value: string; breakAll?: boolean; note?: string }) {
   return (
-    <div className="rounded-2xl border border-blush-200 bg-white px-4 py-3 dark:border-charcoal-700 dark:bg-charcoal-800/70">
+    <div className="rounded-lg border border-blush-200 bg-white px-4 py-3 dark:border-charcoal-700 dark:bg-charcoal-800/70">
       <p className="text-xs font-semibold uppercase tracking-[0.14em] text-charcoal-400">{props.label}</p>
       <p className={`mt-2 text-sm font-medium text-charcoal dark:text-charcoal-100 ${props.breakAll ? 'break-all' : ''}`}>{props.value}</p>
       {props.note ? <p className="mt-2 text-xs leading-5 text-charcoal-400 dark:text-charcoal-500">{props.note}</p> : null}
@@ -190,7 +190,7 @@ function SectionCard(props: {
   children: ReactNode
 }) {
   return (
-    <section className="rounded-[32px] border border-blush-200 bg-white/90 p-6 shadow-sm dark:border-charcoal-700 dark:bg-charcoal-900/70">
+    <section className="rounded-lg border border-blush-200 bg-white/90 p-6 shadow-sm dark:border-charcoal-700 dark:bg-charcoal-900/70">
       <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-rose-gold">{props.eyebrow}</p>
@@ -246,11 +246,11 @@ export default function AdministracaoPage() {
       setLoadError(null)
       const response = await fetch(`${API_URL}/admin/overview`, { headers: { Authorization: `Bearer ${accessToken}` } })
       const payload = await response.json() as { success: boolean; data?: AdminOverview; message?: string }
-      if (!response.ok || !payload.success || !payload.data) throw new Error(payload.message ?? 'Erro ao carregar administracao')
+      if (!response.ok || !payload.success || !payload.data) throw new Error(payload.message ?? 'Erro ao carregar administração')
       hasLoadedRef.current = true
       setOverview(payload.data)
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Erro ao carregar administracao'
+      const message = error instanceof Error ? error.message : 'Erro ao carregar administração'
       setLoadError(message)
       toast.error(message)
     } finally {
@@ -401,7 +401,7 @@ export default function AdministracaoPage() {
     }
 
     if (!metaSdkReady || !window.FB) {
-      toast.error('SDK oficial da Meta ainda nao carregou')
+      toast.error('SDK oficial da Meta ainda não carregou')
       return
     }
 
@@ -413,7 +413,7 @@ export default function AdministracaoPage() {
         window.FB?.login((response) => {
           const authCode = response.authResponse?.code
           if (!authCode) {
-            reject(new Error('Meta nao retornou o codigo de autorizacao do canal'))
+            reject(new Error('Meta não retornou o código de autorização do canal'))
             return
           }
           resolve(authCode)
@@ -441,7 +441,7 @@ export default function AdministracaoPage() {
         }),
       })
       const payload = await response.json() as { success: boolean; message?: string }
-      if (!response.ok || !payload.success) throw new Error(payload.message ?? 'Nao foi possivel conectar o canal oficial do WhatsApp')
+      if (!response.ok || !payload.success) throw new Error(payload.message ?? 'Não foi possível conectar o canal oficial do WhatsApp')
       toast.success(payload.message ?? 'Canal oficial do WhatsApp conectado')
       await loadOverview('refresh')
     } catch (error) {
@@ -508,7 +508,7 @@ export default function AdministracaoPage() {
 
   if (!overview) {
     return (
-      <div className="rounded-3xl border border-red-200 bg-red-50 px-5 py-4 text-sm text-red-700 dark:border-red-900/40 dark:bg-red-950/20 dark:text-red-200">
+      <div className="rounded-lg border border-red-200 bg-red-50 px-5 py-4 text-sm text-red-700 dark:border-red-900/40 dark:bg-red-950/20 dark:text-red-200">
         <p className="font-semibold">Não foi possível carregar o painel.</p>
         <p className="mt-1">{loadError ?? 'Erro inesperado.'}</p>
       </div>
@@ -517,15 +517,15 @@ export default function AdministracaoPage() {
 
   return (
     <div className="space-y-6">
-      <section className="rounded-[32px] border border-blush-200 bg-[radial-gradient(circle_at_top_left,_rgba(201,150,122,0.16),_transparent_36%),linear-gradient(135deg,#fffdfb_0%,#fff7f1_52%,#fffdfb_100%)] px-6 py-6 shadow-[0_28px_80px_-42px_rgba(97,73,54,0.35)] dark:border-charcoal-700 dark:bg-[radial-gradient(circle_at_top_left,_rgba(201,150,122,0.18),_transparent_34%),linear-gradient(135deg,#171412_0%,#1e1a17_52%,#161311_100%)]">
+      <section className="rounded-lg border border-blush-200 bg-[radial-gradient(circle_at_top_left,_rgba(201,150,122,0.16),_transparent_36%),linear-gradient(135deg,#fffdfb_0%,#fff7f1_52%,#fffdfb_100%)] px-6 py-6 shadow-[0_28px_80px_-42px_rgba(97,73,54,0.35)] dark:border-charcoal-700 dark:bg-[radial-gradient(circle_at_top_left,_rgba(201,150,122,0.18),_transparent_34%),linear-gradient(135deg,#171412_0%,#1e1a17_52%,#161311_100%)]">
         <div className="flex flex-col gap-5 xl:flex-row xl:items-end xl:justify-between">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-rose-gold">Administracao</p>
-            <h1 className="mt-2 font-heading text-3xl font-bold text-charcoal dark:text-charcoal-50">Integracoes, credenciais e ambiente sob controle.</h1>
+            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-rose-gold">Administração</p>
+            <h1 className="mt-2 font-heading text-3xl font-bold text-charcoal dark:text-charcoal-50">Integrações, credenciais e ambiente sob controle.</h1>
             <p className="mt-3 max-w-3xl text-sm leading-6 text-charcoal-500 dark:text-charcoal-400">Refinei a hierarquia visual do painel para separar melhor os dados sensíveis e deixar cada bloco mais fácil de operar.</p>
           </div>
           <div className="flex flex-wrap gap-3">
-            <button type="button" onClick={toggleAll} className="inline-flex items-center justify-center gap-2 rounded-2xl border border-blush-300 bg-white px-4 py-3 text-sm font-medium text-charcoal shadow-sm transition-colors hover:bg-blush dark:border-charcoal-600 dark:bg-charcoal-800 dark:text-charcoal-100 dark:hover:bg-charcoal-700">
+            <button type="button" onClick={toggleAll} className="inline-flex items-center justify-center gap-2 rounded border border-blush-300 bg-white px-4 py-3 text-sm font-medium text-charcoal shadow-sm transition-colors hover:bg-blush dark:border-charcoal-600 dark:bg-charcoal-800 dark:text-charcoal-100 dark:hover:bg-charcoal-700">
               {allVisible ? <EyeOff size={15} /> : <Eye size={15} />}
               {allVisible ? 'Ocultar tudo' : 'Mostrar tudo'}
             </button>
@@ -544,38 +544,38 @@ export default function AdministracaoPage() {
         </div>
       </section>
 
-      {loadError ? <div className="rounded-3xl border border-amber-200 bg-amber-50 px-5 py-4 text-sm text-amber-800 dark:border-amber-900/40 dark:bg-amber-950/20 dark:text-amber-100">{loadError}</div> : null}
+      {loadError ? <div className="rounded-lg border border-amber-200 bg-amber-50 px-5 py-4 text-sm text-amber-800 dark:border-amber-900/40 dark:bg-amber-950/20 dark:text-amber-100">{loadError}</div> : null}
 
       <div className="grid gap-4 md:grid-cols-2 2xl:grid-cols-6">
         <SummaryCard label="Banco" value={overview.infrastructure.database ? 'OK' : 'Falha'} note="Disponibilidade do banco principal." icon={<Database size={18} />} />
         <SummaryCard label="Redis" value={overview.infrastructure.redis ? 'OK' : 'Falha'} note="Cache e filas auxiliares." icon={<Server size={18} />} />
         <SummaryCard label="Uploads" value={overview.infrastructure.uploads ? 'OK' : 'Falha'} note={`Driver atual: ${overview.infrastructure.storageDriver}.`} icon={<ExternalLink size={18} />} />
         <SummaryCard label="Google" value={overview.integrations.googleCalendar.connected ? 'Conectado' : 'Pendente'} note={overview.integrations.googleCalendar.configured ? 'OAuth configurado.' : 'Credenciais OAuth pendentes.'} icon={<Globe2 size={18} />} />
-        <SummaryCard label="WhatsApp" value={overview.integrations.whatsapp.connected ? 'Conectado' : 'Pendente'} note={overview.integrations.whatsapp.configured ? 'Canal oficial pronto para conexao.' : 'App, segredo ou webhook pendentes.'} icon={<MessageCircle size={18} />} />
-        <SummaryCard label="Visibilidade" value={`${visibleCount}/4`} note="Blocos com dados visiveis." icon={<Layers3 size={18} />} />
+        <SummaryCard label="WhatsApp" value={overview.integrations.whatsapp.connected ? 'Conectado' : 'Pendente'} note={overview.integrations.whatsapp.configured ? 'Canal oficial pronto para conexão.' : 'App, segredo ou webhook pendentes.'} icon={<MessageCircle size={18} />} />
+        <SummaryCard label="Visibilidade" value={`${visibleCount}/4`} note="Blocos com dados visíveis." icon={<Layers3 size={18} />} />
       </div>
 
-      <section className="rounded-[32px] border border-blush-200 bg-white/90 p-6 shadow-sm dark:border-charcoal-700 dark:bg-charcoal-900/70">
+      <section className="rounded-lg border border-blush-200 bg-white/90 p-6 shadow-sm dark:border-charcoal-700 dark:bg-charcoal-900/70">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-rose-gold">Visibilidade</p>
-            <h2 className="mt-2 font-heading text-xl font-semibold text-charcoal dark:text-charcoal-50">Controle rapido por area</h2>
+            <h2 className="mt-2 font-heading text-xl font-semibold text-charcoal dark:text-charcoal-50">Controle rápido por área</h2>
             <p className="mt-2 max-w-2xl text-sm leading-6 text-charcoal-500 dark:text-charcoal-400">Cada seção agora tem um controle mais claro para exibição pontual. O botão global continua no topo para abrir ou fechar tudo.</p>
           </div>
-          <div className="rounded-2xl border border-blush-200 bg-cream/80 px-4 py-3 text-sm text-charcoal-600 dark:border-charcoal-700 dark:bg-charcoal-800/70 dark:text-charcoal-300">{visibleCount} de 3 blocos visíveis.</div>
+          <div className="rounded-lg border border-blush-200 bg-cream/80 px-4 py-3 text-sm text-charcoal-600 dark:border-charcoal-700 dark:bg-charcoal-800/70 dark:text-charcoal-300">{visibleCount} de 3 blocos visíveis.</div>
         </div>
         <div className="mt-5 flex flex-wrap gap-2">
-          <VisibilityToggle label={visibility.google ? 'Google visivel' : 'Google oculto'} active={visibility.google} onClick={() => toggleSection('google')} />
-          <VisibilityToggle label={visibility.whatsapp ? 'WhatsApp visivel' : 'WhatsApp oculto'} active={visibility.whatsapp} onClick={() => toggleSection('whatsapp')} />
-          <VisibilityToggle label={visibility.email ? 'E-mail visivel' : 'E-mail oculto'} active={visibility.email} onClick={() => toggleSection('email')} />
-          <VisibilityToggle label={visibility.environment ? 'Ambiente visivel' : 'Ambiente oculto'} active={visibility.environment} onClick={() => toggleSection('environment')} />
+          <VisibilityToggle label={visibility.google ? 'Google visível' : 'Google oculto'} active={visibility.google} onClick={() => toggleSection('google')} />
+          <VisibilityToggle label={visibility.whatsapp ? 'WhatsApp visível' : 'WhatsApp oculto'} active={visibility.whatsapp} onClick={() => toggleSection('whatsapp')} />
+          <VisibilityToggle label={visibility.email ? 'E-mail visível' : 'E-mail oculto'} active={visibility.email} onClick={() => toggleSection('email')} />
+          <VisibilityToggle label={visibility.environment ? 'Ambiente visível' : 'Ambiente oculto'} active={visibility.environment} onClick={() => toggleSection('environment')} />
         </div>
       </section>
 
       <div className="grid gap-4 xl:grid-cols-[minmax(0,1.12fr)_minmax(0,0.88fr)]">
         <div className="space-y-4">
           <SectionCard eyebrow="Google Calendar" title="Sincronização da agenda externa" description={overview.integrations.googleCalendar.connected ? (overview.integrations.googleCalendar.expiresAt ? `Conta conectada. Expiração atual: ${new Date(overview.integrations.googleCalendar.expiresAt).toLocaleString('pt-BR')}.` : 'Conta conectada. O token atual não expõe expiração neste retorno.') : 'Use o acesso abaixo para autorizar sua conta Google e preparar a sincronização do calendário.'} visible={visibility.google} onToggle={() => toggleSection('google')} status={<><StatusPill ok={overview.integrations.googleCalendar.configured} label={overview.integrations.googleCalendar.configured ? 'OAuth configurado' : 'OAuth pendente'} /><StatusPill ok={overview.integrations.googleCalendar.connected} label={overview.integrations.googleCalendar.connected ? 'Conta conectada' : 'Sem conexão'} /></>}>
-            {!overview.integrations.googleCalendar.configured ? <div className="mb-5 rounded-3xl border border-amber-200 bg-amber-50 px-4 py-4 text-sm text-amber-800 dark:border-amber-900/40 dark:bg-amber-950/20 dark:text-amber-100">O botão de conexão só habilita quando a API tiver client id, secret e redirect URI válidos.</div> : null}
+            {!overview.integrations.googleCalendar.configured ? <div className="mb-5 rounded-lg border border-amber-200 bg-amber-50 px-4 py-4 text-sm text-amber-800 dark:border-amber-900/40 dark:bg-amber-950/20 dark:text-amber-100">O botão de conexão só habilita quando a API tiver client id, secret e redirect URI válidos.</div> : null}
             <div className="grid gap-3 md:grid-cols-2">
               <InfoCard label="Calendar ID" value={maskValue(overview.integrations.googleCalendar.calendarId, visibility.google)} note="Identificador usado para sincronizar eventos." />
               <InfoCard label="Refresh token" value={overview.integrations.googleCalendar.hasRefreshToken ? 'Disponível' : 'Não disponível'} note="Indica se o ambiente consegue renovar a autorização." />
@@ -584,51 +584,51 @@ export default function AdministracaoPage() {
               </div>
             </div>
             <div className="mt-5 flex flex-wrap gap-3">
-              <button type="button" onClick={() => void handleGoogleConnect()} disabled={googleBusy !== null || !overview.integrations.googleCalendar.configured} className="inline-flex items-center gap-2 rounded-2xl border border-blush-300 bg-white px-4 py-3 text-sm font-medium text-charcoal transition-colors hover:bg-blush disabled:opacity-60 dark:border-charcoal-600 dark:bg-charcoal-800 dark:text-charcoal-100 dark:hover:bg-charcoal-700">
+              <button type="button" onClick={() => void handleGoogleConnect()} disabled={googleBusy !== null || !overview.integrations.googleCalendar.configured} className="inline-flex items-center gap-2 rounded border border-blush-300 bg-white px-4 py-3 text-sm font-medium text-charcoal transition-colors hover:bg-blush disabled:opacity-60 dark:border-charcoal-600 dark:bg-charcoal-800 dark:text-charcoal-100 dark:hover:bg-charcoal-700">
                 {googleBusy === 'connect' ? <Loader2 size={15} className="animate-spin" /> : <Globe2 size={15} />}
                 Acessar com sua conta Google
                 <ExternalLink size={14} className="opacity-60" />
               </button>
-              <button type="button" onClick={() => void handleGoogleDisconnect()} disabled={googleBusy !== null || !overview.integrations.googleCalendar.connected} className="inline-flex items-center gap-2 rounded-2xl border border-blush-300 bg-white px-4 py-3 text-sm font-medium text-charcoal transition-colors hover:bg-blush disabled:opacity-60 dark:border-charcoal-600 dark:bg-charcoal-800 dark:text-charcoal-100 dark:hover:bg-charcoal-700">
+              <button type="button" onClick={() => void handleGoogleDisconnect()} disabled={googleBusy !== null || !overview.integrations.googleCalendar.connected} className="inline-flex items-center gap-2 rounded border border-blush-300 bg-white px-4 py-3 text-sm font-medium text-charcoal transition-colors hover:bg-blush disabled:opacity-60 dark:border-charcoal-600 dark:bg-charcoal-800 dark:text-charcoal-100 dark:hover:bg-charcoal-700">
                 {googleBusy === 'disconnect' ? <Loader2 size={15} className="animate-spin" /> : <Unlink2 size={15} />}
                 Desconectar Google
               </button>
             </div>
           </SectionCard>
 
-          <SectionCard eyebrow="WhatsApp Business" title="Canal oficial para disparos e status reais" description={overview.integrations.whatsapp.connected ? `Canal conectado no numero ${overview.integrations.whatsapp.displayPhoneNumber ?? 'comercial'} para uso pelo backend/API.` : 'Conecte o numero comercial pelo Embedded Signup oficial da Meta. O CRM nao usa WhatsApp Web nem sessao local.'} visible={visibility.whatsapp} onToggle={() => toggleSection('whatsapp')} status={<><StatusPill ok={overview.integrations.whatsapp.configured} label={overview.integrations.whatsapp.configured ? 'App configurado' : 'App pendente'} /><StatusPill ok={overview.integrations.whatsapp.connected} label={overview.integrations.whatsapp.connected ? 'Canal conectado' : 'Sem conexao'} /></>}>
+          <SectionCard eyebrow="WhatsApp Business" title="Canal oficial para disparos e status reais" description={overview.integrations.whatsapp.connected ? `Canal conectado no número ${overview.integrations.whatsapp.displayPhoneNumber ?? 'comercial'} para uso pelo backend/API.` : 'Conecte o número comercial pelo Embedded Signup oficial da Meta. O CRM não usa WhatsApp Web nem sessão local.'} visible={visibility.whatsapp} onToggle={() => toggleSection('whatsapp')} status={<><StatusPill ok={overview.integrations.whatsapp.configured} label={overview.integrations.whatsapp.configured ? 'App configurado' : 'App pendente'} /><StatusPill ok={overview.integrations.whatsapp.connected} label={overview.integrations.whatsapp.connected ? 'Canal conectado' : 'Sem conexão'} /></>}>
             {!overview.integrations.whatsapp.configured ? (
-              <div className="mb-5 rounded-3xl border border-amber-200 bg-amber-50 px-4 py-4 text-sm text-amber-800 dark:border-amber-900/40 dark:bg-amber-950/20 dark:text-amber-100">
-                Faltam variaveis para o canal oficial: {overview.integrations.whatsapp.missingConfiguration.join(', ')}.
+              <div className="mb-5 rounded-lg border border-amber-200 bg-amber-50 px-4 py-4 text-sm text-amber-800 dark:border-amber-900/40 dark:bg-amber-950/20 dark:text-amber-100">
+                Faltam variáveis para o canal oficial: {overview.integrations.whatsapp.missingConfiguration.join(', ')}.
               </div>
             ) : null}
             <div className="grid gap-3 md:grid-cols-2">
-              <InfoCard label="Numero comercial" value={maskValue(overview.integrations.whatsapp.displayPhoneNumber, visibility.whatsapp)} note="Numero empresarial conectado ao backend." />
-              <InfoCard label="Nome verificado" value={maskValue(overview.integrations.whatsapp.verifiedName, visibility.whatsapp)} note="Identidade retornada pela Meta para o numero." />
+              <InfoCard label="Número comercial" value={maskValue(overview.integrations.whatsapp.displayPhoneNumber, visibility.whatsapp)} note="Número empresarial conectado ao backend." />
+              <InfoCard label="Nome verificado" value={maskValue(overview.integrations.whatsapp.verifiedName, visibility.whatsapp)} note="Identidade retornada pela Meta para o número." />
               <InfoCard label="Phone number ID" value={maskValue(overview.integrations.whatsapp.phoneNumberId, visibility.whatsapp)} breakAll note="Identificador oficial usado para envios pela API." />
               <InfoCard label="Business account ID" value={maskValue(overview.integrations.whatsapp.businessAccountId, visibility.whatsapp)} breakAll note="Conta empresarial/WABA vinculada no Embedded Signup." />
               <InfoCard label="Webhook" value={overview.integrations.whatsapp.webhookSubscribed ? 'Inscrito' : 'Pendente'} note={maskValue(overview.environment.whatsappWebhookPath, visibility.whatsapp)} />
-              <InfoCard label="Graph API" value={overview.environment.whatsappGraphApiVersion} note={overview.integrations.whatsapp.qualityRating ? `Qualidade atual: ${overview.integrations.whatsapp.qualityRating}` : 'Versao usada para conexao e envio.'} />
+              <InfoCard label="Graph API" value={overview.environment.whatsappGraphApiVersion} note={overview.integrations.whatsapp.qualityRating ? `Qualidade atual: ${overview.integrations.whatsapp.qualityRating}` : 'Versão usada para conexão e envio.'} />
             </div>
             {overview.integrations.whatsapp.lastError ? (
-              <div className="mt-4 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-900/40 dark:bg-red-950/20 dark:text-red-200">
-                Ultimo erro: {overview.integrations.whatsapp.lastError}
+              <div className="mt-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-900/40 dark:bg-red-950/20 dark:text-red-200">
+                Último erro: {overview.integrations.whatsapp.lastError}
               </div>
             ) : null}
             <div className="mt-5 flex flex-wrap gap-3">
-              <button type="button" onClick={() => void handleWhatsappConnect()} disabled={whatsappBusy !== null || !overview.integrations.whatsapp.configured} className="inline-flex items-center gap-2 rounded-2xl border border-blush-300 bg-white px-4 py-3 text-sm font-medium text-charcoal transition-colors hover:bg-blush disabled:opacity-60 dark:border-charcoal-600 dark:bg-charcoal-800 dark:text-charcoal-100 dark:hover:bg-charcoal-700">
+              <button type="button" onClick={() => void handleWhatsappConnect()} disabled={whatsappBusy !== null || !overview.integrations.whatsapp.configured} className="inline-flex items-center gap-2 rounded border border-blush-300 bg-white px-4 py-3 text-sm font-medium text-charcoal transition-colors hover:bg-blush disabled:opacity-60 dark:border-charcoal-600 dark:bg-charcoal-800 dark:text-charcoal-100 dark:hover:bg-charcoal-700">
                 {whatsappBusy === 'connect' ? <Loader2 size={15} className="animate-spin" /> : <MessageCircle size={15} />}
                 Conectar canal oficial
                 <ExternalLink size={14} className="opacity-60" />
               </button>
-              <button type="button" onClick={() => void handleWhatsappDisconnect()} disabled={whatsappBusy !== null || !overview.integrations.whatsapp.connected} className="inline-flex items-center gap-2 rounded-2xl border border-blush-300 bg-white px-4 py-3 text-sm font-medium text-charcoal transition-colors hover:bg-blush disabled:opacity-60 dark:border-charcoal-600 dark:bg-charcoal-800 dark:text-charcoal-100 dark:hover:bg-charcoal-700">
+              <button type="button" onClick={() => void handleWhatsappDisconnect()} disabled={whatsappBusy !== null || !overview.integrations.whatsapp.connected} className="inline-flex items-center gap-2 rounded border border-blush-300 bg-white px-4 py-3 text-sm font-medium text-charcoal transition-colors hover:bg-blush disabled:opacity-60 dark:border-charcoal-600 dark:bg-charcoal-800 dark:text-charcoal-100 dark:hover:bg-charcoal-700">
                 {whatsappBusy === 'disconnect' ? <Loader2 size={15} className="animate-spin" /> : <Unlink2 size={15} />}
                 Desconectar canal
               </button>
             </div>
           </SectionCard>
 
-          <SectionCard eyebrow="Dados de e-mail" title="SMTP, remetente e notificacoes" description="As credenciais de envio ficam agrupadas em um unico fluxo de manutencao, com leitura do banco e atualizacao imediata apos salvar." visible={visibility.email} onToggle={() => toggleSection('email')} status={<><StatusPill ok={overview.integrations.email.configured} label={overview.integrations.email.configured ? 'SMTP pronto' : 'SMTP pendente'} /><StatusPill ok={overview.integrations.email.source === 'database'} label={overview.integrations.email.source === 'database' ? 'Editavel no painel' : 'Lendo do ambiente'} /></>}>
+          <SectionCard eyebrow="Dados de e-mail" title="SMTP, remetente e notificações" description="As credenciais de envio ficam agrupadas em um único fluxo de manutenção, com leitura do banco e atualização imediata após salvar." visible={visibility.email} onToggle={() => toggleSection('email')} status={<><StatusPill ok={overview.integrations.email.configured} label={overview.integrations.email.configured ? 'SMTP pronto' : 'SMTP pendente'} /><StatusPill ok={overview.integrations.email.source === 'database'} label={overview.integrations.email.source === 'database' ? 'Editavel no painel' : 'Lendo do ambiente'} /></>}>
             <div className="grid gap-3 md:grid-cols-3">
               <InfoCard label="Provider" value={overview.integrations.email.provider} />
               <InfoCard label="Origem" value={overview.integrations.email.source === 'database' ? 'Banco de dados' : 'Variaveis de ambiente'} />
@@ -636,11 +636,11 @@ export default function AdministracaoPage() {
             </div>
             <div className="mt-5 grid gap-3">
               <div className="grid gap-3 md:grid-cols-2">
-                <label className="space-y-2 text-sm"><span className="font-medium text-charcoal dark:text-charcoal-100">Host SMTP</span><input value={emailForm.host} onChange={(event) => updateEmailField('host', event.target.value)} className="w-full rounded-2xl border border-blush-200 bg-white px-4 py-3 text-sm text-charcoal outline-none transition focus:border-rose-gold dark:border-charcoal-700 dark:bg-charcoal-800 dark:text-charcoal-100" placeholder={maskValue(overview.integrations.email.host, visibility.email)} /></label>
-                <label className="space-y-2 text-sm"><span className="font-medium text-charcoal dark:text-charcoal-100">Porta SMTP</span><input value={emailForm.port} onChange={(event) => updateEmailField('port', event.target.value)} className="w-full rounded-2xl border border-blush-200 bg-white px-4 py-3 text-sm text-charcoal outline-none transition focus:border-rose-gold dark:border-charcoal-700 dark:bg-charcoal-800 dark:text-charcoal-100" placeholder="587" /></label>
+                <label className="space-y-2 text-sm"><span className="font-medium text-charcoal dark:text-charcoal-100">Host SMTP</span><input value={emailForm.host} onChange={(event) => updateEmailField('host', event.target.value)} className="w-full rounded-md border border-blush-200 bg-white px-4 py-3 text-sm text-charcoal outline-none transition focus:border-rose-gold dark:border-charcoal-700 dark:bg-charcoal-800 dark:text-charcoal-100" placeholder={maskValue(overview.integrations.email.host, visibility.email)} /></label>
+                <label className="space-y-2 text-sm"><span className="font-medium text-charcoal dark:text-charcoal-100">Porta SMTP</span><input value={emailForm.port} onChange={(event) => updateEmailField('port', event.target.value)} className="w-full rounded-md border border-blush-200 bg-white px-4 py-3 text-sm text-charcoal outline-none transition focus:border-rose-gold dark:border-charcoal-700 dark:bg-charcoal-800 dark:text-charcoal-100" placeholder="587" /></label>
               </div>
               <div className="grid gap-3 md:grid-cols-2">
-                <label className="space-y-2 text-sm"><span className="font-medium text-charcoal dark:text-charcoal-100">Usuário SMTP</span><input value={emailForm.user} onChange={(event) => updateEmailField('user', event.target.value)} className="w-full rounded-2xl border border-blush-200 bg-white px-4 py-3 text-sm text-charcoal outline-none transition focus:border-rose-gold dark:border-charcoal-700 dark:bg-charcoal-800 dark:text-charcoal-100" placeholder={maskValue(overview.integrations.email.user, visibility.email)} /></label>
+                <label className="space-y-2 text-sm"><span className="font-medium text-charcoal dark:text-charcoal-100">Usuário SMTP</span><input value={emailForm.user} onChange={(event) => updateEmailField('user', event.target.value)} className="w-full rounded-md border border-blush-200 bg-white px-4 py-3 text-sm text-charcoal outline-none transition focus:border-rose-gold dark:border-charcoal-700 dark:bg-charcoal-800 dark:text-charcoal-100" placeholder={maskValue(overview.integrations.email.user, visibility.email)} /></label>
                 <label className="space-y-2 text-sm">
                   <span className="font-medium text-charcoal dark:text-charcoal-100">Segurança</span>
                   <div className={crmFieldSelectWrapper}>
@@ -652,16 +652,16 @@ export default function AdministracaoPage() {
                   </div>
                 </label>
               </div>
-              <label className="space-y-2 text-sm"><span className="font-medium text-charcoal dark:text-charcoal-100">Senha SMTP</span><input type="password" value={emailForm.password} onChange={(event) => updateEmailField('password', event.target.value)} className="w-full rounded-2xl border border-blush-200 bg-white px-4 py-3 text-sm text-charcoal outline-none transition focus:border-rose-gold dark:border-charcoal-700 dark:bg-charcoal-800 dark:text-charcoal-100" placeholder={overview.integrations.email.passwordConfigured ? (visibility.email ? 'Deixe em branco para manter a atual' : '****** senha configurada') : 'Digite a senha SMTP'} /></label>
+              <label className="space-y-2 text-sm"><span className="font-medium text-charcoal dark:text-charcoal-100">Senha SMTP</span><input type="password" value={emailForm.password} onChange={(event) => updateEmailField('password', event.target.value)} className="w-full rounded-md border border-blush-200 bg-white px-4 py-3 text-sm text-charcoal outline-none transition focus:border-rose-gold dark:border-charcoal-700 dark:bg-charcoal-800 dark:text-charcoal-100" placeholder={overview.integrations.email.passwordConfigured ? (visibility.email ? 'Deixe em branco para manter a atual' : '****** senha configurada') : 'Digite a senha SMTP'} /></label>
               <div className="grid gap-3 md:grid-cols-2">
-                <label className="space-y-2 text-sm"><span className="font-medium text-charcoal dark:text-charcoal-100">E-mail remetente</span><input value={emailForm.from} onChange={(event) => updateEmailField('from', event.target.value)} className="w-full rounded-2xl border border-blush-200 bg-white px-4 py-3 text-sm text-charcoal outline-none transition focus:border-rose-gold dark:border-charcoal-700 dark:bg-charcoal-800 dark:text-charcoal-100" placeholder={maskValue(overview.integrations.email.from, visibility.email)} /></label>
-                <label className="space-y-2 text-sm"><span className="font-medium text-charcoal dark:text-charcoal-100">Nome do remetente</span><input value={emailForm.fromName} onChange={(event) => updateEmailField('fromName', event.target.value)} className="w-full rounded-2xl border border-blush-200 bg-white px-4 py-3 text-sm text-charcoal outline-none transition focus:border-rose-gold dark:border-charcoal-700 dark:bg-charcoal-800 dark:text-charcoal-100" placeholder={maskValue(overview.integrations.email.fromName, visibility.email)} /></label>
+                <label className="space-y-2 text-sm"><span className="font-medium text-charcoal dark:text-charcoal-100">E-mail remetente</span><input value={emailForm.from} onChange={(event) => updateEmailField('from', event.target.value)} className="w-full rounded-md border border-blush-200 bg-white px-4 py-3 text-sm text-charcoal outline-none transition focus:border-rose-gold dark:border-charcoal-700 dark:bg-charcoal-800 dark:text-charcoal-100" placeholder={maskValue(overview.integrations.email.from, visibility.email)} /></label>
+                <label className="space-y-2 text-sm"><span className="font-medium text-charcoal dark:text-charcoal-100">Nome do remetente</span><input value={emailForm.fromName} onChange={(event) => updateEmailField('fromName', event.target.value)} className="w-full rounded-md border border-blush-200 bg-white px-4 py-3 text-sm text-charcoal outline-none transition focus:border-rose-gold dark:border-charcoal-700 dark:bg-charcoal-800 dark:text-charcoal-100" placeholder={maskValue(overview.integrations.email.fromName, visibility.email)} /></label>
               </div>
-              <label className="space-y-2 text-sm"><span className="font-medium text-charcoal dark:text-charcoal-100">E-mail administrativo</span><input value={emailForm.adminEmail} onChange={(event) => updateEmailField('adminEmail', event.target.value)} className="w-full rounded-2xl border border-blush-200 bg-white px-4 py-3 text-sm text-charcoal outline-none transition focus:border-rose-gold dark:border-charcoal-700 dark:bg-charcoal-800 dark:text-charcoal-100" placeholder={maskValue(overview.integrations.email.adminEmail, visibility.email)} /></label>
+              <label className="space-y-2 text-sm"><span className="font-medium text-charcoal dark:text-charcoal-100">E-mail administrativo</span><input value={emailForm.adminEmail} onChange={(event) => updateEmailField('adminEmail', event.target.value)} className="w-full rounded-md border border-blush-200 bg-white px-4 py-3 text-sm text-charcoal outline-none transition focus:border-rose-gold dark:border-charcoal-700 dark:bg-charcoal-800 dark:text-charcoal-100" placeholder={maskValue(overview.integrations.email.adminEmail, visibility.email)} /></label>
             </div>
             <div className="mt-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
               <p className="text-xs leading-6 text-charcoal-400 dark:text-charcoal-500">Se a senha ficar vazia, o valor atual sera preservado. As alteracoes entram em uso assim que forem salvas.</p>
-              <button type="button" onClick={() => void handleEmailSave()} disabled={emailSaving} className="inline-flex items-center gap-2 rounded-2xl border border-blush-300 bg-white px-4 py-3 text-sm font-medium text-charcoal transition-colors hover:bg-blush disabled:opacity-60 dark:border-charcoal-600 dark:bg-charcoal-800 dark:text-charcoal-100 dark:hover:bg-charcoal-700">
+              <button type="button" onClick={() => void handleEmailSave()} disabled={emailSaving} className="inline-flex items-center gap-2 rounded border border-blush-300 bg-white px-4 py-3 text-sm font-medium text-charcoal transition-colors hover:bg-blush disabled:opacity-60 dark:border-charcoal-600 dark:bg-charcoal-800 dark:text-charcoal-100 dark:hover:bg-charcoal-700">
                 {emailSaving ? <Loader2 size={15} className="animate-spin" /> : <Mail size={15} />}
                 Salvar dados de e-mail
               </button>
@@ -679,19 +679,19 @@ export default function AdministracaoPage() {
               <InfoCard label="WhatsApp Config ID" value={maskValue(overview.environment.whatsappEmbeddedSignupConfigId, visibility.environment)} breakAll />
               <InfoCard label="Storage" value={overview.infrastructure.storageDriver} note="Driver atual usado para uploads." />
             </div>
-            <div className="mt-5 rounded-3xl border border-blush-200 bg-cream/70 p-4 dark:border-charcoal-700 dark:bg-charcoal-800/60">
+            <div className="mt-5 rounded-lg border border-blush-200 bg-cream/70 p-4 dark:border-charcoal-700 dark:bg-charcoal-800/60">
               <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
                 <div>
                   <p className="text-sm font-semibold text-charcoal dark:text-charcoal-50">Origens liberadas em CORS</p>
                   <p className="mt-1 text-xs leading-5 text-charcoal-500 dark:text-charcoal-400">{overview.environment.corsOrigins.length} origem(ns) configurada(s).</p>
                 </div>
-                <StatusPill ok={visibility.environment} label={visibility.environment ? 'Lista visivel' : 'Lista oculta'} />
+                <StatusPill ok={visibility.environment} label={visibility.environment ? 'Lista visível' : 'Lista oculta'} />
               </div>
               <div className="mt-4 space-y-2">
                 {visibility.environment ? overview.environment.corsOrigins.map((origin) => (
-                  <div key={origin} className="rounded-2xl border border-blush-200 bg-white px-4 py-3 text-sm font-medium text-charcoal break-all dark:border-charcoal-700 dark:bg-charcoal-900 dark:text-charcoal-100">{origin}</div>
+                  <div key={origin} className="rounded border border-blush-200 bg-white px-4 py-3 text-sm font-medium text-charcoal break-all dark:border-charcoal-700 dark:bg-charcoal-900 dark:text-charcoal-100">{origin}</div>
                 )) : (
-                  <div className="rounded-2xl border border-dashed border-blush-300 bg-white px-4 py-3 text-sm text-charcoal-500 dark:border-charcoal-700 dark:bg-charcoal-900 dark:text-charcoal-400">A lista de origens está oculta. Abra a seção para exibir os valores completos.</div>
+                  <div className="rounded border border-dashed border-blush-300 bg-white px-4 py-3 text-sm text-charcoal-500 dark:border-charcoal-700 dark:bg-charcoal-900 dark:text-charcoal-400">A lista de origens está oculta. Abra a seção para exibir os valores completos.</div>
                 )}
               </div>
             </div>

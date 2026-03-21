@@ -50,7 +50,7 @@ function ExitIntentModal({ onClose, waLink }: { onClose: () => void; waLink: str
     >
       <motion.div
         ref={modalRef}
-        className="relative w-full max-w-sm bg-white rounded-3xl overflow-hidden shadow-2xl"
+        className="relative w-full max-w-sm bg-white rounded-lg overflow-hidden shadow-2xl"
         initial={{ scale: 0.8, opacity: 0, y: 40 }}
         animate={{ scale: 1, opacity: 1, y: 0 }}
         exit={{ scale: 0.8, opacity: 0, y: 40 }}

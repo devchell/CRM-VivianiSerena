@@ -111,8 +111,8 @@ function StatusBanner({ status, lastCheck }: { status: 'green' | 'yellow' | 'red
   const Icon = cfg.icon
 
   return (
-    <div className={`rounded-2xl border p-5 flex items-center gap-5 ${cfg.bg}`}>
-      <div className={`w-16 h-16 rounded-2xl flex items-center justify-center flex-shrink-0 ${cfg.bg}`}>
+    <div className={`rounded-lg border p-5 flex items-center gap-5 ${cfg.bg}`}>
+      <div className={`w-16 h-16 rounded-lg flex items-center justify-center flex-shrink-0 ${cfg.bg}`}>
         <Icon size={32} className={cfg.text} />
       </div>
       <div className="flex-1 min-w-0">
@@ -134,7 +134,7 @@ function KpiCard({ icon: Icon, label, value, sub, color, bg }: {
 }) {
   return (
     <div className="card-dark p-5 shadow-sm">
-      <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${bg} mb-3`}>
+      <div className={`w-9 h-9 rounded-md flex items-center justify-center ${bg} mb-3`}>
         <Icon size={18} className={color} />
       </div>
       <p className="text-xs text-charcoal-400 dark:text-charcoal-500">{label}</p>
@@ -162,7 +162,7 @@ function ChecklistPanel({ items, loading }: { items: ChecklistItem[]; loading: b
       {items.map(item => {
         const isOpen = expanded === item.id
         return (
-          <div key={item.id} className="rounded-xl border border-blush-200 dark:border-charcoal-700 overflow-hidden">
+          <div key={item.id} className="rounded-md border border-blush-200 dark:border-charcoal-700 overflow-hidden">
             <button
               onClick={() => setExpanded(isOpen ? null : item.id)}
               className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-blush-50 dark:hover:bg-charcoal-700/30 transition-colors"
@@ -199,7 +199,7 @@ function EventModal({ event, onClose }: { event: SecurityEvent; onClose: () => v
   const sev = SEVERITY_CFG[event.severity]
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-charcoal/60 backdrop-blur-sm" onClick={onClose}>
-      <div className="bg-white dark:bg-charcoal-800 rounded-2xl shadow-2xl w-full max-w-lg p-6" onClick={e => e.stopPropagation()}>
+      <div className="bg-white dark:bg-charcoal-800 rounded-lg shadow-2xl w-full max-w-lg p-6" onClick={e => e.stopPropagation()}>
         <div className="flex items-start justify-between mb-5">
           <div>
             <h3 className="font-heading text-base font-bold text-charcoal dark:text-charcoal-50">Detalhes do Evento</h3>
@@ -245,7 +245,7 @@ function EventModal({ event, onClose }: { event: SecurityEvent; onClose: () => v
           )}
         </div>
 
-        <button onClick={onClose} className="mt-5 w-full py-2.5 rounded-xl bg-blush dark:bg-charcoal-700 text-charcoal dark:text-charcoal-100 text-sm font-medium hover:bg-blush-200 dark:hover:bg-charcoal-600 transition-colors">
+        <button onClick={onClose} className="mt-5 w-full py-2.5 rounded-md bg-blush dark:bg-charcoal-700 text-charcoal dark:text-charcoal-100 text-sm font-medium hover:bg-blush-200 dark:hover:bg-charcoal-600 transition-colors">
           Fechar
         </button>
       </div>
@@ -274,7 +274,7 @@ function BlockIpModal({ onClose, onBlock }: {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-charcoal/60 backdrop-blur-sm" onClick={onClose}>
-      <div className="bg-white dark:bg-charcoal-800 rounded-2xl shadow-2xl w-full max-w-sm p-6" onClick={e => e.stopPropagation()}>
+      <div className="bg-white dark:bg-charcoal-800 rounded-lg shadow-2xl w-full max-w-sm p-6" onClick={e => e.stopPropagation()}>
         <div className="flex items-center justify-between mb-5">
           <h3 className="font-heading text-base font-bold text-charcoal dark:text-charcoal-50">Bloquear IP</h3>
           <button onClick={onClose} className="p-1.5 rounded-lg text-charcoal-400 hover:bg-blush dark:hover:bg-charcoal-700 transition-colors"><X size={18} /></button>
@@ -287,7 +287,7 @@ function BlockIpModal({ onClose, onBlock }: {
               value={ip}
               onChange={e => setIp(e.target.value)}
               placeholder="ex: 192.168.1.100"
-              className="w-full px-3 py-2.5 rounded-xl border border-blush-300 dark:border-charcoal-600 bg-white dark:bg-charcoal-700 text-charcoal dark:text-charcoal-100 text-sm focus:outline-none focus:ring-2 focus:ring-rose-gold/30"
+              className="w-full px-3 py-2.5 rounded-md border border-blush-300 dark:border-charcoal-600 bg-white dark:bg-charcoal-700 text-charcoal dark:text-charcoal-100 text-sm focus:outline-none focus:ring-2 focus:ring-rose-gold/30"
               pattern="^(\d{1,3}\.){3}\d{1,3}$"
               required
             />
@@ -306,8 +306,8 @@ function BlockIpModal({ onClose, onBlock }: {
             </div>
           </div>
           <div className="flex gap-3 pt-1">
-            <button type="button" onClick={onClose} className="flex-1 py-2.5 rounded-xl border border-blush-300 dark:border-charcoal-600 text-charcoal dark:text-charcoal-100 text-sm font-medium hover:bg-blush dark:hover:bg-charcoal-700 transition-colors">Cancelar</button>
-            <button type="submit" disabled={loading} className="flex-1 py-2.5 rounded-xl bg-red-500 text-white text-sm font-medium hover:bg-red-600 disabled:opacity-50 transition-colors flex items-center justify-center gap-2">
+            <button type="button" onClick={onClose} className="flex-1 py-2.5 rounded-md border border-blush-300 dark:border-charcoal-600 text-charcoal dark:text-charcoal-100 text-sm font-medium hover:bg-blush dark:hover:bg-charcoal-700 transition-colors">Cancelar</button>
+            <button type="submit" disabled={loading} className="flex-1 py-2.5 rounded-md bg-red-500 text-white text-sm font-medium hover:bg-red-600 disabled:opacity-50 transition-colors flex items-center justify-center gap-2">
               {loading ? <RefreshCw size={14} className="animate-spin" /> : <Lock size={14} />}
               Bloquear
             </button>
@@ -699,7 +699,7 @@ export default function SegurancaPage() {
               <button
                 onClick={() => setShowBlockModal(true)}
                 disabled={!canManageSecurity}
-                className="w-full flex items-center gap-3 px-4 py-3 rounded-xl border border-red-400/20 text-red-400 hover:bg-red-500/10 transition-colors text-sm disabled:opacity-40 disabled:cursor-not-allowed"
+                className="w-full flex items-center gap-3 px-4 py-3 rounded-md border border-red-400/20 text-red-400 hover:bg-red-500/10 transition-colors text-sm disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 <Lock size={16} />
                 <div className="text-left">
@@ -709,7 +709,7 @@ export default function SegurancaPage() {
               </button>
               <button
                 onClick={handleExportPDF}
-                className="w-full flex items-center gap-3 px-4 py-3 rounded-xl border border-blush-300 dark:border-charcoal-600 text-charcoal dark:text-charcoal-100 hover:bg-blush-50 dark:hover:bg-charcoal-700/30 transition-colors text-sm"
+                className="w-full flex items-center gap-3 px-4 py-3 rounded-md border border-blush-300 dark:border-charcoal-600 text-charcoal dark:text-charcoal-100 hover:bg-blush-50 dark:hover:bg-charcoal-700/30 transition-colors text-sm"
               >
                 <Download size={16} className="text-charcoal-400" />
                 <div className="text-left">
@@ -720,7 +720,7 @@ export default function SegurancaPage() {
               <button
                 onClick={handleTestAlert}
                 disabled={!canManageSecurity}
-                className="w-full flex items-center gap-3 px-4 py-3 rounded-xl border border-blue-400/20 text-blue-400 hover:bg-blue-500/10 transition-colors text-sm disabled:opacity-40 disabled:cursor-not-allowed"
+                className="w-full flex items-center gap-3 px-4 py-3 rounded-md border border-blue-400/20 text-blue-400 hover:bg-blue-500/10 transition-colors text-sm disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 <Wifi size={16} />
                 <div className="text-left">
@@ -767,7 +767,7 @@ export default function SegurancaPage() {
           <span className="text-xs text-charcoal-400 dark:text-charcoal-500 ml-auto">Volume de acessos por hora</span>
         </div>
         {activityLoading ? (
-          <div className="h-48 rounded-xl bg-blush-50 dark:bg-charcoal-700/20 animate-pulse" />
+          <div className="h-48 rounded-md bg-blush-50 dark:bg-charcoal-700/20 animate-pulse" />
         ) : (
           <ResponsiveContainer width="100%" height={200}>
             <BarChart data={activity} margin={{ top: 0, right: 0, left: -20, bottom: 0 }}>

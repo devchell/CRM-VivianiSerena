@@ -163,7 +163,7 @@ export function HowItWorks() {
 
         {/* Info técnica Q-Switched */}
         <motion.div
-          className="mt-16 p-8 rounded-2xl bg-charcoal text-white relative overflow-hidden"
+          className="mt-16 p-8 rounded-lg bg-charcoal text-white relative overflow-hidden"
           initial={{ opacity: 0, y: 24 }}
           animate={isInView ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 0.6, delay: 0.5 }}
@@ -186,7 +186,7 @@ export function HowItWorks() {
                 { value: 'ANVISA', label: 'Equipamento aprovado' },
                 { value: '100%', label: 'Seguro pele morena' },
               ].map(stat => (
-                <div key={stat.label} className="text-center p-3 rounded-xl bg-white/5 border border-white/10">
+                <div key={stat.label} className="text-center p-3 rounded-md bg-white/5 border border-white/10">
                   <div className="font-heading text-xl font-bold text-rose-gold">{stat.value}</div>
                   <div className="text-white/50 text-xs mt-1">{stat.label}</div>
                 </div>

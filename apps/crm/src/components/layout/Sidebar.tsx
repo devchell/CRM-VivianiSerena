@@ -29,9 +29,9 @@ const NAV_ITEMS: NavItem[] = [
   { href: '/agenda', label: 'Agenda', icon: Calendar, module: 'agenda' },
   { href: '/financeiro', label: 'Financeiro', icon: DollarSign, module: 'financeiro' },
   { href: '/editar-site', label: 'Editar Site', icon: Paintbrush, module: 'editar-site' },
-  { href: '/seguranca', label: 'Seguranca', icon: Shield, module: 'seguranca' },
+  { href: '/seguranca', label: 'Segurança', icon: Shield, module: 'seguranca' },
   { href: '/colaboradores', label: 'Colaboradores', icon: UserCheck, permission: 'users.manage' },
-  { href: '/administracao', label: 'Administracao', icon: Settings, permission: 'users.manage' },
+  { href: '/administracao', label: 'Administração', icon: Settings, permission: 'users.manage' },
 ]
 
 function getRoleLabel(profile: string | null, isAdmin: boolean) {

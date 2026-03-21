@@ -207,7 +207,7 @@ interface ToggleFieldProps {
 
 const ToggleField = memo(function ToggleField({ enabled, onToggle, label, description }: ToggleFieldProps) {
   return (
-    <div className="rounded-xl border border-blush-200 dark:border-charcoal-600 bg-white dark:bg-charcoal-800 overflow-hidden">
+    <div className="rounded-md border border-blush-200 dark:border-charcoal-600 bg-white dark:bg-charcoal-800 overflow-hidden">
       <div className="flex items-center justify-between gap-4 px-4 py-3">
         <div className="min-w-0 flex-1">
           <p className="text-sm font-semibold text-charcoal dark:text-charcoal-100 leading-snug">{label}</p>
@@ -653,10 +653,10 @@ export default function EditarSitePage() {
       if (iframeRef.current) {
         iframeRef.current.src = `${LANDING_URL}?t=${Date.now()}`
       }
-      toast.success(`Versao ${entry.version} restaurada com sucesso`)
+      toast.success(`Versão ${entry.version} restaurada com sucesso`)
       await fetchHistory()
     } catch {
-      toast.error('Erro ao restaurar esta versao')
+      toast.error('Erro ao restaurar esta versão')
     } finally {
       setRestoringHistoryId(null)
     }
@@ -669,7 +669,7 @@ export default function EditarSitePage() {
       <div>
         <label className={labelCls}>{label}</label>
         <div
-          className="border-2 border-dashed border-blush-200 dark:border-charcoal-600 rounded-xl p-4 text-center transition-colors hover:border-rose-gold/50 cursor-pointer relative bg-cream dark:bg-charcoal-900"
+          className="border-2 border-dashed border-blush-200 dark:border-charcoal-600 rounded-md p-4 text-center transition-colors hover:border-rose-gold/50 cursor-pointer relative bg-cream dark:bg-charcoal-900"
           onDragOver={e => e.preventDefault()}
           onDrop={e => { e.preventDefault(); const f = e.dataTransfer.files[0]; if (f) handleImageUpload(section, fieldKey, f) }}
           onClick={() => {
@@ -735,7 +735,7 @@ export default function EditarSitePage() {
     label: string
     description: string
   }) => (
-    <div className="space-y-3 rounded-xl border border-blush-200 bg-cream p-4 dark:border-charcoal-600 dark:bg-charcoal-700">
+    <div className="space-y-3 rounded-md border border-blush-200 bg-cream p-4 dark:border-charcoal-600 dark:bg-charcoal-700">
       <p className="text-xs text-charcoal-400 dark:text-charcoal-500">{description}</p>
       <ImageField section={section} fieldKey={fieldKey} label={label} />
     </div>
@@ -756,7 +756,7 @@ export default function EditarSitePage() {
               : true
 
             return (
-              <div className="space-y-3 rounded-xl border border-blush-200 bg-cream p-4 dark:border-charcoal-600 dark:bg-charcoal-700">
+              <div className="space-y-3 rounded-md border border-blush-200 bg-cream p-4 dark:border-charcoal-600 dark:bg-charcoal-700">
                 <ToggleField
                   enabled={socialProofEnabled}
                   onToggle={() => setSubVal('contact', 'social_proof', 'enabled', !socialProofEnabled)}
@@ -1029,7 +1029,7 @@ export default function EditarSitePage() {
             />
 
             {results.map((item, idx) => (
-              <div key={item.id || idx} className="space-y-3 rounded-xl border border-blush-200 bg-cream p-4 dark:border-charcoal-600 dark:bg-charcoal-700">
+              <div key={item.id || idx} className="space-y-3 rounded-md border border-blush-200 bg-cream p-4 dark:border-charcoal-600 dark:bg-charcoal-700">
                 <div className="flex items-center justify-between gap-3">
                   <button
                     type="button"
@@ -1106,7 +1106,7 @@ export default function EditarSitePage() {
                               <div className="flex h-full items-center justify-center text-xs text-charcoal-400">Sem imagem</div>
                             )}
                           </div>
-                          <label className="flex cursor-pointer items-center justify-center gap-2 rounded-xl border-2 border-dashed border-blush-200 px-3 py-2 text-xs text-charcoal-400 transition-colors hover:border-rose-gold/50 hover:text-rose-gold dark:border-charcoal-600">
+                          <label className="flex cursor-pointer items-center justify-center gap-2 rounded-md border-2 border-dashed border-blush-200 px-3 py-2 text-xs text-charcoal-400 transition-colors hover:border-rose-gold/50 hover:text-rose-gold dark:border-charcoal-600">
                             <Upload size={14} /> Adicionar imagem
                             <input
                               type="file"
@@ -1142,7 +1142,7 @@ export default function EditarSitePage() {
                               <div className="flex h-full items-center justify-center text-xs text-charcoal-400">Sem imagem</div>
                             )}
                           </div>
-                          <label className="flex cursor-pointer items-center justify-center gap-2 rounded-xl border-2 border-dashed border-blush-200 px-3 py-2 text-xs text-charcoal-400 transition-colors hover:border-rose-gold/50 hover:text-rose-gold dark:border-charcoal-600">
+                          <label className="flex cursor-pointer items-center justify-center gap-2 rounded-md border-2 border-dashed border-blush-200 px-3 py-2 text-xs text-charcoal-400 transition-colors hover:border-rose-gold/50 hover:text-rose-gold dark:border-charcoal-600">
                             <Upload size={14} /> Adicionar imagem
                             <input
                               type="file"
@@ -1168,7 +1168,7 @@ export default function EditarSitePage() {
                           type="button"
                           onClick={() => void handleSaveResult(item.id)}
                           disabled={savingResultId === item.id}
-                          className="inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-rose-gold px-4 text-sm font-medium text-white transition-colors hover:bg-rose-gold-500 disabled:cursor-not-allowed disabled:opacity-60"
+                          className="inline-flex h-10 items-center justify-center gap-2 rounded-md bg-rose-gold px-4 text-sm font-medium text-white transition-colors hover:bg-rose-gold-500 disabled:cursor-not-allowed disabled:opacity-60"
                         >
                           {savingResultId === item.id ? (
                             <>
@@ -1191,7 +1191,7 @@ export default function EditarSitePage() {
               </div>
             ))}
 
-            <div className="space-y-2 rounded-xl border border-blush-200 bg-white p-3 dark:border-charcoal-600 dark:bg-charcoal-800">
+            <div className="space-y-2 rounded-md border border-blush-200 bg-white p-3 dark:border-charcoal-600 dark:bg-charcoal-800">
               <div className="flex flex-col gap-2 md:flex-row md:items-end">
                 <div className="flex-1">
                   <label className={labelCls}>Criar categoria</label>
@@ -1206,7 +1206,7 @@ export default function EditarSitePage() {
                 <button
                   type="button"
                   onClick={handleAddCategory}
-                  className="inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-rose-gold px-4 text-sm font-medium text-white transition-colors hover:bg-rose-gold-500"
+                  className="inline-flex h-10 items-center justify-center gap-2 rounded-md bg-rose-gold px-4 text-sm font-medium text-white transition-colors hover:bg-rose-gold-500"
                 >
                   <Plus size={14} /> Salvar categoria
                 </button>
@@ -1234,7 +1234,7 @@ export default function EditarSitePage() {
             <button
               type="button"
               onClick={handleCreateResult}
-              className="flex w-full items-center justify-center gap-2 rounded-xl border-2 border-dashed border-blush-200 py-2.5 text-sm text-charcoal-400 transition-colors hover:border-rose-gold/50 hover:text-rose-gold dark:border-charcoal-600"
+              className="flex w-full items-center justify-center gap-2 rounded-md border-2 border-dashed border-blush-200 py-2.5 text-sm text-charcoal-400 transition-colors hover:border-rose-gold/50 hover:text-rose-gold dark:border-charcoal-600"
             >
               <Plus size={14} /> Criar novo resultado
             </button>
@@ -1271,13 +1271,13 @@ export default function EditarSitePage() {
             />
 
             {googleEnabled && (
-              <div className="space-y-3 rounded-xl border border-blush-200 bg-cream p-4 dark:border-charcoal-600 dark:bg-charcoal-700">
+              <div className="space-y-3 rounded-md border border-blush-200 bg-cream p-4 dark:border-charcoal-600 dark:bg-charcoal-700">
                 <div className="flex flex-wrap items-center gap-2">
                   <button
                     type="button"
                     onClick={handleConnectGoogleAccount}
                     disabled={googleConnecting}
-                    className="inline-flex items-center gap-2 rounded-xl bg-rose-gold px-3 py-2 text-xs font-semibold text-white transition-colors hover:bg-rose-gold/90 disabled:cursor-not-allowed disabled:opacity-70"
+                    className="inline-flex items-center gap-2 rounded-md bg-rose-gold px-3 py-2 text-xs font-semibold text-white transition-colors hover:bg-rose-gold/90 disabled:cursor-not-allowed disabled:opacity-70"
                   >
                     {googleConnecting ? <Loader2 size={14} className="animate-spin" /> : <Link2 size={14} />}
                     Vincular sua conta do Google
@@ -1286,7 +1286,7 @@ export default function EditarSitePage() {
                     type="button"
                     onClick={fetchGoogleBusinessLocations}
                     disabled={loadingGoogleLocations}
-                    className="inline-flex items-center gap-2 rounded-xl border border-blush-200 px-3 py-2 text-xs font-semibold text-charcoal-500 transition-colors hover:border-rose-gold/40 hover:text-rose-gold disabled:cursor-not-allowed disabled:opacity-70 dark:border-charcoal-600 dark:text-charcoal-300"
+                    className="inline-flex items-center gap-2 rounded-md border border-blush-200 px-3 py-2 text-xs font-semibold text-charcoal-500 transition-colors hover:border-rose-gold/40 hover:text-rose-gold disabled:cursor-not-allowed disabled:opacity-70 dark:border-charcoal-600 dark:text-charcoal-300"
                   >
                     {loadingGoogleLocations ? <Loader2 size={14} className="animate-spin" /> : <RefreshCw size={14} />}
                     Buscar perfis do Google Empresa
@@ -1305,7 +1305,7 @@ export default function EditarSitePage() {
                     {linkedLocations.map((location) => (
                       <div
                         key={`${location.accountName}-${location.locationId}`}
-                        className="flex items-start justify-between gap-3 rounded-xl border border-blush-200 bg-white p-3 dark:border-charcoal-600 dark:bg-charcoal-800"
+                        className="flex items-start justify-between gap-3 rounded-md border border-blush-200 bg-white p-3 dark:border-charcoal-600 dark:bg-charcoal-800"
                       >
                         <div className="min-w-0">
                           <p className="text-sm font-semibold text-charcoal dark:text-charcoal-100">{location.title}</p>
@@ -1336,14 +1336,14 @@ export default function EditarSitePage() {
 
                 <div className="space-y-2">
                   <p className="text-xs font-semibold uppercase tracking-[0.18em] text-charcoal-400 dark:text-charcoal-500">
-                    Perfis disponiveis para adicionar
+                    Perfis disponíveis para adicionar
                   </p>
 
                   {availableLocations.length > 0 ? (
                     availableLocations.map((location) => (
                       <div
                         key={`${location.accountName}-${location.locationId}`}
-                        className="flex items-start justify-between gap-3 rounded-xl border border-blush-200 bg-white p-3 dark:border-charcoal-600 dark:bg-charcoal-800"
+                        className="flex items-start justify-between gap-3 rounded-md border border-blush-200 bg-white p-3 dark:border-charcoal-600 dark:bg-charcoal-800"
                       >
                         <div className="min-w-0">
                           <p className="text-sm font-semibold text-charcoal dark:text-charcoal-100">{location.title}</p>
@@ -1362,10 +1362,10 @@ export default function EditarSitePage() {
                       </div>
                     ))
                   ) : (
-                    <div className="rounded-xl border border-dashed border-blush-200 px-3 py-4 text-center text-xs text-charcoal-400 dark:border-charcoal-600 dark:text-charcoal-500">
+                    <div className="rounded-md border border-dashed border-blush-200 px-3 py-4 text-center text-xs text-charcoal-400 dark:border-charcoal-600 dark:text-charcoal-500">
                       {loadingGoogleLocations
                         ? 'Buscando perfis do Google Empresa...'
-                        : 'Nenhum novo perfil encontrado. Use o botao acima para buscar novamente apos vincular a conta.'}
+                        : 'Nenhum novo perfil encontrado. Use o botão acima para buscar novamente após vincular a conta.'}
                     </div>
                   )}
                 </div>
@@ -1377,7 +1377,7 @@ export default function EditarSitePage() {
                 Depoimentos manuais
               </p>
             {testimonials.map((t, idx) => (
-              <div key={t.id || idx} className="relative space-y-2.5 rounded-xl border border-blush-200 bg-cream p-4 dark:border-charcoal-600 dark:bg-charcoal-700">
+              <div key={t.id || idx} className="relative space-y-2.5 rounded-md border border-blush-200 bg-cream p-4 dark:border-charcoal-600 dark:bg-charcoal-700">
                 <button
                   type="button"
                   onClick={() => setVal('testimonials', 'manual_items', testimonials.filter((_, i) => i !== idx))}
@@ -1443,7 +1443,7 @@ export default function EditarSitePage() {
                   stars: 5,
                 },
               ])}
-              className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl border-2 border-dashed border-blush-200 dark:border-charcoal-600 text-charcoal-400 hover:text-rose-gold hover:border-rose-gold/50 transition-colors text-sm"
+              className="w-full flex items-center justify-center gap-2 py-2.5 rounded-md border-2 border-dashed border-blush-200 dark:border-charcoal-600 text-charcoal-400 hover:text-rose-gold hover:border-rose-gold/50 transition-colors text-sm"
             >
               <Plus size={14} /> Adicionar depoimento
             </button>
@@ -1469,7 +1469,7 @@ export default function EditarSitePage() {
           </div>
           <div className="flex-1 p-3 space-y-2">
             {SECTIONS.map(([k]) => (
-              <div key={k} className="h-12 bg-blush-100 dark:bg-charcoal-700/60 rounded-xl animate-pulse" />
+              <div key={k} className="h-12 bg-blush-100 dark:bg-charcoal-700/60 rounded-md animate-pulse" />
             ))}
           </div>
         </div>
@@ -1600,8 +1600,8 @@ export default function EditarSitePage() {
       {/* ── Publish Modal ─────────────────────────────────────────────── */}
       {showPublishModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
-          <div className="bg-white dark:bg-charcoal-900 border border-blush-200 dark:border-charcoal-700 rounded-2xl w-full max-w-sm shadow-2xl p-8 text-center">
-            <div className="w-14 h-14 bg-rose-gold/10 rounded-2xl flex items-center justify-center mx-auto mb-4">
+          <div className="bg-white dark:bg-charcoal-900 border border-blush-200 dark:border-charcoal-700 rounded-lg w-full max-w-sm shadow-2xl p-8 text-center">
+            <div className="w-14 h-14 bg-rose-gold/10 rounded-lg flex items-center justify-center mx-auto mb-4">
               <Send size={24} className="text-rose-gold" />
             </div>
             <h3 className="font-heading text-lg font-bold text-charcoal dark:text-charcoal-50 mb-2">Publicar Alterações</h3>
@@ -1611,11 +1611,11 @@ export default function EditarSitePage() {
             <div className="flex gap-3">
               <button
                 onClick={() => setShowPublishModal(false)}
-                className="flex-1 px-4 py-2.5 rounded-xl border border-blush-200 dark:border-charcoal-600 text-charcoal-500 dark:text-charcoal-400 text-sm hover:bg-blush dark:hover:bg-charcoal-700 transition-colors"
+                className="flex-1 px-4 py-2.5 rounded-md border border-blush-200 dark:border-charcoal-600 text-charcoal-500 dark:text-charcoal-400 text-sm hover:bg-blush dark:hover:bg-charcoal-700 transition-colors"
               >Cancelar</button>
               <button
                 onClick={handlePublish}
-                className="flex-1 px-4 py-2.5 rounded-xl bg-rose-gold text-white text-sm font-semibold hover:bg-rose-gold/90 transition-colors"
+                className="flex-1 px-4 py-2.5 rounded-md bg-rose-gold text-white text-sm font-semibold hover:bg-rose-gold/90 transition-colors"
               >Publicar</button>
             </div>
           </div>
@@ -1628,7 +1628,7 @@ export default function EditarSitePage() {
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4"
           onClick={e => e.target === e.currentTarget && setShowHistory(false)}
         >
-          <div className="bg-white dark:bg-charcoal-900 border border-blush-200 dark:border-charcoal-700 rounded-2xl w-full max-w-md shadow-2xl max-h-[70vh] overflow-y-auto">
+          <div className="bg-white dark:bg-charcoal-900 border border-blush-200 dark:border-charcoal-700 rounded-lg w-full max-w-md shadow-2xl max-h-[70vh] overflow-y-auto">
             <div className="flex items-center justify-between p-6 border-b border-blush-200 dark:border-charcoal-700 sticky top-0 bg-white dark:bg-charcoal-900">
               <h3 className="font-heading text-base font-semibold text-charcoal dark:text-charcoal-50">Versões Anteriores</h3>
               <button onClick={() => setShowHistory(false)} className="text-charcoal-400 hover:text-charcoal dark:hover:text-charcoal-200 transition-colors"><X size={18} /></button>

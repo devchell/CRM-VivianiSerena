@@ -146,11 +146,11 @@ const STATUS_CONFIG: Record<string, { label: string; color: string; icon: typeof
 }
 
 const SOURCE_LABELS: Record<string, string> = {
-  organic: 'Organico',
+  organic: 'Orgânico',
   instagram: 'Instagram',
   facebook: 'Facebook',
   google_ads: 'Google Ads',
-  referral: 'Indicacao',
+  referral: 'Indicação',
   whatsapp: 'WhatsApp',
   other: 'Outro',
 }
@@ -243,7 +243,7 @@ export function LeadsTable() {
       setLeads(listResponse.data ?? [])
       setLeadStats(statsResponse.data)
     } catch {
-      toast.error('Erro ao carregar operacao de leads')
+      toast.error('Erro ao carregar operação de leads')
     } finally {
       setLoading(false)
     }
@@ -499,7 +499,7 @@ export function LeadsTable() {
     },
     {
       id: 'actions',
-      header: 'Acoes',
+      header: 'Ações',
       cell: ({ row }) => {
         const isExpanded = expandedLeadId === row.original.id
 
@@ -508,7 +508,7 @@ export function LeadsTable() {
             <button
               type="button"
               onClick={() => void handleExpandLead(row.original.id)}
-              className="inline-flex items-center gap-1 rounded-xl border border-blush-300 px-3 py-2 text-xs font-medium text-charcoal-500 transition-colors hover:border-rose-gold/40 hover:text-rose-gold dark:border-charcoal-600 dark:text-charcoal-300"
+              className="inline-flex items-center gap-1 rounded border border-blush-300 px-3 py-2 text-xs font-medium text-charcoal-500 transition-colors hover:border-rose-gold/40 hover:text-rose-gold dark:border-charcoal-600 dark:text-charcoal-300"
             >
               <ChevronRight size={14} className={isExpanded ? 'rotate-90 transition-transform' : 'transition-transform'} />
               Detalhes
@@ -517,7 +517,7 @@ export function LeadsTable() {
               type="button"
               onClick={() => openEditModal(row.original)}
               disabled={!canUpdateLeads}
-              className="inline-flex items-center gap-1 rounded-xl border border-blush-300 px-3 py-2 text-xs font-medium text-charcoal-500 transition-colors hover:border-rose-gold/40 hover:text-rose-gold disabled:cursor-not-allowed disabled:opacity-50 dark:border-charcoal-600 dark:text-charcoal-300"
+              className="inline-flex items-center gap-1 rounded border border-blush-300 px-3 py-2 text-xs font-medium text-charcoal-500 transition-colors hover:border-rose-gold/40 hover:text-rose-gold disabled:cursor-not-allowed disabled:opacity-50 dark:border-charcoal-600 dark:text-charcoal-300"
             >
               <Pencil size={14} />
               Editar
@@ -545,7 +545,7 @@ export function LeadsTable() {
           const Icon = item.icon
 
           return (
-            <div key={item.label} className="card-dark rounded-[28px] p-5 shadow-sm">
+            <div key={item.label} className="card-dark rounded-lg p-5 shadow-sm">
               <div className="flex items-center justify-between gap-3">
                 <div>
                   <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-charcoal-400 dark:text-charcoal-500">
@@ -571,7 +571,7 @@ export function LeadsTable() {
             <input
               value={searchFilter}
               onChange={e => setSearchFilter(e.target.value)}
-              placeholder="Buscar por nome, email, telefone ou observacao"
+              placeholder="Buscar por nome, email, telefone ou observação"
               className={crmListSearchInput}
             />
           </div>
@@ -630,7 +630,7 @@ export function LeadsTable() {
           <button
             type="button"
             onClick={handleResetFilters}
-            className="inline-flex items-center gap-2 rounded-2xl border border-blush-300 px-4 py-3 text-sm font-medium text-charcoal-500 transition-colors hover:border-rose-gold/40 hover:text-rose-gold dark:border-charcoal-600 dark:text-charcoal-300"
+            className="inline-flex items-center gap-2 rounded border border-blush-300 px-4 py-3 text-sm font-medium text-charcoal-500 transition-colors hover:border-rose-gold/40 hover:text-rose-gold dark:border-charcoal-600 dark:text-charcoal-300"
           >
             <FilterX size={14} />
             Limpar
@@ -642,7 +642,7 @@ export function LeadsTable() {
             type="button"
             onClick={openCreateModal}
             disabled={!canCreateLeads}
-            className="inline-flex items-center gap-2 rounded-2xl border border-blush-300 px-4 py-3 text-sm font-medium text-charcoal-500 transition-colors hover:border-rose-gold/40 hover:text-rose-gold disabled:cursor-not-allowed disabled:opacity-50 dark:border-charcoal-600 dark:text-charcoal-300"
+            className="inline-flex items-center gap-2 rounded border border-blush-300 px-4 py-3 text-sm font-medium text-charcoal-500 transition-colors hover:border-rose-gold/40 hover:text-rose-gold disabled:cursor-not-allowed disabled:opacity-50 dark:border-charcoal-600 dark:text-charcoal-300"
           >
             <Plus size={14} />
             Novo lead
@@ -650,7 +650,7 @@ export function LeadsTable() {
           <button
             onClick={handleExport}
             disabled={!canExportLeads}
-            className="inline-flex items-center gap-2 rounded-2xl bg-rose-gold px-4 py-3 text-sm font-medium text-white shadow-sm transition-colors hover:bg-rose-gold-500 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="inline-flex items-center gap-2 rounded bg-rose-gold px-4 py-3 text-sm font-medium text-white shadow-sm transition-colors hover:bg-rose-gold-500 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <Download size={14} />
             Exportar CSV
@@ -755,7 +755,7 @@ export function LeadsTable() {
                                     </div>
                                     <div className="mt-3 space-y-2 text-sm text-charcoal-500 dark:text-charcoal-400">
                                       {detail.appointments.length > 0 ? detail.appointments.map((appointment) => (
-                                        <div key={appointment.id} className="rounded-xl border border-blush-100 bg-white/80 px-3 py-2 dark:border-charcoal-700 dark:bg-charcoal-800">
+                                        <div key={appointment.id} className="rounded border border-blush-100 bg-white/80 px-3 py-2 dark:border-charcoal-700 dark:bg-charcoal-800">
                                           {appointment.serviceType} · {appointment.status} · {new Date(appointment.date).toLocaleString('pt-BR')}
                                         </div>
                                       )) : (
@@ -769,7 +769,7 @@ export function LeadsTable() {
                                     <div className="text-sm font-semibold text-charcoal dark:text-charcoal-100">Sessao e entrada</div>
                                     <div className="mt-3 space-y-3 text-sm text-charcoal-500 dark:text-charcoal-400">
                                       {detail.sessions.length > 0 ? detail.sessions.map((session) => (
-                                        <div key={session.id} className="rounded-xl border border-blush-100 bg-white/80 px-3 py-3 dark:border-charcoal-700 dark:bg-charcoal-800">
+                                        <div key={session.id} className="rounded border border-blush-100 bg-white/80 px-3 py-3 dark:border-charcoal-700 dark:bg-charcoal-800">
                                           <p>Referrer: {session.referrer ?? '-'}</p>
                                           <p className="mt-1">Paginas: {parsePagesVisited(session.pagesVisited).join(', ') || '-'}</p>
                                           <p className="mt-1">Eventos: {session.analyticsEvents.length}</p>
@@ -783,7 +783,7 @@ export function LeadsTable() {
                                     <div className="text-sm font-semibold text-charcoal dark:text-charcoal-100">Timeline</div>
                                     <div className="mt-3 space-y-2 text-sm text-charcoal-500 dark:text-charcoal-400">
                                       {detail.timeline.length > 0 ? detail.timeline.slice(0, 8).map((item) => (
-                                        <div key={item.id} className="rounded-xl border border-blush-100 bg-white/80 px-3 py-2 dark:border-charcoal-700 dark:bg-charcoal-800">
+                                        <div key={item.id} className="rounded border border-blush-100 bg-white/80 px-3 py-2 dark:border-charcoal-700 dark:bg-charcoal-800">
                                           <p className="font-medium text-charcoal dark:text-charcoal-100">{item.title}</p>
                                           <p className="mt-1">{item.description ?? '-'}</p>
                                           <p className="mt-1 text-xs">{new Date(item.timestamp).toLocaleString('pt-BR')}</p>
@@ -924,10 +924,10 @@ export function LeadsTable() {
               </label>
 
               <div className="flex gap-3 pt-2">
-                <button type="button" onClick={() => setShowModal(false)} className="flex-1 rounded-xl border border-blush-300 px-4 py-2 text-sm text-charcoal-400 transition-colors hover:bg-blush dark:border-charcoal-600 dark:hover:bg-charcoal-700">
+                <button type="button" onClick={() => setShowModal(false)} className="flex-1 rounded border border-blush-300 px-4 py-2 text-sm text-charcoal-400 transition-colors hover:bg-blush dark:border-charcoal-600 dark:hover:bg-charcoal-700">
                   Cancelar
                 </button>
-                <button type="submit" disabled={submitting} className="flex-1 rounded-xl bg-rose-gold px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-rose-gold-500 disabled:opacity-60">
+                <button type="submit" disabled={submitting} className="flex-1 rounded bg-rose-gold px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-rose-gold-500 disabled:opacity-60">
                   {submitting ? 'Salvando...' : editingLead ? 'Salvar alteracoes' : 'Criar lead'}
                 </button>
               </div>

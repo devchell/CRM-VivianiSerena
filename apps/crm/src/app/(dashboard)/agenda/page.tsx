@@ -318,7 +318,7 @@ export default function AgendaPage() {
     const statusMeta = info.event.extendedProps.statusMeta as (typeof STATUS_META)[keyof typeof STATUS_META]
 
     return (
-      <div className="min-w-0 overflow-hidden rounded-2xl border border-white/80 bg-[linear-gradient(180deg,rgba(255,255,255,0.98)_0%,rgba(252,247,242,0.96)_100%)] shadow-[0_16px_28px_-24px_rgba(66,46,31,0.55)] backdrop-blur-sm">
+      <div className="min-w-0 overflow-hidden rounded-lg border border-white/80 bg-[linear-gradient(180deg,rgba(255,255,255,0.98)_0%,rgba(252,247,242,0.96)_100%)] shadow-[0_16px_28px_-24px_rgba(66,46,31,0.55)] backdrop-blur-sm">
         <div className="h-1.5 w-full bg-[linear-gradient(90deg,rgba(201,150,122,0.98),rgba(232,180,154,0.78))]" />
         <div className="px-2.5 py-2.5">
           <div className="mb-1.5 flex items-center justify-between gap-2">
@@ -344,7 +344,7 @@ export default function AgendaPage() {
 
   return (
     <div className="space-y-6">
-      <div className="overflow-hidden rounded-[32px] border border-blush-200 bg-[radial-gradient(circle_at_top_left,_rgba(201,150,122,0.16),_transparent_38%),linear-gradient(135deg,#fffdfb_0%,#fff7f1_52%,#fffdfb_100%)] px-6 py-6 shadow-[0_28px_80px_-42px_rgba(97,73,54,0.35)] dark:border-charcoal-700 dark:bg-[radial-gradient(circle_at_top_left,_rgba(201,150,122,0.18),_transparent_34%),linear-gradient(135deg,#171412_0%,#1e1a17_52%,#161311_100%)]">
+      <div className="overflow-hidden rounded-lg border border-blush-200 bg-[radial-gradient(circle_at_top_left,_rgba(201,150,122,0.16),_transparent_38%),linear-gradient(135deg,#fffdfb_0%,#fff7f1_52%,#fffdfb_100%)] px-6 py-6 shadow-[0_28px_80px_-42px_rgba(97,73,54,0.35)] dark:border-charcoal-700 dark:bg-[radial-gradient(circle_at_top_left,_rgba(201,150,122,0.18),_transparent_34%),linear-gradient(135deg,#171412_0%,#1e1a17_52%,#161311_100%)]">
         <div className="flex flex-col gap-5 xl:flex-row xl:items-end xl:justify-between">
           <div className="max-w-2xl">
             <p className="text-xs font-semibold uppercase tracking-[0.24em] text-rose-gold">Agenda viva</p>
@@ -357,7 +357,7 @@ export default function AgendaPage() {
           </div>
 
           <div className="flex flex-col gap-3 sm:flex-row">
-            <div className="rounded-2xl border border-white/70 bg-white/75 px-4 py-3 shadow-sm backdrop-blur dark:border-charcoal-700 dark:bg-charcoal-800/70">
+            <div className="rounded-lg border border-white/70 bg-white/75 px-4 py-3 shadow-sm backdrop-blur dark:border-charcoal-700 dark:bg-charcoal-800/70">
               <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-charcoal-400 dark:text-charcoal-500">Carga atual</p>
               <p className="mt-1 font-heading text-2xl font-bold text-charcoal dark:text-charcoal-50">{totalDuration} min</p>
             </div>
@@ -365,7 +365,7 @@ export default function AgendaPage() {
             <button
               onClick={() => setShowModal(true)}
               disabled={!canCreateAppointments}
-              className="inline-flex items-center justify-center gap-2 rounded-2xl bg-rose-gold px-5 py-3 text-sm font-medium text-white shadow-sm transition-all hover:bg-rose-gold-500 hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
+              className="inline-flex items-center justify-center gap-2 rounded bg-rose-gold px-5 py-3 text-sm font-medium text-white shadow-sm transition-all hover:bg-rose-gold-500 hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <Plus size={16} />
               Novo agendamento
@@ -385,13 +385,13 @@ export default function AgendaPage() {
                 tone: 'bg-rose-50 text-rose-700 ring-rose-100',
               },
               {
-                label: 'Proximos atendimentos',
+                label: 'Próximos atendimentos',
                 value: summary.upcoming,
                 icon: Clock3,
                 tone: 'bg-sky-50 text-sky-700 ring-sky-100',
               },
               {
-                label: 'Leads disponiveis',
+                label: 'Leads disponíveis',
                 value: summary.leadsReady,
                 icon: UserRound,
                 tone: 'bg-emerald-50 text-emerald-700 ring-emerald-100',
@@ -399,7 +399,7 @@ export default function AgendaPage() {
             ].map((item) => {
               const Icon = item.icon
               return (
-                <div key={item.label} className="card-dark rounded-2xl p-5 shadow-sm">
+                <div key={item.label} className="card-dark rounded-lg p-5 shadow-sm">
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-xs font-medium uppercase tracking-[0.16em] text-charcoal-400">
@@ -409,7 +409,7 @@ export default function AgendaPage() {
                         {item.value}
                       </p>
                     </div>
-                    <div className={`flex h-11 w-11 items-center justify-center rounded-2xl ring-1 ${item.tone}`}>
+                    <div className={`flex h-11 w-11 items-center justify-center rounded-lg ring-1 ${item.tone}`}>
                       <Icon size={18} />
                     </div>
                   </div>
@@ -418,11 +418,11 @@ export default function AgendaPage() {
             })}
           </div>
 
-          <div className="card-dark overflow-hidden rounded-[32px] p-4 shadow-sm">
+          <div className="card-dark overflow-hidden rounded-lg p-4 shadow-sm">
             {loading ? (
-              <div className="h-[760px] animate-pulse rounded-[26px] bg-blush-100 dark:bg-charcoal-700/40" />
+              <div className="h-[760px] animate-pulse rounded-lg bg-blush-100 dark:bg-charcoal-700/40" />
             ) : (
-              <div className="crm-calendar rounded-[26px] border border-blush-100 bg-[linear-gradient(180deg,#fffdfa_0%,#fffaf7_100%)] p-3 dark:border-charcoal-700 dark:bg-[linear-gradient(180deg,#181513_0%,#141110_100%)]">
+              <div className="crm-calendar rounded-lg border border-blush-100 bg-[linear-gradient(180deg,#fffdfa_0%,#fffaf7_100%)] p-3 dark:border-charcoal-700 dark:bg-[linear-gradient(180deg,#181513_0%,#141110_100%)]">
                 <FullCalendarView
                   plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
                   initialView="timeGridWeek"
@@ -432,7 +432,7 @@ export default function AgendaPage() {
                     center: 'title',
                     right: 'dayGridMonth,timeGridWeek,timeGridDay',
                   }}
-                  buttonText={{ today: 'Hoje', month: 'Mes', week: 'Semana', day: 'Dia' }}
+                  buttonText={{ today: 'Hoje', month: 'Mês', week: 'Semana', day: 'Dia' }}
                   slotMinTime="08:00:00"
                   slotMaxTime="20:00:00"
                   slotDuration="00:30:00"
@@ -454,7 +454,7 @@ export default function AgendaPage() {
         </div>
 
         <aside className="space-y-4">
-          <div className="card-dark rounded-[32px] p-5 shadow-sm">
+          <div className="card-dark rounded-lg p-5 shadow-sm">
             <div className="mb-4 flex items-center gap-2">
               <Sparkles size={16} className="text-rose-gold" />
               <h2 className="font-heading text-base font-semibold text-charcoal dark:text-charcoal-50">
@@ -464,7 +464,7 @@ export default function AgendaPage() {
 
             <div className="space-y-3">
               {SERVICE_OPTIONS.map((service) => (
-                <div key={service.value} className="flex items-center justify-between gap-3 rounded-2xl border border-blush-200 bg-cream/70 px-3 py-3 dark:border-charcoal-700 dark:bg-charcoal-800/70">
+                <div key={service.value} className="flex items-center justify-between gap-3 rounded-lg border border-blush-200 bg-cream/70 px-3 py-3 dark:border-charcoal-700 dark:bg-charcoal-800/70">
                   <div>
                     <p className="text-sm font-medium text-charcoal dark:text-charcoal-100">{service.label}</p>
                     <p className="text-xs text-charcoal-400 dark:text-charcoal-500">Categoria do atendimento</p>
@@ -477,11 +477,11 @@ export default function AgendaPage() {
             </div>
           </div>
 
-          <div className="card-dark rounded-[32px] p-5 shadow-sm">
+          <div className="card-dark rounded-lg p-5 shadow-sm">
             <div className="mb-4 flex items-center justify-between gap-3">
               <div>
                 <h2 className="font-heading text-base font-semibold text-charcoal dark:text-charcoal-50">
-                  Proximos atendimentos
+                  Próximos atendimentos
                 </h2>
                 <p className="mt-1 text-xs text-charcoal-400 dark:text-charcoal-500">
                   Janela operacional mais imediata da agenda.
@@ -493,7 +493,7 @@ export default function AgendaPage() {
             </div>
 
             {upcomingAppointments.length === 0 ? (
-              <div className="rounded-2xl border border-dashed border-blush-200 px-4 py-8 text-center text-sm text-charcoal-400 dark:border-charcoal-700 dark:text-charcoal-500">
+              <div className="rounded border border-dashed border-blush-200 px-4 py-8 text-center text-sm text-charcoal-400 dark:border-charcoal-700 dark:text-charcoal-500">
                 Nenhum atendimento futuro por enquanto.
               </div>
             ) : (
@@ -505,7 +505,7 @@ export default function AgendaPage() {
                   return (
                     <div
                       key={appointment.id}
-                      className="rounded-2xl border border-blush-200 bg-cream/60 px-4 py-3 shadow-sm dark:border-charcoal-700 dark:bg-charcoal-800/70"
+                      className="rounded-lg border border-blush-200 bg-cream/60 px-4 py-3 shadow-sm dark:border-charcoal-700 dark:bg-charcoal-800/70"
                     >
                       <div className="flex items-start justify-between gap-3">
                         <div className="min-w-0">
@@ -539,7 +539,7 @@ export default function AgendaPage() {
             )}
           </div>
 
-          <div className="card-dark rounded-[32px] p-5 shadow-sm">
+          <div className="card-dark rounded-lg p-5 shadow-sm">
             <h2 className="font-heading text-base font-semibold text-charcoal dark:text-charcoal-50">
               Ritmo da agenda
             </h2>
@@ -557,7 +557,7 @@ export default function AgendaPage() {
           className="fixed inset-0 z-50 flex items-center justify-center bg-charcoal/25 p-4 backdrop-blur-md"
           onClick={(event) => event.target === event.currentTarget && setShowModal(false)}
         >
-          <div className="w-full max-w-lg overflow-hidden rounded-[28px] border border-white/70 bg-white shadow-[0_30px_80px_-35px_rgba(27,22,18,0.35)] dark:border-charcoal-700 dark:bg-charcoal-800">
+          <div className="w-full max-w-lg overflow-hidden rounded-lg border border-white/70 bg-white shadow-[0_30px_80px_-35px_rgba(27,22,18,0.35)] dark:border-charcoal-700 dark:bg-charcoal-800">
             <div className="border-b border-blush-200 bg-gradient-to-r from-white via-cream to-blush/70 p-6 dark:border-charcoal-700 dark:from-charcoal-800 dark:via-charcoal-800 dark:to-charcoal-700">
               <div className="flex items-start justify-between gap-4">
                 <div>
@@ -572,7 +572,7 @@ export default function AgendaPage() {
 
                 <button
                   onClick={() => setShowModal(false)}
-                  className="rounded-xl p-2 text-charcoal-400 transition-colors hover:bg-white hover:text-charcoal dark:hover:bg-charcoal-700 dark:hover:text-charcoal-100"
+                  className="rounded-md p-2 text-charcoal-400 transition-colors hover:bg-white hover:text-charcoal dark:hover:bg-charcoal-700 dark:hover:text-charcoal-100"
                 >
                   <X size={18} />
                 </button>
@@ -617,7 +617,7 @@ export default function AgendaPage() {
                     required
                     value={form.date}
                     onChange={(event) => setForm((current) => ({ ...current, date: event.target.value }))}
-                    className="w-full rounded-2xl border border-blush-300 bg-white px-4 py-3 text-sm text-charcoal shadow-sm focus:outline-none focus:ring-2 focus:ring-rose-gold/30 dark:border-charcoal-600 dark:bg-charcoal-700 dark:text-charcoal-100"
+                    className="w-full rounded-md border border-blush-300 bg-white px-4 py-3 text-sm text-charcoal shadow-sm focus:outline-none focus:ring-2 focus:ring-rose-gold/30 dark:border-charcoal-600 dark:bg-charcoal-700 dark:text-charcoal-100"
                   />
                 </div>
 
@@ -625,7 +625,7 @@ export default function AgendaPage() {
                   <label className="mb-1.5 block text-xs font-medium uppercase tracking-[0.12em] text-charcoal-400 dark:text-charcoal-400">
                     Duração
                   </label>
-                  <div className="flex h-[50px] items-center rounded-2xl border border-blush-300 bg-blush-50 px-4 text-sm font-medium text-charcoal-500 shadow-sm dark:border-charcoal-600 dark:bg-charcoal-700/60 dark:text-charcoal-300">
+                  <div className="flex h-[50px] items-center rounded-md border border-blush-300 bg-blush-50 px-4 text-sm font-medium text-charcoal-500 shadow-sm dark:border-charcoal-600 dark:bg-charcoal-700/60 dark:text-charcoal-300">
                     60 min padrão
                   </div>
                   <p className="mt-1 text-[11px] text-charcoal-400 dark:text-charcoal-500">
@@ -646,7 +646,7 @@ export default function AgendaPage() {
                         key={service.value}
                         type="button"
                         onClick={() => setForm((current) => ({ ...current, serviceType: service.value }))}
-                        className={`rounded-2xl border px-3 py-3 text-left transition-all ${
+                        className={`rounded border px-3 py-3 text-left transition-all ${
                           active
                             ? 'border-rose-gold bg-rose-gold/8 shadow-sm'
                             : 'border-blush-200 bg-white hover:border-rose-gold/40 hover:bg-blush/50 dark:border-charcoal-600 dark:bg-charcoal-700 dark:hover:border-rose-gold/40 dark:hover:bg-charcoal-700/80'
@@ -664,13 +664,13 @@ export default function AgendaPage() {
 
               <div>
                 <label className="mb-1.5 block text-xs font-medium uppercase tracking-[0.12em] text-charcoal-400 dark:text-charcoal-400">
-                  Observacoes
+                  Observações
                 </label>
                 <textarea
                   value={form.notes ?? ''}
                   onChange={(event) => setForm((current) => ({ ...current, notes: event.target.value }))}
                   rows={4}
-                  className="w-full resize-none rounded-2xl border border-blush-300 bg-white px-4 py-3 text-sm text-charcoal shadow-sm focus:outline-none focus:ring-2 focus:ring-rose-gold/30 dark:border-charcoal-600 dark:bg-charcoal-700 dark:text-charcoal-100"
+                  className="w-full resize-none rounded-md border border-blush-300 bg-white px-4 py-3 text-sm text-charcoal shadow-sm focus:outline-none focus:ring-2 focus:ring-rose-gold/30 dark:border-charcoal-600 dark:bg-charcoal-700 dark:text-charcoal-100"
                   placeholder="Ex.: primeira avaliação, retorno, observações clínicas..."
                 />
               </div>
@@ -679,14 +679,14 @@ export default function AgendaPage() {
                 <button
                   type="button"
                   onClick={() => setShowModal(false)}
-                  className="flex-1 rounded-2xl border border-blush-300 px-4 py-3 text-sm font-medium text-charcoal-500 transition-colors hover:bg-blush dark:border-charcoal-600 dark:text-charcoal-300 dark:hover:bg-charcoal-700"
+                  className="flex-1 rounded border border-blush-300 px-4 py-3 text-sm font-medium text-charcoal-500 transition-colors hover:bg-blush dark:border-charcoal-600 dark:text-charcoal-300 dark:hover:bg-charcoal-700"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
                   disabled={submitting || !canCreateAppointments}
-                  className="flex-1 rounded-2xl bg-rose-gold px-4 py-3 text-sm font-medium text-white transition-colors hover:bg-rose-gold-500 disabled:opacity-60"
+                  className="flex-1 rounded bg-rose-gold px-4 py-3 text-sm font-medium text-white transition-colors hover:bg-rose-gold-500 disabled:opacity-60"
                 >
                   {submitting ? 'Salvando...' : 'Salvar agendamento'}
                 </button>

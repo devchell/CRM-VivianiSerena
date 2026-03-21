@@ -58,7 +58,7 @@ const SERVICE_OPTIONS = [
 
 const PERIOD_OPTIONS = [
   { value: 'manha', label: 'Manhã', sub: '9h às 12h' },
-  { value: 'tarde', label: 'Tarde', sub: '13h as 18h' },
+  { value: 'tarde', label: 'Tarde', sub: '13h às 18h' },
   { value: 'qualquer', label: 'Qualquer horário', sub: 'Sem preferência' },
 ] as const
 
@@ -149,7 +149,7 @@ function Step1({ onNext }: { onNext: (data: Step1Data) => void }) {
                   id={field.id}
                   type={field.type}
                   autoComplete={field.autoComplete}
-                  className={`h-12 w-full rounded-xl border bg-white pl-11 pr-4 text-charcoal placeholder:text-charcoal/40 transition-all focus:outline-none focus:ring-2 focus:ring-rose-gold ${
+                  className={`h-12 w-full rounded-md border bg-white pl-11 pr-4 text-charcoal placeholder:text-charcoal/40 transition-all focus:outline-none focus:ring-2 focus:ring-rose-gold ${
                     error ? 'border-red-400 focus:ring-red-400' : 'border-blush focus:border-transparent'
                   }`}
                   {...register(field.id)}
@@ -199,7 +199,7 @@ function Step2({ onNext, onBack }: { onNext: (data: Step2Data) => void; onBack: 
               key={option.value}
               type="button"
               onClick={() => setValue('service', option.value, { shouldValidate: true })}
-              className={`flex w-full items-center gap-3 rounded-xl border-2 px-4 py-3.5 text-left transition-all ${
+              className={`flex w-full items-center gap-3 rounded-md border-2 px-4 py-3.5 text-left transition-all ${
                 selected === option.value
                   ? 'border-rose-gold bg-rose-gold/5 text-charcoal'
                   : 'border-blush bg-white text-charcoal/70 hover:border-rose-gold/40 hover:bg-blush/30'
@@ -267,7 +267,7 @@ function Step3({
               key={option.value}
               type="button"
               onClick={() => setValue('period', option.value, { shouldValidate: true })}
-              className={`flex flex-col items-center gap-1 rounded-xl border-2 px-2 py-4 text-center transition-all ${
+              className={`flex flex-col items-center gap-1 rounded-md border-2 px-2 py-4 text-center transition-all ${
                 selected === option.value
                   ? 'border-rose-gold bg-rose-gold/5 text-charcoal'
                   : 'border-blush bg-white text-charcoal/70 hover:border-rose-gold/40'
@@ -419,7 +419,7 @@ export function LeadFormSection({ socialProof }: { socialProof?: SocialProofSumm
             </ul>
 
             {proofEnabled ? (
-              <div className="rounded-xl border border-blush bg-white p-4">
+              <div className="rounded-md border border-blush bg-white p-4">
                 <div className="flex items-center gap-4">
                   <div className="flex -space-x-2" aria-hidden="true">
                     {['VS', 'LG', 'GL'].map((initials) => (

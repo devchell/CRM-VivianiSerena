@@ -146,7 +146,7 @@ function ConfirmDeleteModal(props: {
 
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="bg-white dark:bg-[#1e1e1e] border border-blush-200 dark:border-[#2a2a2a] rounded-2xl shadow-2xl max-w-md w-full p-6">
+      <div className="bg-white dark:bg-[#1e1e1e] border border-blush-200 dark:border-[#2a2a2a] rounded-lg shadow-2xl max-w-md w-full p-6">
         <div className="flex flex-col items-center text-center mb-5">
           <div className="w-14 h-14 rounded-full bg-red-100 dark:bg-red-900/20 flex items-center justify-center mb-4">
             <UserX size={24} className="text-red-500" />
@@ -431,7 +431,7 @@ export default function ColaboradoresPage() {
           { label: 'Inativos', value: stats.inactive, icon: Mail, color: 'text-orange-500', bg: 'bg-orange-500/10' },
         ].map((item) => (
           <div key={item.label} className="card-dark p-4 shadow-sm flex items-center gap-3">
-            <div className={`w-9 h-9 rounded-xl ${item.bg} flex items-center justify-center flex-shrink-0`}>
+            <div className={`w-9 h-9 rounded-md ${item.bg} flex items-center justify-center flex-shrink-0`}>
               <item.icon size={18} className={item.color} />
             </div>
             <div>
@@ -442,7 +442,7 @@ export default function ColaboradoresPage() {
         ))}
       </div>
 
-      <div className={`${crmListToolbar} rounded-[28px] border border-blush-200/80 dark:border-charcoal-700`}>
+      <div className={`${crmListToolbar} rounded-lg border border-blush-200/80 dark:border-charcoal-700`}>
         {([
           { key: 'ACTIVE', label: `Ativos (${stats.active})` },
           { key: 'INACTIVE', label: `Inativos (${stats.inactive})` },
@@ -668,7 +668,7 @@ export default function ColaboradoresPage() {
                         key={profile}
                         type="button"
                         onClick={() => setProfile(profile)}
-                        className={`p-4 rounded-xl border-2 text-left transition-all ${
+                        className={`p-4 rounded-md border-2 text-left transition-all ${
                           selected
                             ? 'border-rose-gold bg-rose-gold/5'
                             : 'border-blush-300 dark:border-charcoal-600 hover:border-rose-gold/30'
@@ -695,7 +695,7 @@ export default function ColaboradoresPage() {
                           key={module.key}
                           type="button"
                           onClick={() => toggleModule(module.key)}
-                          className={`flex items-start gap-2.5 px-3 py-3 rounded-xl border text-left transition-all text-sm ${
+                          className={`flex items-start gap-2.5 px-3 py-3 rounded-md border text-left transition-all text-sm ${
                             active
                               ? 'border-rose-gold bg-rose-gold/5 text-rose-gold'
                               : 'border-blush-300 dark:border-charcoal-600 text-charcoal-400 hover:border-rose-gold/30'
@@ -713,7 +713,7 @@ export default function ColaboradoresPage() {
                 </div>
               ) : null}
 
-              <div className="rounded-xl border border-blush-200 dark:border-charcoal-700 bg-blush/40 dark:bg-charcoal-800/60 p-4 text-sm text-charcoal-500 dark:text-charcoal-400">
+              <div className="rounded border border-blush-200 dark:border-charcoal-700 bg-blush/40 dark:bg-charcoal-800/60 p-4 text-sm text-charcoal-500 dark:text-charcoal-400">
                 {form.profile === 'ADMIN'
                   ? 'Admin recebe acesso total, incluindo Editar Site, Segurança e Colaboradores.'
                   : PROFILE_META[form.profile].description}
@@ -723,14 +723,14 @@ export default function ColaboradoresPage() {
                 <button
                   type="button"
                   onClick={() => setShowModal(false)}
-                  className="flex-1 py-2.5 rounded-xl border border-blush-300 dark:border-charcoal-600 text-charcoal-400 text-sm hover:bg-blush dark:hover:bg-charcoal-700 transition-colors"
+                  className="flex-1 py-2.5 rounded-md border border-blush-300 dark:border-charcoal-600 text-charcoal-400 text-sm hover:bg-blush dark:hover:bg-charcoal-700 transition-colors"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
                   disabled={saving}
-                  className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl bg-rose-gold text-white text-sm font-semibold hover:bg-rose-gold/90 transition-colors disabled:opacity-60"
+                  className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-md bg-rose-gold text-white text-sm font-semibold hover:bg-rose-gold/90 transition-colors disabled:opacity-60"
                 >
                   {saving ? <Loader2 size={14} className="animate-spin" /> : null}
                   {editing ? 'Salvar alterações' : 'Criar colaborador'}

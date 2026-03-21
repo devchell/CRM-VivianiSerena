@@ -42,8 +42,8 @@ interface TwoFactorResponseData {
   sessionToken?: string
 }
 
-const inputClass = 'w-full px-4 py-3 text-sm rounded-xl border border-blush-300 bg-white text-charcoal placeholder-charcoal-300 focus:outline-none focus:ring-2 focus:ring-rose-gold/30 focus:border-rose-gold/40 transition-colors'
-const otpInputClass = 'w-full px-4 py-3 text-center text-2xl font-mono tracking-[0.5em] rounded-xl border border-blush-300 bg-white text-charcoal placeholder-charcoal-300 focus:outline-none focus:ring-2 focus:ring-rose-gold/30 focus:border-rose-gold/40 transition-colors'
+const inputClass = 'w-full px-4 py-3 text-sm rounded-md border border-blush-300 bg-white text-charcoal placeholder-charcoal-300 focus:outline-none focus:ring-2 focus:ring-rose-gold/30 focus:border-rose-gold/40 transition-colors'
+const otpInputClass = 'w-full px-4 py-3 text-center text-2xl font-mono tracking-[0.5em] rounded-md border border-blush-300 bg-white text-charcoal placeholder-charcoal-300 focus:outline-none focus:ring-2 focus:ring-rose-gold/30 focus:border-rose-gold/40 transition-colors'
 
 function getStepForChannel(channel: TwoFactorChannel): Step {
   return channel === 'email' ? 'email-otp' : 'sms-otp'
@@ -88,7 +88,7 @@ export default function LoginPage() {
     })
 
     if (result?.error) {
-      throw new Error('Erro ao criar sessao. Tente novamente.')
+      throw new Error('Erro ao criar sessão. Tente novamente.')
     }
 
     const session = await getSession()
@@ -104,7 +104,7 @@ export default function LoginPage() {
     }
 
     if (!data.nextStep) {
-      throw new Error('Resposta invalida do 2FA.')
+      throw new Error('Resposta inválida do 2FA.')
     }
 
     setTwoFa((current) => current ? {
@@ -139,7 +139,7 @@ export default function LoginPage() {
       }
 
       if (!res.ok || !data.success) {
-        setError(data.message ?? 'Credenciais invalidas.')
+        setError(data.message ?? 'Credenciais inválidas.')
         return
       }
 
@@ -275,7 +275,7 @@ export default function LoginPage() {
         className="w-full max-w-sm relative"
       >
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-white shadow-sm border border-rose-gold/20 mb-4">
+          <div className="inline-flex items-center justify-center w-14 h-14 rounded-lg bg-white shadow-sm border border-rose-gold/20 mb-4">
             <Sparkles size={24} className="text-rose-gold" />
           </div>
           <h1 className="font-heading text-2xl font-bold text-charcoal">
@@ -314,10 +314,10 @@ export default function LoginPage() {
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -20 }}
             transition={{ duration: 0.25 }}
-            className="bg-white border border-blush-200 rounded-2xl shadow-xl p-8"
+            className="bg-white border border-blush-200 rounded-lg shadow-xl p-8"
           >
             <div className="mb-6">
-              <div className="w-10 h-10 bg-rose-gold/10 rounded-xl flex items-center justify-center mb-4">
+              <div className="w-10 h-10 bg-rose-gold/10 rounded-md flex items-center justify-center mb-4">
                 <CurrentIcon size={18} className="text-rose-gold" />
               </div>
               <h2 className="font-heading text-lg font-semibold text-charcoal">{current.title}</h2>
@@ -359,7 +359,7 @@ export default function LoginPage() {
                 <button
                   type="submit"
                   disabled={isLoading}
-                  className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-rose-gold text-white font-medium text-sm hover:bg-rose-gold/90 disabled:opacity-60 transition-colors mt-2"
+                  className="w-full flex items-center justify-center gap-2 py-3 rounded-md bg-rose-gold text-white font-medium text-sm hover:bg-rose-gold/90 disabled:opacity-60 transition-colors mt-2"
                 >
                   {isLoading ? <Loader2 size={16} className="animate-spin" /> : <Lock size={16} />}
                   {isLoading ? 'Verificando...' : 'Entrar'}
@@ -384,7 +384,7 @@ export default function LoginPage() {
                 <button
                   type="submit"
                   disabled={emailCode.length !== 6 || isLoading}
-                  className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-rose-gold text-white font-medium text-sm hover:bg-rose-gold/90 disabled:opacity-60 transition-colors"
+                  className="w-full flex items-center justify-center gap-2 py-3 rounded-md bg-rose-gold text-white font-medium text-sm hover:bg-rose-gold/90 disabled:opacity-60 transition-colors"
                 >
                   {isLoading ? <Loader2 size={16} className="animate-spin" /> : <Mail size={16} />}
                   {isLoading ? 'Verificando...' : 'Confirmar Código'}
@@ -416,7 +416,7 @@ export default function LoginPage() {
                 <button
                   type="submit"
                   disabled={smsCode.length !== 6 || isLoading}
-                  className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-rose-gold text-white font-medium text-sm hover:bg-rose-gold/90 disabled:opacity-60 transition-colors"
+                  className="w-full flex items-center justify-center gap-2 py-3 rounded-md bg-rose-gold text-white font-medium text-sm hover:bg-rose-gold/90 disabled:opacity-60 transition-colors"
                 >
                   {isLoading ? <Loader2 size={16} className="animate-spin" /> : <Smartphone size={16} />}
                   {isLoading ? 'Verificando...' : 'Confirmar Código'}
@@ -443,7 +443,7 @@ export default function LoginPage() {
 
 function ErrorBox({ message }: { message: string }) {
   return (
-    <div className="flex items-center gap-2 rounded-xl bg-red-50 border border-red-200 px-4 py-3">
+    <div className="flex items-center gap-2 rounded-md bg-red-50 border border-red-200 px-4 py-3">
       <AlertCircle size={16} className="text-red-500 flex-shrink-0" />
       <p className="text-sm text-red-500">{message}</p>
     </div>

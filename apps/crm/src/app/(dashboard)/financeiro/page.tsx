@@ -324,7 +324,7 @@ export default function FinanceiroPage() {
 
   return (
     <div className="space-y-6">
-      <div className="overflow-hidden rounded-[32px] border border-blush-200 bg-[radial-gradient(circle_at_top_left,_rgba(201,150,122,0.16),_transparent_38%),linear-gradient(135deg,#fffdfb_0%,#fff7f1_52%,#fffdfb_100%)] px-6 py-6 shadow-[0_28px_80px_-42px_rgba(97,73,54,0.35)] dark:border-charcoal-700 dark:bg-[radial-gradient(circle_at_top_left,_rgba(201,150,122,0.18),_transparent_34%),linear-gradient(135deg,#171412_0%,#1e1a17_52%,#161311_100%)]">
+      <div className="overflow-hidden rounded-lg border border-blush-200 bg-[radial-gradient(circle_at_top_left,_rgba(201,150,122,0.16),_transparent_38%),linear-gradient(135deg,#fffdfb_0%,#fff7f1_52%,#fffdfb_100%)] px-6 py-6 shadow-[0_28px_80px_-42px_rgba(97,73,54,0.35)] dark:border-charcoal-700 dark:bg-[radial-gradient(circle_at_top_left,_rgba(201,150,122,0.18),_transparent_34%),linear-gradient(135deg,#171412_0%,#1e1a17_52%,#161311_100%)]">
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div className="max-w-2xl">
             <p className="text-xs font-semibold uppercase tracking-[0.24em] text-rose-gold">Controle financeiro</p>
@@ -334,15 +334,15 @@ export default function FinanceiroPage() {
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
-            <button onClick={handleExportCsv} disabled={!canExportFinancial} className="flex items-center gap-1.5 rounded-2xl border border-blush-300 bg-white/75 px-4 py-3 text-sm text-charcoal-400 shadow-sm transition-colors hover:text-rose-gold disabled:opacity-50 disabled:cursor-not-allowed dark:border-charcoal-600 dark:bg-charcoal-800/65 dark:text-charcoal-400">
+            <button onClick={handleExportCsv} disabled={!canExportFinancial} className="flex items-center gap-1.5 rounded border border-blush-300 bg-white/75 px-4 py-3 text-sm text-charcoal-400 shadow-sm transition-colors hover:text-rose-gold disabled:opacity-50 disabled:cursor-not-allowed dark:border-charcoal-600 dark:bg-charcoal-800/65 dark:text-charcoal-400">
               <Download size={14} />
               CSV
             </button>
-            <button onClick={() => void handleExportPdf()} disabled={!canExportFinancial} className="flex items-center gap-1.5 rounded-2xl border border-blush-300 bg-white/75 px-4 py-3 text-sm text-charcoal-400 shadow-sm transition-colors hover:text-rose-gold disabled:opacity-50 disabled:cursor-not-allowed dark:border-charcoal-600 dark:bg-charcoal-800/65 dark:text-charcoal-400">
+            <button onClick={() => void handleExportPdf()} disabled={!canExportFinancial} className="flex items-center gap-1.5 rounded border border-blush-300 bg-white/75 px-4 py-3 text-sm text-charcoal-400 shadow-sm transition-colors hover:text-rose-gold disabled:opacity-50 disabled:cursor-not-allowed dark:border-charcoal-600 dark:bg-charcoal-800/65 dark:text-charcoal-400">
               <FileText size={14} />
               PDF
             </button>
-            <button onClick={() => openCreateModal('income')} disabled={!canCreateFinancial} className="flex items-center gap-2 rounded-2xl bg-rose-gold px-5 py-3 text-sm font-medium text-white shadow-sm transition-colors hover:bg-rose-gold-500 disabled:opacity-50 disabled:cursor-not-allowed">
+            <button onClick={() => openCreateModal('income')} disabled={!canCreateFinancial} className="flex items-center gap-2 rounded bg-rose-gold px-5 py-3 text-sm font-medium text-white shadow-sm transition-colors hover:bg-rose-gold-500 disabled:opacity-50 disabled:cursor-not-allowed">
               <Plus size={16} />
               Novo lançamento
             </button>
@@ -352,8 +352,8 @@ export default function FinanceiroPage() {
 
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         {kpis.map((kpi) => (
-          <div key={kpi.label} className="card-dark rounded-[28px] p-5 shadow-sm">
-            <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-2xl" style={{ background: kpi.background }}>
+          <div key={kpi.label} className="card-dark rounded-lg p-5 shadow-sm">
+            <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-lg" style={{ background: kpi.background }}>
               <span className="text-sm font-semibold" style={{ color: kpi.color }}>
                 R$
               </span>
@@ -367,12 +367,12 @@ export default function FinanceiroPage() {
       </div>
 
       <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
-        <div className="card-dark rounded-[32px] p-5 shadow-sm">
+        <div className="card-dark rounded-lg p-5 shadow-sm">
           <h3 className="mb-4 font-heading text-sm font-semibold text-charcoal dark:text-charcoal-100">
             Evolução mensal
           </h3>
           {loading ? (
-            <div className="h-[240px] animate-pulse rounded-2xl bg-blush-100 dark:bg-charcoal-700/40" />
+            <div className="h-[240px] animate-pulse rounded-lg bg-blush-100 dark:bg-charcoal-700/40" />
           ) : (
             <ResponsiveContainer width="100%" height={240}>
               <BarChart data={charts?.monthly ?? []}>
@@ -388,12 +388,12 @@ export default function FinanceiroPage() {
           )}
         </div>
 
-        <div className="card-dark rounded-[32px] p-5 shadow-sm">
+        <div className="card-dark rounded-lg p-5 shadow-sm">
           <h3 className="mb-4 font-heading text-sm font-semibold text-charcoal dark:text-charcoal-100">
             Despesas por categoria
           </h3>
           {loading ? (
-            <div className="h-[240px] animate-pulse rounded-2xl bg-blush-100 dark:bg-charcoal-700/40" />
+            <div className="h-[240px] animate-pulse rounded-lg bg-blush-100 dark:bg-charcoal-700/40" />
           ) : (
             <ResponsiveContainer width="100%" height={240}>
               <PieChart>
@@ -557,7 +557,7 @@ export default function FinanceiroPage() {
                       type,
                       category: FINANCIAL_CATEGORIES_BY_TYPE[type][0].value,
                     }))}
-                    className="rounded-xl border-2 px-4 py-3 text-sm font-semibold transition-all"
+                    className="rounded border-2 px-4 py-3 text-sm font-semibold transition-all"
                     style={form.type === type ? {
                       borderColor: type === 'income' ? colors.income.border : colors.expense.border,
                       background: type === 'income' ? colors.income.bg : colors.expense.bg,

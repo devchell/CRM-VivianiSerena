@@ -131,7 +131,7 @@ function ServiceCard({ service }: { service: typeof SERVICES[0] }) {
       >
         {/* Header do card */}
         <div className="flex items-start justify-between mb-5">
-          <div className={`w-14 h-14 rounded-xl ${service.accentBg} flex items-center justify-center flex-shrink-0`}>
+          <div className={`w-14 h-14 rounded-md ${service.accentBg} flex items-center justify-center flex-shrink-0`}>
             <span className="text-rose-gold text-2xl font-bold" aria-hidden="true">{service.emoji}</span>
           </div>
           <span className="badge bg-blush text-rose-gold border border-rose-gold/20 text-xs">

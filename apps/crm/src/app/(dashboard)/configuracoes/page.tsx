@@ -150,12 +150,12 @@ export default function ConfiguracoesPage() {
 
   const handleChangePassword = async () => {
     if (passwordForm.new !== passwordForm.confirm) {
-      toast.error('A nova senha e a confirmacao nao coincidem')
+      toast.error('A nova senha e a confirmação não coincidem')
       return
     }
 
     if (passwordForm.new.length < 8) {
-      toast.error('A nova senha deve ter no minimo 8 caracteres')
+      toast.error('A nova senha deve ter no mínimo 8 caracteres')
       return
     }
 
@@ -287,8 +287,8 @@ export default function ConfiguracoesPage() {
 
   const tabs = [
     { key: 'profile', label: 'Perfil', icon: User },
-    { key: 'security', label: 'Seguranca', icon: Lock },
-    { key: 'theme', label: 'Aparencia', icon: Palette },
+    { key: 'security', label: 'Segurança', icon: Lock },
+    { key: 'theme', label: 'Aparência', icon: Palette },
   ] as const
 
   if (loadingProfile) {
@@ -333,7 +333,7 @@ export default function ConfiguracoesPage() {
           {activeTab === 'profile' && (
             <div className="p-6 space-y-5">
               <h2 className="font-heading text-base font-semibold text-charcoal dark:text-charcoal-100 pb-4 border-b border-blush-200 dark:border-charcoal-700">
-                Informacoes do Perfil
+                Informações do Perfil
               </h2>
 
               <div>
@@ -369,7 +369,7 @@ export default function ConfiguracoesPage() {
                   className={inputClass}
                 />
                 <p className="text-xs text-charcoal-400 dark:text-charcoal-500 mt-1">
-                  Necessario para usar o 2FA por celular.
+                  Necessário para usar o 2FA por celular.
                 </p>
               </div>
 
@@ -429,11 +429,11 @@ export default function ConfiguracoesPage() {
 
               <div className="space-y-4">
                 <h2 className="font-heading text-base font-semibold text-charcoal dark:text-charcoal-100 pb-4 border-b border-blush-200 dark:border-charcoal-700">
-                  Autenticacao de 2 Fatores
+                  Autenticação de 2 Fatores
                 </h2>
 
-                <div className="rounded-xl border border-blush-200 dark:border-charcoal-700 p-4 flex items-start gap-4">
-                  <div className={`mt-0.5 p-2 rounded-lg ${twoFaDraft.enabled ? 'bg-green-100 dark:bg-green-900/30' : 'bg-charcoal-100 dark:bg-charcoal-700'}`}>
+                <div className="rounded-md border border-blush-200 dark:border-charcoal-700 p-4 flex items-start gap-4">
+                  <div className={`mt-0.5 p-2 rounded ${twoFaDraft.enabled ? 'bg-green-100 dark:bg-green-900/30' : 'bg-charcoal-100 dark:bg-charcoal-700'}`}>
                     {twoFaDraft.enabled
                       ? <ShieldCheck size={20} className="text-green-600 dark:text-green-400" />
                       : <ShieldOff size={20} className="text-charcoal-400" />
@@ -469,7 +469,7 @@ export default function ConfiguracoesPage() {
                     <button
                       type="button"
                       onClick={() => toggleTwoFaChannel('sms')}
-                      className={`flex items-start gap-3 rounded-xl border p-4 text-left transition-colors ${
+                      className={`flex items-start gap-3 rounded-md border p-4 text-left transition-colors ${
                         twoFaDraft.smsEnabled
                           ? 'border-rose-gold bg-rose-gold/5'
                           : 'border-blush-300 dark:border-charcoal-600'
@@ -479,7 +479,7 @@ export default function ConfiguracoesPage() {
                       <span>
                         <strong className="block text-sm text-charcoal dark:text-charcoal-100">Celular</strong>
                         <span className="text-xs text-charcoal-400 dark:text-charcoal-500">
-                          Recebe o codigo por SMS. Padrao ao ativar.
+                          Recebe o código por SMS. Padrão ao ativar.
                         </span>
                       </span>
                     </button>
@@ -487,7 +487,7 @@ export default function ConfiguracoesPage() {
                     <button
                       type="button"
                       onClick={() => toggleTwoFaChannel('email')}
-                      className={`flex items-start gap-3 rounded-xl border p-4 text-left transition-colors ${
+                      className={`flex items-start gap-3 rounded-md border p-4 text-left transition-colors ${
                         twoFaDraft.emailEnabled
                           ? 'border-rose-gold bg-rose-gold/5'
                           : 'border-blush-300 dark:border-charcoal-600'
@@ -497,15 +497,15 @@ export default function ConfiguracoesPage() {
                       <span>
                         <strong className="block text-sm text-charcoal dark:text-charcoal-100">E-mail</strong>
                         <span className="text-xs text-charcoal-400 dark:text-charcoal-500">
-                          Recebe o codigo pelo e-mail cadastrado.
+                          Recebe o código pelo e-mail cadastrado.
                         </span>
                       </span>
                     </button>
                   </div>
                 )}
 
-                <div className="rounded-xl border border-blush-200 dark:border-charcoal-700 bg-blush/40 dark:bg-charcoal-800/60 p-4 text-sm text-charcoal-500 dark:text-charcoal-400">
-                  Se celular e e-mail ficarem desligados, o 2FA sera desativado automaticamente.
+                <div className="rounded-md border border-blush-200 dark:border-charcoal-700 bg-blush/40 dark:bg-charcoal-800/60 p-4 text-sm text-charcoal-500 dark:text-charcoal-400">
+                  Se celular e e-mail ficarem desligados, o 2FA será desativado automaticamente.
                 </div>
 
                 <button
@@ -518,7 +518,7 @@ export default function ConfiguracoesPage() {
                   className="flex items-center gap-2 px-5 py-2 bg-rose-gold text-white rounded-lg text-sm font-medium hover:bg-rose-gold/90 transition-colors disabled:opacity-50"
                 >
                   <Save size={14} />
-                  Salvar configuracao do 2FA
+                  Salvar configuração do 2FA
                 </button>
               </div>
             </div>
@@ -541,14 +541,14 @@ export default function ConfiguracoesPage() {
                       setTheme(item.value)
                       toast.success(`Tema ${item.label} ativado`)
                     }}
-                    className={`p-4 rounded-xl border-2 text-left transition-all ${
+                    className={`p-4 rounded-md border-2 text-left transition-all ${
                       theme === item.value
                         ? 'border-rose-gold bg-rose-gold/5'
                         : 'border-blush-300 dark:border-charcoal-600 hover:border-rose-gold/50'
                     }`}
                   >
-                    <div className={`w-full h-16 rounded-lg mb-3 ${item.value === 'dark' ? 'bg-charcoal-900' : 'bg-cream'} border ${item.value === 'dark' ? 'border-charcoal-700' : 'border-blush-300'}`}>
-                      <div className={`h-4 rounded-t-lg ${item.value === 'dark' ? 'bg-charcoal-800' : 'bg-white'}`} />
+                    <div className={`w-full h-16 rounded mb-3 ${item.value === 'dark' ? 'bg-charcoal-900' : 'bg-cream'} border ${item.value === 'dark' ? 'border-charcoal-700' : 'border-blush-300'}`}>
+                      <div className={`h-4 rounded-t ${item.value === 'dark' ? 'bg-charcoal-800' : 'bg-white'}`} />
                     </div>
                     <p className="text-sm font-semibold text-charcoal dark:text-charcoal-100">{item.label}</p>
                     <p className="text-xs text-charcoal-400 dark:text-charcoal-500 mt-0.5">{item.desc}</p>
@@ -562,12 +562,12 @@ export default function ConfiguracoesPage() {
 
       {twoFaPasswordModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-          <div className="bg-white dark:bg-charcoal-800 rounded-2xl shadow-2xl p-6 w-full max-w-sm">
+          <div className="bg-white dark:bg-charcoal-800 rounded-lg shadow-2xl p-6 w-full max-w-sm">
             <h3 className="font-heading text-base font-semibold text-charcoal dark:text-charcoal-100 mb-2">
-              Confirmar configuracao do 2FA
+              Confirmar configuração do 2FA
             </h3>
             <p className="text-sm text-charcoal-400 dark:text-charcoal-500 mb-4">
-              Digite sua senha atual para aplicar a configuracao escolhida.
+              Digite sua senha atual para aplicar a configuração escolhida.
             </p>
             <input
               type="password"
