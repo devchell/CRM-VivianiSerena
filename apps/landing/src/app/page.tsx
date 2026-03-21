@@ -176,6 +176,7 @@ export default async function HomePage() {
 
   const showArtificialTestimonials = Boolean(testimonialDisplay.artificialEnabled)
   const showGoogleTestimonials = Boolean(testimonialDisplay.googleEnabled)
+  const artificialTestimonialsCount = Math.min(20, Math.max(1, asNumber(testimonialDisplay.artificialCount, 3)))
   const testimonialPublicReviews = siteSummary?.socialProof.publicReviews ?? 0
   const testimonialAverageRating = siteSummary?.socialProof.averageRating ?? null
 
@@ -203,6 +204,7 @@ export default async function HomePage() {
           publicReviewCount={testimonialPublicReviews}
           averageRating={testimonialAverageRating}
           artificialEnabled={showArtificialTestimonials}
+          artificialCount={artificialTestimonialsCount}
         />
         <TrustSection stats={siteSummary?.trust} />
         <LeadFormSection socialProof={siteSummary?.socialProof} />

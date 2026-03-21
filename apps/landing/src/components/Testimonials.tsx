@@ -43,6 +43,159 @@ const ARTIFICIAL_TESTIMONIALS: TestimonialItem[] = [
     stars: 5,
     source: 'artificial',
   },
+  {
+    id: 'artificial-4',
+    name: 'Resultado surpreendente',
+    city: 'São Caetano do Sul, SP',
+    service: 'Remoção de micropigmentação',
+    text: 'Já fiz três sessões e a diferença é visível. Profissionalismo do início ao fim.',
+    stars: 5,
+    source: 'artificial',
+  },
+  {
+    id: 'artificial-5',
+    name: 'Muito bem orientada',
+    city: 'Diadema, SP',
+    service: 'Avaliação de pele',
+    text: 'Fui bem orientada sobre cada etapa antes de começar. Isso fez toda a diferença na minha decisão.',
+    stars: 5,
+    source: 'artificial',
+  },
+  {
+    id: 'artificial-6',
+    name: 'Recomendo com certeza',
+    city: 'São Paulo, SP',
+    service: 'Remoção a laser',
+    text: 'Ambiente limpo, profissional capacitada e resultado gradual como prometido. Recomendo.',
+    stars: 5,
+    source: 'artificial',
+  },
+  {
+    id: 'artificial-7',
+    name: 'Superou as expectativas',
+    city: 'Mauá, SP',
+    service: 'Despigmentação labial',
+    text: 'Não esperava resultado tão bom logo nas primeiras sessões. Fiquei muito feliz com o acompanhamento.',
+    stars: 5,
+    source: 'artificial',
+  },
+  {
+    id: 'artificial-8',
+    name: 'Processo tranquilo',
+    city: 'Guarulhos, SP',
+    service: 'Remoção de micropigmentação',
+    text: 'O procedimento foi mais tranquilo do que imaginei. Cada dúvida foi respondida com paciência.',
+    stars: 5,
+    source: 'artificial',
+  },
+  {
+    id: 'artificial-9',
+    name: 'Ótimo suporte',
+    city: 'São Bernardo do Campo, SP',
+    service: 'Remoção a laser',
+    text: 'Além do tratamento em si, o suporte entre as sessões é muito atencioso. Me senti amparada.',
+    stars: 5,
+    source: 'artificial',
+  },
+  {
+    id: 'artificial-10',
+    name: 'Indicação de amiga',
+    city: 'Osasco, SP',
+    service: 'Avaliação de pele',
+    text: 'Vim por indicação de uma amiga e entendi o motivo. Atendimento cuidadoso e sem pressão.',
+    stars: 5,
+    source: 'artificial',
+  },
+  {
+    id: 'artificial-11',
+    name: 'Resultado gradual e seguro',
+    city: 'Santo André, SP',
+    service: 'Remoção de tatuagem',
+    text: 'O resultado vem chegando com segurança e no ritmo certo. Nada apressado.',
+    stars: 5,
+    source: 'artificial',
+  },
+  {
+    id: 'artificial-12',
+    name: 'Sentiu-se acolhida',
+    city: 'São Paulo, SP',
+    service: 'Despigmentação labial',
+    text: 'O ambiente e a postura profissional me fizeram sentir acolhida desde a recepção.',
+    stars: 5,
+    source: 'artificial',
+  },
+  {
+    id: 'artificial-13',
+    name: 'Clareza no diagnóstico',
+    city: 'ABC Paulista, SP',
+    service: 'Avaliação de pele',
+    text: 'Apreciei muito a clareza no diagnóstico inicial. Saí da consulta sabendo exatamente o que esperar.',
+    stars: 5,
+    source: 'artificial',
+  },
+  {
+    id: 'artificial-14',
+    name: 'Sem arrependimentos',
+    city: 'São Paulo, SP',
+    service: 'Remoção de micropigmentação',
+    text: 'Tomei a decisão certa. Já na segunda sessão o resultado era perceptível e o cuidado foi impecável.',
+    stars: 5,
+    source: 'artificial',
+  },
+  {
+    id: 'artificial-15',
+    name: 'Profissional dedicada',
+    city: 'Ribeirão Pires, SP',
+    service: 'Remoção a laser',
+    text: 'A dedicação da profissional em cada sessão mostra o quanto ela se importa com o resultado.',
+    stars: 5,
+    source: 'artificial',
+  },
+  {
+    id: 'artificial-16',
+    name: 'Boa comunicação',
+    city: 'São Caetano do Sul, SP',
+    service: 'Remoção de micropigmentação',
+    text: 'Sempre recebi retorno rápido nas mensagens e orientações claras entre as sessões.',
+    stars: 5,
+    source: 'artificial',
+  },
+  {
+    id: 'artificial-17',
+    name: 'Cuidado com a pele',
+    city: 'São Paulo, SP',
+    service: 'Remoção de tatuagem',
+    text: 'O protocolo de cuidados pós-sessão é detalhado e fez diferença na recuperação da minha pele.',
+    stars: 5,
+    source: 'artificial',
+  },
+  {
+    id: 'artificial-18',
+    name: 'Experiência positiva',
+    city: 'Mogi das Cruzes, SP',
+    service: 'Avaliação de pele',
+    text: 'Desde a avaliação inicial até o acompanhamento, a experiência foi completamente positiva.',
+    stars: 5,
+    source: 'artificial',
+  },
+  {
+    id: 'artificial-19',
+    name: 'Vale cada sessão',
+    city: 'Barueri, SP',
+    service: 'Despigmentação labial',
+    text: 'Os resultados são consistentes e a evolução entre as sessões é nítida. Vale cada visita.',
+    stars: 5,
+    source: 'artificial',
+  },
+  {
+    id: 'artificial-20',
+    name: 'Indicaria para todas',
+    city: 'São Paulo, SP',
+    service: 'Remoção de micropigmentação',
+    text: 'Indicaria para qualquer pessoa que queira fazer remoção com segurança e resultado real.',
+    stars: 5,
+    source: 'artificial',
+  },
 ]
 
 function getInitials(name: string) {
@@ -147,6 +300,7 @@ export default function Testimonials(props: {
   publicReviewCount: number
   averageRating: number | null
   artificialEnabled: boolean
+  artificialCount?: number
 }) {
   const [current, setCurrent] = useState(0)
   const { ref: headerRef, isInView } = useInView()
@@ -155,9 +309,12 @@ export default function Testimonials(props: {
   const items = useMemo(() => {
     const merged = [...props.manualItems]
     if (props.googleItems.length > 0) merged.push(...props.googleItems)
-    if (props.artificialEnabled) merged.push(...ARTIFICIAL_TESTIMONIALS)
+    if (props.artificialEnabled) {
+      const count = Math.min(20, Math.max(1, props.artificialCount ?? 3))
+      merged.push(...ARTIFICIAL_TESTIMONIALS.slice(0, count))
+    }
     return merged.filter((item) => item.text)
-  }, [props.artificialEnabled, props.googleItems, props.manualItems])
+  }, [props.artificialEnabled, props.artificialCount, props.googleItems, props.manualItems])
 
   const total = items.length
 
