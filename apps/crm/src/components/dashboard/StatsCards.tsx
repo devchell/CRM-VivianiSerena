@@ -60,7 +60,7 @@ export function StatsCards({ overview, loading = false }: StatsCardsProps) {
             <p className="text-sm font-medium text-charcoal-400 dark:text-charcoal-300">{card.title}</p>
             <div className="mt-1 font-heading text-2xl font-bold text-charcoal dark:text-charcoal-50">
               {loading ? (
-                <div className="h-8 w-28 animate-pulse rounded bg-blush-100 dark:bg-charcoal-700/40" />
+                <div className="h-8 w-28 animate-pulse rounded bg-blush-100 dark:bg-[#252423]/40" />
               ) : card.format === 'currency' ? (
                 formatCurrency(card.value)
               ) : card.format === 'percent' ? (
@@ -71,7 +71,7 @@ export function StatsCards({ overview, loading = false }: StatsCardsProps) {
                 <CountUp end={card.value} duration={0.8} preserveValue />
               )}
             </div>
-            <p className="mt-1 text-xs text-charcoal-400 dark:text-charcoal-500">{card.helper}</p>
+            <p className="mt-1 text-xs text-charcoal-400 dark:text-charcoal-300">{card.helper}</p>
           </div>
         )
       })}

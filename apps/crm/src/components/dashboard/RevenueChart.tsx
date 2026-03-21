@@ -26,9 +26,9 @@ export function RevenueChart({ data, loading = false }: RevenueChartProps) {
       </h3>
 
       {loading ? (
-        <div className="h-[220px] animate-pulse rounded-lg bg-blush-100 dark:bg-charcoal-700/40" />
+        <div className="h-[220px] animate-pulse rounded-lg bg-blush-100 dark:bg-[#252423]/40" />
       ) : data.length === 0 ? (
-        <div className="flex h-[220px] items-center justify-center rounded-lg border border-dashed border-blush-200 text-sm text-charcoal-400 dark:border-[#3a3835] dark:text-charcoal-500">
+        <div className="flex h-[220px] items-center justify-center rounded-lg border border-dashed border-blush-200 text-sm text-charcoal-400 dark:border-[#3a3835] dark:text-charcoal-300">
           Sem dados financeiros consolidados para exibir.
         </div>
       ) : (

@@ -436,7 +436,7 @@ export function LeadsTable() {
       cell: info => (
         <div>
           <p className="font-medium text-charcoal dark:text-charcoal-100">{info.getValue() as string}</p>
-          <p className="text-xs text-charcoal-400 dark:text-charcoal-500">{info.row.original.email}</p>
+          <p className="text-xs text-charcoal-400 dark:text-charcoal-300">{info.row.original.email}</p>
         </div>
       ),
     },
@@ -445,7 +445,7 @@ export function LeadsTable() {
       header: 'Telefone',
       cell: info => {
         const phone = info.getValue() as string | null
-        if (!phone) return <span className="text-sm text-charcoal-400 dark:text-charcoal-500">-</span>
+        if (!phone) return <span className="text-sm text-charcoal-400 dark:text-charcoal-300">-</span>
         return (
           <a href={`https://wa.me/55${phone.replace(/\D/g, '')}`} target="_blank" rel="noopener noreferrer" className="text-sm text-rose-gold hover:underline">
             {phone}
@@ -473,7 +473,7 @@ export function LeadsTable() {
               className={`text-xs font-semibold px-3 py-1.5 rounded-full border border-transparent outline-none cursor-pointer shadow-[0_8px_20px_-18px_rgba(0,0,0,0.6)] backdrop-blur pr-7 transition-all duration-150 ${crmSelectReset} ${cfg.color}`}
             >
               {STATUS_OPTIONS.map(([k, v]) => (
-                <option key={k} value={k} className="bg-white dark:bg-charcoal-900 text-charcoal dark:text-charcoal-100">
+                <option key={k} value={k} className="bg-white dark:bg-[#111110] text-charcoal dark:text-charcoal-100">
                   {v.label}
                 </option>
               ))}
@@ -491,7 +491,7 @@ export function LeadsTable() {
         </button>
       ),
       cell: info => (
-        <span className="text-xs text-charcoal-400 dark:text-charcoal-500">
+        <span className="text-xs text-charcoal-400 dark:text-charcoal-300">
           {formatDistanceToNow(new Date(info.getValue() as string), { locale: ptBR, addSuffix: true })}
         </span>
       ),
@@ -508,7 +508,7 @@ export function LeadsTable() {
             <button
               type="button"
               onClick={() => void handleExpandLead(row.original.id)}
-              className="inline-flex items-center gap-1 rounded border border-blush-300 px-3 py-2 text-xs font-medium text-charcoal-500 transition-colors hover:border-rose-gold/40 hover:text-rose-gold dark:border-charcoal-600 dark:text-charcoal-300"
+              className="inline-flex items-center gap-1 rounded border border-blush-300 px-3 py-2 text-xs font-medium text-charcoal-500 transition-colors hover:border-rose-gold/40 hover:text-rose-gold dark:border-[#3a3835] dark:text-charcoal-300"
             >
               <ChevronRight size={14} className={isExpanded ? 'rotate-90 transition-transform' : 'transition-transform'} />
               Detalhes
@@ -517,7 +517,7 @@ export function LeadsTable() {
               type="button"
               onClick={() => openEditModal(row.original)}
               disabled={!canUpdateLeads}
-              className="inline-flex items-center gap-1 rounded border border-blush-300 px-3 py-2 text-xs font-medium text-charcoal-500 transition-colors hover:border-rose-gold/40 hover:text-rose-gold disabled:cursor-not-allowed disabled:opacity-50 dark:border-charcoal-600 dark:text-charcoal-300"
+              className="inline-flex items-center gap-1 rounded border border-blush-300 px-3 py-2 text-xs font-medium text-charcoal-500 transition-colors hover:border-rose-gold/40 hover:text-rose-gold disabled:cursor-not-allowed disabled:opacity-50 dark:border-[#3a3835] dark:text-charcoal-300"
             >
               <Pencil size={14} />
               Editar
@@ -548,7 +548,7 @@ export function LeadsTable() {
             <div key={item.label} className="card-dark rounded-lg p-5 shadow-sm">
               <div className="flex items-center justify-between gap-3">
                 <div>
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-charcoal-400 dark:text-charcoal-500">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-charcoal-400 dark:text-charcoal-300">
                     {item.label}
                   </p>
                   <p className="mt-2 font-heading text-3xl font-bold text-charcoal dark:text-charcoal-50">
@@ -613,36 +613,36 @@ export function LeadsTable() {
             value={sourceDetailFilter}
             onChange={e => setSourceDetailFilter(e.target.value)}
             placeholder="Origem detalhada / campanha"
-            className="h-12 min-w-[220px] rounded-lg border border-blush-300 bg-white/95 px-4 text-sm text-charcoal shadow-sm outline-none transition focus:border-rose-gold/40 focus:ring-2 focus:ring-rose-gold/20 dark:border-charcoal-600 dark:bg-charcoal-800 dark:text-charcoal-100"
+            className="h-12 min-w-[220px] rounded-lg border border-blush-300 bg-white/95 px-4 text-sm text-charcoal shadow-sm outline-none transition focus:border-rose-gold/40 focus:ring-2 focus:ring-rose-gold/20 dark:border-[#3a3835] dark:bg-[#1c1b1a] dark:text-charcoal-100"
           />
           <input
             type="date"
             value={fromFilter}
             onChange={e => setFromFilter(e.target.value)}
-            className="h-12 min-w-[170px] rounded-lg border border-blush-300 bg-white/95 px-4 text-sm text-charcoal shadow-sm outline-none transition focus:border-rose-gold/40 focus:ring-2 focus:ring-rose-gold/20 dark:border-charcoal-600 dark:bg-charcoal-800 dark:text-charcoal-100"
+            className="h-12 min-w-[170px] rounded-lg border border-blush-300 bg-white/95 px-4 text-sm text-charcoal shadow-sm outline-none transition focus:border-rose-gold/40 focus:ring-2 focus:ring-rose-gold/20 dark:border-[#3a3835] dark:bg-[#1c1b1a] dark:text-charcoal-100"
           />
           <input
             type="date"
             value={toFilter}
             onChange={e => setToFilter(e.target.value)}
-            className="h-12 min-w-[170px] rounded-lg border border-blush-300 bg-white/95 px-4 text-sm text-charcoal shadow-sm outline-none transition focus:border-rose-gold/40 focus:ring-2 focus:ring-rose-gold/20 dark:border-charcoal-600 dark:bg-charcoal-800 dark:text-charcoal-100"
+            className="h-12 min-w-[170px] rounded-lg border border-blush-300 bg-white/95 px-4 text-sm text-charcoal shadow-sm outline-none transition focus:border-rose-gold/40 focus:ring-2 focus:ring-rose-gold/20 dark:border-[#3a3835] dark:bg-[#1c1b1a] dark:text-charcoal-100"
           />
           <button
             type="button"
             onClick={handleResetFilters}
-            className="inline-flex items-center gap-2 rounded border border-blush-300 px-4 py-3 text-sm font-medium text-charcoal-500 transition-colors hover:border-rose-gold/40 hover:text-rose-gold dark:border-charcoal-600 dark:text-charcoal-300"
+            className="inline-flex items-center gap-2 rounded border border-blush-300 px-4 py-3 text-sm font-medium text-charcoal-500 transition-colors hover:border-rose-gold/40 hover:text-rose-gold dark:border-[#3a3835] dark:text-charcoal-300"
           >
             <FilterX size={14} />
             Limpar
           </button>
-          <button onClick={fetchLeads} className="rounded-lg border border-blush-300 p-3 text-charcoal-400 transition-colors hover:text-rose-gold dark:border-charcoal-600" title="Atualizar">
+          <button onClick={fetchLeads} className="rounded-lg border border-blush-300 p-3 text-charcoal-400 transition-colors hover:text-rose-gold dark:border-[#3a3835]" title="Atualizar">
             <RefreshCw size={16} className={loading ? 'animate-spin' : ''} />
           </button>
           <button
             type="button"
             onClick={openCreateModal}
             disabled={!canCreateLeads}
-            className="inline-flex items-center gap-2 rounded border border-blush-300 px-4 py-3 text-sm font-medium text-charcoal-500 transition-colors hover:border-rose-gold/40 hover:text-rose-gold disabled:cursor-not-allowed disabled:opacity-50 dark:border-charcoal-600 dark:text-charcoal-300"
+            className="inline-flex items-center gap-2 rounded border border-blush-300 px-4 py-3 text-sm font-medium text-charcoal-500 transition-colors hover:border-rose-gold/40 hover:text-rose-gold disabled:cursor-not-allowed disabled:opacity-50 dark:border-[#3a3835] dark:text-charcoal-300"
           >
             <Plus size={14} />
             Novo lead
@@ -656,7 +656,7 @@ export function LeadsTable() {
             Exportar CSV
           </button>
         </div>
-        <div className="grid gap-3 border-t border-blush-100 bg-white/70 px-5 py-4 text-xs text-charcoal-400 dark:border-[#3a3835] dark:bg-charcoal-800/40 dark:text-charcoal-300 md:grid-cols-3">
+        <div className="grid gap-3 border-t border-blush-100 bg-white/70 px-5 py-4 text-xs text-charcoal-400 dark:border-[#3a3835] dark:bg-[#1c1b1a]/40 dark:text-charcoal-300 md:grid-cols-3">
           <div>
             <span className="font-semibold uppercase tracking-[0.16em] text-charcoal-500 dark:text-charcoal-300">Fonte de verdade</span>
             <p className="mt-1">Cards e contadores usam `/api/v1/leads/stats`; tabela e export usam os mesmos filtros de `/api/v1/leads`.</p>
@@ -715,7 +715,7 @@ export function LeadsTable() {
                         ))}
                       </tr>
                       {isExpanded ? (
-                        <tr className="bg-blush/35 dark:bg-charcoal-800/35">
+                        <tr className="bg-blush/35 dark:bg-[#1c1b1a]/35">
                           <td colSpan={columns.length} className="px-4 py-5">
                             {isDetailLoading ? (
                               <div className="flex items-center gap-2 text-sm text-charcoal-400 dark:text-charcoal-300">
@@ -725,7 +725,7 @@ export function LeadsTable() {
                             ) : detail ? (
                               <div className="grid gap-4 lg:grid-cols-[1.2fr_1fr]">
                                 <div className="space-y-4">
-                                  <div className="rounded-lg border border-blush-200 bg-white/80 p-4 dark:border-[#3a3835] dark:bg-charcoal-800/70">
+                                  <div className="rounded-lg border border-blush-200 bg-white/80 p-4 dark:border-[#3a3835] dark:bg-[#1c1b1a]/70">
                                     <div className="flex items-center gap-2 text-sm font-semibold text-charcoal dark:text-charcoal-100">
                                       <ShieldCheck size={16} />
                                       Captura e consentimento
@@ -740,22 +740,22 @@ export function LeadsTable() {
                                     </dl>
                                     <div className="mt-4 flex flex-wrap gap-2">
                                       {detail.consentLogs.length > 0 ? detail.consentLogs.map((log) => (
-                                        <span key={log.id} className="inline-flex items-center rounded-full border border-blush-200 bg-white px-3 py-1 text-[11px] font-medium text-charcoal-500 dark:border-charcoal-600 dark:bg-charcoal-800 dark:text-charcoal-300">
+                                        <span key={log.id} className="inline-flex items-center rounded-full border border-blush-200 bg-white px-3 py-1 text-[11px] font-medium text-charcoal-500 dark:border-[#3a3835] dark:bg-[#1c1b1a] dark:text-charcoal-300">
                                           {log.channel} · {new Date(log.consentedAt).toLocaleDateString('pt-BR')}
                                         </span>
                                       )) : (
-                                        <span className="text-xs text-charcoal-400 dark:text-charcoal-500">Sem log adicional de consentimento.</span>
+                                        <span className="text-xs text-charcoal-400 dark:text-charcoal-300">Sem log adicional de consentimento.</span>
                                       )}
                                     </div>
                                   </div>
-                                  <div className="rounded-lg border border-blush-200 bg-white/80 p-4 dark:border-[#3a3835] dark:bg-charcoal-800/70">
+                                  <div className="rounded-lg border border-blush-200 bg-white/80 p-4 dark:border-[#3a3835] dark:bg-[#1c1b1a]/70">
                                     <div className="flex items-center gap-2 text-sm font-semibold text-charcoal dark:text-charcoal-100">
                                       <CalendarClock size={16} />
                                       Agenda e atividade
                                     </div>
                                     <div className="mt-3 space-y-2 text-sm text-charcoal-500 dark:text-charcoal-300">
                                       {detail.appointments.length > 0 ? detail.appointments.map((appointment) => (
-                                        <div key={appointment.id} className="rounded border border-blush-100 bg-white/80 px-3 py-2 dark:border-[#3a3835] dark:bg-charcoal-800">
+                                        <div key={appointment.id} className="rounded border border-blush-100 bg-white/80 px-3 py-2 dark:border-[#3a3835] dark:bg-[#1c1b1a]">
                                           {appointment.serviceType} · {appointment.status} · {new Date(appointment.date).toLocaleString('pt-BR')}
                                         </div>
                                       )) : (
@@ -765,11 +765,11 @@ export function LeadsTable() {
                                   </div>
                                 </div>
                                 <div className="space-y-4">
-                                  <div className="rounded-lg border border-blush-200 bg-white/80 p-4 dark:border-[#3a3835] dark:bg-charcoal-800/70">
+                                  <div className="rounded-lg border border-blush-200 bg-white/80 p-4 dark:border-[#3a3835] dark:bg-[#1c1b1a]/70">
                                     <div className="text-sm font-semibold text-charcoal dark:text-charcoal-100">Sessão e entrada</div>
                                     <div className="mt-3 space-y-3 text-sm text-charcoal-500 dark:text-charcoal-300">
                                       {detail.sessions.length > 0 ? detail.sessions.map((session) => (
-                                        <div key={session.id} className="rounded border border-blush-100 bg-white/80 px-3 py-3 dark:border-[#3a3835] dark:bg-charcoal-800">
+                                        <div key={session.id} className="rounded border border-blush-100 bg-white/80 px-3 py-3 dark:border-[#3a3835] dark:bg-[#1c1b1a]">
                                           <p>Referrer: {session.referrer ?? '-'}</p>
                                           <p className="mt-1">Páginas: {parsePagesVisited(session.pagesVisited).join(', ') || '-'}</p>
                                           <p className="mt-1">Eventos: {session.analyticsEvents.length}</p>
@@ -779,11 +779,11 @@ export function LeadsTable() {
                                       )}
                                     </div>
                                   </div>
-                                  <div className="rounded-lg border border-blush-200 bg-white/80 p-4 dark:border-[#3a3835] dark:bg-charcoal-800/70">
+                                  <div className="rounded-lg border border-blush-200 bg-white/80 p-4 dark:border-[#3a3835] dark:bg-[#1c1b1a]/70">
                                     <div className="text-sm font-semibold text-charcoal dark:text-charcoal-100">Timeline</div>
                                     <div className="mt-3 space-y-2 text-sm text-charcoal-500 dark:text-charcoal-300">
                                       {detail.timeline.length > 0 ? detail.timeline.slice(0, 8).map((item) => (
-                                        <div key={item.id} className="rounded border border-blush-100 bg-white/80 px-3 py-2 dark:border-[#3a3835] dark:bg-charcoal-800">
+                                        <div key={item.id} className="rounded border border-blush-100 bg-white/80 px-3 py-2 dark:border-[#3a3835] dark:bg-[#1c1b1a]">
                                           <p className="font-medium text-charcoal dark:text-charcoal-100">{item.title}</p>
                                           <p className="mt-1">{item.description ?? '-'}</p>
                                           <p className="mt-1 text-xs">{new Date(item.timestamp).toLocaleString('pt-BR')}</p>
@@ -796,7 +796,7 @@ export function LeadsTable() {
                                 </div>
                               </div>
                             ) : (
-                              <p className="text-sm text-charcoal-400 dark:text-charcoal-500">Nenhum detalhe disponível para este lead.</p>
+                              <p className="text-sm text-charcoal-400 dark:text-charcoal-300">Nenhum detalhe disponível para este lead.</p>
                             )}
                           </td>
                         </tr>
@@ -839,7 +839,7 @@ export function LeadsTable() {
                     required
                     value={form.name}
                     onChange={(event) => setForm((current) => ({ ...current, name: event.target.value }))}
-                    className="w-full rounded-md border border-blush-300 bg-white px-3 py-2 text-sm text-charcoal focus:outline-none focus:ring-2 focus:ring-rose-gold/40 dark:border-charcoal-600 dark:bg-charcoal-700 dark:text-charcoal-100"
+                    className="w-full rounded-md border border-blush-300 bg-white px-3 py-2 text-sm text-charcoal focus:outline-none focus:ring-2 focus:ring-rose-gold/40 dark:border-[#3a3835] dark:bg-[#252423] dark:text-charcoal-100"
                   />
                 </div>
                 <div>
@@ -849,7 +849,7 @@ export function LeadsTable() {
                     type="email"
                     value={form.email}
                     onChange={(event) => setForm((current) => ({ ...current, email: event.target.value }))}
-                    className="w-full rounded-md border border-blush-300 bg-white px-3 py-2 text-sm text-charcoal focus:outline-none focus:ring-2 focus:ring-rose-gold/40 dark:border-charcoal-600 dark:bg-charcoal-700 dark:text-charcoal-100"
+                    className="w-full rounded-md border border-blush-300 bg-white px-3 py-2 text-sm text-charcoal focus:outline-none focus:ring-2 focus:ring-rose-gold/40 dark:border-[#3a3835] dark:bg-[#252423] dark:text-charcoal-100"
                   />
                 </div>
               </div>
@@ -861,7 +861,7 @@ export function LeadsTable() {
                     type="tel"
                     value={form.phone}
                     onChange={(event) => setForm((current) => ({ ...current, phone: event.target.value }))}
-                    className="w-full rounded-md border border-blush-300 bg-white px-3 py-2 text-sm text-charcoal focus:outline-none focus:ring-2 focus:ring-rose-gold/40 dark:border-charcoal-600 dark:bg-charcoal-700 dark:text-charcoal-100"
+                    className="w-full rounded-md border border-blush-300 bg-white px-3 py-2 text-sm text-charcoal focus:outline-none focus:ring-2 focus:ring-rose-gold/40 dark:border-[#3a3835] dark:bg-[#252423] dark:text-charcoal-100"
                   />
                 </div>
                 <div>
@@ -899,7 +899,7 @@ export function LeadsTable() {
                     value={form.sourceDetail}
                     onChange={(event) => setForm((current) => ({ ...current, sourceDetail: event.target.value }))}
                     placeholder="utm_source, campanha ou anotação"
-                    className="w-full rounded-md border border-blush-300 bg-white px-3 py-2 text-sm text-charcoal focus:outline-none focus:ring-2 focus:ring-rose-gold/40 dark:border-charcoal-600 dark:bg-charcoal-700 dark:text-charcoal-100"
+                    className="w-full rounded-md border border-blush-300 bg-white px-3 py-2 text-sm text-charcoal focus:outline-none focus:ring-2 focus:ring-rose-gold/40 dark:border-[#3a3835] dark:bg-[#252423] dark:text-charcoal-100"
                   />
                 </div>
               </div>
@@ -910,7 +910,7 @@ export function LeadsTable() {
                   rows={4}
                   value={form.notes}
                   onChange={(event) => setForm((current) => ({ ...current, notes: event.target.value }))}
-                  className="w-full rounded-md border border-blush-300 bg-white px-3 py-2 text-sm text-charcoal focus:outline-none focus:ring-2 focus:ring-rose-gold/40 dark:border-charcoal-600 dark:bg-charcoal-700 dark:text-charcoal-100"
+                  className="w-full rounded-md border border-blush-300 bg-white px-3 py-2 text-sm text-charcoal focus:outline-none focus:ring-2 focus:ring-rose-gold/40 dark:border-[#3a3835] dark:bg-[#252423] dark:text-charcoal-100"
                 />
               </div>
 
@@ -924,7 +924,7 @@ export function LeadsTable() {
               </label>
 
               <div className="flex gap-3 pt-2">
-                <button type="button" onClick={() => setShowModal(false)} className="flex-1 rounded border border-blush-300 px-4 py-2 text-sm text-charcoal-400 transition-colors hover:bg-blush dark:border-charcoal-600 dark:hover:bg-charcoal-700">
+                <button type="button" onClick={() => setShowModal(false)} className="flex-1 rounded border border-blush-300 px-4 py-2 text-sm text-charcoal-400 transition-colors hover:bg-blush dark:border-[#3a3835] dark:hover:bg-[#252423]">
                   Cancelar
                 </button>
                 <button type="submit" disabled={submitting} className="flex-1 rounded bg-rose-gold px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-rose-gold-500 disabled:opacity-60">

@@ -336,7 +336,7 @@ export function DispatchesPanel() {
     <div className="space-y-6">
       <div className="flex items-center justify-between border-b border-blush-200 pb-4 dark:border-[#3a3835]">
         <h1 className="font-heading text-xl font-semibold text-charcoal dark:text-charcoal-50">Disparos</h1>
-        <Link href="/leads" className="rounded border border-blush-300 px-4 py-2 text-sm font-medium text-charcoal-500 transition-colors hover:border-rose-gold/40 hover:text-rose-gold dark:border-charcoal-600 dark:text-charcoal-300">
+        <Link href="/leads" className="rounded border border-blush-300 px-4 py-2 text-sm font-medium text-charcoal-500 transition-colors hover:border-rose-gold/40 hover:text-rose-gold dark:border-[#3a3835] dark:text-charcoal-300">
           Voltar para Leads
         </Link>
       </div>
@@ -350,7 +350,7 @@ export function DispatchesPanel() {
             className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
               activeStatus === tab.key
                 ? 'bg-rose-gold text-white'
-                : 'text-charcoal-400 hover:bg-blush dark:hover:bg-charcoal-700'
+                : 'text-charcoal-400 hover:bg-blush dark:hover:bg-[#252423]'
             }`}
           >
             {tab.label} ({audience?.statusCounts[tab.key] ?? 0})
@@ -420,12 +420,12 @@ export function DispatchesPanel() {
             </select>
             <ChevronDown size={16} className={crmListSelectIcon} />
           </div>
-          <input type="date" value={filters.from} onChange={(event) => setFilters((current) => ({ ...current, from: event.target.value }))} className="h-12 min-w-[170px] rounded-md border border-blush-300 bg-white/95 px-4 text-sm text-charcoal shadow-sm outline-none transition focus:border-rose-gold/40 focus:ring-2 focus:ring-rose-gold/20 dark:border-charcoal-600 dark:bg-charcoal-800 dark:text-charcoal-100" />
-          <input type="date" value={filters.to} onChange={(event) => setFilters((current) => ({ ...current, to: event.target.value }))} className="h-12 min-w-[170px] rounded-md border border-blush-300 bg-white/95 px-4 text-sm text-charcoal shadow-sm outline-none transition focus:border-rose-gold/40 focus:ring-2 focus:ring-rose-gold/20 dark:border-charcoal-600 dark:bg-charcoal-800 dark:text-charcoal-100" />
+          <input type="date" value={filters.from} onChange={(event) => setFilters((current) => ({ ...current, from: event.target.value }))} className="h-12 min-w-[170px] rounded-md border border-blush-300 bg-white/95 px-4 text-sm text-charcoal shadow-sm outline-none transition focus:border-rose-gold/40 focus:ring-2 focus:ring-rose-gold/20 dark:border-[#3a3835] dark:bg-[#1c1b1a] dark:text-charcoal-100" />
+          <input type="date" value={filters.to} onChange={(event) => setFilters((current) => ({ ...current, to: event.target.value }))} className="h-12 min-w-[170px] rounded-md border border-blush-300 bg-white/95 px-4 text-sm text-charcoal shadow-sm outline-none transition focus:border-rose-gold/40 focus:ring-2 focus:ring-rose-gold/20 dark:border-[#3a3835] dark:bg-[#1c1b1a] dark:text-charcoal-100" />
           <div className={crmListSearchWrapper}>
             <input value={filters.search} onChange={(event) => setFilters((current) => ({ ...current, search: event.target.value }))} placeholder="Buscar nome, e-mail ou observação" className={crmListSearchInput} />
           </div>
-          <button type="button" onClick={() => void loadAudience()} className="rounded border border-blush-300 p-3 text-charcoal-400 transition-colors hover:text-rose-gold dark:border-charcoal-600" title="Atualizar">
+          <button type="button" onClick={() => void loadAudience()} className="rounded border border-blush-300 p-3 text-charcoal-400 transition-colors hover:text-rose-gold dark:border-[#3a3835]" title="Atualizar">
             <RefreshCw size={16} className={loading ? 'animate-spin' : ''} />
           </button>
           <button type="button" onClick={handleExport} disabled={!canExport} className="inline-flex items-center gap-2 rounded bg-rose-gold px-4 py-3 text-sm font-medium text-white shadow-sm transition-colors hover:bg-rose-gold-500 disabled:cursor-not-allowed disabled:opacity-50">
@@ -443,7 +443,7 @@ export function DispatchesPanel() {
           {draft ? (
             <div className="space-y-5 p-5">
               <div className="grid gap-4 md:grid-cols-2">
-                <div className="rounded-lg border border-blush-200 bg-white/80 p-4 dark:border-[#3a3835] dark:bg-charcoal-800/70">
+                <div className="rounded-lg border border-blush-200 bg-white/80 p-4 dark:border-[#3a3835] dark:bg-[#1c1b1a]/70">
                   <label className="flex items-center gap-2 text-sm font-medium text-charcoal dark:text-charcoal-100">
                     <input type="checkbox" checked={draft.emailEnabled} onChange={(event) => setDraft((current) => current ? { ...current, emailEnabled: event.target.checked } : current)} />
                     Ativar disparo por e-mail
@@ -451,10 +451,10 @@ export function DispatchesPanel() {
                   <p className="mt-2 text-xs text-charcoal-400 dark:text-charcoal-300">
                     Restante hoje: {audience?.email.remainingToday ?? 0} / {settings?.emailDailyLimit ?? 0} · SMTP {audience?.email.providerConfigured ? 'ok' : 'não configurado'}
                   </p>
-                  <input value={draft.emailSubject} onChange={(event) => setDraft((current) => current ? { ...current, emailSubject: event.target.value } : current)} placeholder="Assunto do e-mail" className="mt-4 w-full rounded-md border border-blush-300 bg-white px-3 py-2 text-sm text-charcoal focus:outline-none focus:ring-2 focus:ring-rose-gold/40 dark:border-charcoal-600 dark:bg-charcoal-700 dark:text-charcoal-100" />
-                  <textarea rows={8} value={draft.emailBody} onChange={(event) => setDraft((current) => current ? { ...current, emailBody: event.target.value } : current)} placeholder="Mensagem em texto/markdown simples" className="mt-3 w-full rounded-md border border-blush-300 bg-white px-3 py-2 text-sm text-charcoal focus:outline-none focus:ring-2 focus:ring-rose-gold/40 dark:border-charcoal-600 dark:bg-charcoal-700 dark:text-charcoal-100" />
+                  <input value={draft.emailSubject} onChange={(event) => setDraft((current) => current ? { ...current, emailSubject: event.target.value } : current)} placeholder="Assunto do e-mail" className="mt-4 w-full rounded-md border border-blush-300 bg-white px-3 py-2 text-sm text-charcoal focus:outline-none focus:ring-2 focus:ring-rose-gold/40 dark:border-[#3a3835] dark:bg-[#252423] dark:text-charcoal-100" />
+                  <textarea rows={8} value={draft.emailBody} onChange={(event) => setDraft((current) => current ? { ...current, emailBody: event.target.value } : current)} placeholder="Mensagem em texto/markdown simples" className="mt-3 w-full rounded-md border border-blush-300 bg-white px-3 py-2 text-sm text-charcoal focus:outline-none focus:ring-2 focus:ring-rose-gold/40 dark:border-[#3a3835] dark:bg-[#252423] dark:text-charcoal-100" />
                 </div>
-                <div className="rounded-lg border border-blush-200 bg-white/80 p-4 dark:border-[#3a3835] dark:bg-charcoal-800/70">
+                <div className="rounded-lg border border-blush-200 bg-white/80 p-4 dark:border-[#3a3835] dark:bg-[#1c1b1a]/70">
                   <label className="flex items-center gap-2 text-sm font-medium text-charcoal dark:text-charcoal-100">
                     <input type="checkbox" checked={draft.whatsappEnabled} onChange={(event) => setDraft((current) => current ? { ...current, whatsappEnabled: event.target.checked } : current)} />
                     Ativar disparo por WhatsApp
@@ -462,12 +462,12 @@ export function DispatchesPanel() {
                   <p className="mt-2 text-xs text-charcoal-400 dark:text-charcoal-300">
                     Restante hoje: {audience?.whatsapp.remainingToday ?? 0} / {settings?.whatsappDailyLimit ?? 0} · Provider {audience?.whatsapp.providerConfigured ? 'ok' : 'pendente'}
                   </p>
-                  <textarea rows={12} value={draft.whatsappBody} onChange={(event) => setDraft((current) => current ? { ...current, whatsappBody: event.target.value } : current)} placeholder="Mensagem operacional para WhatsApp" className="mt-4 w-full rounded-md border border-blush-300 bg-white px-3 py-2 text-sm text-charcoal focus:outline-none focus:ring-2 focus:ring-rose-gold/40 dark:border-charcoal-600 dark:bg-charcoal-700 dark:text-charcoal-100" />
+                  <textarea rows={12} value={draft.whatsappBody} onChange={(event) => setDraft((current) => current ? { ...current, whatsappBody: event.target.value } : current)} placeholder="Mensagem operacional para WhatsApp" className="mt-4 w-full rounded-md border border-blush-300 bg-white px-3 py-2 text-sm text-charcoal focus:outline-none focus:ring-2 focus:ring-rose-gold/40 dark:border-[#3a3835] dark:bg-[#252423] dark:text-charcoal-100" />
                 </div>
               </div>
 
               <div className="flex flex-wrap gap-3">
-                <button type="button" onClick={handleSaveDraft} disabled={!canBroadcast || savingDraft} className="inline-flex items-center gap-2 rounded border border-blush-300 px-4 py-3 text-sm font-medium text-charcoal-500 transition-colors hover:border-rose-gold/40 hover:text-rose-gold disabled:cursor-not-allowed disabled:opacity-50 dark:border-charcoal-600 dark:text-charcoal-300">
+                <button type="button" onClick={handleSaveDraft} disabled={!canBroadcast || savingDraft} className="inline-flex items-center gap-2 rounded border border-blush-300 px-4 py-3 text-sm font-medium text-charcoal-500 transition-colors hover:border-rose-gold/40 hover:text-rose-gold disabled:cursor-not-allowed disabled:opacity-50 dark:border-[#3a3835] dark:text-charcoal-300">
                   {savingDraft ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />}
                   Salvar rascunho
                 </button>
@@ -488,27 +488,27 @@ export function DispatchesPanel() {
             <div className="space-y-4 p-5">
               <div>
                 <label className="mb-1 block text-xs font-medium text-charcoal-400">Limite diário de e-mail</label>
-                <input type="number" min={1} value={settings.emailDailyLimit} onChange={(event) => setSettings((current) => current ? { ...current, emailDailyLimit: Number(event.target.value) } : current)} className="w-full rounded-md border border-blush-300 bg-white px-3 py-2 text-sm text-charcoal focus:outline-none focus:ring-2 focus:ring-rose-gold/40 dark:border-charcoal-600 dark:bg-charcoal-700 dark:text-charcoal-100" />
+                <input type="number" min={1} value={settings.emailDailyLimit} onChange={(event) => setSettings((current) => current ? { ...current, emailDailyLimit: Number(event.target.value) } : current)} className="w-full rounded-md border border-blush-300 bg-white px-3 py-2 text-sm text-charcoal focus:outline-none focus:ring-2 focus:ring-rose-gold/40 dark:border-[#3a3835] dark:bg-[#252423] dark:text-charcoal-100" />
               </div>
               <div>
                 <label className="mb-1 block text-xs font-medium text-charcoal-400">Limite diário de WhatsApp</label>
-                <input type="number" min={1} value={settings.whatsappDailyLimit} onChange={(event) => setSettings((current) => current ? { ...current, whatsappDailyLimit: Number(event.target.value) } : current)} className="w-full rounded-md border border-blush-300 bg-white px-3 py-2 text-sm text-charcoal focus:outline-none focus:ring-2 focus:ring-rose-gold/40 dark:border-charcoal-600 dark:bg-charcoal-700 dark:text-charcoal-100" />
+                <input type="number" min={1} value={settings.whatsappDailyLimit} onChange={(event) => setSettings((current) => current ? { ...current, whatsappDailyLimit: Number(event.target.value) } : current)} className="w-full rounded-md border border-blush-300 bg-white px-3 py-2 text-sm text-charcoal focus:outline-none focus:ring-2 focus:ring-rose-gold/40 dark:border-[#3a3835] dark:bg-[#252423] dark:text-charcoal-100" />
               </div>
               <div className="grid gap-4 md:grid-cols-2">
                 <div>
                   <label className="mb-1 block text-xs font-medium text-charcoal-400">Lote</label>
-                  <input type="number" min={1} value={settings.batchSize} onChange={(event) => setSettings((current) => current ? { ...current, batchSize: Number(event.target.value) } : current)} className="w-full rounded-md border border-blush-300 bg-white px-3 py-2 text-sm text-charcoal focus:outline-none focus:ring-2 focus:ring-rose-gold/40 dark:border-charcoal-600 dark:bg-charcoal-700 dark:text-charcoal-100" />
+                  <input type="number" min={1} value={settings.batchSize} onChange={(event) => setSettings((current) => current ? { ...current, batchSize: Number(event.target.value) } : current)} className="w-full rounded-md border border-blush-300 bg-white px-3 py-2 text-sm text-charcoal focus:outline-none focus:ring-2 focus:ring-rose-gold/40 dark:border-[#3a3835] dark:bg-[#252423] dark:text-charcoal-100" />
                 </div>
                 <div>
                   <label className="mb-1 block text-xs font-medium text-charcoal-400">Pacing (ms)</label>
-                  <input type="number" min={0} value={settings.pacingMs} onChange={(event) => setSettings((current) => current ? { ...current, pacingMs: Number(event.target.value) } : current)} className="w-full rounded-md border border-blush-300 bg-white px-3 py-2 text-sm text-charcoal focus:outline-none focus:ring-2 focus:ring-rose-gold/40 dark:border-charcoal-600 dark:bg-charcoal-700 dark:text-charcoal-100" />
+                  <input type="number" min={0} value={settings.pacingMs} onChange={(event) => setSettings((current) => current ? { ...current, pacingMs: Number(event.target.value) } : current)} className="w-full rounded-md border border-blush-300 bg-white px-3 py-2 text-sm text-charcoal focus:outline-none focus:ring-2 focus:ring-rose-gold/40 dark:border-[#3a3835] dark:bg-[#252423] dark:text-charcoal-100" />
                 </div>
               </div>
               <div>
                 <label className="mb-1 block text-xs font-medium text-charcoal-400">Dias para marcar como inativo</label>
-                <input type="number" min={7} value={settings.inactiveAfterDays} onChange={(event) => setSettings((current) => current ? { ...current, inactiveAfterDays: Number(event.target.value) } : current)} className="w-full rounded-md border border-blush-300 bg-white px-3 py-2 text-sm text-charcoal focus:outline-none focus:ring-2 focus:ring-rose-gold/40 dark:border-charcoal-600 dark:bg-charcoal-700 dark:text-charcoal-100" />
+                <input type="number" min={7} value={settings.inactiveAfterDays} onChange={(event) => setSettings((current) => current ? { ...current, inactiveAfterDays: Number(event.target.value) } : current)} className="w-full rounded-md border border-blush-300 bg-white px-3 py-2 text-sm text-charcoal focus:outline-none focus:ring-2 focus:ring-rose-gold/40 dark:border-[#3a3835] dark:bg-[#252423] dark:text-charcoal-100" />
               </div>
-              <button type="button" onClick={handleSaveSettings} disabled={!canBroadcast || savingSettings} className="inline-flex items-center gap-2 rounded border border-blush-300 px-4 py-3 text-sm font-medium text-charcoal-500 transition-colors hover:border-rose-gold/40 hover:text-rose-gold disabled:cursor-not-allowed disabled:opacity-50 dark:border-charcoal-600 dark:text-charcoal-300">
+              <button type="button" onClick={handleSaveSettings} disabled={!canBroadcast || savingSettings} className="inline-flex items-center gap-2 rounded border border-blush-300 px-4 py-3 text-sm font-medium text-charcoal-500 transition-colors hover:border-rose-gold/40 hover:text-rose-gold disabled:cursor-not-allowed disabled:opacity-50 dark:border-[#3a3835] dark:text-charcoal-300">
                 {savingSettings ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />}
                 Salvar limites
               </button>
@@ -527,7 +527,7 @@ export function DispatchesPanel() {
               <p className="font-medium text-charcoal dark:text-charcoal-100">E-mail</p>
               <div className="mt-2 flex flex-wrap gap-2">
                 {Object.entries(audience?.email.reasons ?? {}).map(([reason, count]) => (
-                  <span key={reason} className="inline-flex items-center rounded-full border border-blush-200 bg-white/80 px-3 py-1 text-[11px] dark:border-charcoal-600 dark:bg-charcoal-800">
+                  <span key={reason} className="inline-flex items-center rounded-full border border-blush-200 bg-white/80 px-3 py-1 text-[11px] dark:border-[#3a3835] dark:bg-[#1c1b1a]">
                     {REASON_LABELS[reason] ?? reason}: {count}
                   </span>
                 ))}
@@ -537,7 +537,7 @@ export function DispatchesPanel() {
               <p className="font-medium text-charcoal dark:text-charcoal-100">WhatsApp</p>
               <div className="mt-2 flex flex-wrap gap-2">
                 {Object.entries(audience?.whatsapp.reasons ?? {}).map(([reason, count]) => (
-                  <span key={reason} className="inline-flex items-center rounded-full border border-blush-200 bg-white/80 px-3 py-1 text-[11px] dark:border-charcoal-600 dark:bg-charcoal-800">
+                  <span key={reason} className="inline-flex items-center rounded-full border border-blush-200 bg-white/80 px-3 py-1 text-[11px] dark:border-[#3a3835] dark:bg-[#1c1b1a]">
                     {REASON_LABELS[reason] ?? reason}: {count}
                   </span>
                 ))}
@@ -562,7 +562,7 @@ export function DispatchesPanel() {
                   <tr key={lead.id} className={crmListRow}>
                     <td className={crmListCell}>
                       <p className="font-medium text-charcoal dark:text-charcoal-100">{lead.name}</p>
-                      <p className="text-xs text-charcoal-400 dark:text-charcoal-500">{lead.email}</p>
+                      <p className="text-xs text-charcoal-400 dark:text-charcoal-300">{lead.email}</p>
                     </td>
                     <td className={crmListCell}>{SOURCE_LABELS[lead.source]}</td>
                     <td className={crmListCell}>{lead.status}</td>
@@ -581,7 +581,7 @@ export function DispatchesPanel() {
           </div>
           <div className="space-y-4 p-5">
             <div className="grid gap-3 md:grid-cols-2">
-              <div className="rounded-lg border border-blush-200 bg-white/80 p-4 text-sm dark:border-[#3a3835] dark:bg-charcoal-800/70">
+              <div className="rounded-lg border border-blush-200 bg-white/80 p-4 text-sm dark:border-[#3a3835] dark:bg-[#1c1b1a]/70">
                 <p className="font-medium text-charcoal dark:text-charcoal-100">Por origem</p>
                 <div className="mt-2 space-y-1 text-charcoal-500 dark:text-charcoal-300">
                   {Object.entries(history?.reports.bySource ?? {}).map(([source, count]) => (
@@ -589,7 +589,7 @@ export function DispatchesPanel() {
                   ))}
                 </div>
               </div>
-              <div className="rounded-lg border border-blush-200 bg-white/80 p-4 text-sm dark:border-[#3a3835] dark:bg-charcoal-800/70">
+              <div className="rounded-lg border border-blush-200 bg-white/80 p-4 text-sm dark:border-[#3a3835] dark:bg-[#1c1b1a]/70">
                 <p className="font-medium text-charcoal dark:text-charcoal-100">Por status</p>
                 <div className="mt-2 space-y-1 text-charcoal-500 dark:text-charcoal-300">
                   {Object.entries(history?.reports.byStatus ?? {}).map(([leadStatus, count]) => (
@@ -598,29 +598,29 @@ export function DispatchesPanel() {
                 </div>
               </div>
             </div>
-            <div className="rounded-lg border border-blush-200 bg-white/80 p-4 text-sm dark:border-[#3a3835] dark:bg-charcoal-800/70">
+            <div className="rounded-lg border border-blush-200 bg-white/80 p-4 text-sm dark:border-[#3a3835] dark:bg-[#1c1b1a]/70">
               <p className="font-medium text-charcoal dark:text-charcoal-100">Elegibilidade operacional</p>
               <div className="mt-2 space-y-1 text-charcoal-500 dark:text-charcoal-300">
                 {Object.entries(history?.reports.byEligibility ?? {}).map(([key, count]) => (
                   <p key={key}>{key}: {count}</p>
                 ))}
               </div>
-              <p className="mt-3 text-xs text-charcoal-400 dark:text-charcoal-500">
+              <p className="mt-3 text-xs text-charcoal-400 dark:text-charcoal-300">
                 Opt-out: {history?.reports.optOut ?? 0} · Inativos: {history?.reports.inactive ?? 0}
               </p>
             </div>
-            <div className="rounded-lg border border-blush-200 bg-white/80 p-4 text-sm dark:border-[#3a3835] dark:bg-charcoal-800/70">
+            <div className="rounded-lg border border-blush-200 bg-white/80 p-4 text-sm dark:border-[#3a3835] dark:bg-[#1c1b1a]/70">
               <p className="font-medium text-charcoal dark:text-charcoal-100">Por período</p>
               <div className="mt-2 space-y-1 text-charcoal-500 dark:text-charcoal-300">
                 {Object.entries(history?.reports.byPeriod ?? {}).slice(0, 5).map(([period, count]) => (
                   <p key={period}>{period}: {count}</p>
                 ))}
                 {Object.keys(history?.reports.byPeriod ?? {}).length === 0 ? (
-                  <p className="text-xs text-charcoal-400 dark:text-charcoal-500">Sem registros no período auditado.</p>
+                  <p className="text-xs text-charcoal-400 dark:text-charcoal-300">Sem registros no período auditado.</p>
                 ) : null}
               </div>
             </div>
-            <div className="rounded-lg border border-blush-200 bg-white/80 p-4 text-sm dark:border-[#3a3835] dark:bg-charcoal-800/70">
+            <div className="rounded-lg border border-blush-200 bg-white/80 p-4 text-sm dark:border-[#3a3835] dark:bg-[#1c1b1a]/70">
               <p className="font-medium text-charcoal dark:text-charcoal-100">Últimos disparos</p>
               <div className="mt-2 space-y-2 text-charcoal-500 dark:text-charcoal-300">
                 {(history?.campaigns ?? []).slice(0, 5).map((campaign, index) => (
@@ -632,7 +632,7 @@ export function DispatchesPanel() {
                   </div>
                 ))}
                 {(history?.campaigns ?? []).length === 0 ? (
-                  <p className="text-xs text-charcoal-400 dark:text-charcoal-500">Nenhum disparo registrado nos últimos 180 dias.</p>
+                  <p className="text-xs text-charcoal-400 dark:text-charcoal-300">Nenhum disparo registrado nos últimos 180 dias.</p>
                 ) : null}
               </div>
             </div>
@@ -656,7 +656,7 @@ export function DispatchesPanel() {
               <p>Limites restantes hoje: e-mail {audience.email.remainingToday} · WhatsApp {audience.whatsapp.remainingToday}</p>
             </div>
             <div className="flex gap-3 px-6 pb-6">
-              <button type="button" onClick={() => setShowConfirm(false)} className="flex-1 rounded-md border border-blush-300 px-4 py-2 text-sm text-charcoal-400 transition-colors hover:bg-blush dark:border-charcoal-600 dark:hover:bg-charcoal-700">
+              <button type="button" onClick={() => setShowConfirm(false)} className="flex-1 rounded-md border border-blush-300 px-4 py-2 text-sm text-charcoal-400 transition-colors hover:bg-blush dark:border-[#3a3835] dark:hover:bg-[#252423]">
                 Cancelar
               </button>
               <button type="button" onClick={() => void handleSend()} disabled={sending} className="flex-1 rounded-md bg-rose-gold px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-rose-gold-500 disabled:opacity-60">

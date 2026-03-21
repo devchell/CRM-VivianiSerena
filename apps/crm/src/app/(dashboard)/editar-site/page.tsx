@@ -8,7 +8,7 @@ import type { HTMLAttributes } from 'react'
 import { useAuth } from '@/lib/useAuth'
 import { toast } from 'sonner'
 import {
-  ChevronDown, Eye, EyeOff, Upload, X, Check,
+  ChevronDown, Upload, X, Check,
   RefreshCw, Send, History, Plus, ExternalLink, Loader2, Link2, Star, Trash2,
 } from 'lucide-react'
 import { RichTextEditor } from '@/components/editor/RichTextEditor'
@@ -80,10 +80,10 @@ interface HistoryEntry {
 
 const inputCls = [
   'w-full px-3 py-2 text-sm rounded-lg transition-colors',
-  'border border-blush-200 dark:border-charcoal-600',
-  'bg-white dark:bg-charcoal-900',
-  'text-charcoal dark:text-charcoal-100',
-  'placeholder-charcoal-300 dark:placeholder-charcoal-500',
+  'border border-blush-200 dark:border-[#3a3835]',
+  'bg-white dark:bg-[#252423]',
+  'text-charcoal dark:text-[#ECEAE6]',
+  'placeholder-charcoal-300 dark:placeholder-[#706b65]',
   'focus:outline-none focus:ring-2 focus:ring-rose-gold/50 focus:border-rose-gold/50',
 ].join(' ')
 
@@ -207,46 +207,38 @@ interface ToggleFieldProps {
 
 const ToggleField = memo(function ToggleField({ enabled, onToggle, label, description }: ToggleFieldProps) {
   return (
-    <div className="rounded-md border border-blush-200 dark:border-charcoal-600 bg-white dark:bg-charcoal-800 overflow-hidden">
-      <div className="flex items-center justify-between gap-4 px-4 py-3">
-        <div className="min-w-0 flex-1">
-          <p className="text-sm font-semibold text-charcoal dark:text-charcoal-100 leading-snug">{label}</p>
-          {description && (
-            <p className="text-xs text-charcoal-400 mt-0.5 leading-snug">{description}</p>
-          )}
-        </div>
+    <div className="flex items-center justify-between gap-4 px-4 py-3 rounded-lg border border-blush-200 dark:border-[#3a3835] bg-white dark:bg-[#1c1b1a]">
+      <div className="min-w-0 flex-1">
+        <p className="text-sm font-medium text-charcoal dark:text-[#ECEAE6] leading-snug">{label}</p>
+        {description && (
+          <p className="text-xs text-charcoal-400 dark:text-charcoal-300 mt-0.5 leading-snug">{description}</p>
+        )}
+      </div>
+      <div className="flex items-center gap-2.5 flex-shrink-0">
+        <span className={`text-xs font-medium ${enabled ? 'text-green-600 dark:text-green-400' : 'text-charcoal-300 dark:text-charcoal-300'}`}>
+          {enabled ? 'Visível' : 'Oculto'}
+        </span>
         <button
           type="button"
           role="switch"
           aria-checked={enabled}
           onClick={onToggle}
           className={[
-            'relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent',
+            'relative inline-flex h-5 w-9 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent',
             'transition-colors duration-200 ease-in-out',
             'focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-gold focus-visible:ring-offset-2',
-            enabled ? 'bg-rose-gold' : 'bg-blush-300 dark:bg-charcoal-600',
+            enabled ? 'bg-rose-gold' : 'bg-blush-300 dark:bg-[#3a3835]',
           ].join(' ')}
         >
           <span
             aria-hidden="true"
             className={[
-              'pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow-sm',
+              'pointer-events-none inline-block h-4 w-4 rounded-full bg-white shadow-sm',
               'ring-0 transition-transform duration-200 ease-in-out',
-              enabled ? 'translate-x-5' : 'translate-x-0',
+              enabled ? 'translate-x-4' : 'translate-x-0',
             ].join(' ')}
           />
         </button>
-      </div>
-      <div className={[
-        'flex items-center gap-1.5 px-4 py-1.5 text-xs font-medium border-t',
-        enabled
-          ? 'text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/20 border-green-100 dark:border-green-900/30'
-          : 'text-charcoal-400 dark:text-charcoal-500 bg-blush/50 dark:bg-charcoal-800 border-blush-200 dark:border-[#3a3835]',
-      ].join(' ')}>
-        {enabled
-          ? <><Eye size={11} className="flex-shrink-0" /> Visível no site</>
-          : <><EyeOff size={11} className="flex-shrink-0" /> Oculto no site</>
-        }
       </div>
     </div>
   )
@@ -669,7 +661,7 @@ export default function EditarSitePage() {
       <div>
         <label className={labelCls}>{label}</label>
         <div
-          className="border-2 border-dashed border-blush-200 dark:border-charcoal-600 rounded-md p-4 text-center transition-colors hover:border-rose-gold/50 cursor-pointer relative bg-cream dark:bg-charcoal-900"
+          className="border border-dashed border-blush-200 dark:border-[#3a3835] rounded-lg transition-colors hover:border-rose-gold/50 cursor-pointer relative bg-blush/30 dark:bg-[#1c1b1a]"
           onDragOver={e => e.preventDefault()}
           onDrop={e => { e.preventDefault(); const f = e.dataTransfer.files[0]; if (f) handleImageUpload(section, fieldKey, f) }}
           onClick={() => {
@@ -711,12 +703,11 @@ export default function EditarSitePage() {
               </div>
             </div>
           ) : (
-            <div className="py-4">
+            <div className="h-20 flex items-center justify-center gap-2 text-xs text-charcoal-400 dark:text-charcoal-300">
               {isUp
-                ? <Loader2 size={24} className="mx-auto text-rose-gold animate-spin mb-2" />
-                : <Upload size={24} className="mx-auto text-charcoal-300 dark:text-charcoal-600 mb-2" />}
-              <p className="text-xs text-charcoal-400 dark:text-charcoal-300">{isUp ? 'Enviando...' : 'Arraste ou clique para enviar'}</p>
-              <p className="text-xs text-charcoal-400 dark:text-charcoal-500 mt-1">JPG, PNG ou WebP • até 10MB</p>
+                ? <><Loader2 size={14} className="text-rose-gold animate-spin" /> Enviando...</>
+                : <><Upload size={14} /> Arraste ou clique para enviar</>
+              }
             </div>
           )}
         </div>
@@ -735,8 +726,8 @@ export default function EditarSitePage() {
     label: string
     description: string
   }) => (
-    <div className="space-y-3 rounded-md border border-blush-200 bg-cream p-4 dark:border-charcoal-600 dark:bg-charcoal-700">
-      <p className="text-xs text-charcoal-400 dark:text-charcoal-500">{description}</p>
+    <div className="space-y-3 rounded-lg border border-blush-200 bg-blush/20 p-4 dark:border-[#3a3835] dark:bg-[#252423]">
+      <p className="text-xs text-charcoal-400 dark:text-charcoal-300">{description}</p>
       <ImageField section={section} fieldKey={fieldKey} label={label} />
     </div>
   )
@@ -756,7 +747,7 @@ export default function EditarSitePage() {
               : true
 
             return (
-              <div className="space-y-3 rounded-md border border-blush-200 bg-cream p-4 dark:border-charcoal-600 dark:bg-charcoal-700">
+              <div className="space-y-3 rounded-md border border-blush-200 bg-cream p-4 dark:border-[#3a3835] dark:bg-[#252423]">
                 <ToggleField
                   enabled={socialProofEnabled}
                   onToggle={() => setSubVal('contact', 'social_proof', 'enabled', !socialProofEnabled)}
@@ -783,7 +774,7 @@ export default function EditarSitePage() {
                     inputMode="numeric"
                   />
                 </div>
-                <p className="text-xs text-charcoal-400 dark:text-charcoal-500">
+                <p className="text-xs text-charcoal-400 dark:text-charcoal-300">
                   O site soma automaticamente os leads reais cadastrados para atualizar Clientes registrados.
                 </p>
               </div>
@@ -1029,7 +1020,7 @@ export default function EditarSitePage() {
             />
 
             {results.map((item, idx) => (
-              <div key={item.id || idx} className="space-y-3 rounded-md border border-blush-200 bg-cream p-4 dark:border-charcoal-600 dark:bg-charcoal-700">
+              <div key={item.id || idx} className="space-y-3 rounded-md border border-blush-200 bg-cream p-4 dark:border-[#3a3835] dark:bg-[#252423]">
                 <div className="flex items-center justify-between gap-3">
                   <button
                     type="button"
@@ -1037,7 +1028,7 @@ export default function EditarSitePage() {
                     className="flex min-w-0 flex-1 items-center justify-between gap-3 text-left"
                   >
                     <div className="min-w-0">
-                      <p className="text-sm font-semibold text-charcoal dark:text-charcoal-100">Resultado {idx + 1}</p>
+                      <p className="text-sm font-semibold text-charcoal dark:text-[#ECEAE6]">Resultado {idx + 1}</p>
                       <p className="truncate text-xs text-charcoal-400">
                         {item.title.trim() || 'Rascunho sem título'}
                         {item.category ? ` • ${item.category}` : ''}
@@ -1066,7 +1057,7 @@ export default function EditarSitePage() {
                       animate={{ height: 'auto', opacity: 1 }}
                       exit={{ height: 0, opacity: 0 }}
                       transition={{ duration: 0.2 }}
-                      className="space-y-3 overflow-hidden border-t border-blush-200 pt-3 dark:border-charcoal-600"
+                      className="space-y-3 overflow-hidden border-t border-blush-200 pt-3 dark:border-[#3a3835]"
                     >
                       <TextField
                         value={item.title}
@@ -1092,7 +1083,7 @@ export default function EditarSitePage() {
                       <div className="grid gap-3 md:grid-cols-2">
                         <div className="space-y-2">
                           <label className={labelCls}>Antes</label>
-                          <div className="relative h-24 overflow-hidden rounded-lg border border-blush-200 bg-white dark:border-charcoal-600 dark:bg-charcoal-800">
+                          <div className="relative h-24 overflow-hidden rounded-lg border border-blush-200 bg-white dark:border-[#3a3835] dark:bg-[#1c1b1a]">
                             {item.beforeImage ? (
                               <Image
                                 src={normalizeImageUrl(item.beforeImage)}
@@ -1106,7 +1097,7 @@ export default function EditarSitePage() {
                               <div className="flex h-full items-center justify-center text-xs text-charcoal-400">Sem imagem</div>
                             )}
                           </div>
-                          <label className="flex cursor-pointer items-center justify-center gap-2 rounded-md border-2 border-dashed border-blush-200 px-3 py-2 text-xs text-charcoal-400 transition-colors hover:border-rose-gold/50 hover:text-rose-gold dark:border-charcoal-600">
+                          <label className="flex cursor-pointer items-center justify-center gap-2 rounded-md border-2 border-dashed border-blush-200 px-3 py-2 text-xs text-charcoal-400 transition-colors hover:border-rose-gold/50 hover:text-rose-gold dark:border-[#3a3835]">
                             <Upload size={14} /> Adicionar imagem
                             <input
                               type="file"
@@ -1128,7 +1119,7 @@ export default function EditarSitePage() {
 
                         <div className="space-y-2">
                           <label className={labelCls}>Depois</label>
-                          <div className="relative h-24 overflow-hidden rounded-lg border border-blush-200 bg-white dark:border-charcoal-600 dark:bg-charcoal-800">
+                          <div className="relative h-24 overflow-hidden rounded-lg border border-blush-200 bg-white dark:border-[#3a3835] dark:bg-[#1c1b1a]">
                             {item.afterImage ? (
                               <Image
                                 src={normalizeImageUrl(item.afterImage)}
@@ -1142,7 +1133,7 @@ export default function EditarSitePage() {
                               <div className="flex h-full items-center justify-center text-xs text-charcoal-400">Sem imagem</div>
                             )}
                           </div>
-                          <label className="flex cursor-pointer items-center justify-center gap-2 rounded-md border-2 border-dashed border-blush-200 px-3 py-2 text-xs text-charcoal-400 transition-colors hover:border-rose-gold/50 hover:text-rose-gold dark:border-charcoal-600">
+                          <label className="flex cursor-pointer items-center justify-center gap-2 rounded-md border-2 border-dashed border-blush-200 px-3 py-2 text-xs text-charcoal-400 transition-colors hover:border-rose-gold/50 hover:text-rose-gold dark:border-[#3a3835]">
                             <Upload size={14} /> Adicionar imagem
                             <input
                               type="file"
@@ -1191,7 +1182,7 @@ export default function EditarSitePage() {
               </div>
             ))}
 
-            <div className="space-y-2 rounded-md border border-blush-200 bg-white p-3 dark:border-charcoal-600 dark:bg-charcoal-800">
+            <div className="space-y-2 rounded-md border border-blush-200 bg-white p-3 dark:border-[#3a3835] dark:bg-[#1c1b1a]">
               <div className="flex flex-col gap-2 md:flex-row md:items-end">
                 <div className="flex-1">
                   <label className={labelCls}>Criar categoria</label>
@@ -1219,7 +1210,7 @@ export default function EditarSitePage() {
                       key={category}
                       type="button"
                       onClick={() => void handleRemoveCategory(category)}
-                      className="inline-flex items-center gap-2 rounded-full border border-blush-200 bg-cream px-2.5 py-1 text-[11px] font-medium text-charcoal transition-colors hover:border-red-300 hover:text-red-500 dark:border-charcoal-600 dark:bg-charcoal-700 dark:text-charcoal-100"
+                      className="inline-flex items-center gap-2 rounded-full border border-blush-200 bg-cream px-2.5 py-1 text-[11px] font-medium text-charcoal transition-colors hover:border-red-300 hover:text-red-500 dark:border-[#3a3835] dark:bg-[#252423] dark:text-[#ECEAE6]"
                     >
                       {category}
                       <X size={12} />
@@ -1234,7 +1225,7 @@ export default function EditarSitePage() {
             <button
               type="button"
               onClick={handleCreateResult}
-              className="flex w-full items-center justify-center gap-2 rounded-md border-2 border-dashed border-blush-200 py-2.5 text-sm text-charcoal-400 transition-colors hover:border-rose-gold/50 hover:text-rose-gold dark:border-charcoal-600"
+              className="flex w-full items-center justify-center gap-2 rounded-md border-2 border-dashed border-blush-200 py-2.5 text-sm text-charcoal-400 transition-colors hover:border-rose-gold/50 hover:text-rose-gold dark:border-[#3a3835]"
             >
               <Plus size={14} /> Criar novo resultado
             </button>
@@ -1253,7 +1244,7 @@ export default function EditarSitePage() {
             && linked.locationId === location.locationId
           ))
         ))
-        const itemInputCls = 'w-full px-2.5 py-1.5 text-xs rounded-lg border border-blush-200 dark:border-charcoal-600 bg-white dark:bg-charcoal-800 text-charcoal dark:text-charcoal-100 focus:outline-none focus:ring-1 focus:ring-rose-gold/40'
+        const itemInputCls = 'w-full px-2.5 py-1.5 text-xs rounded-lg border border-blush-200 dark:border-[#3a3835] bg-white dark:bg-[#1c1b1a] text-charcoal dark:text-[#ECEAE6] focus:outline-none focus:ring-1 focus:ring-rose-gold/40'
         return (
           <div className="space-y-4">
             <ToggleField
@@ -1271,7 +1262,7 @@ export default function EditarSitePage() {
             />
 
             {googleEnabled && (
-              <div className="space-y-3 rounded-md border border-blush-200 bg-cream p-4 dark:border-charcoal-600 dark:bg-charcoal-700">
+              <div className="space-y-3 rounded-md border border-blush-200 bg-cream p-4 dark:border-[#3a3835] dark:bg-[#252423]">
                 <div className="flex flex-wrap items-center gap-2">
                   <button
                     type="button"
@@ -1286,32 +1277,32 @@ export default function EditarSitePage() {
                     type="button"
                     onClick={fetchGoogleBusinessLocations}
                     disabled={loadingGoogleLocations}
-                    className="inline-flex items-center gap-2 rounded-md border border-blush-200 px-3 py-2 text-xs font-semibold text-charcoal-500 transition-colors hover:border-rose-gold/40 hover:text-rose-gold disabled:cursor-not-allowed disabled:opacity-70 dark:border-charcoal-600 dark:text-charcoal-300"
+                    className="inline-flex items-center gap-2 rounded-md border border-blush-200 px-3 py-2 text-xs font-semibold text-charcoal-500 transition-colors hover:border-rose-gold/40 hover:text-rose-gold disabled:cursor-not-allowed disabled:opacity-70 dark:border-[#3a3835] dark:text-charcoal-300"
                   >
                     {loadingGoogleLocations ? <Loader2 size={14} className="animate-spin" /> : <RefreshCw size={14} />}
                     Buscar perfis do Google Empresa
                   </button>
                 </div>
 
-                <p className="text-xs text-charcoal-400 dark:text-charcoal-500">
+                <p className="text-xs text-charcoal-400 dark:text-charcoal-300">
                   Você pode vincular várias contas e selecionar mais de um perfil empresarial para alimentar a seção de depoimentos.
                 </p>
 
                 {linkedLocations.length > 0 && (
                   <div className="space-y-2">
-                    <p className="text-xs font-semibold uppercase tracking-[0.18em] text-charcoal-400 dark:text-charcoal-500">
+                    <p className="text-xs font-semibold uppercase tracking-[0.18em] text-charcoal-400 dark:text-charcoal-300">
                       Perfis vinculados
                     </p>
                     {linkedLocations.map((location) => (
                       <div
                         key={`${location.accountName}-${location.locationId}`}
-                        className="flex items-start justify-between gap-3 rounded-md border border-blush-200 bg-white p-3 dark:border-charcoal-600 dark:bg-charcoal-800"
+                        className="flex items-start justify-between gap-3 rounded-md border border-blush-200 bg-white p-3 dark:border-[#3a3835] dark:bg-[#1c1b1a]"
                       >
                         <div className="min-w-0">
-                          <p className="text-sm font-semibold text-charcoal dark:text-charcoal-100">{location.title}</p>
-                          <p className="text-xs text-charcoal-400 dark:text-charcoal-500">{location.accountLabel}</p>
+                          <p className="text-sm font-semibold text-charcoal dark:text-[#ECEAE6]">{location.title}</p>
+                          <p className="text-xs text-charcoal-400 dark:text-charcoal-300">{location.accountLabel}</p>
                           {location.address && (
-                            <p className="mt-1 text-xs text-charcoal-400 dark:text-charcoal-500">{location.address}</p>
+                            <p className="mt-1 text-xs text-charcoal-400 dark:text-charcoal-300">{location.address}</p>
                           )}
                         </div>
                         <button
@@ -1335,7 +1326,7 @@ export default function EditarSitePage() {
                 )}
 
                 <div className="space-y-2">
-                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-charcoal-400 dark:text-charcoal-500">
+                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-charcoal-400 dark:text-charcoal-300">
                     Perfis disponíveis para adicionar
                   </p>
 
@@ -1343,26 +1334,26 @@ export default function EditarSitePage() {
                     availableLocations.map((location) => (
                       <div
                         key={`${location.accountName}-${location.locationId}`}
-                        className="flex items-start justify-between gap-3 rounded-md border border-blush-200 bg-white p-3 dark:border-charcoal-600 dark:bg-charcoal-800"
+                        className="flex items-start justify-between gap-3 rounded-md border border-blush-200 bg-white p-3 dark:border-[#3a3835] dark:bg-[#1c1b1a]"
                       >
                         <div className="min-w-0">
-                          <p className="text-sm font-semibold text-charcoal dark:text-charcoal-100">{location.title}</p>
-                          <p className="text-xs text-charcoal-400 dark:text-charcoal-500">{location.accountLabel}</p>
+                          <p className="text-sm font-semibold text-charcoal dark:text-[#ECEAE6]">{location.title}</p>
+                          <p className="text-xs text-charcoal-400 dark:text-charcoal-300">{location.accountLabel}</p>
                           {location.address && (
-                            <p className="mt-1 text-xs text-charcoal-400 dark:text-charcoal-500">{location.address}</p>
+                            <p className="mt-1 text-xs text-charcoal-400 dark:text-charcoal-300">{location.address}</p>
                           )}
                         </div>
                         <button
                           type="button"
                           onClick={() => setVal('testimonials', 'google_business_locations', [...linkedLocations, location])}
-                          className="inline-flex items-center gap-1.5 rounded-lg border border-blush-200 px-2.5 py-1.5 text-xs font-medium text-charcoal-500 transition-colors hover:border-rose-gold/40 hover:text-rose-gold dark:border-charcoal-600 dark:text-charcoal-300"
+                          className="inline-flex items-center gap-1.5 rounded-lg border border-blush-200 px-2.5 py-1.5 text-xs font-medium text-charcoal-500 transition-colors hover:border-rose-gold/40 hover:text-rose-gold dark:border-[#3a3835] dark:text-charcoal-300"
                         >
                           <Plus size={12} /> Adicionar
                         </button>
                       </div>
                     ))
                   ) : (
-                    <div className="rounded-md border border-dashed border-blush-200 px-3 py-4 text-center text-xs text-charcoal-400 dark:border-charcoal-600 dark:text-charcoal-500">
+                    <div className="rounded-md border border-dashed border-blush-200 px-3 py-4 text-center text-xs text-charcoal-400 dark:border-[#3a3835] dark:text-charcoal-300">
                       {loadingGoogleLocations
                         ? 'Buscando perfis do Google Empresa...'
                         : 'Nenhum novo perfil encontrado. Use o botão acima para buscar novamente após vincular a conta.'}
@@ -1373,11 +1364,11 @@ export default function EditarSitePage() {
             )}
 
             <div className="space-y-2">
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-charcoal-400 dark:text-charcoal-500">
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-charcoal-400 dark:text-charcoal-300">
                 Depoimentos manuais
               </p>
             {testimonials.map((t, idx) => (
-              <div key={t.id || idx} className="relative space-y-2.5 rounded-md border border-blush-200 bg-cream p-4 dark:border-charcoal-600 dark:bg-charcoal-700">
+              <div key={t.id || idx} className="relative space-y-2.5 rounded-md border border-blush-200 bg-cream p-4 dark:border-[#3a3835] dark:bg-[#252423]">
                 <button
                   type="button"
                   onClick={() => setVal('testimonials', 'manual_items', testimonials.filter((_, i) => i !== idx))}
@@ -1443,7 +1434,7 @@ export default function EditarSitePage() {
                   stars: 5,
                 },
               ])}
-              className="w-full flex items-center justify-center gap-2 py-2.5 rounded-md border-2 border-dashed border-blush-200 dark:border-charcoal-600 text-charcoal-400 hover:text-rose-gold hover:border-rose-gold/50 transition-colors text-sm"
+              className="w-full flex items-center justify-center gap-2 py-2.5 rounded-md border-2 border-dashed border-blush-200 dark:border-[#3a3835] text-charcoal-400 hover:text-rose-gold hover:border-rose-gold/50 transition-colors text-sm"
             >
               <Plus size={14} /> Adicionar depoimento
             </button>
@@ -1459,21 +1450,21 @@ export default function EditarSitePage() {
   if (loading) {
     return (
       <div className="flex h-[calc(100vh-64px-48px)] gap-0 -m-6 overflow-hidden">
-        <div className="w-96 flex-shrink-0 border-r border-blush-200 dark:border-[#3a3835] bg-white dark:bg-charcoal-800 flex flex-col">
+        <div className="w-96 flex-shrink-0 border-r border-blush-200 dark:border-[#3a3835] bg-white dark:bg-[#1c1b1a] flex flex-col">
           <div className="px-5 py-4 border-b border-blush-200 dark:border-[#3a3835] flex items-center justify-between">
             <div className="space-y-1.5">
-              <div className="h-4 w-24 bg-blush-200 dark:bg-charcoal-700 rounded animate-pulse" />
-              <div className="h-3 w-16 bg-blush-200 dark:bg-charcoal-700 rounded animate-pulse" />
+              <div className="h-4 w-24 bg-blush-200 dark:bg-[#252423] rounded animate-pulse" />
+              <div className="h-3 w-16 bg-blush-200 dark:bg-[#252423] rounded animate-pulse" />
             </div>
-            <div className="h-8 w-20 bg-blush-200 dark:bg-charcoal-700 rounded-lg animate-pulse" />
+            <div className="h-8 w-20 bg-blush-200 dark:bg-[#252423] rounded-lg animate-pulse" />
           </div>
           <div className="flex-1 p-3 space-y-2">
             {SECTIONS.map(([k]) => (
-              <div key={k} className="h-12 bg-blush-100 dark:bg-charcoal-700/60 rounded-md animate-pulse" />
+              <div key={k} className="h-12 bg-blush-100 dark:bg-[#252423]/60 rounded-md animate-pulse" />
             ))}
           </div>
         </div>
-        <div className="flex-1 bg-cream dark:bg-charcoal-900 flex items-center justify-center">
+        <div className="flex-1 bg-cream dark:bg-[#111110] flex items-center justify-center">
           <div className="w-8 h-8 border-2 border-rose-gold border-t-transparent rounded-full animate-spin" />
         </div>
       </div>
@@ -1484,28 +1475,28 @@ export default function EditarSitePage() {
   return (
     <div className="flex h-[calc(100vh-64px-48px)] gap-0 -m-6 overflow-hidden">
       {/* ── Left Panel ───────────────────────────────────────────────────── */}
-      <div className={`w-96 flex-shrink-0 flex flex-col border-r border-blush-200 dark:border-[#3a3835] bg-white dark:bg-charcoal-900${resolvedTheme === 'dark' ? ' dark' : ''}`}>
+      <div className={`w-96 flex-shrink-0 flex flex-col border-r border-blush-200 dark:border-[#3a3835] bg-white dark:bg-[#1c1b1a]${resolvedTheme === 'dark' ? ' dark' : ''}`}>
 
         {/* Panel header */}
-        <div className="px-5 py-4 border-b border-blush-200 dark:border-[#3a3835] bg-cream dark:bg-charcoal-800 flex items-center justify-between">
+        <div className="px-5 py-4 border-b border-blush-200 dark:border-[#3a3835] bg-cream dark:bg-[#1c1b1a] flex items-center justify-between">
           <div>
             <h2 className="font-heading text-base font-semibold text-charcoal dark:text-charcoal-50">Editar Site</h2>
             <div className="flex items-center gap-1.5 mt-0.5">
               {saveStatus.state === 'saving' && (
-                <><Loader2 size={11} className="animate-spin text-charcoal-400" /><span className="text-xs text-charcoal-400 dark:text-charcoal-500">Salvando...</span></>
+                <><Loader2 size={11} className="animate-spin text-charcoal-400" /><span className="text-xs text-charcoal-400 dark:text-charcoal-300">Salvando...</span></>
               )}
               {saveStatus.state === 'saved' && (
-                <><Check size={11} className="text-green-500" /><span className="text-xs text-charcoal-400 dark:text-charcoal-500">Salvo às {saveStatus.time}</span></>
+                <><Check size={11} className="text-green-500" /><span className="text-xs text-charcoal-400 dark:text-charcoal-300">Salvo às {saveStatus.time}</span></>
               )}
               {saveStatus.state === 'idle' && (
-                <span className="text-xs text-charcoal-400 dark:text-charcoal-600">Auto-save ativo</span>
+                <span className="text-xs text-charcoal-400 dark:text-charcoal-300/50">Auto-save ativo</span>
               )}
             </div>
           </div>
           <div className="flex gap-1.5">
             <button
               onClick={fetchHistory}
-              className="p-2 rounded-lg text-charcoal-400 hover:text-rose-gold hover:bg-blush dark:hover:bg-charcoal-700 transition-colors"
+              className="p-2 rounded-lg text-charcoal-400 hover:text-rose-gold hover:bg-blush dark:hover:bg-[#252423] transition-colors"
               title="Histórico"
             >
               <History size={16} />
@@ -1528,18 +1519,18 @@ export default function EditarSitePage() {
                 className={`w-full flex items-center gap-3 px-5 py-3.5 text-left transition-colors ${
                   expanded === key
                     ? 'bg-rose-gold/10 border-l-2 border-l-rose-gold'
-                    : 'hover:bg-blush dark:hover:bg-charcoal-700/30 border-l-2 border-l-transparent'
+                    : 'hover:bg-blush dark:hover:bg-[#252423]/30 border-l-2 border-l-transparent'
                 }`}
               >
                 <span className="text-sm">{meta.icon}</span>
-                <span className={`flex-1 text-sm font-semibold ${expanded === key ? 'text-rose-gold' : 'text-charcoal dark:text-charcoal-200'}`}>
+                <span className={`flex-1 text-sm font-semibold ${expanded === key ? 'text-rose-gold' : 'text-charcoal dark:text-[#ECEAE6]'}`}>
                   {meta.label}
                 </span>
                 <motion.div
                   animate={{ rotate: expanded === key ? 0 : -90 }}
                   transition={{ duration: 0.2 }}
                 >
-                  <ChevronDown size={14} className="text-charcoal-400 dark:text-charcoal-500" />
+                  <ChevronDown size={14} className="text-charcoal-400 dark:text-charcoal-300" />
                 </motion.div>
               </button>
 
@@ -1553,7 +1544,7 @@ export default function EditarSitePage() {
                     transition={{ duration: 0.22, ease: [0.4, 0, 0.2, 1] }}
                     className="overflow-hidden"
                   >
-                    <div className="px-5 pb-5 pt-3 space-y-3 bg-white dark:bg-charcoal-800">
+                    <div className="px-5 pb-5 pt-3 space-y-3 bg-white dark:bg-[#1c1b1a]">
                       {renderSection(key)}
                     </div>
                   </motion.div>
@@ -1565,13 +1556,13 @@ export default function EditarSitePage() {
       </div>
 
       {/* ── Right: iframe preview ─────────────────────────────────────── */}
-      <div className="flex-1 flex flex-col bg-cream dark:bg-charcoal-900">
-        <div className="h-10 flex items-center justify-between px-4 bg-cream dark:bg-charcoal-800 border-b border-blush-200 dark:border-[#3a3835]">
+      <div className="flex-1 flex flex-col bg-cream dark:bg-[#111110]">
+        <div className="h-10 flex items-center justify-between px-4 bg-cream dark:bg-[#1c1b1a] border-b border-blush-200 dark:border-[#3a3835]">
           <div className="flex items-center gap-2">
             <div className="w-3 h-3 rounded-full bg-red-400" />
             <div className="w-3 h-3 rounded-full bg-yellow-400" />
             <div className="w-3 h-3 rounded-full bg-green-400" />
-            <span className="ml-3 text-xs text-charcoal-400 dark:text-charcoal-500 font-mono">{LANDING_URL}</span>
+            <span className="ml-3 text-xs text-charcoal-400 dark:text-charcoal-300 font-mono">{LANDING_URL}</span>
           </div>
           <div className="flex items-center gap-2">
             <button
@@ -1583,7 +1574,7 @@ export default function EditarSitePage() {
             </button>
             <a
               href={LANDING_URL} target="_blank" rel="noopener noreferrer"
-              className="flex items-center gap-1 text-xs text-charcoal-400 dark:text-charcoal-500 hover:text-rose-gold transition-colors px-2 py-1 rounded hover:bg-blush dark:hover:bg-charcoal-700"
+              className="flex items-center gap-1 text-xs text-charcoal-400 dark:text-charcoal-300 hover:text-rose-gold transition-colors px-2 py-1 rounded hover:bg-blush dark:hover:bg-[#252423]"
             >
               <ExternalLink size={12} /> Ver ao vivo
             </a>
@@ -1600,7 +1591,7 @@ export default function EditarSitePage() {
       {/* ── Publish Modal ─────────────────────────────────────────────── */}
       {showPublishModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
-          <div className="bg-white dark:bg-charcoal-900 border border-blush-200 dark:border-[#3a3835] rounded-lg w-full max-w-sm shadow-2xl p-8 text-center">
+          <div className="bg-white dark:bg-[#1c1b1a] border border-blush-200 dark:border-[#3a3835] rounded-lg w-full max-w-sm shadow-2xl p-8 text-center">
             <div className="w-14 h-14 bg-rose-gold/10 rounded-lg flex items-center justify-center mx-auto mb-4">
               <Send size={24} className="text-rose-gold" />
             </div>
@@ -1611,7 +1602,7 @@ export default function EditarSitePage() {
             <div className="flex gap-3">
               <button
                 onClick={() => setShowPublishModal(false)}
-                className="flex-1 px-4 py-2.5 rounded-md border border-blush-200 dark:border-charcoal-600 text-charcoal-500 dark:text-charcoal-300 text-sm hover:bg-blush dark:hover:bg-charcoal-700 transition-colors"
+                className="flex-1 px-4 py-2.5 rounded-md border border-blush-200 dark:border-[#3a3835] text-charcoal-500 dark:text-charcoal-300 text-sm hover:bg-blush dark:hover:bg-[#252423] transition-colors"
               >Cancelar</button>
               <button
                 onClick={handlePublish}
@@ -1628,37 +1619,37 @@ export default function EditarSitePage() {
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4"
           onClick={e => e.target === e.currentTarget && setShowHistory(false)}
         >
-          <div className="bg-white dark:bg-charcoal-900 border border-blush-200 dark:border-[#3a3835] rounded-lg w-full max-w-md shadow-2xl max-h-[70vh] overflow-y-auto">
-            <div className="flex items-center justify-between p-6 border-b border-blush-200 dark:border-[#3a3835] sticky top-0 bg-white dark:bg-charcoal-900">
+          <div className="bg-white dark:bg-[#1c1b1a] border border-blush-200 dark:border-[#3a3835] rounded-lg w-full max-w-md shadow-2xl max-h-[70vh] overflow-y-auto">
+            <div className="flex items-center justify-between p-6 border-b border-blush-200 dark:border-[#3a3835] sticky top-0 bg-white dark:bg-[#1c1b1a]">
               <h3 className="font-heading text-base font-semibold text-charcoal dark:text-charcoal-50">Versões Anteriores</h3>
               <button onClick={() => setShowHistory(false)} className="text-charcoal-400 hover:text-charcoal dark:hover:text-charcoal-200 transition-colors"><X size={18} /></button>
             </div>
-            <div className="divide-y divide-blush-100 dark:divide-charcoal-700">
+            <div className="divide-y divide-blush-100 dark:divide-[#3a3835]">
               {loadingHistory && (
-                <p className="px-6 py-8 text-center text-sm text-charcoal-400 dark:text-charcoal-500">Carregando histórico...</p>
+                <p className="px-6 py-8 text-center text-sm text-charcoal-400 dark:text-charcoal-300">Carregando histórico...</p>
               )}
               {!loadingHistory && history.map((h) => (
                 <div key={h.id} className="px-6 py-4 flex items-center justify-between gap-4">
                   <div>
-                    <p className="font-mono text-xs text-charcoal dark:text-charcoal-200">{h.section}.{h.key}</p>
-                    <p className="text-xs text-charcoal-400 dark:text-charcoal-500 mt-0.5">
+                    <p className="font-mono text-xs text-charcoal dark:text-[#ECEAE6]">{h.section}.{h.key}</p>
+                    <p className="text-xs text-charcoal-400 dark:text-charcoal-300 mt-0.5">
                       V{h.version} • {new Date(h.savedAt).toLocaleString('pt-BR')}
                     </p>
-                    <p className="text-[11px] text-charcoal-400 dark:text-charcoal-500 mt-1">
+                    <p className="text-[11px] text-charcoal-400 dark:text-charcoal-300 mt-1">
                       {h.reason} • {h.author?.name || h.author?.email || 'sistema'}
                     </p>
                   </div>
                   <button
                     onClick={() => handleRestoreHistory(h)}
                     disabled={restoringHistoryId === h.id}
-                    className="text-xs px-3 py-1.5 rounded-lg border border-blush-200 dark:border-charcoal-600 text-charcoal-500 dark:text-charcoal-300 hover:bg-rose-gold/10 hover:text-rose-gold hover:border-rose-gold/30 transition-colors whitespace-nowrap disabled:opacity-60"
+                    className="text-xs px-3 py-1.5 rounded-lg border border-blush-200 dark:border-[#3a3835] text-charcoal-500 dark:text-charcoal-300 hover:bg-rose-gold/10 hover:text-rose-gold hover:border-rose-gold/30 transition-colors whitespace-nowrap disabled:opacity-60"
                   >
                     {restoringHistoryId === h.id ? 'Restaurando...' : 'Restaurar'}
                   </button>
                 </div>
               ))}
               {!loadingHistory && history.length === 0 && (
-                <p className="px-6 py-8 text-center text-sm text-charcoal-400 dark:text-charcoal-500">Nenhuma versão anterior</p>
+                <p className="px-6 py-8 text-center text-sm text-charcoal-400 dark:text-charcoal-300">Nenhuma versão anterior</p>
               )}
             </div>
           </div>

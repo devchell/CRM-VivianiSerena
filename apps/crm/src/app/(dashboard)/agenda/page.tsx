@@ -347,7 +347,7 @@ export default function AgendaPage() {
       <div className="flex items-center justify-between border-b border-blush-200 pb-4 dark:border-[#3a3835]">
         <div className="flex items-center gap-3">
           <h1 className="font-heading text-xl font-semibold text-charcoal dark:text-charcoal-50">Agenda</h1>
-          <span className="text-sm text-charcoal-400 dark:text-charcoal-500">{totalDuration} min</span>
+          <span className="text-sm text-charcoal-400 dark:text-charcoal-300">{totalDuration} min</span>
         </div>
         <button
           onClick={() => setShowModal(true)}
@@ -405,7 +405,7 @@ export default function AgendaPage() {
 
           <div className="card-dark overflow-hidden rounded-lg p-4 shadow-sm">
             {loading ? (
-              <div className="h-[760px] animate-pulse rounded-lg bg-blush-100 dark:bg-charcoal-700/40" />
+              <div className="h-[760px] animate-pulse rounded-lg bg-blush-100 dark:bg-[#252423]/40" />
             ) : (
               <div className="crm-calendar rounded-lg border border-blush-100 bg-[linear-gradient(180deg,#fffdfa_0%,#fffaf7_100%)] p-3 dark:border-[#3a3835] dark:bg-[linear-gradient(180deg,#181513_0%,#141110_100%)]">
                 <FullCalendarView
@@ -449,10 +449,10 @@ export default function AgendaPage() {
 
             <div className="space-y-3">
               {SERVICE_OPTIONS.map((service) => (
-                <div key={service.value} className="flex items-center justify-between gap-3 rounded-lg border border-blush-200 bg-cream/70 px-3 py-3 dark:border-[#3a3835] dark:bg-charcoal-800/70">
+                <div key={service.value} className="flex items-center justify-between gap-3 rounded-lg border border-blush-200 bg-cream/70 px-3 py-3 dark:border-[#3a3835] dark:bg-[#1c1b1a]/70">
                   <div>
                     <p className="text-sm font-medium text-charcoal dark:text-charcoal-100">{service.label}</p>
-                    <p className="text-xs text-charcoal-400 dark:text-charcoal-500">Categoria do atendimento</p>
+                    <p className="text-xs text-charcoal-400 dark:text-charcoal-300">Categoria do atendimento</p>
                   </div>
                   <span className={`inline-flex rounded-full border px-2.5 py-1 text-[11px] font-semibold ${service.badgeClassName}`}>
                     {service.shortLabel}
@@ -468,7 +468,7 @@ export default function AgendaPage() {
                 <h2 className="font-heading text-base font-semibold text-charcoal dark:text-charcoal-50">
                   Próximos atendimentos
                 </h2>
-                <p className="mt-1 text-xs text-charcoal-400 dark:text-charcoal-500">
+                <p className="mt-1 text-xs text-charcoal-400 dark:text-charcoal-300">
                   Janela operacional mais imediata da agenda.
                 </p>
               </div>
@@ -478,7 +478,7 @@ export default function AgendaPage() {
             </div>
 
             {upcomingAppointments.length === 0 ? (
-              <div className="rounded border border-dashed border-blush-200 px-4 py-8 text-center text-sm text-charcoal-400 dark:border-[#3a3835] dark:text-charcoal-500">
+              <div className="rounded border border-dashed border-blush-200 px-4 py-8 text-center text-sm text-charcoal-400 dark:border-[#3a3835] dark:text-charcoal-300">
                 Nenhum atendimento futuro por enquanto.
               </div>
             ) : (
@@ -490,14 +490,14 @@ export default function AgendaPage() {
                   return (
                     <div
                       key={appointment.id}
-                      className="rounded-lg border border-blush-200 bg-cream/60 px-4 py-3 shadow-sm dark:border-[#3a3835] dark:bg-charcoal-800/70"
+                      className="rounded-lg border border-blush-200 bg-cream/60 px-4 py-3 shadow-sm dark:border-[#3a3835] dark:bg-[#1c1b1a]/70"
                     >
                       <div className="flex items-start justify-between gap-3">
                         <div className="min-w-0">
                           <p className="truncate text-sm font-semibold text-charcoal dark:text-charcoal-100">
                             {appointment.leadName}
                           </p>
-                          <p className="mt-1 text-xs text-charcoal-400 dark:text-charcoal-500">
+                          <p className="mt-1 text-xs text-charcoal-400 dark:text-charcoal-300">
                             {formatDateLabel(appointment.startTime)}
                           </p>
                         </div>
@@ -511,7 +511,7 @@ export default function AgendaPage() {
                           {service?.label ?? appointment.serviceType}
                         </span>
                         {appointment.notes ? (
-                          <span className="inline-flex items-center gap-1 rounded-full bg-white px-2.5 py-1 text-[11px] text-charcoal-500 dark:bg-charcoal-700 dark:text-charcoal-300">
+                          <span className="inline-flex items-center gap-1 rounded-full bg-white px-2.5 py-1 text-[11px] text-charcoal-500 dark:bg-[#252423] dark:text-charcoal-300">
                             <Dot size={14} className="-mx-1" />
                             {appointment.notes}
                           </span>
@@ -542,7 +542,7 @@ export default function AgendaPage() {
           className="fixed inset-0 z-50 flex items-center justify-center bg-charcoal/25 p-4 backdrop-blur-md"
           onClick={(event) => event.target === event.currentTarget && setShowModal(false)}
         >
-          <div className="w-full max-w-lg overflow-hidden rounded-lg border border-white/70 bg-white shadow-[0_30px_80px_-35px_rgba(27,22,18,0.35)] dark:border-[#3a3835] dark:bg-charcoal-800">
+          <div className="w-full max-w-lg overflow-hidden rounded-lg border border-white/70 bg-white shadow-[0_30px_80px_-35px_rgba(27,22,18,0.35)] dark:border-[#3a3835] dark:bg-[#1c1b1a]">
             <div className="border-b border-blush-200 bg-gradient-to-r from-white via-cream to-blush/70 p-6 dark:border-[#3a3835] dark:from-charcoal-800 dark:via-charcoal-800 dark:to-charcoal-700">
               <div className="flex items-start justify-between gap-4">
                 <div>
@@ -557,7 +557,7 @@ export default function AgendaPage() {
 
                 <button
                   onClick={() => setShowModal(false)}
-                  className="rounded-md p-2 text-charcoal-400 transition-colors hover:bg-white hover:text-charcoal dark:hover:bg-charcoal-700 dark:hover:text-charcoal-100"
+                  className="rounded-md p-2 text-charcoal-400 transition-colors hover:bg-white hover:text-charcoal dark:hover:bg-[#252423] dark:hover:text-charcoal-100"
                 >
                   <X size={18} />
                 </button>
@@ -586,7 +586,7 @@ export default function AgendaPage() {
                   <ChevronDown size={16} className={crmFieldSelectIcon} />
                 </div>
                 {!canViewLeads ? (
-                  <p className="mt-1 text-[11px] text-charcoal-400 dark:text-charcoal-500">
+                  <p className="mt-1 text-[11px] text-charcoal-400 dark:text-charcoal-300">
                     Este perfil precisa de acesso a leads para criar agendamentos.
                   </p>
                 ) : null}
@@ -602,7 +602,7 @@ export default function AgendaPage() {
                     required
                     value={form.date}
                     onChange={(event) => setForm((current) => ({ ...current, date: event.target.value }))}
-                    className="w-full rounded-md border border-blush-300 bg-white px-4 py-3 text-sm text-charcoal shadow-sm focus:outline-none focus:ring-2 focus:ring-rose-gold/30 dark:border-charcoal-600 dark:bg-charcoal-700 dark:text-charcoal-100"
+                    className="w-full rounded-md border border-blush-300 bg-white px-4 py-3 text-sm text-charcoal shadow-sm focus:outline-none focus:ring-2 focus:ring-rose-gold/30 dark:border-[#3a3835] dark:bg-[#252423] dark:text-charcoal-100"
                   />
                 </div>
 
@@ -610,10 +610,10 @@ export default function AgendaPage() {
                   <label className="mb-1.5 block text-xs font-medium uppercase tracking-[0.12em] text-charcoal-400 dark:text-charcoal-300">
                     Duração
                   </label>
-                  <div className="flex h-[50px] items-center rounded-md border border-blush-300 bg-blush-50 px-4 text-sm font-medium text-charcoal-500 shadow-sm dark:border-charcoal-600 dark:bg-charcoal-700/60 dark:text-charcoal-300">
+                  <div className="flex h-[50px] items-center rounded-md border border-blush-300 bg-blush-50 px-4 text-sm font-medium text-charcoal-500 shadow-sm dark:border-[#3a3835] dark:bg-[#252423]/60 dark:text-charcoal-300">
                     60 min padrão
                   </div>
-                  <p className="mt-1 text-[11px] text-charcoal-400 dark:text-charcoal-500">
+                  <p className="mt-1 text-[11px] text-charcoal-400 dark:text-charcoal-300">
                     A duração operacional atual do CRM é fixa em 1 hora por agendamento.
                   </p>
                 </div>
@@ -634,7 +634,7 @@ export default function AgendaPage() {
                         className={`rounded border px-3 py-3 text-left transition-all ${
                           active
                             ? 'border-rose-gold bg-rose-gold/8 shadow-sm'
-                            : 'border-blush-200 bg-white hover:border-rose-gold/40 hover:bg-blush/50 dark:border-charcoal-600 dark:bg-charcoal-700 dark:hover:border-rose-gold/40 dark:hover:bg-charcoal-700/80'
+                            : 'border-blush-200 bg-white hover:border-rose-gold/40 hover:bg-blush/50 dark:border-[#3a3835] dark:bg-[#252423] dark:hover:border-rose-gold/40 dark:hover:bg-[#252423]/80'
                         }`}
                       >
                         <span className={`inline-flex rounded-full border px-2 py-0.5 text-[10px] font-semibold ${service.badgeClassName}`}>
@@ -655,7 +655,7 @@ export default function AgendaPage() {
                   value={form.notes ?? ''}
                   onChange={(event) => setForm((current) => ({ ...current, notes: event.target.value }))}
                   rows={4}
-                  className="w-full resize-none rounded-md border border-blush-300 bg-white px-4 py-3 text-sm text-charcoal shadow-sm focus:outline-none focus:ring-2 focus:ring-rose-gold/30 dark:border-charcoal-600 dark:bg-charcoal-700 dark:text-charcoal-100"
+                  className="w-full resize-none rounded-md border border-blush-300 bg-white px-4 py-3 text-sm text-charcoal shadow-sm focus:outline-none focus:ring-2 focus:ring-rose-gold/30 dark:border-[#3a3835] dark:bg-[#252423] dark:text-charcoal-100"
                   placeholder="Ex.: primeira avaliação, retorno, observações clínicas..."
                 />
               </div>
@@ -664,7 +664,7 @@ export default function AgendaPage() {
                 <button
                   type="button"
                   onClick={() => setShowModal(false)}
-                  className="flex-1 rounded border border-blush-300 px-4 py-3 text-sm font-medium text-charcoal-500 transition-colors hover:bg-blush dark:border-charcoal-600 dark:text-charcoal-300 dark:hover:bg-charcoal-700"
+                  className="flex-1 rounded border border-blush-300 px-4 py-3 text-sm font-medium text-charcoal-500 transition-colors hover:bg-blush dark:border-[#3a3835] dark:text-charcoal-300 dark:hover:bg-[#252423]"
                 >
                   Cancelar
                 </button>

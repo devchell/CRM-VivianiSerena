@@ -38,7 +38,7 @@ type TwoFactorDraft = {
   smsEnabled: boolean
 }
 
-const inputClass = 'w-full px-3 py-2 text-sm rounded-lg border border-blush-300 dark:border-charcoal-600 bg-white dark:bg-charcoal-700 text-charcoal dark:text-charcoal-100 focus:outline-none focus:ring-2 focus:ring-rose-gold/40'
+const inputClass = 'w-full px-3 py-2 text-sm rounded-lg border border-blush-300 dark:border-[#3a3835] bg-white dark:bg-[#252423] text-charcoal dark:text-charcoal-100 focus:outline-none focus:ring-2 focus:ring-rose-gold/40'
 const labelClass = 'block text-xs font-medium text-charcoal-400 dark:text-charcoal-300 mb-1'
 
 function toTwoFactorDraft(profile: Pick<SettingsUserProfile, 'twoFactorEnabled' | 'twoFactorEmailEnabled' | 'twoFactorSmsEnabled'>): TwoFactorDraft {
@@ -318,7 +318,7 @@ export default function ConfiguracoesPage() {
                   className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
                     activeTab === tab.key
                       ? 'bg-rose-gold/10 text-rose-gold'
-                      : 'text-charcoal-400 dark:text-charcoal-300 hover:bg-blush dark:hover:bg-charcoal-700'
+                      : 'text-charcoal-400 dark:text-charcoal-300 hover:bg-blush dark:hover:bg-[#252423]'
                   }`}
                 >
                   <Icon size={16} />
@@ -352,9 +352,9 @@ export default function ConfiguracoesPage() {
                   type="email"
                   value={profileForm.email}
                   readOnly
-                  className="w-full px-3 py-2 text-sm rounded-lg border border-blush-300 dark:border-[#3a3835] bg-blush/30 dark:bg-charcoal-800 text-charcoal-400 dark:text-charcoal-500 cursor-not-allowed"
+                  className="w-full px-3 py-2 text-sm rounded-lg border border-blush-300 dark:border-[#3a3835] bg-blush/30 dark:bg-[#1c1b1a] text-charcoal-400 dark:text-charcoal-300 cursor-not-allowed"
                 />
-                <p className="text-xs text-charcoal-400 dark:text-charcoal-500 mt-1">
+                <p className="text-xs text-charcoal-400 dark:text-charcoal-300 mt-1">
                   Alterar o e-mail afeta o acesso ao sistema.
                 </p>
               </div>
@@ -368,7 +368,7 @@ export default function ConfiguracoesPage() {
                   placeholder="(11) 99999-9999"
                   className={inputClass}
                 />
-                <p className="text-xs text-charcoal-400 dark:text-charcoal-500 mt-1">
+                <p className="text-xs text-charcoal-400 dark:text-charcoal-300 mt-1">
                   Necessário para usar o 2FA por celular.
                 </p>
               </div>
@@ -433,7 +433,7 @@ export default function ConfiguracoesPage() {
                 </h2>
 
                 <div className="rounded-md border border-blush-200 dark:border-[#3a3835] p-4 flex items-start gap-4">
-                  <div className={`mt-0.5 p-2 rounded ${twoFaDraft.enabled ? 'bg-green-100 dark:bg-green-900/30' : 'bg-charcoal-100 dark:bg-charcoal-700'}`}>
+                  <div className={`mt-0.5 p-2 rounded ${twoFaDraft.enabled ? 'bg-green-100 dark:bg-green-900/30' : 'bg-charcoal-100 dark:bg-[#252423]'}`}>
                     {twoFaDraft.enabled
                       ? <ShieldCheck size={20} className="text-green-600 dark:text-green-400" />
                       : <ShieldOff size={20} className="text-charcoal-400" />
@@ -443,7 +443,7 @@ export default function ConfiguracoesPage() {
                     <p className="text-sm font-medium text-charcoal dark:text-charcoal-100">
                       {twoFaDraft.enabled ? '2FA ativo' : '2FA desativado'}
                     </p>
-                    <p className="text-xs text-charcoal-400 dark:text-charcoal-500 mt-0.5">
+                    <p className="text-xs text-charcoal-400 dark:text-charcoal-300 mt-0.5">
                       O 2FA sempre começa desligado. Ao ativar, o celular fica marcado por padrão e você pode manter celular, e-mail ou ambos.
                     </p>
                     {!profileForm.phone.trim() && (
@@ -472,13 +472,13 @@ export default function ConfiguracoesPage() {
                       className={`flex items-start gap-3 rounded-md border p-4 text-left transition-colors ${
                         twoFaDraft.smsEnabled
                           ? 'border-rose-gold bg-rose-gold/5'
-                          : 'border-blush-300 dark:border-charcoal-600'
+                          : 'border-blush-300 dark:border-[#3a3835]'
                       }`}
                     >
                       <Smartphone size={18} className={twoFaDraft.smsEnabled ? 'text-rose-gold' : 'text-charcoal-400'} />
                       <span>
                         <strong className="block text-sm text-charcoal dark:text-charcoal-100">Celular</strong>
-                        <span className="text-xs text-charcoal-400 dark:text-charcoal-500">
+                        <span className="text-xs text-charcoal-400 dark:text-charcoal-300">
                           Recebe o código por SMS. Padrão ao ativar.
                         </span>
                       </span>
@@ -490,13 +490,13 @@ export default function ConfiguracoesPage() {
                       className={`flex items-start gap-3 rounded-md border p-4 text-left transition-colors ${
                         twoFaDraft.emailEnabled
                           ? 'border-rose-gold bg-rose-gold/5'
-                          : 'border-blush-300 dark:border-charcoal-600'
+                          : 'border-blush-300 dark:border-[#3a3835]'
                       }`}
                     >
                       <Mail size={18} className={twoFaDraft.emailEnabled ? 'text-rose-gold' : 'text-charcoal-400'} />
                       <span>
                         <strong className="block text-sm text-charcoal dark:text-charcoal-100">E-mail</strong>
-                        <span className="text-xs text-charcoal-400 dark:text-charcoal-500">
+                        <span className="text-xs text-charcoal-400 dark:text-charcoal-300">
                           Recebe o código pelo e-mail cadastrado.
                         </span>
                       </span>
@@ -504,7 +504,7 @@ export default function ConfiguracoesPage() {
                   </div>
                 )}
 
-                <div className="rounded-md border border-blush-200 dark:border-[#3a3835] bg-blush/40 dark:bg-charcoal-800/60 p-4 text-sm text-charcoal-500 dark:text-charcoal-300">
+                <div className="rounded-md border border-blush-200 dark:border-[#3a3835] bg-blush/40 dark:bg-[#1c1b1a]/60 p-4 text-sm text-charcoal-500 dark:text-charcoal-300">
                   Se celular e e-mail ficarem desligados, o 2FA será desativado automaticamente.
                 </div>
 
@@ -544,14 +544,14 @@ export default function ConfiguracoesPage() {
                     className={`p-4 rounded-md border-2 text-left transition-all ${
                       theme === item.value
                         ? 'border-rose-gold bg-rose-gold/5'
-                        : 'border-blush-300 dark:border-charcoal-600 hover:border-rose-gold/50'
+                        : 'border-blush-300 dark:border-[#3a3835] hover:border-rose-gold/50'
                     }`}
                   >
                     <div className={`w-full h-16 rounded mb-3 ${item.value === 'dark' ? 'bg-charcoal-900' : 'bg-cream'} border ${item.value === 'dark' ? 'border-charcoal-700' : 'border-blush-300'}`}>
                       <div className={`h-4 rounded-t ${item.value === 'dark' ? 'bg-charcoal-800' : 'bg-white'}`} />
                     </div>
                     <p className="text-sm font-semibold text-charcoal dark:text-charcoal-100">{item.label}</p>
-                    <p className="text-xs text-charcoal-400 dark:text-charcoal-500 mt-0.5">{item.desc}</p>
+                    <p className="text-xs text-charcoal-400 dark:text-charcoal-300 mt-0.5">{item.desc}</p>
                   </button>
                 ))}
               </div>
@@ -562,11 +562,11 @@ export default function ConfiguracoesPage() {
 
       {twoFaPasswordModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-          <div className="bg-white dark:bg-charcoal-800 rounded-lg shadow-2xl p-6 w-full max-w-sm">
+          <div className="bg-white dark:bg-[#1c1b1a] rounded-lg shadow-2xl p-6 w-full max-w-sm">
             <h3 className="font-heading text-base font-semibold text-charcoal dark:text-charcoal-100 mb-2">
               Confirmar configuração do 2FA
             </h3>
-            <p className="text-sm text-charcoal-400 dark:text-charcoal-500 mb-4">
+            <p className="text-sm text-charcoal-400 dark:text-charcoal-300 mb-4">
               Digite sua senha atual para aplicar a configuração escolhida.
             </p>
             <input
@@ -588,7 +588,7 @@ export default function ConfiguracoesPage() {
                   setTwoFaPasswordModal(false)
                   setTwoFaPassword('')
                 }}
-                className="flex-1 py-2 rounded-lg border border-blush-300 dark:border-charcoal-600 text-sm text-charcoal-400 hover:bg-blush dark:hover:bg-charcoal-700 transition-colors"
+                className="flex-1 py-2 rounded-lg border border-blush-300 dark:border-[#3a3835] text-sm text-charcoal-400 hover:bg-blush dark:hover:bg-[#252423] transition-colors"
               >
                 Cancelar
               </button>

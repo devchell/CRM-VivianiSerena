@@ -26,12 +26,12 @@ export function Header({ onMobileMenuClick }: HeaderProps) {
   const pageTitle = breadcrumbs[pathname] ?? 'CRM'
 
   return (
-    <header className="bg-white dark:bg-charcoal-800 border-b border-blush-200 dark:border-[#3a3835] px-6 h-16 flex items-center justify-between flex-shrink-0">
+    <header className="bg-white dark:bg-[#1c1b1a] border-b border-blush-200 dark:border-[#3a3835] px-6 h-16 flex items-center justify-between flex-shrink-0">
       {/* Mobile hamburger */}
       {typeof onMobileMenuClick === 'function' && (
         <button
           onClick={onMobileMenuClick}
-          className="lg:hidden p-2 -ml-2 rounded-lg text-charcoal-400 hover:bg-blush dark:hover:bg-charcoal-700 transition-colors mr-1"
+          className="lg:hidden p-2 -ml-2 rounded-lg text-charcoal-400 hover:bg-blush dark:hover:bg-[#252423] transition-colors mr-1"
           aria-label="Abrir menu"
         >
           <Menu size={20} />
@@ -40,7 +40,7 @@ export function Header({ onMobileMenuClick }: HeaderProps) {
 
       {/* Breadcrumb */}
       <div className="flex items-center gap-2">
-        <span className="text-xs text-charcoal-400 dark:text-charcoal-500">Viviani CRM</span>
+        <span className="text-xs text-charcoal-400 dark:text-charcoal-300">Viviani CRM</span>
         <span className="text-charcoal-300 dark:text-charcoal-600">/</span>
         <span className="text-sm font-semibold text-charcoal dark:text-charcoal-100">{pageTitle}</span>
       </div>
