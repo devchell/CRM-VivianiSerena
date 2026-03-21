@@ -20,18 +20,19 @@ type NavItem = {
   icon: React.ElementType
   module?: string
   permission?: string
+  exact?: boolean
 }
 
 const NAV_ITEMS: NavItem[] = [
-  { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, module: 'dashboard' },
-  { href: '/leads', label: 'Leads', icon: Users, module: 'leads' },
-  { href: '/leads/disparos', label: 'Disparos', icon: Send, permission: 'leads.broadcast' },
-  { href: '/agenda', label: 'Agenda', icon: Calendar, module: 'agenda' },
-  { href: '/financeiro', label: 'Financeiro', icon: DollarSign, module: 'financeiro' },
-  { href: '/editar-site', label: 'Editar Site', icon: Paintbrush, module: 'editar-site' },
-  { href: '/seguranca', label: 'Segurança', icon: Shield, module: 'seguranca' },
-  { href: '/colaboradores', label: 'Colaboradores', icon: UserCheck, permission: 'users.manage' },
-  { href: '/administracao', label: 'Administração', icon: Building2, permission: 'users.manage' },
+  { href: '/dashboard',    label: 'Dashboard',    icon: LayoutDashboard, module: 'dashboard',   exact: true },
+  { href: '/leads',        label: 'Leads',        icon: Users,           module: 'leads',        exact: true },
+  { href: '/leads/disparos', label: 'Disparos',   icon: Send,            permission: 'leads.broadcast', exact: true },
+  { href: '/agenda',       label: 'Agenda',       icon: Calendar,        module: 'agenda',       exact: true },
+  { href: '/financeiro',   label: 'Financeiro',   icon: DollarSign,      module: 'financeiro',   exact: true },
+  { href: '/editar-site',  label: 'Editar Site',  icon: Paintbrush,      module: 'editar-site',  exact: true },
+  { href: '/seguranca',    label: 'Segurança',    icon: Shield,          module: 'seguranca',    exact: true },
+  { href: '/colaboradores',label: 'Colaboradores',icon: UserCheck,       permission: 'users.manage', exact: true },
+  { href: '/administracao',label: 'Administração',icon: Building2,       permission: 'users.manage', exact: true },
 ]
 
 function getRoleLabel(profile: string | null, isAdmin: boolean) {
@@ -91,8 +92,10 @@ function Sidebar() {
       </div>
 
       <nav className="flex-1 overflow-y-auto overflow-x-hidden py-4 px-3 space-y-1 bg-white dark:bg-[#0f0f0f] transition-opacity duration-200 ease-out">
-        {visibleItems.map(({ href, label, icon: Icon }) => {
-          const active = pathname === href || (pathname?.startsWith(href + '/') ?? false)
+        {visibleItems.map(({ href, label, icon: Icon, exact }) => {
+          const active = exact
+            ? pathname === href
+            : pathname === href || (pathname?.startsWith(href + '/') ?? false)
           const collapsedClasses = collapsed ? 'justify-center gap-0' : 'gap-3'
           const hoverShift = collapsed ? '' : 'hover:translate-x-1'
 
