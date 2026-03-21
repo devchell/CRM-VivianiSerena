@@ -70,7 +70,7 @@ export default function Footer({ whatsappNumber }: FooterProps = {}) {
                 target="_blank"
                 rel="noopener noreferrer"
                 onClick={() => { trackWhatsAppClick('footer'); trackCTAClick('footer_whatsapp', 'footer') }}
-                className="w-9 h-9 bg-white/10 hover:bg-[#25D366] rounded-full flex items-center justify-center transition-colors"
+                className="w-9 h-9 bg-white/10 hover:bg-[#25D366] rounded flex items-center justify-center transition-colors"
                 aria-label="WhatsApp"
               >
                 <svg viewBox="0 0 24 24" className="w-4 h-4 fill-current" aria-hidden="true">
@@ -84,7 +84,7 @@ export default function Footer({ whatsappNumber }: FooterProps = {}) {
                 target="_blank"
                 rel="noopener noreferrer"
                 onClick={() => trackCTAClick('footer_instagram', 'footer')}
-                className="w-9 h-9 bg-white/10 hover:bg-gradient-to-br hover:from-purple-600 hover:to-pink-500 rounded-full flex items-center justify-center transition-all"
+                className="w-9 h-9 bg-white/10 hover:bg-gradient-to-br hover:from-purple-600 hover:to-pink-500 rounded flex items-center justify-center transition-all"
                 aria-label="Instagram @vivini.serena"
               >
                 <svg viewBox="0 0 24 24" className="w-4 h-4 fill-current" aria-hidden="true">
@@ -174,7 +174,7 @@ export default function Footer({ whatsappNumber }: FooterProps = {}) {
               className="mt-6 inline-flex items-center gap-2 text-xs text-white/40 hover:text-white/80 transition-colors group"
               aria-label="Voltar ao topo da página"
             >
-              <div className="w-7 h-7 border border-white/20 rounded-full flex items-center justify-center group-hover:border-white/60 transition-colors">
+              <div className="w-7 h-7 border border-white/20 rounded flex items-center justify-center group-hover:border-white/60 transition-colors">
                 <ChevronUp className="w-3.5 h-3.5" aria-hidden="true" />
               </div>
               Voltar ao topo

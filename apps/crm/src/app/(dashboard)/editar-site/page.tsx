@@ -702,7 +702,7 @@ export default function EditarSitePage() {
                   event.stopPropagation()
                   setVal(section, fieldKey, null)
                 }}
-                className="absolute bottom-2 right-2 z-20 inline-flex h-8 w-8 items-center justify-center rounded-full bg-black/65 text-white transition-colors hover:bg-red-500"
+                className="absolute bottom-2 right-2 z-20 inline-flex h-8 w-8 items-center justify-center rounded bg-black/65 text-white transition-colors hover:bg-red-500"
               >
                 <Trash2 size={14} />
               </button>

@@ -412,7 +412,7 @@ authRouter.post('/login', authRateLimiter, bruteForceCheck, async (req, res, nex
 
     if (!user) {
       recordLoginFailure(ip)
-      throw new AppError(401, 'Credenciais invalidas')
+      throw new AppError(401, 'Credenciais inválidas')
     }
 
     if (user.lockedUntil && user.lockedUntil > new Date()) {
@@ -429,7 +429,7 @@ authRouter.post('/login', authRateLimiter, bruteForceCheck, async (req, res, nex
           lockedUntil: user.failedAttempts >= 4 ? new Date(Date.now() + 15 * 60 * 1000) : null,
         },
       })
-      throw new AppError(401, 'Credenciais invalidas')
+      throw new AppError(401, 'Credenciais inválidas')
     }
 
     resetLoginFailures(ip)

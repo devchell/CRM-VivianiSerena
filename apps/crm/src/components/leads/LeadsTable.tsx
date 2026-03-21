@@ -555,7 +555,7 @@ export function LeadsTable() {
                     {item.value}
                   </p>
                 </div>
-                <div className={`flex h-11 w-11 items-center justify-center rounded-2xl ring-1 ${item.tone}`}>
+                <div className={`flex h-11 w-11 items-center justify-center rounded-lg ring-1 ${item.tone}`}>
                   <Icon size={18} aria-hidden="true" />
                 </div>
               </div>
@@ -613,19 +613,19 @@ export function LeadsTable() {
             value={sourceDetailFilter}
             onChange={e => setSourceDetailFilter(e.target.value)}
             placeholder="Origem detalhada / campanha"
-            className="h-12 min-w-[220px] rounded-2xl border border-blush-300 bg-white/95 px-4 text-sm text-charcoal shadow-sm outline-none transition focus:border-rose-gold/40 focus:ring-2 focus:ring-rose-gold/20 dark:border-charcoal-600 dark:bg-charcoal-800 dark:text-charcoal-100"
+            className="h-12 min-w-[220px] rounded-lg border border-blush-300 bg-white/95 px-4 text-sm text-charcoal shadow-sm outline-none transition focus:border-rose-gold/40 focus:ring-2 focus:ring-rose-gold/20 dark:border-charcoal-600 dark:bg-charcoal-800 dark:text-charcoal-100"
           />
           <input
             type="date"
             value={fromFilter}
             onChange={e => setFromFilter(e.target.value)}
-            className="h-12 min-w-[170px] rounded-2xl border border-blush-300 bg-white/95 px-4 text-sm text-charcoal shadow-sm outline-none transition focus:border-rose-gold/40 focus:ring-2 focus:ring-rose-gold/20 dark:border-charcoal-600 dark:bg-charcoal-800 dark:text-charcoal-100"
+            className="h-12 min-w-[170px] rounded-lg border border-blush-300 bg-white/95 px-4 text-sm text-charcoal shadow-sm outline-none transition focus:border-rose-gold/40 focus:ring-2 focus:ring-rose-gold/20 dark:border-charcoal-600 dark:bg-charcoal-800 dark:text-charcoal-100"
           />
           <input
             type="date"
             value={toFilter}
             onChange={e => setToFilter(e.target.value)}
-            className="h-12 min-w-[170px] rounded-2xl border border-blush-300 bg-white/95 px-4 text-sm text-charcoal shadow-sm outline-none transition focus:border-rose-gold/40 focus:ring-2 focus:ring-rose-gold/20 dark:border-charcoal-600 dark:bg-charcoal-800 dark:text-charcoal-100"
+            className="h-12 min-w-[170px] rounded-lg border border-blush-300 bg-white/95 px-4 text-sm text-charcoal shadow-sm outline-none transition focus:border-rose-gold/40 focus:ring-2 focus:ring-rose-gold/20 dark:border-charcoal-600 dark:bg-charcoal-800 dark:text-charcoal-100"
           />
           <button
             type="button"
@@ -635,7 +635,7 @@ export function LeadsTable() {
             <FilterX size={14} />
             Limpar
           </button>
-          <button onClick={fetchLeads} className="rounded-2xl border border-blush-300 p-3 text-charcoal-400 transition-colors hover:text-rose-gold dark:border-charcoal-600" title="Atualizar">
+          <button onClick={fetchLeads} className="rounded-lg border border-blush-300 p-3 text-charcoal-400 transition-colors hover:text-rose-gold dark:border-charcoal-600" title="Atualizar">
             <RefreshCw size={16} className={loading ? 'animate-spin' : ''} />
           </button>
           <button
@@ -725,7 +725,7 @@ export function LeadsTable() {
                             ) : detail ? (
                               <div className="grid gap-4 lg:grid-cols-[1.2fr_1fr]">
                                 <div className="space-y-4">
-                                  <div className="rounded-2xl border border-blush-200 bg-white/80 p-4 dark:border-charcoal-700 dark:bg-charcoal-800/70">
+                                  <div className="rounded-lg border border-blush-200 bg-white/80 p-4 dark:border-charcoal-700 dark:bg-charcoal-800/70">
                                     <div className="flex items-center gap-2 text-sm font-semibold text-charcoal dark:text-charcoal-100">
                                       <ShieldCheck size={16} />
                                       Captura e consentimento
@@ -735,8 +735,8 @@ export function LeadsTable() {
                                       <div><dt className="text-xs uppercase tracking-[0.16em]">Origem detalhada</dt><dd className="mt-1">{detail.utmSource ?? '-'}</dd></div>
                                       <div><dt className="text-xs uppercase tracking-[0.16em]">UTM medium</dt><dd className="mt-1">{detail.utmMedium ?? '-'}</dd></div>
                                       <div><dt className="text-xs uppercase tracking-[0.16em]">UTM campaign</dt><dd className="mt-1">{detail.utmCampaign ?? '-'}</dd></div>
-                                      <div><dt className="text-xs uppercase tracking-[0.16em]">Consentido em</dt><dd className="mt-1">{detail.consentedAt ? new Date(detail.consentedAt).toLocaleString('pt-BR') : 'Nao'}</dd></div>
-                                      <div><dt className="text-xs uppercase tracking-[0.16em]">Observacao</dt><dd className="mt-1">{detail.notes ?? '-'}</dd></div>
+                                      <div><dt className="text-xs uppercase tracking-[0.16em]">Consentido em</dt><dd className="mt-1">{detail.consentedAt ? new Date(detail.consentedAt).toLocaleString('pt-BR') : 'Não'}</dd></div>
+                                      <div><dt className="text-xs uppercase tracking-[0.16em]">Observação</dt><dd className="mt-1">{detail.notes ?? '-'}</dd></div>
                                     </dl>
                                     <div className="mt-4 flex flex-wrap gap-2">
                                       {detail.consentLogs.length > 0 ? detail.consentLogs.map((log) => (
@@ -748,7 +748,7 @@ export function LeadsTable() {
                                       )}
                                     </div>
                                   </div>
-                                  <div className="rounded-2xl border border-blush-200 bg-white/80 p-4 dark:border-charcoal-700 dark:bg-charcoal-800/70">
+                                  <div className="rounded-lg border border-blush-200 bg-white/80 p-4 dark:border-charcoal-700 dark:bg-charcoal-800/70">
                                     <div className="flex items-center gap-2 text-sm font-semibold text-charcoal dark:text-charcoal-100">
                                       <CalendarClock size={16} />
                                       Agenda e atividade
@@ -765,21 +765,21 @@ export function LeadsTable() {
                                   </div>
                                 </div>
                                 <div className="space-y-4">
-                                  <div className="rounded-2xl border border-blush-200 bg-white/80 p-4 dark:border-charcoal-700 dark:bg-charcoal-800/70">
-                                    <div className="text-sm font-semibold text-charcoal dark:text-charcoal-100">Sessao e entrada</div>
+                                  <div className="rounded-lg border border-blush-200 bg-white/80 p-4 dark:border-charcoal-700 dark:bg-charcoal-800/70">
+                                    <div className="text-sm font-semibold text-charcoal dark:text-charcoal-100">Sessão e entrada</div>
                                     <div className="mt-3 space-y-3 text-sm text-charcoal-500 dark:text-charcoal-400">
                                       {detail.sessions.length > 0 ? detail.sessions.map((session) => (
                                         <div key={session.id} className="rounded border border-blush-100 bg-white/80 px-3 py-3 dark:border-charcoal-700 dark:bg-charcoal-800">
                                           <p>Referrer: {session.referrer ?? '-'}</p>
-                                          <p className="mt-1">Paginas: {parsePagesVisited(session.pagesVisited).join(', ') || '-'}</p>
+                                          <p className="mt-1">Páginas: {parsePagesVisited(session.pagesVisited).join(', ') || '-'}</p>
                                           <p className="mt-1">Eventos: {session.analyticsEvents.length}</p>
                                         </div>
                                       )) : (
-                                        <p>Nenhuma sessao vinculada.</p>
+                                        <p>Nenhuma sessão vinculada.</p>
                                       )}
                                     </div>
                                   </div>
-                                  <div className="rounded-2xl border border-blush-200 bg-white/80 p-4 dark:border-charcoal-700 dark:bg-charcoal-800/70">
+                                  <div className="rounded-lg border border-blush-200 bg-white/80 p-4 dark:border-charcoal-700 dark:bg-charcoal-800/70">
                                     <div className="text-sm font-semibold text-charcoal dark:text-charcoal-100">Timeline</div>
                                     <div className="mt-3 space-y-2 text-sm text-charcoal-500 dark:text-charcoal-400">
                                       {detail.timeline.length > 0 ? detail.timeline.slice(0, 8).map((item) => (
@@ -796,7 +796,7 @@ export function LeadsTable() {
                                 </div>
                               </div>
                             ) : (
-                              <p className="text-sm text-charcoal-400 dark:text-charcoal-500">Nenhum detalhe disponivel para este lead.</p>
+                              <p className="text-sm text-charcoal-400 dark:text-charcoal-500">Nenhum detalhe disponível para este lead.</p>
                             )}
                           </td>
                         </tr>
@@ -823,7 +823,7 @@ export function LeadsTable() {
                   {editingLead ? 'Editar lead' : 'Cadastrar lead manualmente'}
                 </h2>
                 <p className="mt-1 text-xs text-charcoal-400 dark:text-charcoal-400">
-                  Operacao manual usa o mesmo modelo de lead da captura publica, com origem e consentimento rastreaveis.
+                  Operação manual usa o mesmo modelo de lead da captura pública, com origem e consentimento rastreáveis.
                 </p>
               </div>
               <button type="button" onClick={() => setShowModal(false)} className="text-charcoal-400 transition-colors hover:text-charcoal dark:hover:text-charcoal-100">
@@ -839,7 +839,7 @@ export function LeadsTable() {
                     required
                     value={form.name}
                     onChange={(event) => setForm((current) => ({ ...current, name: event.target.value }))}
-                    className="w-full rounded-xl border border-blush-300 bg-white px-3 py-2 text-sm text-charcoal focus:outline-none focus:ring-2 focus:ring-rose-gold/40 dark:border-charcoal-600 dark:bg-charcoal-700 dark:text-charcoal-100"
+                    className="w-full rounded-md border border-blush-300 bg-white px-3 py-2 text-sm text-charcoal focus:outline-none focus:ring-2 focus:ring-rose-gold/40 dark:border-charcoal-600 dark:bg-charcoal-700 dark:text-charcoal-100"
                   />
                 </div>
                 <div>
@@ -849,7 +849,7 @@ export function LeadsTable() {
                     type="email"
                     value={form.email}
                     onChange={(event) => setForm((current) => ({ ...current, email: event.target.value }))}
-                    className="w-full rounded-xl border border-blush-300 bg-white px-3 py-2 text-sm text-charcoal focus:outline-none focus:ring-2 focus:ring-rose-gold/40 dark:border-charcoal-600 dark:bg-charcoal-700 dark:text-charcoal-100"
+                    className="w-full rounded-md border border-blush-300 bg-white px-3 py-2 text-sm text-charcoal focus:outline-none focus:ring-2 focus:ring-rose-gold/40 dark:border-charcoal-600 dark:bg-charcoal-700 dark:text-charcoal-100"
                   />
                 </div>
               </div>
@@ -861,7 +861,7 @@ export function LeadsTable() {
                     type="tel"
                     value={form.phone}
                     onChange={(event) => setForm((current) => ({ ...current, phone: event.target.value }))}
-                    className="w-full rounded-xl border border-blush-300 bg-white px-3 py-2 text-sm text-charcoal focus:outline-none focus:ring-2 focus:ring-rose-gold/40 dark:border-charcoal-600 dark:bg-charcoal-700 dark:text-charcoal-100"
+                    className="w-full rounded-md border border-blush-300 bg-white px-3 py-2 text-sm text-charcoal focus:outline-none focus:ring-2 focus:ring-rose-gold/40 dark:border-charcoal-600 dark:bg-charcoal-700 dark:text-charcoal-100"
                   />
                 </div>
                 <div>
@@ -898,19 +898,19 @@ export function LeadsTable() {
                   <input
                     value={form.sourceDetail}
                     onChange={(event) => setForm((current) => ({ ...current, sourceDetail: event.target.value }))}
-                    placeholder="utm_source, campanha ou anotacao"
-                    className="w-full rounded-xl border border-blush-300 bg-white px-3 py-2 text-sm text-charcoal focus:outline-none focus:ring-2 focus:ring-rose-gold/40 dark:border-charcoal-600 dark:bg-charcoal-700 dark:text-charcoal-100"
+                    placeholder="utm_source, campanha ou anotação"
+                    className="w-full rounded-md border border-blush-300 bg-white px-3 py-2 text-sm text-charcoal focus:outline-none focus:ring-2 focus:ring-rose-gold/40 dark:border-charcoal-600 dark:bg-charcoal-700 dark:text-charcoal-100"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="mb-1 block text-xs font-medium text-charcoal-400">Observacao / necessidade</label>
+                <label className="mb-1 block text-xs font-medium text-charcoal-400">Observação / necessidade</label>
                 <textarea
                   rows={4}
                   value={form.notes}
                   onChange={(event) => setForm((current) => ({ ...current, notes: event.target.value }))}
-                  className="w-full rounded-xl border border-blush-300 bg-white px-3 py-2 text-sm text-charcoal focus:outline-none focus:ring-2 focus:ring-rose-gold/40 dark:border-charcoal-600 dark:bg-charcoal-700 dark:text-charcoal-100"
+                  className="w-full rounded-md border border-blush-300 bg-white px-3 py-2 text-sm text-charcoal focus:outline-none focus:ring-2 focus:ring-rose-gold/40 dark:border-charcoal-600 dark:bg-charcoal-700 dark:text-charcoal-100"
                 />
               </div>
 
@@ -928,7 +928,7 @@ export function LeadsTable() {
                   Cancelar
                 </button>
                 <button type="submit" disabled={submitting} className="flex-1 rounded bg-rose-gold px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-rose-gold-500 disabled:opacity-60">
-                  {submitting ? 'Salvando...' : editingLead ? 'Salvar alteracoes' : 'Criar lead'}
+                  {submitting ? 'Salvando...' : editingLead ? 'Salvar alterações' : 'Criar lead'}
                 </button>
               </div>
             </form>

@@ -527,7 +527,7 @@ export default function ConfiguracoesPage() {
           {activeTab === 'theme' && (
             <div className="p-6 space-y-6">
               <h2 className="font-heading text-base font-semibold text-charcoal dark:text-charcoal-100 pb-4 border-b border-blush-200 dark:border-charcoal-700">
-                Aparencia
+                Aparência
               </h2>
               <p className="text-sm text-charcoal-500 dark:text-charcoal-400">Escolha o tema da interface</p>
               <div className="grid grid-cols-2 gap-4 max-w-sm">

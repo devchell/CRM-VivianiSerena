@@ -529,7 +529,7 @@ export default function AdministracaoPage() {
               {allVisible ? <EyeOff size={15} /> : <Eye size={15} />}
               {allVisible ? 'Ocultar tudo' : 'Mostrar tudo'}
             </button>
-            <button type="button" onClick={() => void loadOverview('refresh')} disabled={refreshing} className="inline-flex items-center justify-center gap-2 rounded-2xl border border-blush-300 bg-white px-4 py-3 text-sm font-medium text-charcoal shadow-sm transition-colors hover:bg-blush disabled:opacity-60 dark:border-charcoal-600 dark:bg-charcoal-800 dark:text-charcoal-100 dark:hover:bg-charcoal-700">
+            <button type="button" onClick={() => void loadOverview('refresh')} disabled={refreshing} className="inline-flex items-center justify-center gap-2 rounded-lg border border-blush-300 bg-white px-4 py-3 text-sm font-medium text-charcoal shadow-sm transition-colors hover:bg-blush disabled:opacity-60 dark:border-charcoal-600 dark:bg-charcoal-800 dark:text-charcoal-100 dark:hover:bg-charcoal-700">
               {refreshing ? <Loader2 size={15} className="animate-spin" /> : <RefreshCw size={15} />}
               Atualizar painel
             </button>
@@ -628,10 +628,10 @@ export default function AdministracaoPage() {
             </div>
           </SectionCard>
 
-          <SectionCard eyebrow="Dados de e-mail" title="SMTP, remetente e notificações" description="As credenciais de envio ficam agrupadas em um único fluxo de manutenção, com leitura do banco e atualização imediata após salvar." visible={visibility.email} onToggle={() => toggleSection('email')} status={<><StatusPill ok={overview.integrations.email.configured} label={overview.integrations.email.configured ? 'SMTP pronto' : 'SMTP pendente'} /><StatusPill ok={overview.integrations.email.source === 'database'} label={overview.integrations.email.source === 'database' ? 'Editavel no painel' : 'Lendo do ambiente'} /></>}>
+          <SectionCard eyebrow="Dados de e-mail" title="SMTP, remetente e notificações" description="As credenciais de envio ficam agrupadas em um único fluxo de manutenção, com leitura do banco e atualização imediata após salvar." visible={visibility.email} onToggle={() => toggleSection('email')} status={<><StatusPill ok={overview.integrations.email.configured} label={overview.integrations.email.configured ? 'SMTP pronto' : 'SMTP pendente'} /><StatusPill ok={overview.integrations.email.source === 'database'} label={overview.integrations.email.source === 'database' ? 'Editável no painel' : 'Lendo do ambiente'} /></>}>
             <div className="grid gap-3 md:grid-cols-3">
               <InfoCard label="Provider" value={overview.integrations.email.provider} />
-              <InfoCard label="Origem" value={overview.integrations.email.source === 'database' ? 'Banco de dados' : 'Variaveis de ambiente'} />
+              <InfoCard label="Origem" value={overview.integrations.email.source === 'database' ? 'Banco de dados' : 'Variáveis de ambiente'} />
               <InfoCard label="Senha SMTP" value={overview.integrations.email.passwordConfigured ? 'Configurada' : 'Não configurada'} />
             </div>
             <div className="mt-5 grid gap-3">
@@ -660,7 +660,7 @@ export default function AdministracaoPage() {
               <label className="space-y-2 text-sm"><span className="font-medium text-charcoal dark:text-charcoal-100">E-mail administrativo</span><input value={emailForm.adminEmail} onChange={(event) => updateEmailField('adminEmail', event.target.value)} className="w-full rounded-md border border-blush-200 bg-white px-4 py-3 text-sm text-charcoal outline-none transition focus:border-rose-gold dark:border-charcoal-700 dark:bg-charcoal-800 dark:text-charcoal-100" placeholder={maskValue(overview.integrations.email.adminEmail, visibility.email)} /></label>
             </div>
             <div className="mt-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-              <p className="text-xs leading-6 text-charcoal-400 dark:text-charcoal-500">Se a senha ficar vazia, o valor atual sera preservado. As alteracoes entram em uso assim que forem salvas.</p>
+              <p className="text-xs leading-6 text-charcoal-400 dark:text-charcoal-500">Se a senha ficar vazia, o valor atual será preservado. As alterações entram em uso assim que forem salvas.</p>
               <button type="button" onClick={() => void handleEmailSave()} disabled={emailSaving} className="inline-flex items-center gap-2 rounded border border-blush-300 bg-white px-4 py-3 text-sm font-medium text-charcoal transition-colors hover:bg-blush disabled:opacity-60 dark:border-charcoal-600 dark:bg-charcoal-800 dark:text-charcoal-100 dark:hover:bg-charcoal-700">
                 {emailSaving ? <Loader2 size={15} className="animate-spin" /> : <Mail size={15} />}
                 Salvar dados de e-mail

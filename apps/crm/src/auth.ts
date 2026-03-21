@@ -205,7 +205,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         }
         const normalized = normalizeAuthUser(currentUser)
 
-        token.name = normalized.name ?? token.email?.split('@')[0] ?? 'Usuario'
+        token.name = normalized.name ?? token.email?.split('@')[0] ?? 'Usuário'
         token.userId = normalized.id
         token.role = normalized.role
         token.profile = normalized.profile
@@ -221,7 +221,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
       token.name = typeof token.name === 'string' && token.name.length > 0
         ? token.name
-        : (typeof token.email === 'string' ? token.email.split('@')[0] : 'Usuario')
+        : (typeof token.email === 'string' ? token.email.split('@')[0] : 'Usuário')
 
       const role = toKnownRole(typeof token.role === 'string' ? token.role : undefined)
       token.role = role
@@ -314,7 +314,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
       session.user.name = typeof token.name === 'string' && token.name.length > 0
         ? token.name
-        : (typeof session.user.email === 'string' ? session.user.email.split('@')[0] : 'Usuario')
+        : (typeof session.user.email === 'string' ? session.user.email.split('@')[0] : 'Usuário')
 
       session.user.id = typeof token.userId === 'string' && token.userId.length > 0
         ? token.userId

@@ -168,7 +168,7 @@ export default async function HomePage() {
     id: review.id,
     name: review.reviewerName,
     city: review.locationTitle,
-    service: 'Avaliacao Google',
+    service: 'Avaliação Google',
     text: review.comment,
     stars: review.rating,
     source: 'google' as const,

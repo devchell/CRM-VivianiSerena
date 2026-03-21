@@ -53,7 +53,7 @@ export function StatsCards({ overview, loading = false }: StatsCardsProps) {
         return (
           <div key={card.title} className="card-dark p-6 shadow-sm">
             <div className="mb-4 flex items-start justify-between">
-              <div className={`flex h-10 w-10 items-center justify-center rounded-xl ${card.tone}`}>
+              <div className={`flex h-10 w-10 items-center justify-center rounded-md ${card.tone}`}>
                 <Icon size={20} />
               </div>
             </div>

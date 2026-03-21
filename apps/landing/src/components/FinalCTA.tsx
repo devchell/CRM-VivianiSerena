@@ -66,7 +66,7 @@ export default function FinalCTA() {
                 trackWhatsAppClick('final_cta')
                 trackCTAClick('final_cta_whatsapp', 'final_cta')
               }}
-              className="inline-flex items-center gap-3 bg-[#25D366] hover:bg-[#20b858] text-white font-semibold px-8 py-4 rounded-full shadow-xl hover:shadow-2xl transition-all duration-200 hover:-translate-y-0.5 w-full sm:w-auto justify-center"
+              className="inline-flex items-center gap-3 bg-[#25D366] hover:bg-[#20b858] text-white font-semibold px-8 py-4 rounded shadow-xl hover:shadow-2xl transition-all duration-200 hover:-translate-y-0.5 w-full sm:w-auto justify-center"
               aria-label="Agendar avaliação pelo WhatsApp"
             >
               <svg viewBox="0 0 24 24" className="w-5 h-5 fill-current flex-shrink-0" aria-hidden="true">
@@ -78,7 +78,7 @@ export default function FinalCTA() {
             {/* Form */}
             <button
               onClick={scrollToForm}
-              className="inline-flex items-center gap-2 bg-white/90 hover:bg-white text-charcoal font-semibold px-8 py-4 rounded-full shadow-xl hover:shadow-2xl transition-all duration-200 hover:-translate-y-0.5 w-full sm:w-auto justify-center"
+              className="inline-flex items-center gap-2 bg-white/90 hover:bg-white text-charcoal font-semibold px-8 py-4 rounded shadow-xl hover:shadow-2xl transition-all duration-200 hover:-translate-y-0.5 w-full sm:w-auto justify-center"
             >
               Preencher formulário
             </button>
@@ -89,7 +89,7 @@ export default function FinalCTA() {
               target="_blank"
               rel="noopener noreferrer"
               onClick={() => trackCTAClick('final_cta_instagram', 'final_cta')}
-              className="inline-flex items-center gap-2 bg-white/10 hover:bg-white/20 text-white border border-white/30 font-semibold px-8 py-4 rounded-full shadow-xl hover:shadow-2xl transition-all duration-200 hover:-translate-y-0.5 w-full sm:w-auto justify-center backdrop-blur-sm"
+              className="inline-flex items-center gap-2 bg-white/10 hover:bg-white/20 text-white border border-white/30 font-semibold px-8 py-4 rounded shadow-xl hover:shadow-2xl transition-all duration-200 hover:-translate-y-0.5 w-full sm:w-auto justify-center backdrop-blur-sm"
               aria-label="Ver perfil no Instagram"
             >
               <svg viewBox="0 0 24 24" className="w-5 h-5 fill-current flex-shrink-0" aria-hidden="true">

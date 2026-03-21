@@ -205,7 +205,7 @@ function Step2({ onNext, onBack }: { onNext: (data: Step2Data) => void; onBack: 
                   : 'border-blush bg-white text-charcoal/70 hover:border-rose-gold/40 hover:bg-blush/30'
               }`}
             >
-              <span className="flex h-7 w-7 items-center justify-center rounded-full bg-cream text-sm font-semibold text-rose-gold">
+              <span className="flex h-7 w-7 items-center justify-center rounded bg-cream text-sm font-semibold text-rose-gold">
                 {option.emoji}
               </span>
               <span className="text-sm font-medium">{option.label}</span>
@@ -305,7 +305,7 @@ function SuccessScreen({ name }: { name: string }) {
 
   return (
     <motion.div key="success" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.5 }} className="py-4 text-center">
-      <div className="mx-auto mb-5 flex h-20 w-20 items-center justify-center rounded-full bg-sage/15">
+      <div className="mx-auto mb-5 flex h-20 w-20 items-center justify-center rounded bg-sage/15">
         <CheckCircle className="text-sage" size={40} />
       </div>
       <h3 className="mb-3 font-heading text-2xl font-bold text-charcoal">Recebido, {firstName}!</h3>
@@ -469,7 +469,7 @@ export function LeadFormSection({ socialProof }: { socialProof?: SocialProofSumm
 
               <AnimatePresence mode="wait">
                 {isSuccess ? (
-                  <SuccessScreen key="success" name={formData.name ?? 'voce'} />
+                  <SuccessScreen key="success" name={formData.name ?? 'você'} />
                 ) : step === 1 ? (
                   <Step1 key="step1" onNext={handleStep1} />
                 ) : step === 2 ? (

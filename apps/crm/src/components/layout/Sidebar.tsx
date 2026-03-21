@@ -66,7 +66,7 @@ function Sidebar() {
         {collapsed ? (
           <button
             onClick={toggle}
-            className="inline-flex items-center justify-center w-11 h-11 rounded-xl text-[#c58b62] dark:text-[#d8b898] hover:bg-[#f0e8de] dark:hover:bg-[#272421] transition-all duration-200 hover:scale-[1.04] active:scale-[0.98]"
+            className="inline-flex items-center justify-center w-11 h-11 rounded-md text-[#c58b62] dark:text-[#d8b898] hover:bg-[#f0e8de] dark:hover:bg-[#272421] transition-all duration-200 hover:scale-[1.04] active:scale-[0.98]"
             aria-label="Expandir menu"
           >
             <Sparkles size={20} />

@@ -142,7 +142,7 @@ export default function Results({ items, vivianiPhotoUrl }: { items: ResultItem[
                 <button
                   key={category}
                   onClick={() => { setActiveCategory(category); setShowAll(false) }}
-                  className={`rounded-full px-5 py-2 text-sm font-medium transition-all duration-200 ${
+                  className={`rounded px-5 py-2 text-sm font-medium transition-all duration-200 ${
                     activeCategory === category
                       ? 'scale-105 bg-rose-gold text-white shadow-md'
                       : 'border border-blush-300 bg-white text-charcoal-600 hover:border-rose-gold hover:text-rose-gold'

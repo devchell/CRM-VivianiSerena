@@ -28,7 +28,7 @@ export function RecentActivity({ items, loading = false }: RecentActivityProps) 
       {loading ? (
         <div className="space-y-3">
           {Array.from({ length: 4 }).map((_, index) => (
-            <div key={index} className="h-12 animate-pulse rounded-xl bg-blush-100 dark:bg-charcoal-700/40" />
+            <div key={index} className="h-12 animate-pulse rounded-md bg-blush-100 dark:bg-charcoal-700/40" />
           ))}
         </div>
       ) : items.length === 0 ? (

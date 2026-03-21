@@ -145,7 +145,7 @@ export function About({ bio, photoUrl, whatsappNumber }: AboutProps = {}) {
               className="absolute -bottom-6 -right-4 lg:-right-8 glass rounded-lg px-6 py-5 border border-blush shadow-xl"
             >
               <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-xl bg-rose-gold flex items-center justify-center flex-shrink-0">
+                <div className="w-12 h-12 rounded-md bg-rose-gold flex items-center justify-center flex-shrink-0">
                   <Award className="text-white" size={22} aria-hidden="true" />
                 </div>
                 <div>

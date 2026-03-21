@@ -49,8 +49,11 @@ apps/api/logs/
 # App-local env files
 apps/*/.env
 apps/*/.env.*
+!apps/*/.env.example
+!apps/*/.env.test.example
 packages/*/.env
 packages/*/.env.*
+!packages/*/.env.example
 
 # Deploy platforms
 .vercel/

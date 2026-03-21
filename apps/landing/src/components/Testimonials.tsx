@@ -205,7 +205,7 @@ export default function Testimonials(props: {
           {total > 1 ? (
             <button
               onClick={prev}
-              className="absolute left-0 top-1/2 z-10 flex h-10 w-10 -translate-x-4 -translate-y-1/2 items-center justify-center rounded-full bg-white shadow-md transition-colors hover:bg-[#FAF7F2]"
+              className="absolute left-0 top-1/2 z-10 flex h-10 w-10 -translate-x-4 -translate-y-1/2 items-center justify-center rounded bg-white shadow-md transition-colors hover:bg-[#FAF7F2]"
               aria-label="Depoimento anterior"
             >
               <ChevronLeft size={20} className="text-[#C9967A]" />
@@ -245,7 +245,7 @@ export default function Testimonials(props: {
           {total > 1 ? (
             <button
               onClick={next}
-              className="absolute right-0 top-1/2 z-10 flex h-10 w-10 translate-x-4 -translate-y-1/2 items-center justify-center rounded-full bg-white shadow-md transition-colors hover:bg-[#FAF7F2]"
+              className="absolute right-0 top-1/2 z-10 flex h-10 w-10 translate-x-4 -translate-y-1/2 items-center justify-center rounded bg-white shadow-md transition-colors hover:bg-[#FAF7F2]"
               aria-label="Próximo depoimento"
             >
               <ChevronRight size={20} className="text-[#C9967A]" />

@@ -4,6 +4,7 @@ import Script from 'next/script'
 import { Suspense } from 'react'
 import './globals.css'
 import { PageTracker } from '@/components/PageTracker'
+import WhatsAppButton from '@/components/WhatsAppButton'
 
 const SITE_URL = 'https://vivianicoaching.com'
 const WHATSAPP_NUMBER = '5511915751770'
@@ -185,6 +186,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           Pular para o conteúdo principal
         </a>
         {children}
+        <WhatsAppButton />
       </body>
     </html>
   )
