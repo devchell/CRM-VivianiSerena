@@ -517,32 +517,26 @@ export default function AdministracaoPage() {
 
   return (
     <div className="space-y-6">
-      <section className="rounded-lg border border-blush-200 bg-[radial-gradient(circle_at_top_left,_rgba(201,150,122,0.16),_transparent_36%),linear-gradient(135deg,#fffdfb_0%,#fff7f1_52%,#fffdfb_100%)] px-6 py-6 shadow-[0_28px_80px_-42px_rgba(97,73,54,0.35)] dark:border-charcoal-700 dark:bg-[radial-gradient(circle_at_top_left,_rgba(201,150,122,0.18),_transparent_34%),linear-gradient(135deg,#171412_0%,#1e1a17_52%,#161311_100%)]">
-        <div className="flex flex-col gap-5 xl:flex-row xl:items-end xl:justify-between">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-rose-gold">Administração</p>
-            <h1 className="mt-2 font-heading text-3xl font-bold text-charcoal dark:text-charcoal-50">Integrações, credenciais e ambiente sob controle.</h1>
-            <p className="mt-3 max-w-3xl text-sm leading-6 text-charcoal-500 dark:text-charcoal-400">Refinei a hierarquia visual do painel para separar melhor os dados sensíveis e deixar cada bloco mais fácil de operar.</p>
-          </div>
-          <div className="flex flex-wrap gap-3">
-            <button type="button" onClick={toggleAll} className="inline-flex items-center justify-center gap-2 rounded border border-blush-300 bg-white px-4 py-3 text-sm font-medium text-charcoal shadow-sm transition-colors hover:bg-blush dark:border-charcoal-600 dark:bg-charcoal-800 dark:text-charcoal-100 dark:hover:bg-charcoal-700">
-              {allVisible ? <EyeOff size={15} /> : <Eye size={15} />}
-              {allVisible ? 'Ocultar tudo' : 'Mostrar tudo'}
-            </button>
-            <button type="button" onClick={() => void loadOverview('refresh')} disabled={refreshing} className="inline-flex items-center justify-center gap-2 rounded-lg border border-blush-300 bg-white px-4 py-3 text-sm font-medium text-charcoal shadow-sm transition-colors hover:bg-blush disabled:opacity-60 dark:border-charcoal-600 dark:bg-charcoal-800 dark:text-charcoal-100 dark:hover:bg-charcoal-700">
-              {refreshing ? <Loader2 size={15} className="animate-spin" /> : <RefreshCw size={15} />}
-              Atualizar painel
-            </button>
-          </div>
+      <div className="flex items-center justify-between border-b border-blush-200 pb-4 dark:border-charcoal-700">
+        <h1 className="font-heading text-xl font-semibold text-charcoal dark:text-charcoal-50">Administração</h1>
+        <div className="flex flex-wrap gap-2">
+          <button type="button" onClick={toggleAll} className="inline-flex items-center justify-center gap-2 rounded border border-blush-300 bg-white px-4 py-2 text-sm font-medium text-charcoal shadow-sm transition-colors hover:bg-blush dark:border-charcoal-600 dark:bg-charcoal-800 dark:text-charcoal-100 dark:hover:bg-charcoal-700">
+            {allVisible ? <EyeOff size={15} /> : <Eye size={15} />}
+            {allVisible ? 'Ocultar tudo' : 'Mostrar tudo'}
+          </button>
+          <button type="button" onClick={() => void loadOverview('refresh')} disabled={refreshing} className="inline-flex items-center justify-center gap-2 rounded border border-blush-300 bg-white px-4 py-2 text-sm font-medium text-charcoal shadow-sm transition-colors hover:bg-blush disabled:opacity-60 dark:border-charcoal-600 dark:bg-charcoal-800 dark:text-charcoal-100 dark:hover:bg-charcoal-700">
+            {refreshing ? <Loader2 size={15} className="animate-spin" /> : <RefreshCw size={15} />}
+            Atualizar painel
+          </button>
         </div>
-        <div className="mt-6 flex flex-wrap items-center gap-2">
-          <StatusPill ok={overview.infrastructure.database} label={overview.infrastructure.database ? 'Banco OK' : 'Banco com falha'} />
-          <StatusPill ok={overview.infrastructure.redis} label={overview.infrastructure.redis ? 'Redis OK' : 'Redis com falha'} />
-          <StatusPill ok={overview.integrations.email.source === 'database'} label={overview.integrations.email.source === 'database' ? 'SMTP no banco' : 'SMTP via ambiente'} />
-          <StatusPill ok={overview.integrations.googleCalendar.connected} label={overview.integrations.googleCalendar.connected ? 'Google conectado' : 'Google pendente'} />
-          <StatusPill ok={overview.integrations.whatsapp.connected} label={overview.integrations.whatsapp.connected ? 'WhatsApp conectado' : 'WhatsApp pendente'} />
-        </div>
-      </section>
+      </div>
+      <div className="flex flex-wrap items-center gap-2">
+        <StatusPill ok={overview.infrastructure.database} label={overview.infrastructure.database ? 'Banco OK' : 'Banco com falha'} />
+        <StatusPill ok={overview.infrastructure.redis} label={overview.infrastructure.redis ? 'Redis OK' : 'Redis com falha'} />
+        <StatusPill ok={overview.integrations.email.source === 'database'} label={overview.integrations.email.source === 'database' ? 'SMTP no banco' : 'SMTP via ambiente'} />
+        <StatusPill ok={overview.integrations.googleCalendar.connected} label={overview.integrations.googleCalendar.connected ? 'Google conectado' : 'Google pendente'} />
+        <StatusPill ok={overview.integrations.whatsapp.connected} label={overview.integrations.whatsapp.connected ? 'WhatsApp conectado' : 'WhatsApp pendente'} />
+      </div>
 
       {loadError ? <div className="rounded-lg border border-amber-200 bg-amber-50 px-5 py-4 text-sm text-amber-800 dark:border-amber-900/40 dark:bg-amber-950/20 dark:text-amber-100">{loadError}</div> : null}
 

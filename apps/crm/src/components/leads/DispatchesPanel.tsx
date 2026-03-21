@@ -334,21 +334,11 @@ export function DispatchesPanel() {
 
   return (
     <div className="space-y-6">
-      <div className="overflow-hidden rounded-lg border border-blush-200 bg-[radial-gradient(circle_at_top_left,_rgba(201,150,122,0.14),_transparent_40%),linear-gradient(135deg,#fffdfb_0%,#fff5ef_52%,#fffdfb_100%)] px-6 py-6 shadow-[0_28px_80px_-42px_rgba(97,73,54,0.35)] dark:border-charcoal-700 dark:bg-[radial-gradient(circle_at_top_left,_rgba(201,150,122,0.18),_transparent_34%),linear-gradient(135deg,#171412_0%,#1e1a17_52%,#161311_100%)]">
-        <div className="flex flex-wrap items-start justify-between gap-4">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-rose-gold">Leads / Disparos</p>
-            <h1 className="mt-2 font-heading text-3xl font-bold text-charcoal dark:text-charcoal-50">
-              Segmentação, confirmação e histórico de campanhas.
-            </h1>
-            <p className="mt-3 max-w-3xl text-sm leading-6 text-charcoal-500 dark:text-charcoal-400">
-              A audiência usa a mesma base de leads do CRM. E-mail respeita consentimento e histórico. WhatsApp fica pronto no lado operacional, sem simular provider.
-            </p>
-          </div>
-          <Link href="/leads" className="rounded border border-blush-300 px-4 py-3 text-sm font-medium text-charcoal-500 transition-colors hover:border-rose-gold/40 hover:text-rose-gold dark:border-charcoal-600 dark:text-charcoal-300">
-            Voltar para Leads
-          </Link>
-        </div>
+      <div className="flex items-center justify-between border-b border-blush-200 pb-4 dark:border-charcoal-700">
+        <h1 className="font-heading text-xl font-semibold text-charcoal dark:text-charcoal-50">Disparos</h1>
+        <Link href="/leads" className="rounded border border-blush-300 px-4 py-2 text-sm font-medium text-charcoal-500 transition-colors hover:border-rose-gold/40 hover:text-rose-gold dark:border-charcoal-600 dark:text-charcoal-300">
+          Voltar para Leads
+        </Link>
       </div>
 
       <div className={`${crmListToolbar} rounded-lg border border-blush-200/80 dark:border-charcoal-700`}>

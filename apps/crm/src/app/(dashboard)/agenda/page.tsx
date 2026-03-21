@@ -344,34 +344,19 @@ export default function AgendaPage() {
 
   return (
     <div className="space-y-6">
-      <div className="overflow-hidden rounded-lg border border-blush-200 bg-[radial-gradient(circle_at_top_left,_rgba(201,150,122,0.16),_transparent_38%),linear-gradient(135deg,#fffdfb_0%,#fff7f1_52%,#fffdfb_100%)] px-6 py-6 shadow-[0_28px_80px_-42px_rgba(97,73,54,0.35)] dark:border-charcoal-700 dark:bg-[radial-gradient(circle_at_top_left,_rgba(201,150,122,0.18),_transparent_34%),linear-gradient(135deg,#171412_0%,#1e1a17_52%,#161311_100%)]">
-        <div className="flex flex-col gap-5 xl:flex-row xl:items-end xl:justify-between">
-          <div className="max-w-2xl">
-            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-rose-gold">Agenda viva</p>
-            <h1 className="mt-2 font-heading text-3xl font-bold text-charcoal dark:text-charcoal-50">
-              Calendário elegante, leitura imediata e operação suave.
-            </h1>
-            <p className="mt-3 text-sm leading-6 text-charcoal-500 dark:text-charcoal-400">
-              A agenda agora prioriza contexto visual, contraste suave e leitura rápida por tipo de atendimento, status e janela de horário.
-            </p>
-          </div>
-
-          <div className="flex flex-col gap-3 sm:flex-row">
-            <div className="rounded-lg border border-white/70 bg-white/75 px-4 py-3 shadow-sm backdrop-blur dark:border-charcoal-700 dark:bg-charcoal-800/70">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-charcoal-400 dark:text-charcoal-500">Carga atual</p>
-              <p className="mt-1 font-heading text-2xl font-bold text-charcoal dark:text-charcoal-50">{totalDuration} min</p>
-            </div>
-
-            <button
-              onClick={() => setShowModal(true)}
-              disabled={!canCreateAppointments}
-              className="inline-flex items-center justify-center gap-2 rounded bg-rose-gold px-5 py-3 text-sm font-medium text-white shadow-sm transition-all hover:bg-rose-gold-500 hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              <Plus size={16} />
-              Novo agendamento
-            </button>
-          </div>
+      <div className="flex items-center justify-between border-b border-blush-200 pb-4 dark:border-charcoal-700">
+        <div className="flex items-center gap-3">
+          <h1 className="font-heading text-xl font-semibold text-charcoal dark:text-charcoal-50">Agenda</h1>
+          <span className="text-sm text-charcoal-400 dark:text-charcoal-500">{totalDuration} min</span>
         </div>
+        <button
+          onClick={() => setShowModal(true)}
+          disabled={!canCreateAppointments}
+          className="inline-flex items-center justify-center gap-2 rounded bg-rose-gold px-5 py-2 text-sm font-medium text-white shadow-sm transition-all hover:bg-rose-gold-500 disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          <Plus size={16} />
+          Novo agendamento
+        </button>
       </div>
 
       <div className="grid grid-cols-1 gap-4 xl:grid-cols-[minmax(0,1fr)_360px]">
