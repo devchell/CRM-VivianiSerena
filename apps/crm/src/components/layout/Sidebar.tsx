@@ -9,7 +9,7 @@ import {
   LayoutDashboard, Users, Calendar, DollarSign,
   Paintbrush, Shield, Settings, UserCheck, LogOut,
   PanelLeftClose, Menu, Sparkles,
-  Send, SlidersHorizontal,
+  Send, Building2,
 } from 'lucide-react'
 import { useSidebar } from '@/hooks/useSidebar'
 import { useAuth } from '@/lib/useAuth'
@@ -31,7 +31,7 @@ const NAV_ITEMS: NavItem[] = [
   { href: '/editar-site', label: 'Editar Site', icon: Paintbrush, module: 'editar-site' },
   { href: '/seguranca', label: 'Segurança', icon: Shield, module: 'seguranca' },
   { href: '/colaboradores', label: 'Colaboradores', icon: UserCheck, permission: 'users.manage' },
-  { href: '/administracao', label: 'Administração', icon: SlidersHorizontal, permission: 'users.manage' },
+  { href: '/administracao', label: 'Administração', icon: Building2, permission: 'users.manage' },
 ]
 
 function getRoleLabel(profile: string | null, isAdmin: boolean) {
