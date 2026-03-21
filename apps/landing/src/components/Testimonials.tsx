@@ -1,7 +1,7 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
-import { AnimatePresence, motion } from 'framer-motion'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { motion } from 'framer-motion'
 import { Star, ChevronLeft, ChevronRight, Quote } from 'lucide-react'
 import { useInView } from '@/lib/hooks'
 
@@ -60,29 +60,22 @@ function StarRating({ count }: { count: number }) {
   )
 }
 
-function TestimonialCard({ item, featured }: { item: TestimonialItem; featured?: boolean }) {
-  const sourceLabel = item.source === 'google'
-    ? 'Google'
-    : item.source === 'artificial'
-      ? 'Exemplo'
-      : 'Depoimento'
+// ── Card base — neutro, sem estilo de destaque ─────────────────────────────────
+function TestimonialCard({ item }: { item: TestimonialItem }) {
+  const sourceLabel =
+    item.source === 'google'
+      ? 'Google'
+      : item.source === 'artificial'
+        ? 'Exemplo'
+        : 'Depoimento'
 
   return (
     <div
-      className={`relative rounded-lg border p-7 transition-all duration-300 ${
-        featured
-          ? 'border-rose-gold/40 bg-gradient-to-br from-rose-gold/10 to-blush shadow-xl'
-          : 'border-stone-100 bg-white shadow-sm'
-      }`}
+      className="rounded-xl border border-stone-100 bg-white p-6 shadow-[0_1px_4px_rgba(0,0,0,0.06)]"
       aria-label={`Depoimento de ${item.name}`}
     >
-      {featured ? (
-        <div className="absolute -top-3 left-6 rounded-full bg-rose-gold px-3 py-1 text-xs font-semibold text-white">
-          Destaque
-        </div>
-      ) : null}
+      <Quote className="mb-4 h-6 w-6 text-rose-gold/25" aria-hidden="true" />
 
-      <Quote className="mb-4 h-7 w-7 text-rose-gold/30" aria-hidden="true" />
       <div className="flex items-center justify-between gap-3">
         <StarRating count={Math.max(1, Math.min(5, item.stars))} />
         <span className="rounded-full bg-cream px-2.5 py-1 text-[11px] font-semibold text-charcoal-500">
@@ -90,12 +83,12 @@ function TestimonialCard({ item, featured }: { item: TestimonialItem; featured?:
         </span>
       </div>
 
-      <p className="mt-3 mb-6 text-sm leading-relaxed text-charcoal-600">
+      <p className="mb-5 mt-3 text-sm leading-relaxed text-charcoal-600">
         &ldquo;{item.text}&rdquo;
       </p>
 
       <div className="flex items-center gap-3">
-        <div className={`flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full text-sm font-bold ${featured ? 'bg-rose-gold text-white' : 'bg-blush text-rose-gold'}`}>
+        <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-blush text-sm font-bold text-rose-gold">
           {getInitials(item.name)}
         </div>
         <div>
@@ -108,6 +101,46 @@ function TestimonialCard({ item, featured }: { item: TestimonialItem; featured?:
   )
 }
 
+// ── Posições do carrossel ─────────────────────────────────────────────────────
+//
+// Cada card tem position: absolute; left: 50%.
+// O x do framer-motion é % da largura do próprio card.
+// center:    x = -50%  → card centralizado
+// left:      x = -145% → 1 card de distância à esquerda, parcialmente visível
+// right:     x = +45%  → 1 card de distância à direita, parcialmente visível
+// far-left/right: fora do campo de visão
+//
+type CardPos = 'center' | 'left' | 'right' | 'far-left' | 'far-right'
+
+const CARD_VARIANTS: Record<CardPos, { x: string; scale: number; opacity: number; zIndex: number }> = {
+  center:      { x: '-50%',  scale: 1,    opacity: 1,    zIndex: 3 },
+  left:        { x: '-145%', scale: 0.85, opacity: 0.45, zIndex: 2 },
+  right:       { x: '45%',   scale: 0.85, opacity: 0.45, zIndex: 2 },
+  'far-left':  { x: '-250%', scale: 0.7,  opacity: 0,    zIndex: 1 },
+  'far-right': { x: '150%',  scale: 0.7,  opacity: 0,    zIndex: 1 },
+}
+
+const SPRING: {
+  type: 'spring'
+  stiffness: number
+  damping: number
+  mass: number
+} = {
+  type: 'spring',
+  stiffness: 280,
+  damping: 28,
+  mass: 0.8,
+}
+
+function getCardPos(index: number, current: number, total: number): CardPos {
+  const diff = (index - current + total) % total
+  if (diff === 0) return 'center'
+  if (diff === 1) return 'right'
+  if (diff === total - 1) return 'left'
+  return diff <= Math.floor(total / 2) ? 'far-right' : 'far-left'
+}
+
+// ── Componente principal ──────────────────────────────────────────────────────
 export default function Testimonials(props: {
   manualItems: TestimonialItem[]
   googleItems: TestimonialItem[]
@@ -116,18 +149,13 @@ export default function Testimonials(props: {
   artificialEnabled: boolean
 }) {
   const [current, setCurrent] = useState(0)
-  const [direction, setDirection] = useState<1 | -1>(1)
   const { ref: headerRef, isInView } = useInView()
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
   const items = useMemo(() => {
     const merged = [...props.manualItems]
-    if (props.googleItems.length > 0) {
-      merged.push(...props.googleItems)
-    }
-    if (props.artificialEnabled) {
-      merged.push(...ARTIFICIAL_TESTIMONIALS)
-    }
-
+    if (props.googleItems.length > 0) merged.push(...props.googleItems)
+    if (props.artificialEnabled) merged.push(...ARTIFICIAL_TESTIMONIALS)
     return merged.filter((item) => item.text)
   }, [props.artificialEnabled, props.googleItems, props.manualItems])
 
@@ -137,41 +165,44 @@ export default function Testimonials(props: {
     setCurrent(0)
   }, [total])
 
-  useEffect(() => {
-    if (total <= 1) return undefined
-    const timer = setInterval(() => {
-      setDirection(1)
-      setCurrent((value) => (value + 1) % total)
-    }, 5000)
-    return () => clearInterval(timer)
-  }, [total])
+  const stopAutoPlay = useCallback(() => {
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current)
+      intervalRef.current = null
+    }
+  }, [])
 
-  if (total === 0) {
-    return null
-  }
+  const startAutoPlay = useCallback(() => {
+    stopAutoPlay()
+    if (total <= 1) return
+    intervalRef.current = setInterval(() => {
+      setCurrent((v) => (v + 1) % total)
+    }, 2800)
+  }, [total, stopAutoPlay])
+
+  useEffect(() => {
+    startAutoPlay()
+    return stopAutoPlay
+  }, [startAutoPlay, stopAutoPlay])
+
+  if (total === 0) return null
 
   const goTo = (index: number) => {
     if (index === current) return
-    setDirection(index > current ? 1 : -1)
     setCurrent(index)
   }
 
-  const prev = () => {
-    setDirection(-1)
-    setCurrent((value) => (value - 1 + total) % total)
-  }
-
-  const next = () => {
-    setDirection(1)
-    setCurrent((value) => (value + 1) % total)
-  }
-
-  const prevIdx = (current - 1 + total) % total
-  const nextIdx = (current + 1) % total
+  const prev = () => setCurrent((v) => (v - 1 + total) % total)
+  const next = () => setCurrent((v) => (v + 1) % total)
 
   return (
-    <section id="avaliacoes" className="section overflow-hidden bg-white" aria-labelledby="testimonials-heading">
+    <section
+      id="avaliacoes"
+      className="section overflow-hidden bg-white"
+      aria-labelledby="testimonials-heading"
+    >
       <div className="container-main">
+        {/* Cabeçalho */}
         <motion.div
           ref={headerRef as React.RefObject<HTMLDivElement>}
           className="mb-12 text-center"
@@ -182,7 +213,7 @@ export default function Testimonials(props: {
           <span className="text-sm font-semibold uppercase tracking-[0.2em] text-rose-gold">
             Depoimentos
           </span>
-          <h2 id="testimonials-heading" className="heading-lg mt-2 mb-4 text-charcoal">
+          <h2 id="testimonials-heading" className="heading-lg mb-4 mt-2 text-charcoal">
             O que dizem as clientes
           </h2>
 
@@ -196,12 +227,22 @@ export default function Testimonials(props: {
               {props.publicReviewCount} avaliações públicas
             </span>
             <span className="text-sm text-amber-700">
-              {props.averageRating ? `- nota média ${props.averageRating.toFixed(1)}` : '- depoimentos configurados no painel'}
+              {props.averageRating
+                ? `- nota média ${props.averageRating.toFixed(1)}`
+                : '- depoimentos configurados no painel'}
             </span>
           </div>
         </motion.div>
 
-        <div className="relative" aria-roledescription="carrossel" aria-label="Depoimentos de clientes">
+        {/* Carrossel */}
+        <div
+          className="relative"
+          onMouseEnter={stopAutoPlay}
+          onMouseLeave={startAutoPlay}
+          aria-roledescription="carrossel"
+          aria-label="Depoimentos de clientes"
+        >
+          {/* Seta anterior */}
           {total > 1 ? (
             <button
               onClick={prev}
@@ -212,36 +253,65 @@ export default function Testimonials(props: {
             </button>
           ) : null}
 
-          <div className="overflow-hidden px-8">
-            <AnimatePresence mode="wait" custom={direction}>
-              <motion.div
-                key={items[current].id}
-                custom={direction}
-                className="flex items-center gap-4"
-                initial={{ opacity: 0, x: direction > 0 ? 36 : -36, scale: 0.985, filter: 'blur(4px)' }}
-                animate={{ opacity: 1, x: 0, scale: 1, filter: 'blur(0px)' }}
-                exit={{ opacity: 0, x: direction > 0 ? -36 : 36, scale: 0.985, filter: 'blur(4px)' }}
-                transition={{ duration: 0.34, ease: [0.22, 1, 0.36, 1] }}
-              >
-                {total > 1 ? (
-                  <div className="hidden flex-1 scale-[0.95] opacity-40 md:block">
-                    <TestimonialCard item={items[prevIdx]} />
-                  </div>
-                ) : null}
+          {/* Trilha do carrossel */}
+          <div className="relative px-8 pt-4">
+            {/*
+              Ghost card: elemento invisível que define a altura do container
+              para o card central atual sem interromper o fluxo de layout.
+            */}
+            <div className="pointer-events-none invisible" aria-hidden="true">
+              <div className="mx-auto w-full max-w-sm md:max-w-md">
+                <TestimonialCard item={items[current]} />
+              </div>
+            </div>
 
-                <div className="flex-1 md:flex-[1.2]">
-                  <TestimonialCard item={items[current]} featured />
-                </div>
+            {/* Cards animados */}
+            {items.map((item, index) => {
+              const pos = getCardPos(index, current, total)
+              const isCenter = pos === 'center'
 
-                {total > 1 ? (
-                  <div className="hidden flex-1 scale-[0.95] opacity-40 md:block">
-                    <TestimonialCard item={items[nextIdx]} />
+              return (
+                <motion.div
+                  key={item.id}
+                  className="absolute top-4 w-full max-w-sm md:max-w-md"
+                  style={{ left: '50%' }}
+                  animate={CARD_VARIANTS[pos]}
+                  transition={SPRING}
+                  aria-hidden={!isCenter}
+                >
+                  {/* Wrapper relativo para o overlay de destaque */}
+                  <div className="relative">
+                    {/* Overlay rose-gold: apenas no card central */}
+                    {isCenter && (
+                      <div
+                        className="pointer-events-none absolute inset-0 rounded-xl"
+                        style={{
+                          border: '2px solid rgba(201, 169, 110, 0.45)',
+                          background: 'rgba(201, 169, 110, 0.06)',
+                          zIndex: 1,
+                        }}
+                        aria-hidden="true"
+                      />
+                    )}
+
+                    {/* Badge "Destaque": apenas no card central */}
+                    {isCenter && (
+                      <span
+                        className="absolute left-5 z-[2] rounded-full bg-[#C9A96E] px-3 py-0.5 text-[11px] font-semibold text-white"
+                        style={{ top: '-12px' }}
+                      >
+                        Destaque
+                      </span>
+                    )}
+
+                    <TestimonialCard item={item} />
                   </div>
-                ) : null}
-              </motion.div>
-            </AnimatePresence>
+                </motion.div>
+              )
+            })}
           </div>
 
+          {/* Seta próxima */}
           {total > 1 ? (
             <button
               onClick={next}
@@ -252,13 +322,20 @@ export default function Testimonials(props: {
             </button>
           ) : null}
 
+          {/* Dots de navegação */}
           {total > 1 ? (
-            <div className="mt-6 flex justify-center gap-2" role="tablist" aria-label="Navegação do carrossel">
+            <div
+              className="mt-6 flex justify-center gap-2"
+              role="tablist"
+              aria-label="Navegação do carrossel"
+            >
               {items.map((item, index) => (
                 <button
                   key={item.id}
                   onClick={() => goTo(index)}
-                  className={`h-2 rounded-full transition-all duration-300 ${index === current ? 'w-6 bg-[#C9967A]' : 'w-2 bg-[#C9967A]/30'}`}
+                  className={`h-2 rounded-full transition-all duration-300 ${
+                    index === current ? 'w-6 bg-[#C9967A]' : 'w-2 bg-[#C9967A]/30'
+                  }`}
                   role="tab"
                   aria-selected={index === current}
                   aria-label={`Depoimento ${index + 1}`}
