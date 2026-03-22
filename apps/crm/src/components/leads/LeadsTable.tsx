@@ -9,7 +9,7 @@ import {
 import { toast } from 'sonner'
 import { formatDistanceToNow } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
-import { Search, Download, RefreshCw, ArrowUpDown, ChevronUp, ChevronDown, CircleDot, CheckCircle2, Phone, Star, Users, XCircle, Plus, Pencil, Loader2, FilterX, ChevronRight, CalendarClock, ShieldCheck } from 'lucide-react'
+import { Search, Download, RefreshCw, ArrowUpDown, ChevronUp, ChevronDown, CircleDot, CheckCircle2, Phone, Star, Users, XCircle, Plus, Pencil, Loader2, FilterX, ChevronRight, CalendarClock, ShieldCheck, Trash2 } from 'lucide-react'
 import { apiFetchJson, buildApiUrl, buildAuthHeaders } from '@/lib/api-client'
 import {
   crmFieldSelect,
@@ -134,8 +134,56 @@ interface LeadFormState {
   source: LeadSourceKey
   sourceDetail: string
   status: LeadStatusKey
-  notes: string
+  notesService: string
+  notesPeriod: string
+  notesExtra: string
   consented: boolean
+}
+
+const ORIGEM_DETALHADA_OPTIONS = [
+  { value: 'landing_form',   label: 'Formulário da Landing' },
+  { value: 'instagram',      label: 'Instagram' },
+  { value: 'facebook',       label: 'Facebook' },
+  { value: 'google_ads',     label: 'Google Ads' },
+  { value: 'whatsapp',       label: 'WhatsApp' },
+  { value: 'indicacao',      label: 'Indicação de cliente' },
+  { value: 'direct',         label: 'Acesso direto' },
+  { value: 'email',          label: 'E-mail marketing' },
+  { value: 'outro',          label: 'Outro' },
+]
+
+const NOTES_SERVICE_OPTIONS = [
+  { value: 'sobrancelhas',            label: 'Sobrancelhas' },
+  { value: 'labios_eyeliner',         label: 'Lábios & Eyeliner' },
+  { value: 'capilar',                 label: 'Micropigmentação Capilar' },
+  { value: 'tatuagens',               label: 'Remoção de Tatuagem' },
+  { value: 'despigmentacao_labial',   label: 'Despigmentação Labial' },
+]
+
+const NOTES_PERIOD_OPTIONS = [
+  { value: 'manha',  label: 'Manhã' },
+  { value: 'tarde',  label: 'Tarde' },
+  { value: 'noite',  label: 'Noite' },
+]
+
+function buildObservation(service: string, period: string, extra: string): string {
+  const parts: string[] = []
+  if (service) parts.push(`Serviço: ${service}`)
+  if (period)  parts.push(`Período: ${period}`)
+  if (extra.trim()) parts.push(extra.trim())
+  return parts.join(' | ')
+}
+
+function parseObservation(notes: string | null | undefined) {
+  const raw = notes ?? ''
+  const service = raw.match(/Serviço:\s*([^|]+)/)?.[1]?.trim() ?? ''
+  const period  = raw.match(/Período:\s*([^|]+)/)?.[1]?.trim() ?? ''
+  const extra   = raw
+    .replace(/Serviço:[^|]+(\|)?/i, '')
+    .replace(/Período:[^|]+(\|)?/i, '')
+    .replace(/^\||\|$/g, '')
+    .trim()
+  return { service, period, extra }
 }
 
 const STATUS_CONFIG: Record<string, { label: string; color: string; icon: typeof CircleDot }> = {
@@ -165,7 +213,9 @@ const EMPTY_FORM: LeadFormState = {
   source: 'organic',
   sourceDetail: '',
   status: 'new',
-  notes: '',
+  notesService: '',
+  notesPeriod: '',
+  notesExtra: '',
   consented: false,
 }
 
@@ -257,6 +307,7 @@ export function LeadsTable() {
   const canCreateLeads = hasPermission('leads.create')
   const canUpdateLeads = hasPermission('leads.update')
   const canExportLeads = hasPermission('leads.export')
+  const canDeleteLeads = hasPermission('leads.delete')
   const [leads, setLeads] = useState<Lead[]>([])
   const [leadStats, setLeadStats] = useState<LeadStats | null>(null)
   const [loading, setLoading] = useState(true)
@@ -271,10 +322,17 @@ export function LeadsTable() {
   const [expandedLeadId, setExpandedLeadId] = useState<string | null>(null)
   const [leadDetails, setLeadDetails] = useState<Record<string, LeadDetail>>({})
   const [detailLoadingId, setDetailLoadingId] = useState<string | null>(null)
+  const [rowSelection, setRowSelection] = useState<Record<string, boolean>>({})
   const [showModal, setShowModal] = useState(false)
   const [editingLead, setEditingLead] = useState<Lead | null>(null)
   const [submitting, setSubmitting] = useState(false)
   const [form, setForm] = useState<LeadFormState>(EMPTY_FORM)
+  const [bulkStatusModal, setBulkStatusModal] = useState(false)
+  const [bulkOriginModal, setBulkOriginModal] = useState(false)
+  const [bulkDeleteConfirm, setBulkDeleteConfirm] = useState(false)
+  const [bulkStatus, setBulkStatus] = useState<LeadStatusKey>('new')
+  const [bulkOrigin, setBulkOrigin] = useState('')
+  const [bulkSubmitting, setBulkSubmitting] = useState(false)
 
   const buildLeadParams = useCallback((mode: 'list' | 'stats' | 'export' = 'list') => {
     const params = new URLSearchParams()
@@ -348,6 +406,7 @@ export function LeadsTable() {
 
   const openEditModal = useCallback((lead: Lead) => {
     setEditingLead(lead)
+    const parsed = parseObservation(lead.notes)
     setForm({
       name: lead.name,
       email: lead.email,
@@ -355,7 +414,9 @@ export function LeadsTable() {
       source: (SOURCE_OPTIONS.some(([value]) => value === lead.source) ? lead.source : 'other') as LeadSourceKey,
       sourceDetail: lead.utmSource ?? '',
       status: (STATUS_OPTIONS.some(([value]) => value === lead.status) ? lead.status : 'new') as LeadStatusKey,
-      notes: lead.notes ?? '',
+      notesService: parsed.service,
+      notesPeriod: parsed.period,
+      notesExtra: parsed.extra,
       consented: Boolean(lead.consentedAt),
     })
     setShowModal(true)
@@ -452,6 +513,7 @@ export function LeadsTable() {
 
     setSubmitting(true)
     try {
+      const builtNotes = buildObservation(form.notesService, form.notesPeriod, form.notesExtra)
       const payload = {
         name: form.name.trim(),
         email: form.email.trim(),
@@ -459,7 +521,7 @@ export function LeadsTable() {
         source: form.source,
         sourceDetail: form.sourceDetail.trim() || undefined,
         status: form.status,
-        notes: form.notes.trim() || undefined,
+        notes: builtNotes || undefined,
         ...(editingLead
           ? { consentedAt: form.consented ? (editingLead.consentedAt ?? new Date().toISOString()) : null }
           : { consented: form.consented }),
@@ -602,12 +664,102 @@ export function LeadsTable() {
   const table = useReactTable({
     data: leads,
     columns,
-    state: { sorting },
+    state: { sorting, rowSelection },
     onSortingChange: setSorting,
+    onRowSelectionChange: setRowSelection,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
     enableRowSelection: true,
+    getRowId: row => row.id,
   })
+
+  const selectedCount = table.getSelectedRowModel().rows.length
+
+  const handleBulkStatus = useCallback(async () => {
+    if (!accessToken || !canUpdateLeads) return
+    const ids = table.getSelectedRowModel().rows.map(r => r.original.id)
+    if (!ids.length) return
+    setBulkSubmitting(true)
+    try {
+      await apiFetchJson<{ success: true; updated: number }>('/api/v1/leads/bulk', {
+        method: 'PATCH',
+        headers: buildAuthHeaders(accessToken, 'application/json'),
+        body: JSON.stringify({ ids, updates: { status: bulkStatus } }),
+      })
+      toast.success(`Status atualizado em ${ids.length} lead${ids.length > 1 ? 's' : ''}`)
+      setBulkStatusModal(false)
+      setRowSelection({})
+      await fetchLeads()
+    } catch {
+      toast.error('Erro ao atualizar status em massa')
+    } finally {
+      setBulkSubmitting(false)
+    }
+  }, [accessToken, canUpdateLeads, bulkStatus, fetchLeads, table])
+
+  const handleBulkOrigin = useCallback(async () => {
+    if (!accessToken || !canUpdateLeads) return
+    const ids = table.getSelectedRowModel().rows.map(r => r.original.id)
+    if (!ids.length) return
+    setBulkSubmitting(true)
+    try {
+      await apiFetchJson<{ success: true; updated: number }>('/api/v1/leads/bulk', {
+        method: 'PATCH',
+        headers: buildAuthHeaders(accessToken, 'application/json'),
+        body: JSON.stringify({ ids, updates: { source: bulkOrigin } }),
+      })
+      toast.success(`Origem atualizada em ${ids.length} lead${ids.length > 1 ? 's' : ''}`)
+      setBulkOriginModal(false)
+      setRowSelection({})
+      await fetchLeads()
+    } catch {
+      toast.error('Erro ao atualizar origem em massa')
+    } finally {
+      setBulkSubmitting(false)
+    }
+  }, [accessToken, canUpdateLeads, bulkOrigin, fetchLeads, table])
+
+  const handleBulkExportSelected = useCallback(() => {
+    const selectedLeads = table.getSelectedRowModel().rows.map(r => r.original)
+    if (!selectedLeads.length) return
+    const headers = ['Nome', 'Email', 'Telefone', 'Origem', 'Status', 'Criado em']
+    const escape = (v: string) => `"${String(v).replace(/"/g, '""')}"`
+    const rows = selectedLeads.map(l => [
+      l.name, l.email, l.phone ?? '', SOURCE_LABELS[l.source] ?? l.source,
+      STATUS_CONFIG[l.status]?.label ?? l.status, l.createdAt,
+    ])
+    const csv = [headers, ...rows].map(r => r.map(c => escape(String(c))).join(',')).join('\n')
+    const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `leads-selecionados-${new Date().toISOString().slice(0, 10)}.csv`
+    a.click()
+    URL.revokeObjectURL(url)
+    toast.success(`${selectedLeads.length} lead${selectedLeads.length > 1 ? 's' : ''} exportado${selectedLeads.length > 1 ? 's' : ''}`)
+  }, [table])
+
+  const handleBulkDelete = useCallback(async () => {
+    if (!accessToken || !canDeleteLeads) return
+    const ids = table.getSelectedRowModel().rows.map(r => r.original.id)
+    if (!ids.length) return
+    setBulkSubmitting(true)
+    try {
+      await apiFetchJson<{ success: true; deleted: number }>('/api/v1/leads/bulk', {
+        method: 'DELETE',
+        headers: buildAuthHeaders(accessToken, 'application/json'),
+        body: JSON.stringify({ ids }),
+      })
+      toast.success(`${ids.length} lead${ids.length > 1 ? 's' : ''} excluído${ids.length > 1 ? 's' : ''}`)
+      setBulkDeleteConfirm(false)
+      setRowSelection({})
+      await fetchLeads()
+    } catch {
+      toast.error('Erro ao excluir leads em massa')
+    } finally {
+      setBulkSubmitting(false)
+    }
+  }, [accessToken, canDeleteLeads, fetchLeads, table])
 
   return (
     <div className="space-y-5">
@@ -729,6 +881,56 @@ export function LeadsTable() {
         </div>
       </div>
 
+      {selectedCount > 0 && (
+        <div className="flex flex-wrap items-center gap-2 rounded-lg border border-blush-200 bg-[#FDFCF9] px-4 py-3 shadow-[0_4px_16px_rgba(45,35,20,0.12)] animate-[slideDown_0.2s_ease] dark:border-[#3a3835] dark:bg-[#1c1b1a]">
+          <span className="text-sm font-medium text-charcoal dark:text-charcoal-100">
+            {selectedCount} lead{selectedCount > 1 ? 's' : ''} selecionado{selectedCount > 1 ? 's' : ''}
+          </span>
+          <div className="h-4 w-px bg-blush-300 dark:bg-[#3a3835]" />
+          <button
+            type="button"
+            onClick={() => setBulkStatusModal(true)}
+            disabled={!canUpdateLeads}
+            className="inline-flex items-center gap-1.5 rounded border border-blush-300 px-3 py-1.5 text-xs font-medium text-charcoal-500 transition-colors hover:border-rose-gold/40 hover:text-rose-gold disabled:opacity-50 dark:border-[#3a3835] dark:text-charcoal-300"
+          >
+            Alterar status
+          </button>
+          <button
+            type="button"
+            onClick={() => setBulkOriginModal(true)}
+            disabled={!canUpdateLeads}
+            className="inline-flex items-center gap-1.5 rounded border border-blush-300 px-3 py-1.5 text-xs font-medium text-charcoal-500 transition-colors hover:border-rose-gold/40 hover:text-rose-gold disabled:opacity-50 dark:border-[#3a3835] dark:text-charcoal-300"
+          >
+            Alterar origem
+          </button>
+          <button
+            type="button"
+            onClick={handleBulkExportSelected}
+            disabled={!canExportLeads}
+            className="inline-flex items-center gap-1.5 rounded border border-blush-300 px-3 py-1.5 text-xs font-medium text-charcoal-500 transition-colors hover:border-rose-gold/40 hover:text-rose-gold disabled:opacity-50 dark:border-[#3a3835] dark:text-charcoal-300"
+          >
+            <Download size={12} />
+            Exportar selecionados
+          </button>
+          <button
+            type="button"
+            onClick={() => setBulkDeleteConfirm(true)}
+            disabled={!canDeleteLeads}
+            className="inline-flex items-center gap-1.5 rounded border border-red-200 px-3 py-1.5 text-xs font-medium text-red-600 transition-colors hover:border-red-400 hover:text-red-700 disabled:opacity-50 dark:border-red-900/40 dark:text-red-400"
+          >
+            <Trash2 size={12} />
+            Excluir selecionados
+          </button>
+          <button
+            type="button"
+            onClick={() => setRowSelection({})}
+            className="ml-auto inline-flex items-center gap-1.5 rounded border border-blush-300 px-3 py-1.5 text-xs font-medium text-charcoal-400 transition-colors hover:text-charcoal dark:border-[#3a3835] dark:text-charcoal-300"
+          >
+            Cancelar
+          </button>
+        </div>
+      )}
+
       <div className={crmListShell}>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
@@ -847,7 +1049,7 @@ export function LeadsTable() {
                   {editingLead ? 'Editar lead' : 'Cadastrar lead manualmente'}
                 </h2>
                 <p className="mt-1 text-xs text-charcoal-400 dark:text-charcoal-300">
-                  Operação manual usa o mesmo modelo de lead da captura pública, com origem e consentimento rastreáveis.
+                  Edite as informações do lead. As alterações ficam registradas no histórico.
                 </p>
               </div>
               <button type="button" onClick={() => setShowModal(false)} className="text-charcoal-400 transition-colors hover:text-charcoal dark:hover:text-charcoal-100">
@@ -919,21 +1121,63 @@ export function LeadsTable() {
                 </div>
                 <div>
                   <label className="mb-1 block text-xs font-medium text-charcoal-400">Origem detalhada</label>
-                  <input
-                    value={form.sourceDetail}
-                    onChange={(event) => setForm((current) => ({ ...current, sourceDetail: event.target.value }))}
-                    placeholder="utm_source, campanha ou anotação"
-                    className="w-full rounded-md border border-blush-300 bg-white px-3 py-2 text-sm text-charcoal focus:outline-none focus:ring-2 focus:ring-rose-gold/40 dark:border-[#3a3835] dark:bg-[#252423] dark:text-charcoal-100"
-                  />
+                  <div className={crmFieldSelectWrapper}>
+                    <select
+                      value={form.sourceDetail}
+                      onChange={(event) => setForm((current) => ({ ...current, sourceDetail: event.target.value }))}
+                      className={crmFieldSelect}
+                    >
+                      <option value="">Não informada</option>
+                      {ORIGEM_DETALHADA_OPTIONS.map(o => (
+                        <option key={o.value} value={o.value}>{o.label}</option>
+                      ))}
+                    </select>
+                    <ChevronDown size={16} className={crmFieldSelectIcon} />
+                  </div>
                 </div>
               </div>
 
+              <div className="grid gap-4 md:grid-cols-2">
+                <div>
+                  <label className="mb-1 block text-xs font-medium text-charcoal-400">Serviço de interesse</label>
+                  <div className={crmFieldSelectWrapper}>
+                    <select
+                      value={form.notesService}
+                      onChange={(event) => setForm((current) => ({ ...current, notesService: event.target.value }))}
+                      className={crmFieldSelect}
+                    >
+                      <option value="">Não informado</option>
+                      {NOTES_SERVICE_OPTIONS.map(o => (
+                        <option key={o.value} value={o.value}>{o.label}</option>
+                      ))}
+                    </select>
+                    <ChevronDown size={16} className={crmFieldSelectIcon} />
+                  </div>
+                </div>
+                <div>
+                  <label className="mb-1 block text-xs font-medium text-charcoal-400">Período preferido</label>
+                  <div className={crmFieldSelectWrapper}>
+                    <select
+                      value={form.notesPeriod}
+                      onChange={(event) => setForm((current) => ({ ...current, notesPeriod: event.target.value }))}
+                      className={crmFieldSelect}
+                    >
+                      <option value="">Não informado</option>
+                      {NOTES_PERIOD_OPTIONS.map(o => (
+                        <option key={o.value} value={o.value}>{o.label}</option>
+                      ))}
+                    </select>
+                    <ChevronDown size={16} className={crmFieldSelectIcon} />
+                  </div>
+                </div>
+              </div>
               <div>
-                <label className="mb-1 block text-xs font-medium text-charcoal-400">Observação / necessidade</label>
+                <label className="mb-1 block text-xs font-medium text-charcoal-400">Observação adicional (opcional)</label>
                 <textarea
-                  rows={4}
-                  value={form.notes}
-                  onChange={(event) => setForm((current) => ({ ...current, notes: event.target.value }))}
+                  rows={3}
+                  value={form.notesExtra}
+                  onChange={(event) => setForm((current) => ({ ...current, notesExtra: event.target.value }))}
+                  placeholder="Alguma informação extra sobre o lead..."
                   className="w-full rounded-md border border-blush-300 bg-white px-3 py-2 text-sm text-charcoal focus:outline-none focus:ring-2 focus:ring-rose-gold/40 dark:border-[#3a3835] dark:bg-[#252423] dark:text-charcoal-100"
                 />
               </div>
@@ -956,6 +1200,81 @@ export function LeadsTable() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      ) : null}
+
+      {bulkStatusModal ? (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm" onClick={(e) => e.target === e.currentTarget && setBulkStatusModal(false)}>
+          <div className="card-dark w-full max-w-sm shadow-2xl">
+            <div className="flex items-center justify-between border-b border-blush-200 p-5 dark:border-[#3a3835]">
+              <h2 className="font-heading text-base font-semibold text-charcoal dark:text-charcoal-50">Alterar status em massa</h2>
+              <button type="button" onClick={() => setBulkStatusModal(false)} className="text-charcoal-400 hover:text-charcoal dark:hover:text-charcoal-100"><XCircle size={18} /></button>
+            </div>
+            <div className="space-y-4 p-5">
+              <p className="text-sm text-charcoal-500 dark:text-charcoal-300">Aplicar a {selectedCount} lead{selectedCount > 1 ? 's' : ''} selecionado{selectedCount > 1 ? 's' : ''}.</p>
+              <div className={crmFieldSelectWrapper}>
+                <select value={bulkStatus} onChange={e => setBulkStatus(e.target.value as LeadStatusKey)} className={crmFieldSelect}>
+                  {STATUS_OPTIONS.map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
+                </select>
+                <ChevronDown size={16} className={crmFieldSelectIcon} />
+              </div>
+              <div className="flex gap-3">
+                <button type="button" onClick={() => setBulkStatusModal(false)} className="flex-1 rounded border border-blush-300 px-4 py-2 text-sm text-charcoal-400 hover:bg-blush dark:border-[#3a3835] dark:hover:bg-[#252423]">Cancelar</button>
+                <button type="button" onClick={() => void handleBulkStatus()} disabled={bulkSubmitting} className="flex-1 rounded bg-rose-gold px-4 py-2 text-sm font-medium text-white hover:bg-rose-gold-500 disabled:opacity-60">
+                  {bulkSubmitting ? 'Salvando...' : 'Confirmar'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
+      {bulkOriginModal ? (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm" onClick={(e) => e.target === e.currentTarget && setBulkOriginModal(false)}>
+          <div className="card-dark w-full max-w-sm shadow-2xl">
+            <div className="flex items-center justify-between border-b border-blush-200 p-5 dark:border-[#3a3835]">
+              <h2 className="font-heading text-base font-semibold text-charcoal dark:text-charcoal-50">Alterar origem em massa</h2>
+              <button type="button" onClick={() => setBulkOriginModal(false)} className="text-charcoal-400 hover:text-charcoal dark:hover:text-charcoal-100"><XCircle size={18} /></button>
+            </div>
+            <div className="space-y-4 p-5">
+              <p className="text-sm text-charcoal-500 dark:text-charcoal-300">Aplicar a {selectedCount} lead{selectedCount > 1 ? 's' : ''} selecionado{selectedCount > 1 ? 's' : ''}.</p>
+              <div className={crmFieldSelectWrapper}>
+                <select value={bulkOrigin} onChange={e => setBulkOrigin(e.target.value)} className={crmFieldSelect}>
+                  <option value="">Selecionar origem...</option>
+                  {SOURCE_OPTIONS.map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+                </select>
+                <ChevronDown size={16} className={crmFieldSelectIcon} />
+              </div>
+              <div className="flex gap-3">
+                <button type="button" onClick={() => setBulkOriginModal(false)} className="flex-1 rounded border border-blush-300 px-4 py-2 text-sm text-charcoal-400 hover:bg-blush dark:border-[#3a3835] dark:hover:bg-[#252423]">Cancelar</button>
+                <button type="button" onClick={() => void handleBulkOrigin()} disabled={bulkSubmitting || !bulkOrigin} className="flex-1 rounded bg-rose-gold px-4 py-2 text-sm font-medium text-white hover:bg-rose-gold-500 disabled:opacity-60">
+                  {bulkSubmitting ? 'Salvando...' : 'Confirmar'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
+      {bulkDeleteConfirm ? (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm" onClick={(e) => e.target === e.currentTarget && setBulkDeleteConfirm(false)}>
+          <div className="card-dark w-full max-w-sm shadow-2xl">
+            <div className="flex items-center justify-between border-b border-blush-200 p-5 dark:border-[#3a3835]">
+              <h2 className="font-heading text-base font-semibold text-charcoal dark:text-charcoal-50">Confirmar exclusão</h2>
+              <button type="button" onClick={() => setBulkDeleteConfirm(false)} className="text-charcoal-400 hover:text-charcoal dark:hover:text-charcoal-100"><XCircle size={18} /></button>
+            </div>
+            <div className="space-y-4 p-5">
+              <p className="text-sm text-charcoal-500 dark:text-charcoal-300">
+                Tem certeza que deseja excluir <strong className="text-charcoal dark:text-charcoal-100">{selectedCount} lead{selectedCount > 1 ? 's' : ''}</strong>? Esta ação é irreversível.
+              </p>
+              <div className="flex gap-3">
+                <button type="button" onClick={() => setBulkDeleteConfirm(false)} className="flex-1 rounded border border-blush-300 px-4 py-2 text-sm text-charcoal-400 hover:bg-blush dark:border-[#3a3835] dark:hover:bg-[#252423]">Cancelar</button>
+                <button type="button" onClick={() => void handleBulkDelete()} disabled={bulkSubmitting} className="flex-1 rounded bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 disabled:opacity-60">
+                  {bulkSubmitting ? 'Excluindo...' : `Excluir ${selectedCount} lead${selectedCount > 1 ? 's' : ''}`}
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       ) : null}
