@@ -765,33 +765,29 @@ export default function EditarSitePage() {
                   label="Box lateral de prova social"
                   description="Card com clientes e avaliações no formulário"
                 />
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginTop: 12 }}>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                    <label className={labelCls}>Clientes iniciais</label>
-                    <p style={{ fontSize: 11, color: 'var(--muted-foreground,#A09890)', margin: '2px 0', lineHeight: '1.4', minHeight: '15.4px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                      Soma com leads reais cadastrados
-                    </p>
-                    <input
-                      type="number"
-                      inputMode="numeric"
-                      placeholder="0"
-                      value={String(getNum('contact', 'social_proof', 'baseClients'))}
-                      onChange={e => setSubVal('contact', 'social_proof', 'baseClients', Number(e.target.value) || 0)}
-                      className={inputCls}
-                    />
-                  </div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                    <label className={labelCls}>Avaliações iniciais</label>
-                    <p style={{ fontSize: 11, margin: '2px 0', lineHeight: '1.4', minHeight: '15.4px', visibility: 'hidden' }}>&nbsp;</p>
-                    <input
-                      type="number"
-                      inputMode="numeric"
-                      placeholder="0"
-                      value={String(getNum('contact', 'social_proof', 'basePublicReviews'))}
-                      onChange={e => setSubVal('contact', 'social_proof', 'basePublicReviews', Number(e.target.value) || 0)}
-                      className={inputCls}
-                    />
-                  </div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gridTemplateRows: 'auto auto auto', gap: '4px 12px', marginTop: 12 }}>
+                  <label className={labelCls}>Clientes iniciais</label>
+                  <label className={labelCls}>Avaliações iniciais</label>
+                  <p style={{ fontSize: 11, color: 'var(--muted-foreground,#A09890)', margin: 0, lineHeight: '1.4', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                    Soma com leads reais cadastrados
+                  </p>
+                  <p style={{ fontSize: 11, margin: 0, lineHeight: '1.4', visibility: 'hidden' }}>&nbsp;</p>
+                  <input
+                    type="number"
+                    inputMode="numeric"
+                    placeholder="0"
+                    value={String(getNum('contact', 'social_proof', 'baseClients'))}
+                    onChange={e => setSubVal('contact', 'social_proof', 'baseClients', Number(e.target.value) || 0)}
+                    className={inputCls}
+                  />
+                  <input
+                    type="number"
+                    inputMode="numeric"
+                    placeholder="0"
+                    value={String(getNum('contact', 'social_proof', 'basePublicReviews'))}
+                    onChange={e => setSubVal('contact', 'social_proof', 'basePublicReviews', Number(e.target.value) || 0)}
+                    className={inputCls}
+                  />
                 </div>
               </div>
             )
