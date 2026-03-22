@@ -6,7 +6,7 @@ import { Menu, X, Phone } from 'lucide-react'
 import { trackCTAClick, trackWhatsAppClick } from '@/lib/analytics'
 import { useActiveSection } from '@/hooks/useActiveSection'
 
-const NAV_LINKS = [
+const ALL_NAV_LINKS = [
   { href: '#sobre', label: 'Sobre' },
   { href: '#como-funciona', label: 'Como Funciona' },
   { href: '#servicos', label: 'Serviços' },
@@ -16,7 +16,10 @@ const NAV_LINKS = [
 
 const WA_LINK = 'https://wa.link/e2g7ii'
 
-export function Navbar() {
+export function Navbar({ hasTestimonials = true }: { hasTestimonials?: boolean }) {
+  const NAV_LINKS = hasTestimonials
+    ? ALL_NAV_LINKS
+    : ALL_NAV_LINKS.filter(l => l.href !== '#avaliacoes')
   const [isScrolled, setIsScrolled] = useState(false)
   const [isMenuOpen, setIsMenuOpen] = useState(false)
 

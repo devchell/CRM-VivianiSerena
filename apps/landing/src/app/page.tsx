@@ -141,8 +141,9 @@ export default async function HomePage() {
   const whatsappNumber = waRaw?.number
   const whatsappMessage = waRaw?.message
 
-  // About bio
+  // About bio + photo
   const aboutBio = str(content.about?.bio)
+  const aboutPhotoUrl = asAssetUrl(content.about?.photo_viviani)
   const resultsVivianiPhoto = asAssetUrl(content.services?.viviani_photo)
   const resultsItems = asArray<Record<string, unknown>>(content.services?.results_items).map((item, index) => ({
     id: asString(item.id, `result-${index}`),
@@ -177,12 +178,17 @@ export default async function HomePage() {
   const showArtificialTestimonials = Boolean(testimonialDisplay.artificialEnabled)
   const showGoogleTestimonials = Boolean(testimonialDisplay.googleEnabled)
   const artificialTestimonialsCount = Math.min(20, Math.max(1, asNumber(testimonialDisplay.artificialCount, 3)))
+
+  const hasActiveTestimonials =
+    manualTestimonials.length > 0 ||
+    (showGoogleTestimonials && googleTestimonials.length > 0) ||
+    showArtificialTestimonials
   const testimonialPublicReviews = siteSummary?.socialProof.publicReviews ?? 0
   const testimonialAverageRating = siteSummary?.socialProof.averageRating ?? null
 
   return (
     <>
-      <Navbar />
+      <Navbar hasTestimonials={hasActiveTestimonials} />
       <main id="main-content">
         <Hero
           urgencyBadge={urgencyBadge}
@@ -194,7 +200,7 @@ export default async function HomePage() {
           whatsappMessage={whatsappMessage}
           socialProof={siteSummary?.socialProof}
         />
-        <About bio={aboutBio} whatsappNumber={whatsappNumber} />
+        <About bio={aboutBio} photoUrl={aboutPhotoUrl} whatsappNumber={whatsappNumber} />
         <HowItWorks />
         <Services />
         <Results items={resultsItems} vivianiPhotoUrl={resultsVivianiPhoto} />

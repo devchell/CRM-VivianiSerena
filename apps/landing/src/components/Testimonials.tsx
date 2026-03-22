@@ -1,7 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { motion } from 'framer-motion'
+import { motion, useAnimationControls } from 'framer-motion'
 import { Star, ChevronLeft, ChevronRight, Quote } from 'lucide-react'
 import { useInView } from '@/lib/hooks'
 
@@ -266,11 +266,77 @@ function TestimonialCard({ item }: { item: TestimonialItem }) {
 type CardPos = 'center' | 'left' | 'right' | 'far-left' | 'far-right'
 
 const CARD_VARIANTS: Record<CardPos, { x: string; scale: number; opacity: number; zIndex: number }> = {
-  center:      { x: '-50%',  scale: 1,    opacity: 1,    zIndex: 3 },
-  left:        { x: '-145%', scale: 0.85, opacity: 0.45, zIndex: 2 },
-  right:       { x: '45%',   scale: 0.85, opacity: 0.45, zIndex: 2 },
-  'far-left':  { x: '-250%', scale: 0.7,  opacity: 0,    zIndex: 1 },
-  'far-right': { x: '150%',  scale: 0.7,  opacity: 0,    zIndex: 1 },
+  center:      { x: '-50%',  scale: 1,    opacity: 1,   zIndex: 3 },
+  left:        { x: '-145%', scale: 0.85, opacity: 0.2, zIndex: 2 },
+  right:       { x: '45%',   scale: 0.85, opacity: 0.2, zIndex: 2 },
+  'far-left':  { x: '-250%', scale: 0.7,  opacity: 0,   zIndex: 1 },
+  'far-right': { x: '150%',  scale: 0.7,  opacity: 0,   zIndex: 1 },
+}
+
+const LEFT_SIDE: CardPos[] = ['left', 'far-left']
+const RIGHT_SIDE: CardPos[] = ['right', 'far-right']
+
+// ── Card animado com teleporte para carrossel infinito ─────────────────────────
+function CarouselCard({ item, pos, isCenter }: { item: TestimonialItem; pos: CardPos; isCenter: boolean }) {
+  const controls = useAnimationControls()
+  const prevPosRef = useRef<CardPos>(pos)
+  const isMountedRef = useRef(false)
+
+  useEffect(() => {
+    if (!isMountedRef.current) {
+      isMountedRef.current = true
+      return
+    }
+
+    const prev = prevPosRef.current
+    prevPosRef.current = pos
+
+    if (prev === pos) return
+
+    // Quando um card precisa cruzar de um lado visível para o outro, teleportamos
+    // para a posição "far" correta (opacity 0) antes de animar, garantindo que
+    // o movimento seja sempre na mesma direção (sem "rolar de volta").
+    if (LEFT_SIDE.includes(prev) && RIGHT_SIDE.includes(pos)) {
+      controls.set(CARD_VARIANTS['far-right'])
+    } else if (RIGHT_SIDE.includes(prev) && LEFT_SIDE.includes(pos)) {
+      controls.set(CARD_VARIANTS['far-left'])
+    }
+
+    void controls.start({ ...CARD_VARIANTS[pos], transition: SPRING })
+  }, [pos, controls])
+
+  return (
+    <motion.div
+      className="absolute top-4 w-full max-w-sm md:max-w-md"
+      style={{ left: '50%' }}
+      initial={CARD_VARIANTS[pos]}
+      animate={controls}
+      aria-hidden={!isCenter}
+    >
+      <div className="relative">
+        {isCenter && (
+          <div
+            className="pointer-events-none absolute inset-0 rounded-xl"
+            style={{
+              border: '2px solid rgba(201, 169, 110, 0.45)',
+              background: 'rgba(201, 169, 110, 0.06)',
+              zIndex: 1,
+            }}
+            aria-hidden="true"
+          />
+        )}
+        {isCenter && (
+          <span
+            className="absolute left-5 z-[2] rounded-full bg-[#C9A96E] px-3 py-0.5 text-[11px] font-semibold text-white"
+            style={{ top: '-12px' }}
+          >
+            Destaque
+          </span>
+        )}
+        <TestimonialCard item={item} />
+      </div>
+    </motion.div>
+  )
 }
 
 const SPRING: {
@@ -425,45 +491,13 @@ export default function Testimonials(props: {
             {/* Cards animados */}
             {items.map((item, index) => {
               const pos = getCardPos(index, current, total)
-              const isCenter = pos === 'center'
-
               return (
-                <motion.div
+                <CarouselCard
                   key={item.id}
-                  className="absolute top-4 w-full max-w-sm md:max-w-md"
-                  style={{ left: '50%' }}
-                  animate={CARD_VARIANTS[pos]}
-                  transition={SPRING}
-                  aria-hidden={!isCenter}
-                >
-                  {/* Wrapper relativo para o overlay de destaque */}
-                  <div className="relative">
-                    {/* Overlay rose-gold: apenas no card central */}
-                    {isCenter && (
-                      <div
-                        className="pointer-events-none absolute inset-0 rounded-xl"
-                        style={{
-                          border: '2px solid rgba(201, 169, 110, 0.45)',
-                          background: 'rgba(201, 169, 110, 0.06)',
-                          zIndex: 1,
-                        }}
-                        aria-hidden="true"
-                      />
-                    )}
-
-                    {/* Badge "Destaque": apenas no card central */}
-                    {isCenter && (
-                      <span
-                        className="absolute left-5 z-[2] rounded-full bg-[#C9A96E] px-3 py-0.5 text-[11px] font-semibold text-white"
-                        style={{ top: '-12px' }}
-                      >
-                        Destaque
-                      </span>
-                    )}
-
-                    <TestimonialCard item={item} />
-                  </div>
-                </motion.div>
+                  item={item}
+                  pos={pos}
+                  isCenter={pos === 'center'}
+                />
               )
             })}
           </div>
