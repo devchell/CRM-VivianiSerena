@@ -32,6 +32,7 @@ import {
   crmListTableHead,
   crmListToolbar,
 } from '@/components/ui/listStyles'
+import { EmptyState } from '@/components/ui/EmptyState'
 
 type LeadStatusKey = 'new' | 'contacted' | 'qualified' | 'converted' | 'lost'
 type LeadSourceKey = 'organic' | 'instagram' | 'facebook' | 'google_ads' | 'referral' | 'whatsapp' | 'other'
@@ -557,7 +558,7 @@ export function DispatchesPanel() {
                 {loading ? (
                   <tr><td colSpan={5} className="px-4 py-12 text-center"><Loader2 size={20} className="mx-auto animate-spin text-rose-gold" /></td></tr>
                 ) : sample.length === 0 ? (
-                  <tr><td colSpan={5} className={crmListEmpty}>Nenhum lead encontrado para os filtros atuais.</td></tr>
+                  <tr><td colSpan={5} className="p-4"><EmptyState message="Nenhum lead encontrado para os filtros atuais." /></td></tr>
                 ) : sample.map((lead) => (
                   <tr key={lead.id} className={crmListRow}>
                     <td className={crmListCell}>

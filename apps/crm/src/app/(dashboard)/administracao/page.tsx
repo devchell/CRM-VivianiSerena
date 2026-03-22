@@ -627,17 +627,18 @@ export default function AdministracaoPage() {
                   </div>
                 </label>
               </div>
-              <label className="space-y-2 text-sm"><span className="font-medium text-charcoal dark:text-charcoal-100">Senha SMTP</span><input type="password" value={emailForm.password} onChange={(event) => updateEmailField('password', event.target.value)} className="w-full rounded-md border border-blush-200 bg-white px-4 py-3 text-sm text-charcoal outline-none transition focus:border-rose-gold dark:border-[#3a3835] dark:bg-[#1c1b1a] dark:text-charcoal-100" placeholder={overview.integrations.email.passwordConfigured ? (visibility.email ? 'Deixe em branco para manter a atual' : '****** senha configurada') : 'Digite a senha SMTP'} /></label>
+              <label className="relative space-y-2 text-sm">
+                <InfoTooltip title="Senha SMTP" description="Se a senha ficar vazia, o valor atual será preservado. As alterações entram em uso assim que forem salvas." />
+                <span className="font-medium text-charcoal dark:text-charcoal-100">Senha SMTP</span>
+                <input type="password" value={emailForm.password} onChange={(event) => updateEmailField('password', event.target.value)} className="w-full rounded-md border border-blush-200 bg-white px-4 py-3 text-sm text-charcoal outline-none transition focus:border-rose-gold dark:border-[#3a3835] dark:bg-[#1c1b1a] dark:text-charcoal-100" placeholder={overview.integrations.email.passwordConfigured ? (visibility.email ? 'Deixe em branco para manter a atual' : '****** senha configurada') : 'Digite a senha SMTP'} />
+              </label>
               <div className="grid gap-3 md:grid-cols-2">
                 <label className="space-y-2 text-sm"><span className="font-medium text-charcoal dark:text-charcoal-100">E-mail remetente</span><input value={emailForm.from} onChange={(event) => updateEmailField('from', event.target.value)} className="w-full rounded-md border border-blush-200 bg-white px-4 py-3 text-sm text-charcoal outline-none transition focus:border-rose-gold dark:border-[#3a3835] dark:bg-[#1c1b1a] dark:text-charcoal-100" placeholder={maskValue(overview.integrations.email.from, visibility.email)} /></label>
                 <label className="space-y-2 text-sm"><span className="font-medium text-charcoal dark:text-charcoal-100">Nome do remetente</span><input value={emailForm.fromName} onChange={(event) => updateEmailField('fromName', event.target.value)} className="w-full rounded-md border border-blush-200 bg-white px-4 py-3 text-sm text-charcoal outline-none transition focus:border-rose-gold dark:border-[#3a3835] dark:bg-[#1c1b1a] dark:text-charcoal-100" placeholder={maskValue(overview.integrations.email.fromName, visibility.email)} /></label>
               </div>
               <label className="space-y-2 text-sm"><span className="font-medium text-charcoal dark:text-charcoal-100">E-mail administrativo</span><input value={emailForm.adminEmail} onChange={(event) => updateEmailField('adminEmail', event.target.value)} className="w-full rounded-md border border-blush-200 bg-white px-4 py-3 text-sm text-charcoal outline-none transition focus:border-rose-gold dark:border-[#3a3835] dark:bg-[#1c1b1a] dark:text-charcoal-100" placeholder={maskValue(overview.integrations.email.adminEmail, visibility.email)} /></label>
             </div>
-            <div className="mt-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-              <span className="flex items-center gap-1">
-                <InfoTooltip text="Se a senha ficar vazia, o valor atual será preservado. As alterações entram em uso assim que forem salvas." />
-              </span>
+            <div className="mt-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-end">
               <button type="button" onClick={() => void handleEmailSave()} disabled={emailSaving} className="inline-flex items-center gap-2 rounded border border-blush-300 bg-white px-4 py-3 text-sm font-medium text-charcoal transition-colors hover:bg-blush disabled:opacity-60 dark:border-[#3a3835] dark:bg-[#1c1b1a] dark:text-charcoal-100 dark:hover:bg-[#252423]">
                 {emailSaving ? <Loader2 size={15} className="animate-spin" /> : <Mail size={15} />}
                 Salvar dados de e-mail

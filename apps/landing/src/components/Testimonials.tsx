@@ -17,13 +17,8 @@ interface TestimonialItem {
   source?: 'manual' | 'google' | 'artificial'
 }
 
-// ── C3: Avatar DiceBear (Personas) por nome ────────────────────────────────────
-function getAvatar(name: string): string {
-  const seed = encodeURIComponent(name.split(' ')[0])
-  return `https://api.dicebear.com/9.x/personas/svg?seed=${seed}&backgroundColor=fde2d0,f5cbb6,e8b4a2,c9a96e`
-}
-
 // ── Banco de 20 depoimentos artificiais realistas ─────────────────────────────
+// avatares: fotos reais RandomUser.me /portraits/women/1-20.jpg
 const ARTIFICIAL_TESTIMONIALS: TestimonialItem[] = [
   {
     id: 'art-01',
@@ -32,7 +27,7 @@ const ARTIFICIAL_TESTIMONIALS: TestimonialItem[] = [
     service: 'Remoção de sobrancelha micropigmentada',
     stars: 5.0,
     text: 'Fiz a remoção das sobrancelhas que tinham ficado escuras demais. A Viviani foi extremamente cuidadosa, explicou cada etapa e o resultado superou minhas expectativas. Recomendo muito!',
-    avatar: getAvatar('Camila'),
+    avatar: 'https://randomuser.me/api/portraits/women/1.jpg',
     source: 'artificial',
   },
   {
@@ -42,7 +37,7 @@ const ARTIFICIAL_TESTIMONIALS: TestimonialItem[] = [
     service: 'Despigmentação labial',
     stars: 4.8,
     text: 'Sempre tive complexo com a cor dos meus lábios e finalmente resolvi tratar. O protocolo foi gentil, sem dor excessiva, e minha autoestima melhorou muito. Profissional incrível.',
-    avatar: getAvatar('Beatriz'),
+    avatar: 'https://randomuser.me/api/portraits/women/2.jpg',
     source: 'artificial',
   },
   {
@@ -52,7 +47,7 @@ const ARTIFICIAL_TESTIMONIALS: TestimonialItem[] = [
     service: 'Remoção de eyeliner micropigmentado',
     stars: 4.5,
     text: 'O eyeliner tinha ficado muito grosso e assimétrico. Depois de 4 sessões com a Viviani, sumiu completamente. Atendimento super profissional e ambiente aconchegante.',
-    avatar: getAvatar('Juliana'),
+    avatar: 'https://randomuser.me/api/portraits/women/3.jpg',
     source: 'artificial',
   },
   {
@@ -62,7 +57,7 @@ const ARTIFICIAL_TESTIMONIALS: TestimonialItem[] = [
     service: 'Remoção de tatuagem colorida',
     stars: 4.9,
     text: 'Tinha uma tatuagem no pulso que me incomodava há anos. A Viviani usou o laser Q-Switched e o resultado foi ótimo. Ela é honesta sobre o número de sessões necessárias, o que me passou muita confiança.',
-    avatar: getAvatar('Fernanda'),
+    avatar: 'https://randomuser.me/api/portraits/women/4.jpg',
     source: 'artificial',
   },
   {
@@ -72,7 +67,7 @@ const ARTIFICIAL_TESTIMONIALS: TestimonialItem[] = [
     service: 'Micropigmentação capilar (MSC)',
     stars: 3.8,
     text: 'Fiz o tratamento para reverter a micropigmentação capilar. Levou mais sessões do que eu esperava, mas a Viviani foi honesta sobre isso desde o início. O resultado foi satisfatório.',
-    avatar: getAvatar('Mariana'),
+    avatar: 'https://randomuser.me/api/portraits/women/5.jpg',
     source: 'artificial',
   },
   {
@@ -82,7 +77,7 @@ const ARTIFICIAL_TESTIMONIALS: TestimonialItem[] = [
     service: 'Remoção de sobrancelha micropigmentada',
     stars: 5.0,
     text: 'Melhor decisão que tomei! Minhas sobrancelhas estavam com um formato que eu odiava. Hoje estou com o rosto que sempre quis. A Viviani é paciente e muito técnica.',
-    avatar: getAvatar('Ana'),
+    avatar: 'https://randomuser.me/api/portraits/women/6.jpg',
     source: 'artificial',
   },
   {
@@ -92,7 +87,7 @@ const ARTIFICIAL_TESTIMONIALS: TestimonialItem[] = [
     service: 'Remoção de tatuagem preta',
     stars: 4.3,
     text: 'Tratei uma tatuagem tribal no tornozelo. Processo demorou algumas sessões, mas ela sempre me orientou sobre os cuidados pós-sessão. Ficou muito bem, quase invisível.',
-    avatar: getAvatar('Rafaela'),
+    avatar: 'https://randomuser.me/api/portraits/women/7.jpg',
     source: 'artificial',
   },
   {
@@ -102,7 +97,7 @@ const ARTIFICIAL_TESTIMONIALS: TestimonialItem[] = [
     service: 'Despigmentação labial',
     stars: 4.7,
     text: 'Comecei o tratamento com ceticismo, mas os resultados me surpreenderam desde a primeira sessão. Ambiente limpo, profissional atenciosa e preço justo. Voltarei com certeza.',
-    avatar: getAvatar('Priscila'),
+    avatar: 'https://randomuser.me/api/portraits/women/8.jpg',
     source: 'artificial',
   },
   {
@@ -112,7 +107,7 @@ const ARTIFICIAL_TESTIMONIALS: TestimonialItem[] = [
     service: 'Remoção de eyeliner micropigmentado',
     stars: 2.5,
     text: 'O resultado demorou mais do que eu esperava para aparecer e precisei de mais sessões. A profissional é atenciosa, mas esperava resultados mais rápidos para o meu caso.',
-    avatar: getAvatar('Tatiane'),
+    avatar: 'https://randomuser.me/api/portraits/women/9.jpg',
     source: 'artificial',
   },
   {
@@ -122,7 +117,7 @@ const ARTIFICIAL_TESTIMONIALS: TestimonialItem[] = [
     service: 'Remoção de sobrancelha micropigmentada',
     stars: 5.0,
     text: 'Fiz a remoção completa de sobrancelhas que tinham ficado com cor avermelhada. Em 5 sessões, o resultado foi perfeito. A Viviani explica tudo com muita clareza e segurança.',
-    avatar: getAvatar('Luciana'),
+    avatar: 'https://randomuser.me/api/portraits/women/10.jpg',
     source: 'artificial',
   },
   {
@@ -132,7 +127,7 @@ const ARTIFICIAL_TESTIMONIALS: TestimonialItem[] = [
     service: 'Micropigmentação capilar (MSC)',
     stars: 4.6,
     text: 'Tinha feito MSC há 3 anos e queria remover. A Viviani foi super honesta sobre o processo e quanto tempo levaria. Hoje estou muito feliz com meu couro cabeludo natural de volta.',
-    avatar: getAvatar('Daniela'),
+    avatar: 'https://randomuser.me/api/portraits/women/11.jpg',
     source: 'artificial',
   },
   {
@@ -142,7 +137,7 @@ const ARTIFICIAL_TESTIMONIALS: TestimonialItem[] = [
     service: 'Remoção de tatuagem colorida',
     stars: 4.2,
     text: 'Tatuagem no ombro com várias cores. A Viviani foi transparente que cores vibrantes levam mais sessões. Já estou na 6ª sessão e o progresso é visível. Ótimo trabalho!',
-    avatar: getAvatar('Carolina'),
+    avatar: 'https://randomuser.me/api/portraits/women/12.jpg',
     source: 'artificial',
   },
   {
@@ -152,7 +147,7 @@ const ARTIFICIAL_TESTIMONIALS: TestimonialItem[] = [
     service: 'Despigmentação labial',
     stars: 4.9,
     text: 'Resultado surpreendente já nas primeiras sessões. Minha autoestima melhorou demais. A Viviani é cuidadosa, explica os protocolos pós-sessão detalhadamente e está sempre disponível para tirar dúvidas.',
-    avatar: getAvatar('Vanessa'),
+    avatar: 'https://randomuser.me/api/portraits/women/13.jpg',
     source: 'artificial',
   },
   {
@@ -162,7 +157,7 @@ const ARTIFICIAL_TESTIMONIALS: TestimonialItem[] = [
     service: 'Remoção de tatuagem preta',
     stars: 3.4,
     text: 'Atendimento bom e profissional capacitada. Minha tatuagem era muito densa e o processo está sendo mais longo. Ela sempre é honesta sobre as expectativas, o que é muito importante.',
-    avatar: getAvatar('Isabela'),
+    avatar: 'https://randomuser.me/api/portraits/women/14.jpg',
     source: 'artificial',
   },
   {
@@ -172,7 +167,7 @@ const ARTIFICIAL_TESTIMONIALS: TestimonialItem[] = [
     service: 'Remoção de sobrancelha micropigmentada',
     stars: 5.0,
     text: 'Vim com sobrancelhas muito escuras e mal desenhadas feitas por outra profissional. A Viviani removeu tudo com muito cuidado e precisão. Agora posso fazer novamente do jeito certo.',
-    avatar: getAvatar('Renata'),
+    avatar: 'https://randomuser.me/api/portraits/women/15.jpg',
     source: 'artificial',
   },
   {
@@ -182,7 +177,7 @@ const ARTIFICIAL_TESTIMONIALS: TestimonialItem[] = [
     service: 'Remoção de eyeliner micropigmentado',
     stars: 4.7,
     text: 'Tinha eyeliner inferior que envelheceu mal. Após 3 sessões, ficou quase imperceptível. Profissional delicada, ambiente impecável e resultado muito acima do que esperava.',
-    avatar: getAvatar('Simone'),
+    avatar: 'https://randomuser.me/api/portraits/women/16.jpg',
     source: 'artificial',
   },
   {
@@ -192,7 +187,7 @@ const ARTIFICIAL_TESTIMONIALS: TestimonialItem[] = [
     service: 'Remoção de tatuagem colorida',
     stars: 4.1,
     text: 'Tratei uma tatuagem grande na costela. A Viviani foi muito honesta: disse que levaria bastante sessões por ser colorida e extensa. Já estou vendo resultados ótimos após 5 sessões.',
-    avatar: getAvatar('Monique'),
+    avatar: 'https://randomuser.me/api/portraits/women/17.jpg',
     source: 'artificial',
   },
   {
@@ -202,7 +197,7 @@ const ARTIFICIAL_TESTIMONIALS: TestimonialItem[] = [
     service: 'Despigmentação labial',
     stars: 4.8,
     text: 'Sempre tive insegurança com meus lábios. A Viviani me recebeu com muito acolhimento, explicou o processo com clareza e os resultados foram chegando gradualmente. Estou muito satisfeita!',
-    avatar: getAvatar('Thais'),
+    avatar: 'https://randomuser.me/api/portraits/women/18.jpg',
     source: 'artificial',
   },
   {
@@ -212,7 +207,7 @@ const ARTIFICIAL_TESTIMONIALS: TestimonialItem[] = [
     service: 'Micropigmentação capilar (MSC)',
     stars: 3.9,
     text: 'Decidi remover a MSC após mudança de estilo. Processo mais longo do que imaginei, mas a Viviani foi sempre transparente sobre isso. O resultado está ficando ótimo sessão a sessão.',
-    avatar: getAvatar('Gabriela'),
+    avatar: 'https://randomuser.me/api/portraits/women/19.jpg',
     source: 'artificial',
   },
   {
@@ -222,10 +217,16 @@ const ARTIFICIAL_TESTIMONIALS: TestimonialItem[] = [
     service: 'Remoção de sobrancelha micropigmentada',
     stars: 5.0,
     text: 'Atendimento impecável do início ao fim. A Viviani é apaixonada pelo que faz e isso reflete no resultado. Minhas sobrancelhas estão completamente removidas e já posso refazer do jeito que sempre quis.',
-    avatar: getAvatar('Letícia'),
+    avatar: 'https://randomuser.me/api/portraits/women/20.jpg',
     source: 'artificial',
   },
 ]
+
+// ── Avatar helpers ────────────────────────────────────────────────────────────
+function getInitials(name: string) {
+  const tokens = name.trim().split(/\s+/).filter(Boolean)
+  return tokens.slice(0, 2).map((token) => token[0]?.toUpperCase() ?? '').join('') || 'VS'
+}
 
 // ── Highlight helpers ─────────────────────────────────────────────────────────
 
@@ -281,12 +282,21 @@ function TestimonialCard({ item }: { item: TestimonialItem }) {
       </p>
 
       <div className="mt-auto flex items-center gap-3">
-        <img
-          src={item.avatar ?? getAvatar(item.name)}
-          alt={item.name}
-          className="h-10 w-10 flex-shrink-0 rounded-full object-cover"
-          loading="lazy"
-        />
+        <div className="relative h-10 w-10 flex-shrink-0">
+          {/* Iniciais — fallback sempre presente atrás da foto */}
+          <div className="absolute inset-0 flex items-center justify-center rounded-full bg-blush text-sm font-bold text-rose-gold" aria-hidden="true">
+            {getInitials(item.name)}
+          </div>
+          {item.avatar && (
+            <img
+              src={item.avatar}
+              alt={item.name}
+              className="relative z-10 h-10 w-10 rounded-full object-cover"
+              loading="lazy"
+              onError={(e) => { e.currentTarget.style.display = 'none' }}
+            />
+          )}
+        </div>
         <div>
           <p className="text-sm font-semibold text-charcoal">{item.name}</p>
           <p className="text-xs text-charcoal-500">{item.city}</p>

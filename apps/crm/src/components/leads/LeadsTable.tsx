@@ -31,6 +31,7 @@ import {
   crmListToolbar,
   crmSelectReset,
 } from '@/components/ui/listStyles'
+import { EmptyState } from '@/components/ui/EmptyState'
 
 interface Lead {
   id: string
@@ -695,8 +696,8 @@ export function LeadsTable() {
                 </tr>
               ) : table.getRowModel().rows.length === 0 ? (
                 <tr>
-                  <td colSpan={columns.length} className={crmListEmpty}>
-                    Nenhum lead encontrado
+                  <td colSpan={columns.length} className="p-4">
+                    <EmptyState message="Nenhum lead encontrado." />
                   </td>
                 </tr>
               ) : (

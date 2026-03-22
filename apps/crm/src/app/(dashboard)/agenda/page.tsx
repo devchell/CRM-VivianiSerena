@@ -25,6 +25,7 @@ import {
   crmFieldSelectIcon,
   crmFieldSelectWrapper,
 } from '@/components/ui/listStyles'
+import { EmptyState } from '@/components/ui/EmptyState'
 
 interface AppointmentsResponse {
   success: true
@@ -478,9 +479,7 @@ export default function AgendaPage() {
             </div>
 
             {upcomingAppointments.length === 0 ? (
-              <div className="rounded border border-dashed border-blush-200 px-4 py-8 text-center text-sm text-charcoal-400 dark:border-[#3a3835] dark:text-charcoal-300">
-                Nenhum atendimento futuro por enquanto.
-              </div>
+              <EmptyState message="Nenhum atendimento futuro por enquanto." />
             ) : (
               <div className="space-y-3">
                 {upcomingAppointments.map((appointment) => {

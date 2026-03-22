@@ -32,6 +32,7 @@ import {
   crmListTableHead,
   crmListToolbar,
 } from '@/components/ui/listStyles'
+import { EmptyState } from '@/components/ui/EmptyState'
 
 const API_URL = crmPublicEnv.apiBaseUrl
 
@@ -467,12 +468,7 @@ export default function ColaboradoresPage() {
             <Loader2 size={24} className="animate-spin text-rose-gold" />
           </div>
         ) : visibleUsers.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-16 text-center">
-            <Users size={36} className="text-charcoal-300 mb-3" />
-            <p className="text-sm text-charcoal-400">
-              {activeTab === 'ACTIVE' ? 'Nenhum colaborador ativo encontrado.' : 'Nenhum colaborador inativo encontrado.'}
-            </p>
-          </div>
+          <EmptyState message={activeTab === 'ACTIVE' ? 'Nenhum colaborador ativo encontrado.' : 'Nenhum colaborador inativo encontrado.'} />
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">

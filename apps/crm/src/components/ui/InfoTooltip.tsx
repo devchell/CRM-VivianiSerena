@@ -1,43 +1,96 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 
 interface InfoTooltipProps {
-  text: string
-  position?: 'top' | 'bottom' | 'left' | 'right'
+  title: string
+  description?: string
 }
 
-export function InfoTooltip({ text, position = 'top' }: InfoTooltipProps) {
+export function InfoTooltip({ title, description }: InfoTooltipProps) {
   const [visible, setVisible] = useState(false)
+  const [flipLeft, setFlipLeft] = useState(false)
+  const btnRef = useRef<HTMLButtonElement>(null)
 
-  const positionClasses: Record<string, string> = {
-    top: 'bottom-full left-1/2 -translate-x-1/2 mb-2',
-    bottom: 'top-full left-1/2 -translate-x-1/2 mt-2',
-    left: 'right-full top-1/2 -translate-y-1/2 mr-2',
-    right: 'left-full top-1/2 -translate-y-1/2 ml-2',
+  function handleShow() {
+    setVisible(true)
+    if (btnRef.current) {
+      const rect = btnRef.current.getBoundingClientRect()
+      setFlipLeft(rect.left > window.innerWidth / 2)
+    }
   }
 
   return (
-    <span className="relative inline-flex items-center">
+    <span
+      style={{
+        position: 'absolute',
+        top: 8,
+        right: 8,
+        zIndex: 10,
+        display: 'inline-flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+      }}
+    >
       <button
+        ref={btnRef}
         type="button"
-        className="flex h-4 w-4 items-center justify-center rounded-full text-[11px] font-bold text-charcoal-400 transition-colors hover:text-rose-gold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-gold focus-visible:ring-offset-1 dark:text-charcoal-300"
-        onMouseEnter={() => setVisible(true)}
+        onMouseEnter={handleShow}
         onMouseLeave={() => setVisible(false)}
-        onFocus={() => setVisible(true)}
+        onFocus={handleShow}
         onBlur={() => setVisible(false)}
-        aria-label={text}
-        aria-describedby={visible ? 'info-tooltip' : undefined}
+        aria-label={`Info: ${title}`}
+        style={{
+          width: 15,
+          height: 15,
+          borderRadius: '50%',
+          border: '1px solid currentColor',
+          background: 'transparent',
+          color: 'var(--muted-foreground, #8A8078)',
+          fontSize: 9,
+          fontWeight: 700,
+          cursor: 'help',
+          padding: 0,
+          display: 'inline-flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          opacity: visible ? 1 : 0.35,
+          transition: 'opacity 0.15s ease',
+          lineHeight: 1,
+          flexShrink: 0,
+        }}
       >
-        ⓘ
+        i
       </button>
+
       {visible && (
         <span
-          id="info-tooltip"
           role="tooltip"
-          className={`absolute z-50 w-64 rounded-md border border-[#3a3835] bg-[#1c1b1a] px-3 py-2 text-xs leading-relaxed text-charcoal-100 shadow-xl dark:border-[#3a3835] dark:bg-[#1c1b1a] ${positionClasses[position]}`}
+          style={{
+            position: 'absolute',
+            top: '100%',
+            ...(flipLeft ? { right: 0 } : { left: 0 }),
+            marginTop: 4,
+            background: '#1A1A18',
+            color: '#F0EDE8',
+            borderRadius: 6,
+            padding: '8px 10px',
+            zIndex: 100,
+            pointerEvents: 'none',
+            boxShadow: '0 4px 12px rgba(0,0,0,0.22)',
+            minWidth: 160,
+            maxWidth: 220,
+            whiteSpace: 'normal',
+          }}
         >
-          {text}
+          <span style={{ display: 'block', fontSize: 11, fontWeight: 600, marginBottom: description ? 3 : 0 }}>
+            {title}
+          </span>
+          {description && (
+            <span style={{ display: 'block', fontSize: 11, lineHeight: 1.5, opacity: 0.8 }}>
+              {description}
+            </span>
+          )}
         </span>
       )}
     </span>
