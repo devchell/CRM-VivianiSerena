@@ -42,7 +42,7 @@ const draftSchema = z.object({
   status: leadStatusSchema,
   emailEnabled: z.boolean().default(false),
   emailSubject: z.string().max(160).default(''),
-  emailBody: z.string().max(6000).default(''),
+  emailBody: z.string().max(20000).default(''),
   whatsappEnabled: z.boolean().default(false),
   whatsappBody: z.string().max(3000).default(''),
 })
@@ -131,6 +131,49 @@ function normalizeEmail(value: string) {
 
 function isValidEmail(value: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)
+}
+
+const SOURCE_NAMES: Record<string, string> = {
+  organic: 'pesquisa orgânica',
+  instagram: 'Instagram',
+  facebook: 'Facebook',
+  google_ads: 'Google Ads',
+  referral: 'indicação',
+  whatsapp: 'WhatsApp',
+  other: 'outro canal',
+}
+
+const SERVICE_NAMES: Record<string, string> = {
+  sobrancelhas: 'Sobrancelhas',
+  labios_eyeliner: 'Lábios / Eyeliner',
+  capilar: 'Micropigmentação capilar',
+  tatuagens: 'Tatuagens',
+  nao_sei: 'não sei ao certo',
+}
+
+const PERIOD_NAMES: Record<string, string> = {
+  manha: 'manhã',
+  tarde: 'tarde',
+  qualquer: 'qualquer horário',
+}
+
+function extractNoteValue(notes: string | null, key: 'service' | 'period'): string {
+  if (!notes) return ''
+  const pattern = key === 'service' ? /Serviço:\s*([^|]+)/ : /Período:\s*([^|]+)/
+  const raw = notes.match(pattern)?.[1]?.trim() ?? ''
+  if (key === 'service') return SERVICE_NAMES[raw] ?? raw
+  return PERIOD_NAMES[raw] ?? raw
+}
+
+function interpolateVariables(template: string, lead: LeadRow): string {
+  return template
+    .replace(/\{nome\}/gi,     lead.name ?? '')
+    .replace(/\{email\}/gi,    lead.email ?? '')
+    .replace(/\{telefone\}/gi, lead.phone ?? '')
+    .replace(/\{servico\}/gi,  extractNoteValue(lead.notes, 'service'))
+    .replace(/\{periodo\}/gi,  extractNoteValue(lead.notes, 'period'))
+    .replace(/\{origem\}/gi,   SOURCE_NAMES[lead.source] ?? lead.source)
+    .replace(/\{data\}/gi,     new Date().toLocaleDateString('pt-BR'))
 }
 
 function normalizePhoneToE164(value: string | null) {
@@ -563,9 +606,9 @@ dispatchesRouter.post('/send', authorizePermission('leads.broadcast'), async (re
       const success = emailProvider.configured
         ? await emailService.sendCampaignMessage({
           to: lead.email,
-          subject: input.draft.emailSubject || `Contato Viviani Serena - ${lead.status}`,
+          subject: interpolateVariables(input.draft.emailSubject || `Contato Viviani Serena - ${lead.status}`, lead),
           title: 'Viviani Serena',
-          body: input.draft.emailBody,
+          body: interpolateVariables(input.draft.emailBody, lead),
         })
         : false
 
@@ -633,7 +676,7 @@ dispatchesRouter.post('/send', authorizePermission('leads.broadcast'), async (re
       try {
         const response = await sendWhatsAppBusinessMessage({
           to: lead.whatsappE164 ?? '',
-          body: input.draft.whatsappBody,
+          body: interpolateVariables(input.draft.whatsappBody, lead),
         })
         providerMessageId = response.providerMessageId
         providerFailed = false

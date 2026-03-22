@@ -17,6 +17,7 @@ import {
 } from 'lucide-react'
 import { apiFetchJson, buildApiUrl, buildAuthHeaders } from '@/lib/api-client'
 import { useAuth } from '@/lib/useAuth'
+import { RichTextEditor } from '@/components/editor/RichTextEditor'
 import {
   crmListBody,
   crmListCell,
@@ -149,6 +150,33 @@ const REASON_LABELS: Record<string, string> = {
   provider_unconfigured: 'Provider não configurado',
 }
 
+const EMAIL_VARIABLES = [
+  { variable: '{nome}',     description: 'Nome completo' },
+  { variable: '{email}',    description: 'E-mail' },
+  { variable: '{telefone}', description: 'Telefone / WhatsApp' },
+  { variable: '{servico}',  description: 'Serviço de interesse' },
+  { variable: '{periodo}',  description: 'Período preferido' },
+  { variable: '{origem}',   description: 'Canal de origem' },
+  { variable: '{data}',     description: 'Data de hoje' },
+]
+
+function EmailVariablesLegend() {
+  return (
+    <div className="mt-2 rounded border border-blush-200 bg-cream px-3 py-2 dark:border-[#3a3835] dark:bg-[#1c1b1a]">
+      <p className="mb-1.5 text-[11px] font-medium text-charcoal-500 dark:text-charcoal-300">Variáveis disponíveis</p>
+      <div className="flex flex-wrap gap-x-3 gap-y-1">
+        {EMAIL_VARIABLES.map(({ variable, description }) => (
+          <span key={variable} className="text-[11px] text-charcoal-400 dark:text-charcoal-300">
+            <code className="rounded bg-blush-100 px-1 py-0.5 font-mono text-[10px] text-charcoal dark:bg-[#252423] dark:text-charcoal-100">{variable}</code>
+            {' → '}
+            {description}
+          </span>
+        ))}
+      </div>
+    </div>
+  )
+}
+
 function createIdempotencyKey() {
   if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
     return crypto.randomUUID()
@@ -167,6 +195,7 @@ export function DispatchesPanel() {
   const [audience, setAudience] = useState<AudienceSummary | null>(null)
   const [sample, setSample] = useState<AudienceRow[]>([])
   const [history, setHistory] = useState<HistoryResponse['data'] | null>(null)
+  const [tabCounts, setTabCounts] = useState<Record<string, number>>({})
   const [loading, setLoading] = useState(true)
   const [savingDraft, setSavingDraft] = useState(false)
   const [savingSettings, setSavingSettings] = useState(false)
@@ -198,6 +227,20 @@ export function DispatchesPanel() {
     return params.toString()
   }, [activeStatus, filters])
 
+  // Separate query for tab counts — no status filter so all tabs show their real total
+  const tabCountsQueryString = useMemo(() => {
+    const params = new URLSearchParams()
+    if (filters.source) params.set('source', filters.source)
+    if (filters.from) params.set('from', new Date(`${filters.from}T00:00:00.000Z`).toISOString())
+    if (filters.to) params.set('to', new Date(`${filters.to}T00:00:00.000Z`).toISOString())
+    params.set('activityState', filters.activityState)
+    params.set('consented', filters.consented)
+    params.set('emailEligibility', filters.emailEligibility)
+    params.set('whatsappEligibility', filters.whatsappEligibility)
+    if (filters.search.trim()) params.set('search', filters.search.trim())
+    return params.toString()
+  }, [filters])
+
   const loadDraft = useCallback(async () => {
     if (!accessToken) return
     const response = await apiFetchJson<{ success: true; data: DraftConfig }>(`/api/v1/dispatches/drafts/${activeStatus}`, {
@@ -224,13 +267,21 @@ export function DispatchesPanel() {
     setHistory(response.data)
   }, [accessToken])
 
+  const loadTabCounts = useCallback(async () => {
+    if (!accessToken) return
+    const response = await apiFetchJson<AudienceResponse>(`/api/v1/dispatches/audience?${tabCountsQueryString}`, {
+      headers: buildAuthHeaders(accessToken),
+    })
+    setTabCounts(response.data.summary.statusCounts ?? {})
+  }, [accessToken, tabCountsQueryString])
+
   useEffect(() => {
     if (status === 'loading' || !accessToken) return
     setLoading(true)
-    Promise.all([loadDraft(), loadAudience(), loadHistory()])
+    Promise.all([loadDraft(), loadAudience(), loadHistory(), loadTabCounts()])
       .catch(() => toast.error('Erro ao carregar módulo de disparos'))
       .finally(() => setLoading(false))
-  }, [accessToken, loadAudience, loadDraft, loadHistory, status])
+  }, [accessToken, loadAudience, loadDraft, loadHistory, loadTabCounts, status])
 
   useEffect(() => {
     if (status === 'loading' || !accessToken) return
@@ -241,6 +292,11 @@ export function DispatchesPanel() {
     if (status === 'loading' || !accessToken) return
     loadAudience().catch(() => toast.error('Erro ao recalcular audiência'))
   }, [accessToken, loadAudience, queryString, status])
+
+  useEffect(() => {
+    if (status === 'loading' || !accessToken) return
+    loadTabCounts().catch(() => {})
+  }, [accessToken, loadTabCounts, status])
 
   const handleSaveDraft = async () => {
     if (!accessToken || !draft || !canBroadcast) return
@@ -354,7 +410,7 @@ export function DispatchesPanel() {
                 : 'text-charcoal-400 hover:bg-blush dark:hover:bg-[#252423]'
             }`}
           >
-            {tab.label} ({audience?.statusCounts[tab.key] ?? 0})
+            {tab.label} ({tabCounts[tab.key] ?? 0})
           </button>
         ))}
       </div>
@@ -453,7 +509,15 @@ export function DispatchesPanel() {
                     Restante hoje: {audience?.email.remainingToday ?? 0} / {settings?.emailDailyLimit ?? 0} · SMTP {audience?.email.providerConfigured ? 'ok' : 'não configurado'}
                   </p>
                   <input value={draft.emailSubject} onChange={(event) => setDraft((current) => current ? { ...current, emailSubject: event.target.value } : current)} placeholder="Assunto do e-mail" className="mt-4 w-full rounded-md border border-blush-300 bg-white px-3 py-2 text-sm text-charcoal focus:outline-none focus:ring-2 focus:ring-rose-gold/40 dark:border-[#3a3835] dark:bg-[#252423] dark:text-charcoal-100" />
-                  <textarea rows={8} value={draft.emailBody} onChange={(event) => setDraft((current) => current ? { ...current, emailBody: event.target.value } : current)} placeholder="Mensagem em texto/markdown simples" className="mt-3 w-full rounded-md border border-blush-300 bg-white px-3 py-2 text-sm text-charcoal focus:outline-none focus:ring-2 focus:ring-rose-gold/40 dark:border-[#3a3835] dark:bg-[#252423] dark:text-charcoal-100" />
+                  <EmailVariablesLegend />
+                  <div className="mt-3">
+                    <RichTextEditor
+                      value={draft.emailBody}
+                      onChange={(html) => setDraft((current) => current ? { ...current, emailBody: html } : current)}
+                      placeholder="Escreva a mensagem do e-mail..."
+                    />
+                  </div>
+                  <EmailVariablesLegend />
                 </div>
                 <div className="rounded-lg border border-blush-200 bg-white/80 p-4 dark:border-[#3a3835] dark:bg-[#1c1b1a]/70">
                   <label className="flex items-center gap-2 text-sm font-medium text-charcoal dark:text-charcoal-100">
