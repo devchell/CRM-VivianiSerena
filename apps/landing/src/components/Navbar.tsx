@@ -65,7 +65,7 @@ export function Navbar({ hasTestimonials = true }: { hasTestimonials?: boolean }
         role="banner"
         className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
           isScrolled
-            ? 'bg-white/90 backdrop-blur-md shadow-sm border-b border-blush/50'
+            ? 'navbar-landing'
             : 'bg-transparent'
         }`}
       >
@@ -183,10 +183,10 @@ export function Navbar({ hasTestimonials = true }: { hasTestimonials?: boolean }
               animate={{ x: 0 }}
               exit={{ x: '100%' }}
               transition={{ type: 'spring', stiffness: 380, damping: 35 }}
-              className="fixed top-0 right-0 bottom-0 z-50 w-[min(320px,85vw)] bg-white shadow-2xl flex flex-col lg:hidden"
+              className="fixed top-0 right-0 bottom-0 z-50 w-[min(320px,85vw)] flex flex-col lg:hidden" style={{ background: 'var(--bg-card)', boxShadow: 'var(--shadow-xl)' }}
             >
               {/* Drawer header */}
-              <div className="flex items-center justify-between p-6 border-b border-blush">
+              <div className="flex items-center justify-between p-6" style={{ boxShadow: '0 1px 0 var(--border-subtle)' }}>
                 <span className="font-heading font-bold text-lg text-charcoal">
                   Viviani <span className="text-rose-gold">Serena</span>
                 </span>
@@ -216,7 +216,7 @@ export function Navbar({ hasTestimonials = true }: { hasTestimonials?: boolean }
               </div>
 
               {/* CTA mobile */}
-              <div className="p-6 border-t border-blush">
+              <div className="p-6" style={{ boxShadow: '0 -1px 0 var(--border-subtle)' }}>
                 <button
                   onClick={handleWhatsApp}
                   className="btn-primary w-full"

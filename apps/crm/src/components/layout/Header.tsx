@@ -26,7 +26,7 @@ export function Header({ onMobileMenuClick }: HeaderProps) {
   const pageTitle = breadcrumbs[pathname] ?? 'CRM'
 
   return (
-    <header className="bg-white dark:bg-[#1c1b1a] border-b border-blush-200 dark:border-[#3a3835] px-6 h-16 flex items-center justify-between flex-shrink-0">
+    <header className="px-6 h-16 flex items-center justify-between flex-shrink-0" style={{ background: 'var(--bg-surface)', boxShadow: 'var(--shadow-sm)' }}>
       {/* Mobile hamburger */}
       {typeof onMobileMenuClick === 'function' && (
         <button

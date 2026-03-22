@@ -270,7 +270,8 @@ function StarRating({ rating }: { rating: number }) {
 function TestimonialCard({ item }: { item: TestimonialItem }) {
   return (
     <div
-      className="flex min-h-[280px] flex-col rounded-xl border border-stone-100 bg-white p-6 shadow-[0_1px_4px_rgba(0,0,0,0.06)]"
+      className="flex min-h-[280px] flex-col rounded-xl p-6"
+      style={{ background: 'var(--bg-card)', boxShadow: 'var(--shadow-md)' }}
       aria-label={`Depoimento de ${item.name}`}
     >
       <Quote className="mb-4 h-6 w-6 text-rose-gold/25" aria-hidden="true" />

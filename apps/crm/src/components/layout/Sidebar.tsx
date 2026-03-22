@@ -63,7 +63,7 @@ function Sidebar() {
 
   const navContent = (
     <>
-      <div className="flex items-center h-16 px-3 border-b border-[#e7e1d9] bg-white dark:bg-[#141414] dark:border-charcoal-800 flex-shrink-0 transition-colors duration-200">
+      <div className="flex items-center h-16 px-3 flex-shrink-0 transition-colors duration-200" style={{ background: 'var(--bg-surface)', boxShadow: '0 1px 0 var(--border-subtle)' }}>
         {collapsed ? (
           <button
             onClick={toggle}
@@ -91,7 +91,7 @@ function Sidebar() {
         )}
       </div>
 
-      <nav className="flex-1 overflow-y-auto overflow-x-hidden py-4 px-3 space-y-1 bg-white dark:bg-[#0f0f0f] transition-opacity duration-200 ease-out">
+      <nav className="flex-1 overflow-y-auto overflow-x-hidden py-4 px-3 space-y-1 transition-opacity duration-200 ease-out" style={{ background: 'var(--bg-surface)' }}>
         {visibleItems.map(({ href, label, icon: Icon, exact }) => {
           const active = exact
             ? pathname === href
@@ -123,7 +123,7 @@ function Sidebar() {
         })}
       </nav>
 
-      <div className="border-t border-[#e7e1d9] dark:border-charcoal-800 bg-white dark:bg-[#0f0f0f] flex-shrink-0">
+      <div className="flex-shrink-0" style={{ background: 'var(--bg-surface)', boxShadow: '0 -1px 0 var(--border-subtle)' }}>
         {collapsed ? (
           <div className="flex flex-col items-center gap-2 p-3">
             <Link href="/configuracoes" title={`${userName} - ${roleLabel} - Configurações`}>
@@ -168,8 +168,8 @@ function Sidebar() {
   return (
     <>
       <aside
-        style={{ width, minWidth: width }}
-        className="h-screen hidden lg:flex flex-col bg-white dark:bg-[#0f0f0f] border-r border-[#e7e1d9] dark:border-charcoal-800 shadow-sm transition-[width] duration-300 ease-in-out"
+        style={{ width, minWidth: width, background: 'var(--bg-surface)', boxShadow: '2px 0 8px rgba(44,35,28,0.07)' }}
+        className="h-screen hidden lg:flex flex-col transition-[width] duration-300 ease-in-out"
       >
         {navContent}
       </aside>
@@ -177,7 +177,7 @@ function Sidebar() {
       {mobileOpen && (
         <div className="lg:hidden fixed inset-0 z-50">
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={closeMobile} />
-          <aside className="absolute left-0 top-0 bottom-0 w-72 bg-white dark:bg-[#0f0f0f] border-r border-[#e7e1d9] dark:border-charcoal-800 shadow-xl flex flex-col">
+          <aside className="absolute left-0 top-0 bottom-0 w-72 flex flex-col" style={{ background: 'var(--bg-surface)', boxShadow: 'var(--shadow-xl)' }}>
             {navContent}
           </aside>
         </div>

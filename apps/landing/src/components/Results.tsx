@@ -150,7 +150,7 @@ export default function Results({ items, vivianiPhotoUrl }: { items: ResultItem[
                       className={`rounded px-5 py-2 text-sm font-medium transition-all duration-200 ${
                         activeCategory === category
                           ? 'scale-105 bg-rose-gold text-white shadow-md'
-                          : 'border border-blush-300 bg-white text-charcoal-600 hover:border-rose-gold hover:text-rose-gold'
+                          : 'bg-white text-charcoal-600 shadow-sm hover:shadow-md hover:text-rose-gold'
                       }`}
                       aria-pressed={activeCategory === category}
                     >
@@ -188,7 +188,8 @@ export default function Results({ items, vivianiPhotoUrl }: { items: ResultItem[
           {/* CTA "Cada resultado é único" — sempre visível */}
           <motion.div
             ref={ctaRef as React.RefObject<HTMLDivElement>}
-            className={`overflow-hidden rounded-lg border border-blush-200 bg-white shadow-lg ${hasItems ? 'mt-16' : ''}`}
+            className={`overflow-hidden rounded-lg ${hasItems ? 'mt-16' : ''}`}
+            style={{ background: 'var(--bg-card)', boxShadow: 'var(--shadow-lg)' }}
             initial={{ opacity: 0, y: 40 }}
             animate={ctaInView ? { opacity: 1, y: 0 } : {}}
             transition={{ duration: 0.7, ease: 'easeOut' }}
