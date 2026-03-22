@@ -51,6 +51,7 @@ interface TestimonialEditorItem {
   service: string
   text: string
   stars: number
+  isHighlight?: boolean
 }
 interface GoogleBusinessLocation {
   accountName: string
@@ -1416,28 +1417,38 @@ export default function EditarSitePage() {
                     className={`${itemInputCls} resize-none`}
                   />
                   <div>
-                    <label className={labelCls}>Nota</label>
-                    <div className="flex items-center gap-2">
-                      <input
-                        type="number"
-                        min={1}
-                        max={5}
-                        value={t.stars || 5}
-                        onChange={e => {
-                          const nextValue = Math.max(1, Math.min(5, Number(e.target.value) || 5))
-                          const u = [...testimonials]
-                          u[idx] = { ...t, stars: nextValue }
-                          setVal('testimonials', 'manual_items', u)
-                        }}
-                        className={`${itemInputCls} max-w-[84px]`}
-                      />
-                      <div className="flex items-center gap-1 text-amber-500">
-                        {Array.from({ length: Math.max(1, Math.min(5, t.stars || 5)) }).map((_, starIndex) => (
-                          <Star key={starIndex} size={13} className="fill-current" />
-                        ))}
-                      </div>
-                    </div>
+                    <label className={labelCls}>Nota (1.0 – 5.0)</label>
+                    <input
+                      type="number"
+                      min={1}
+                      max={5}
+                      step={0.1}
+                      value={t.stars || 5}
+                      onChange={e => {
+                        const nextValue = Math.max(1, Math.min(5, Number(e.target.value) || 5))
+                        const u = [...testimonials]
+                        u[idx] = { ...t, stars: Math.round(nextValue * 10) / 10 }
+                        setVal('testimonials', 'manual_items', u)
+                      }}
+                      className={`${itemInputCls} max-w-[100px]`}
+                    />
                   </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const u = testimonials.map((item, i) => ({ ...item, isHighlight: i === idx }))
+                      setVal('testimonials', 'manual_items', u)
+                    }}
+                    className={[
+                      'inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors',
+                      t.isHighlight
+                        ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400'
+                        : 'border border-blush-200 text-charcoal-400 hover:border-amber-300 hover:text-amber-600 dark:border-[#3a3835] dark:text-charcoal-300',
+                    ].join(' ')}
+                  >
+                    <Star size={11} className={t.isHighlight ? 'fill-amber-500 text-amber-500' : ''} />
+                    {t.isHighlight ? 'Destaque ativo' : 'Definir como destaque'}
+                  </button>
                 </div>
               </div>
             ))}
@@ -1453,6 +1464,7 @@ export default function EditarSitePage() {
                   service: '',
                   text: '',
                   stars: 5,
+                  isHighlight: false,
                 },
               ])}
               className="w-full flex items-center justify-center gap-2 py-2.5 rounded-md border-2 border-dashed border-blush-200 dark:border-[#3a3835] text-charcoal-400 hover:text-rose-gold hover:border-rose-gold/50 transition-colors text-sm"

@@ -162,6 +162,7 @@ export default async function HomePage() {
     service: asString(item.service),
     text: asString(item.text),
     stars: asNumber(item.stars, 5),
+    isHighlight: Boolean(item.isHighlight),
     source: 'manual' as const,
   })).filter((item) => item.text)
 
