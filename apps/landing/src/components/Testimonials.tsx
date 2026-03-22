@@ -12,203 +12,268 @@ interface TestimonialItem {
   service: string
   text: string
   stars: number
+  avatar?: string
+  isHighlight?: boolean
   source?: 'manual' | 'google' | 'artificial'
 }
 
+// ── Banco de 20 depoimentos artificiais realistas ─────────────────────────────
 const ARTIFICIAL_TESTIMONIALS: TestimonialItem[] = [
   {
-    id: 'artificial-1',
-    name: 'Cliente satisfeita',
+    id: 'art-01',
+    name: 'Camila Ferreira',
     city: 'Santo André, SP',
-    service: 'Remoção de micropigmentação',
-    text: 'Atendimento acolhedor, explicação clara do processo e muito cuidado em cada sessão.',
-    stars: 5,
+    service: 'Remoção de sobrancelha micropigmentada',
+    stars: 5.0,
+    text: 'Fiz a remoção das sobrancelhas que tinham ficado escuras demais. A Viviani foi extremamente cuidadosa, explicou cada etapa e o resultado superou minhas expectativas. Recomendo muito!',
+    avatar: 'https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=96&h=96&fit=crop&crop=face',
     source: 'artificial',
   },
   {
-    id: 'artificial-2',
-    name: 'Paciente em acompanhamento',
-    city: 'São Paulo, SP',
-    service: 'Despigmentação labial',
-    text: 'A experiência foi segura e transparente. As expectativas foram alinhadas desde a primeira avaliação.',
-    stars: 5,
-    source: 'artificial',
-  },
-  {
-    id: 'artificial-3',
-    name: 'Caso de remoção',
+    id: 'art-02',
+    name: 'Beatriz Oliveira',
     city: 'São Bernardo do Campo, SP',
-    service: 'Remoção de tatuagem',
-    text: 'O plano de tratamento ficou objetivo e o ambiente transmite bastante confiança durante todo o processo.',
-    stars: 5,
+    service: 'Despigmentação labial',
+    stars: 4.8,
+    text: 'Sempre tive complexo com a cor dos meus lábios e finalmente resolvi tratar. O protocolo foi gentil, sem dor excessiva, e minha autoestima melhorou muito. Profissional incrível.',
+    avatar: 'https://images.unsplash.com/photo-1508214751196-bcfd4ca60f91?w=96&h=96&fit=crop&crop=face',
     source: 'artificial',
   },
   {
-    id: 'artificial-4',
-    name: 'Resultado surpreendente',
-    city: 'São Caetano do Sul, SP',
-    service: 'Remoção de micropigmentação',
-    text: 'Já fiz três sessões e a diferença é visível. Profissionalismo do início ao fim.',
-    stars: 5,
-    source: 'artificial',
-  },
-  {
-    id: 'artificial-5',
-    name: 'Muito bem orientada',
-    city: 'Diadema, SP',
-    service: 'Avaliação de pele',
-    text: 'Fui bem orientada sobre cada etapa antes de começar. Isso fez toda a diferença na minha decisão.',
-    stars: 5,
-    source: 'artificial',
-  },
-  {
-    id: 'artificial-6',
-    name: 'Recomendo com certeza',
+    id: 'art-03',
+    name: 'Juliana Santos',
     city: 'São Paulo, SP',
-    service: 'Remoção a laser',
-    text: 'Ambiente limpo, profissional capacitada e resultado gradual como prometido. Recomendo.',
-    stars: 5,
+    service: 'Remoção de eyeliner micropigmentado',
+    stars: 4.5,
+    text: 'O eyeliner tinha ficado muito grosso e assimétrico. Depois de 4 sessões com a Viviani, sumiu completamente. Atendimento super profissional e ambiente aconchegante.',
+    avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=96&h=96&fit=crop&crop=face',
     source: 'artificial',
   },
   {
-    id: 'artificial-7',
-    name: 'Superou as expectativas',
+    id: 'art-04',
+    name: 'Fernanda Costa',
     city: 'Mauá, SP',
-    service: 'Despigmentação labial',
-    text: 'Não esperava resultado tão bom logo nas primeiras sessões. Fiquei muito feliz com o acompanhamento.',
-    stars: 5,
+    service: 'Remoção de tatuagem colorida',
+    stars: 4.9,
+    text: 'Tinha uma tatuagem no pulso que me incomodava há anos. A Viviani usou o laser Q-Switched e o resultado foi ótimo. Ela é honesta sobre o número de sessões necessárias, o que me passou muita confiança.',
+    avatar: 'https://images.unsplash.com/photo-1489424731084-a3d5bc5f3d20?w=96&h=96&fit=crop&crop=face',
     source: 'artificial',
   },
   {
-    id: 'artificial-8',
-    name: 'Processo tranquilo',
-    city: 'Guarulhos, SP',
-    service: 'Remoção de micropigmentação',
-    text: 'O procedimento foi mais tranquilo do que imaginei. Cada dúvida foi respondida com paciência.',
-    stars: 5,
-    source: 'artificial',
-  },
-  {
-    id: 'artificial-9',
-    name: 'Ótimo suporte',
-    city: 'São Bernardo do Campo, SP',
-    service: 'Remoção a laser',
-    text: 'Além do tratamento em si, o suporte entre as sessões é muito atencioso. Me senti amparada.',
-    stars: 5,
-    source: 'artificial',
-  },
-  {
-    id: 'artificial-10',
-    name: 'Indicação de amiga',
-    city: 'Osasco, SP',
-    service: 'Avaliação de pele',
-    text: 'Vim por indicação de uma amiga e entendi o motivo. Atendimento cuidadoso e sem pressão.',
-    stars: 5,
-    source: 'artificial',
-  },
-  {
-    id: 'artificial-11',
-    name: 'Resultado gradual e seguro',
-    city: 'Santo André, SP',
-    service: 'Remoção de tatuagem',
-    text: 'O resultado vem chegando com segurança e no ritmo certo. Nada apressado.',
-    stars: 5,
-    source: 'artificial',
-  },
-  {
-    id: 'artificial-12',
-    name: 'Sentiu-se acolhida',
-    city: 'São Paulo, SP',
-    service: 'Despigmentação labial',
-    text: 'O ambiente e a postura profissional me fizeram sentir acolhida desde a recepção.',
-    stars: 5,
-    source: 'artificial',
-  },
-  {
-    id: 'artificial-13',
-    name: 'Clareza no diagnóstico',
-    city: 'ABC Paulista, SP',
-    service: 'Avaliação de pele',
-    text: 'Apreciei muito a clareza no diagnóstico inicial. Saí da consulta sabendo exatamente o que esperar.',
-    stars: 5,
-    source: 'artificial',
-  },
-  {
-    id: 'artificial-14',
-    name: 'Sem arrependimentos',
-    city: 'São Paulo, SP',
-    service: 'Remoção de micropigmentação',
-    text: 'Tomei a decisão certa. Já na segunda sessão o resultado era perceptível e o cuidado foi impecável.',
-    stars: 5,
-    source: 'artificial',
-  },
-  {
-    id: 'artificial-15',
-    name: 'Profissional dedicada',
-    city: 'Ribeirão Pires, SP',
-    service: 'Remoção a laser',
-    text: 'A dedicação da profissional em cada sessão mostra o quanto ela se importa com o resultado.',
-    stars: 5,
-    source: 'artificial',
-  },
-  {
-    id: 'artificial-16',
-    name: 'Boa comunicação',
+    id: 'art-05',
+    name: 'Mariana Alves',
     city: 'São Caetano do Sul, SP',
-    service: 'Remoção de micropigmentação',
-    text: 'Sempre recebi retorno rápido nas mensagens e orientações claras entre as sessões.',
-    stars: 5,
+    service: 'Micropigmentação capilar (MSC)',
+    stars: 3.8,
+    text: 'Fiz o tratamento para reverter a micropigmentação capilar. Levou mais sessões do que eu esperava, mas a Viviani foi honesta sobre isso desde o início. O resultado foi satisfatório.',
+    avatar: 'https://images.unsplash.com/photo-1517365830460-955ce3be0547?w=96&h=96&fit=crop&crop=face',
     source: 'artificial',
   },
   {
-    id: 'artificial-17',
-    name: 'Cuidado com a pele',
+    id: 'art-06',
+    name: 'Ana Paula Lima',
+    city: 'Santo André, SP',
+    service: 'Remoção de sobrancelha micropigmentada',
+    stars: 5.0,
+    text: 'Melhor decisão que tomei! Minhas sobrancelhas estavam com um formato que eu odiava. Hoje estou com o rosto que sempre quis. A Viviani é paciente e muito técnica.',
+    avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=96&h=96&fit=crop&crop=face',
+    source: 'artificial',
+  },
+  {
+    id: 'art-07',
+    name: 'Rafaela Monteiro',
+    city: 'Diadema, SP',
+    service: 'Remoção de tatuagem preta',
+    stars: 4.3,
+    text: 'Tratei uma tatuagem tribal no tornozelo. Processo demorou algumas sessões, mas ela sempre me orientou sobre os cuidados pós-sessão. Ficou muito bem, quase invisível.',
+    avatar: 'https://images.unsplash.com/photo-1552058544-f2b08422138a?w=96&h=96&fit=crop&crop=face',
+    source: 'artificial',
+  },
+  {
+    id: 'art-08',
+    name: 'Priscila Rocha',
     city: 'São Paulo, SP',
-    service: 'Remoção de tatuagem',
-    text: 'O protocolo de cuidados pós-sessão é detalhado e fez diferença na recuperação da minha pele.',
-    stars: 5,
-    source: 'artificial',
-  },
-  {
-    id: 'artificial-18',
-    name: 'Experiência positiva',
-    city: 'Mogi das Cruzes, SP',
-    service: 'Avaliação de pele',
-    text: 'Desde a avaliação inicial até o acompanhamento, a experiência foi completamente positiva.',
-    stars: 5,
-    source: 'artificial',
-  },
-  {
-    id: 'artificial-19',
-    name: 'Vale cada sessão',
-    city: 'Barueri, SP',
     service: 'Despigmentação labial',
-    text: 'Os resultados são consistentes e a evolução entre as sessões é nítida. Vale cada visita.',
-    stars: 5,
+    stars: 4.7,
+    text: 'Comecei o tratamento com ceticismo, mas os resultados me surpreenderam desde a primeira sessão. Ambiente limpo, profissional atenciosa e preço justo. Voltarei com certeza.',
+    avatar: 'https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?w=96&h=96&fit=crop&crop=face',
     source: 'artificial',
   },
   {
-    id: 'artificial-20',
-    name: 'Indicaria para todas',
+    id: 'art-09',
+    name: 'Tatiane Barbosa',
+    city: 'Ribeirão Pires, SP',
+    service: 'Remoção de eyeliner micropigmentado',
+    stars: 2.5,
+    text: 'O resultado demorou mais do que eu esperava para aparecer e precisei de mais sessões. A profissional é atenciosa, mas esperava resultados mais rápidos para o meu caso.',
+    avatar: 'https://images.unsplash.com/photo-1541823778819-1b9be26b3ef0?w=96&h=96&fit=crop&crop=face',
+    source: 'artificial',
+  },
+  {
+    id: 'art-10',
+    name: 'Luciana Pereira',
     city: 'São Paulo, SP',
-    service: 'Remoção de micropigmentação',
-    text: 'Indicaria para qualquer pessoa que queira fazer remoção com segurança e resultado real.',
-    stars: 5,
+    service: 'Remoção de sobrancelha micropigmentada',
+    stars: 5.0,
+    text: 'Fiz a remoção completa de sobrancelhas que tinham ficado com cor avermelhada. Em 5 sessões, o resultado foi perfeito. A Viviani explica tudo com muita clareza e segurança.',
+    avatar: 'https://images.unsplash.com/photo-1566616213894-2d4e1baee5d8?w=96&h=96&fit=crop&crop=face',
+    source: 'artificial',
+  },
+  {
+    id: 'art-11',
+    name: 'Daniela Souza',
+    city: 'Santo André, SP',
+    service: 'Micropigmentação capilar (MSC)',
+    stars: 4.6,
+    text: 'Tinha feito MSC há 3 anos e queria remover. A Viviani foi super honesta sobre o processo e quanto tempo levaria. Hoje estou muito feliz com meu couro cabeludo natural de volta.',
+    avatar: 'https://images.unsplash.com/photo-1548142813-c348350df52b?w=96&h=96&fit=crop&crop=face',
+    source: 'artificial',
+  },
+  {
+    id: 'art-12',
+    name: 'Carolina Nunes',
+    city: 'Guarulhos, SP',
+    service: 'Remoção de tatuagem colorida',
+    stars: 4.2,
+    text: 'Tatuagem no ombro com várias cores. A Viviani foi transparente que cores vibrantes levam mais sessões. Já estou na 6ª sessão e o progresso é visível. Ótimo trabalho!',
+    avatar: 'https://images.unsplash.com/photo-1496440737103-cd596325d314?w=96&h=96&fit=crop&crop=face',
+    source: 'artificial',
+  },
+  {
+    id: 'art-13',
+    name: 'Vanessa Cardoso',
+    city: 'São Bernardo do Campo, SP',
+    service: 'Despigmentação labial',
+    stars: 4.9,
+    text: 'Resultado surpreendente já nas primeiras sessões. Minha autoestima melhorou demais. A Viviani é cuidadosa, explica os protocolos pós-sessão detalhadamente e está sempre disponível para tirar dúvidas.',
+    avatar: 'https://images.unsplash.com/photo-1524504388515-9a95c0c6e537?w=96&h=96&fit=crop&crop=face',
+    source: 'artificial',
+  },
+  {
+    id: 'art-14',
+    name: 'Isabela Mendes',
+    city: 'Mogi das Cruzes, SP',
+    service: 'Remoção de tatuagem preta',
+    stars: 3.4,
+    text: 'Atendimento bom e profissional capacitada. Minha tatuagem era muito densa e o processo está sendo mais longo. Ela sempre é honesta sobre as expectativas, o que é muito importante.',
+    avatar: 'https://images.unsplash.com/photo-1536085680664-4d0b04b68b86?w=96&h=96&fit=crop&crop=face',
+    source: 'artificial',
+  },
+  {
+    id: 'art-15',
+    name: 'Renata Pinto',
+    city: 'São Paulo, SP',
+    service: 'Remoção de sobrancelha micropigmentada',
+    stars: 5.0,
+    text: 'Vim com sobrancelhas muito escuras e mal desenhadas feitas por outra profissional. A Viviani removeu tudo com muito cuidado e precisão. Agora posso fazer novamente do jeito certo.',
+    avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=96&h=96&fit=crop&crop=face',
+    source: 'artificial',
+  },
+  {
+    id: 'art-16',
+    name: 'Simone Araújo',
+    city: 'Santo André, SP',
+    service: 'Remoção de eyeliner micropigmentado',
+    stars: 4.7,
+    text: 'Tinha eyeliner inferior que envelheceu mal. Após 3 sessões, ficou quase imperceptível. Profissional delicada, ambiente impecável e resultado muito acima do que esperava.',
+    avatar: 'https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=96&h=96&fit=crop&crop=face',
+    source: 'artificial',
+  },
+  {
+    id: 'art-17',
+    name: 'Monique Ferreira',
+    city: 'Osasco, SP',
+    service: 'Remoção de tatuagem colorida',
+    stars: 4.1,
+    text: 'Tratei uma tatuagem grande na costela. A Viviani foi muito honesta: disse que levaria bastante sessões por ser colorida e extensa. Já estou vendo resultados ótimos após 5 sessões.',
+    avatar: 'https://images.unsplash.com/photo-1508214751196-bcfd4ca60f91?w=96&h=96&fit=crop&crop=face',
+    source: 'artificial',
+  },
+  {
+    id: 'art-18',
+    name: 'Thais Rodrigues',
+    city: 'São Paulo, SP',
+    service: 'Despigmentação labial',
+    stars: 4.8,
+    text: 'Sempre tive insegurança com meus lábios. A Viviani me recebeu com muito acolhimento, explicou o processo com clareza e os resultados foram chegando gradualmente. Estou muito satisfeita!',
+    avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=96&h=96&fit=crop&crop=face',
+    source: 'artificial',
+  },
+  {
+    id: 'art-19',
+    name: 'Gabriela Teixeira',
+    city: 'São Caetano do Sul, SP',
+    service: 'Micropigmentação capilar (MSC)',
+    stars: 3.9,
+    text: 'Decidi remover a MSC após mudança de estilo. Processo mais longo do que imaginei, mas a Viviani foi sempre transparente sobre isso. O resultado está ficando ótimo sessão a sessão.',
+    avatar: 'https://images.unsplash.com/photo-1489424731084-a3d5bc5f3d20?w=96&h=96&fit=crop&crop=face',
+    source: 'artificial',
+  },
+  {
+    id: 'art-20',
+    name: 'Letícia Carvalho',
+    city: 'Santo André, SP',
+    service: 'Remoção de sobrancelha micropigmentada',
+    stars: 5.0,
+    text: 'Atendimento impecável do início ao fim. A Viviani é apaixonada pelo que faz e isso reflete no resultado. Minhas sobrancelhas estão completamente removidas e já posso refazer do jeito que sempre quis.',
+    avatar: 'https://images.unsplash.com/photo-1517365830460-955ce3be0547?w=96&h=96&fit=crop&crop=face',
     source: 'artificial',
   },
 ]
+
+// ── Highlight helpers ─────────────────────────────────────────────────────────
+
+/** Garante que no máximo 1 item tem isHighlight=true */
+function sanitizeHighlights(items: TestimonialItem[]): TestimonialItem[] {
+  let found = false
+  return items.map(t => {
+    if (t.isHighlight && !found) { found = true; return t }
+    return { ...t, isHighlight: false }
+  })
+}
+
+/** Se nenhum artificial tiver isHighlight, elege 1 aleatório */
+function selectRandomHighlight(items: TestimonialItem[]): TestimonialItem[] {
+  if (items.length === 0 || items.some(t => t.isHighlight)) return items
+  const idx = Math.floor(Math.random() * items.length)
+  return items.map((t, i) => ({ ...t, isHighlight: i === idx }))
+}
 
 function getInitials(name: string) {
   const tokens = name.trim().split(/\s+/).filter(Boolean)
   return tokens.slice(0, 2).map((token) => token[0]?.toUpperCase() ?? '').join('') || 'VS'
 }
 
-function StarRating({ count }: { count: number }) {
+// ── StarRating com suporte a nota decimal e meia estrela ──────────────────────
+function StarRating({ rating }: { rating: number }) {
+  const clamped = Math.max(0, Math.min(5, rating))
+  const full = Math.floor(clamped)
+  const partial = Math.round((clamped - full) * 10) / 10
+
   return (
-    <div className="flex gap-0.5" aria-label={`${count} estrelas`}>
-      {Array.from({ length: count }).map((_, index) => (
-        <Star key={index} className="h-4 w-4 fill-amber-400 text-amber-400" aria-hidden="true" />
-      ))}
+    <div className="flex items-center gap-1" aria-label={`${clamped.toFixed(1)} estrelas`}>
+      <div className="flex gap-0.5">
+        {Array.from({ length: 5 }).map((_, i) => {
+          if (i < full) {
+            return <Star key={i} className="h-4 w-4 fill-amber-400 text-amber-400" aria-hidden="true" />
+          }
+          if (i === full && partial > 0) {
+            return (
+              <span key={i} className="relative inline-block h-4 w-4" aria-hidden="true">
+                <Star className="h-4 w-4 fill-amber-200 text-amber-200" />
+                <span
+                  className="absolute inset-0 overflow-hidden"
+                  style={{ width: `${partial * 100}%` }}
+                >
+                  <Star className="h-4 w-4 fill-amber-400 text-amber-400" />
+                </span>
+              </span>
+            )
+          }
+          return <Star key={i} className="h-4 w-4 fill-amber-200 text-amber-200" aria-hidden="true" />
+        })}
+      </div>
+      <span className="text-[11px] font-semibold text-amber-700">{clamped.toFixed(1)}</span>
     </div>
   )
 }
@@ -230,7 +295,7 @@ function TestimonialCard({ item }: { item: TestimonialItem }) {
       <Quote className="mb-4 h-6 w-6 text-rose-gold/25" aria-hidden="true" />
 
       <div className="flex items-center justify-between gap-3">
-        <StarRating count={Math.max(1, Math.min(5, item.stars))} />
+        <StarRating rating={item.stars} />
         <span className="rounded-full bg-cream px-2.5 py-1 text-[11px] font-semibold text-charcoal-500">
           {sourceLabel}
         </span>
@@ -241,9 +306,18 @@ function TestimonialCard({ item }: { item: TestimonialItem }) {
       </p>
 
       <div className="flex items-center gap-3">
-        <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-blush text-sm font-bold text-rose-gold">
-          {getInitials(item.name)}
-        </div>
+        {item.avatar ? (
+          <img
+            src={item.avatar}
+            alt={item.name}
+            className="h-10 w-10 flex-shrink-0 rounded-full object-cover"
+            loading="lazy"
+          />
+        ) : (
+          <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-blush text-sm font-bold text-rose-gold">
+            {getInitials(item.name)}
+          </div>
+        )}
         <div>
           <p className="text-sm font-semibold text-charcoal">{item.name}</p>
           <p className="text-xs text-charcoal-500">{item.city}</p>
@@ -255,14 +329,6 @@ function TestimonialCard({ item }: { item: TestimonialItem }) {
 }
 
 // ── Posições do carrossel ─────────────────────────────────────────────────────
-//
-// Cada card tem position: absolute; left: 50%.
-// O x do framer-motion é % da largura do próprio card.
-// center:    x = -50%  → card centralizado
-// left:      x = -145% → 1 card de distância à esquerda, parcialmente visível
-// right:     x = +45%  → 1 card de distância à direita, parcialmente visível
-// far-left/right: fora do campo de visão
-//
 type CardPos = 'center' | 'left' | 'right' | 'far-left' | 'far-right'
 
 const CARD_VARIANTS: Record<CardPos, { x: string; scale: number; opacity: number; zIndex: number }> = {
@@ -275,69 +341,6 @@ const CARD_VARIANTS: Record<CardPos, { x: string; scale: number; opacity: number
 
 const LEFT_SIDE: CardPos[] = ['left', 'far-left']
 const RIGHT_SIDE: CardPos[] = ['right', 'far-right']
-
-// ── Card animado com teleporte para carrossel infinito ─────────────────────────
-function CarouselCard({ item, pos, isCenter }: { item: TestimonialItem; pos: CardPos; isCenter: boolean }) {
-  const controls = useAnimationControls()
-  const prevPosRef = useRef<CardPos>(pos)
-  const isMountedRef = useRef(false)
-
-  useEffect(() => {
-    if (!isMountedRef.current) {
-      isMountedRef.current = true
-      return
-    }
-
-    const prev = prevPosRef.current
-    prevPosRef.current = pos
-
-    if (prev === pos) return
-
-    // Quando um card precisa cruzar de um lado visível para o outro, teleportamos
-    // para a posição "far" correta (opacity 0) antes de animar, garantindo que
-    // o movimento seja sempre na mesma direção (sem "rolar de volta").
-    if (LEFT_SIDE.includes(prev) && RIGHT_SIDE.includes(pos)) {
-      controls.set(CARD_VARIANTS['far-right'])
-    } else if (RIGHT_SIDE.includes(prev) && LEFT_SIDE.includes(pos)) {
-      controls.set(CARD_VARIANTS['far-left'])
-    }
-
-    void controls.start({ ...CARD_VARIANTS[pos], transition: SPRING })
-  }, [pos, controls])
-
-  return (
-    <motion.div
-      className="absolute top-4 w-full max-w-sm md:max-w-md"
-      style={{ left: '50%' }}
-      initial={CARD_VARIANTS[pos]}
-      animate={controls}
-      aria-hidden={!isCenter}
-    >
-      <div className="relative">
-        {isCenter && (
-          <div
-            className="pointer-events-none absolute inset-0 rounded-xl"
-            style={{
-              border: '2px solid rgba(201, 169, 110, 0.45)',
-              background: 'rgba(201, 169, 110, 0.06)',
-              zIndex: 1,
-            }}
-            aria-hidden="true"
-          />
-        )}
-        {isCenter && (
-          <span
-            className="absolute left-5 z-[2] rounded-full bg-[#C9A96E] px-3 py-0.5 text-[11px] font-semibold text-white"
-            style={{ top: '-12px' }}
-          >
-            Destaque
-          </span>
-        )}
-        <TestimonialCard item={item} />
-      </div>
-    </motion.div>
-  )
-}
 
 const SPRING: {
   type: 'spring'
@@ -359,6 +362,71 @@ function getCardPos(index: number, current: number, total: number): CardPos {
   return diff <= Math.floor(total / 2) ? 'far-right' : 'far-left'
 }
 
+// ── Card animado com teleporte para carrossel infinito ─────────────────────────
+function CarouselCard({ item, pos, isCenter }: { item: TestimonialItem; pos: CardPos; isCenter: boolean }) {
+  const controls = useAnimationControls()
+  const prevPosRef = useRef<CardPos>(pos)
+  const isMountedRef = useRef(false)
+
+  useEffect(() => {
+    if (!isMountedRef.current) {
+      isMountedRef.current = true
+      return
+    }
+
+    const prev = prevPosRef.current
+    prevPosRef.current = pos
+
+    if (prev === pos) return
+
+    // Teleporta para o lado correto quando o card cruzaria de esquerda→direita
+    // ou direita→esquerda (elimina o efeito "rolar de volta")
+    if (LEFT_SIDE.includes(prev) && RIGHT_SIDE.includes(pos)) {
+      controls.set(CARD_VARIANTS['far-right'])
+    } else if (RIGHT_SIDE.includes(prev) && LEFT_SIDE.includes(pos)) {
+      controls.set(CARD_VARIANTS['far-left'])
+    }
+
+    void controls.start({ ...CARD_VARIANTS[pos], transition: SPRING })
+  }, [pos, controls])
+
+  const showHighlight = isCenter && Boolean(item.isHighlight)
+
+  return (
+    <motion.div
+      className="absolute top-4 w-full max-w-sm md:max-w-md"
+      style={{ left: '50%' }}
+      initial={CARD_VARIANTS[pos]}
+      animate={controls}
+      aria-hidden={!isCenter}
+    >
+      <div className="relative">
+        {/* Overlay dourado: apenas no card marcado como destaque quando centralizado */}
+        {showHighlight && (
+          <div
+            className="pointer-events-none absolute inset-0 rounded-xl"
+            style={{
+              border: '2px solid rgba(201, 169, 110, 0.45)',
+              background: 'rgba(201, 169, 110, 0.06)',
+              zIndex: 1,
+            }}
+            aria-hidden="true"
+          />
+        )}
+        {showHighlight && (
+          <span
+            className="absolute left-5 z-[2] rounded-full bg-[#C9A96E] px-3 py-0.5 text-[11px] font-semibold text-white"
+            style={{ top: '-12px' }}
+          >
+            Destaque
+          </span>
+        )}
+        <TestimonialCard item={item} />
+      </div>
+    </motion.div>
+  )
+}
+
 // ── Componente principal ──────────────────────────────────────────────────────
 export default function Testimonials(props: {
   manualItems: TestimonialItem[]
@@ -377,9 +445,27 @@ export default function Testimonials(props: {
     if (props.googleItems.length > 0) merged.push(...props.googleItems)
     if (props.artificialEnabled) {
       const count = Math.min(20, Math.max(1, props.artificialCount ?? 3))
-      merged.push(...ARTIFICIAL_TESTIMONIALS.slice(0, count))
+      // Elege 1 artificial aleatório como destaque (muda a cada reload)
+      const artificials = selectRandomHighlight(ARTIFICIAL_TESTIMONIALS.slice(0, count))
+      merged.push(...artificials)
     }
-    return merged.filter((item) => item.text)
+    const filtered = merged.filter((item) => item.text)
+    if (filtered.length === 0) return []
+
+    // Garante no máximo 1 destaque; se nenhum tiver, marca o primeiro
+    const sanitized = sanitizeHighlights(
+      filtered.some(t => t.isHighlight)
+        ? filtered
+        : filtered.map((t, i) => ({ ...t, isHighlight: i === 0 }))
+    )
+
+    // Move o item destacado para a frente (posição 0) para iniciar no destaque
+    const hIdx = sanitized.findIndex(t => t.isHighlight)
+    if (hIdx > 0) {
+      const h = sanitized[hIdx]
+      return [h, ...sanitized.filter((_, i) => i !== hIdx)]
+    }
+    return sanitized
   }, [props.artificialEnabled, props.artificialCount, props.googleItems, props.manualItems])
 
   const total = items.length
