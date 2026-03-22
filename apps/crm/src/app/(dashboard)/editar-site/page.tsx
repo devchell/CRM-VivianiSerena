@@ -768,7 +768,7 @@ export default function EditarSitePage() {
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginTop: 12 }}>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                     <label className={labelCls}>Clientes iniciais</label>
-                    <p style={{ fontSize: 11, color: 'var(--muted-foreground,#A09890)', margin: 0, lineHeight: 1.4, minHeight: '1.4em', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                    <p style={{ fontSize: 11, color: 'var(--muted-foreground,#A09890)', margin: '2px 0', lineHeight: '1.4', minHeight: '15.4px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                       Soma com leads reais cadastrados
                     </p>
                     <input
@@ -782,7 +782,7 @@ export default function EditarSitePage() {
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                     <label className={labelCls}>Avaliações iniciais</label>
-                    <p style={{ fontSize: 11, margin: 0, minHeight: '1.4em', visibility: 'hidden' }}>&nbsp;</p>
+                    <p style={{ fontSize: 11, margin: '2px 0', lineHeight: '1.4', minHeight: '15.4px', visibility: 'hidden' }}>&nbsp;</p>
                     <input
                       type="number"
                       inputMode="numeric"
