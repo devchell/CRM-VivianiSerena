@@ -150,9 +150,10 @@ function Step1({ onNext }: { onNext: (data: Step1Data) => void }) {
                   type={field.type}
                   autoComplete={field.autoComplete}
                   placeholder={field.placeholder}
-                  className={`h-12 w-full rounded-md border bg-white pl-11 pr-4 text-charcoal placeholder:text-charcoal/40 transition-all focus:outline-none focus:ring-2 focus:ring-rose-gold ${
-                    error ? 'border-red-400 focus:ring-red-400' : 'border-blush focus:border-transparent'
+                  className={`h-12 w-full rounded-md pl-11 pr-4 text-charcoal placeholder:text-charcoal/40 transition-all ${
+                    error ? 'ring-2 ring-red-400' : 'focus-visible:ring-2 focus-visible:ring-rose-gold'
                   }`}
+                  style={{ background: 'var(--bg-input)', boxShadow: 'var(--shadow-inset)', outline: 'none' }}
                   {...register(field.id)}
                 />
               </div>
@@ -200,11 +201,14 @@ function Step2({ onNext, onBack }: { onNext: (data: Step2Data) => void; onBack: 
               key={option.value}
               type="button"
               onClick={() => setValue('service', option.value, { shouldValidate: true })}
-              className={`flex w-full items-center gap-3 rounded-md border-2 px-4 py-3.5 text-left transition-all ${
-                selected === option.value
-                  ? 'border-rose-gold bg-rose-gold/5 text-charcoal'
-                  : 'border-blush bg-white text-charcoal/70 hover:border-rose-gold/40 hover:bg-blush/30'
-              }`}
+              className="flex w-full items-center gap-3 rounded-md px-4 py-3.5 text-left transition-all"
+              style={{
+                background: selected === option.value ? 'rgba(201,150,122,0.06)' : 'var(--bg-input)',
+                boxShadow: selected === option.value
+                  ? 'var(--shadow-inset), 0 0 0 2px var(--accent)'
+                  : 'var(--shadow-inset)',
+                color: selected === option.value ? 'var(--text-primary)' : 'var(--text-secondary)',
+              }}
             >
               <span className="flex h-7 w-7 items-center justify-center rounded bg-cream text-sm font-semibold text-rose-gold">
                 {option.emoji}
@@ -268,11 +272,14 @@ function Step3({
               key={option.value}
               type="button"
               onClick={() => setValue('period', option.value, { shouldValidate: true })}
-              className={`flex flex-col items-center gap-1 rounded-md border-2 px-2 py-4 text-center transition-all ${
-                selected === option.value
-                  ? 'border-rose-gold bg-rose-gold/5 text-charcoal'
-                  : 'border-blush bg-white text-charcoal/70 hover:border-rose-gold/40'
-              }`}
+              className="flex flex-col items-center gap-1 rounded-md px-2 py-4 text-center transition-all"
+              style={{
+                background: selected === option.value ? 'rgba(201,150,122,0.06)' : 'var(--bg-input)',
+                boxShadow: selected === option.value
+                  ? 'var(--shadow-inset), 0 0 0 2px var(--accent)'
+                  : 'var(--shadow-inset)',
+                color: selected === option.value ? 'var(--text-primary)' : 'var(--text-secondary)',
+              }}
             >
               <span className="text-sm font-semibold">{option.label}</span>
               <span className="text-xs text-charcoal/50">{option.sub}</span>
@@ -420,7 +427,7 @@ export function LeadFormSection({ socialProof }: { socialProof?: SocialProofSumm
             </ul>
 
             {proofEnabled ? (
-              <div className="rounded-md border border-blush bg-white p-4">
+              <div className="rounded-md p-4" style={{ background: 'var(--bg-card)', boxShadow: 'var(--shadow-sm)' }}>
                 <div className="flex items-center gap-4">
                   <div className="flex -space-x-2" aria-hidden="true">
                     {['VS', 'LG', 'GL'].map((initials) => (
@@ -454,7 +461,7 @@ export function LeadFormSection({ socialProof }: { socialProof?: SocialProofSumm
           </motion.div>
 
           <motion.div initial={{ opacity: 0, x: 24 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true, margin: '-80px' }} transition={{ duration: 0.6, delay: 0.15 }}>
-            <div className="card p-8 shadow-xl shadow-charcoal/6">
+            <div className="card p-8">
               <div className="mb-6 flex items-center justify-between">
                 <h3 className="font-heading text-lg font-bold text-charcoal">
                   {isSuccess ? 'Solicitação enviada!' : 'Solicitar Avaliação Gratuita'}

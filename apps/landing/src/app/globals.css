@@ -13,6 +13,40 @@
     --white: #ffffff;
     --font-heading: var(--font-inter);
     --font-body: var(--font-inter);
+
+    /* Design system tokens */
+    --bg-page:    #FAF7F2;
+    --bg-surface: #F5F0EB;
+    --bg-card:    #FFFFFF;
+    --bg-input:   #FFFFFF;
+    --bg-hover:   #F0EBE4;
+
+    --shadow-sm:    0 1px 3px rgba(44,35,28,0.07);
+    --shadow-md:    0 3px 10px rgba(44,35,28,0.09), 0 1px 2px rgba(44,35,28,0.05);
+    --shadow-lg:    0 6px 20px rgba(44,35,28,0.11), 0 2px 6px rgba(44,35,28,0.07);
+    --shadow-xl:    0 10px 40px rgba(44,35,28,0.14), 0 4px 10px rgba(44,35,28,0.09);
+    --shadow-inset: inset 0 1px 3px rgba(44,35,28,0.08);
+
+    --text-primary:   #2C2320;
+    --text-secondary: #6B5E56;
+    --text-tertiary:  #9E8E84;
+
+    --accent:        #C9967A;
+    --accent-hover:  #B5785A;
+    --accent-subtle: rgba(201,150,122,0.10);
+
+    --border-subtle: rgba(44,35,28,0.08);
+    --border-medium: rgba(44,35,28,0.14);
+
+    --radius-sm: 6px;
+    --radius-md: 10px;
+    --radius-lg: 14px;
+    --radius-xl: 20px;
+    --radius-full: 9999px;
+
+    --transition-fast: 150ms ease;
+    --transition-base: 200ms ease;
+    --transition-slow: 300ms ease;
   }
 
   *,
@@ -99,14 +133,38 @@
   /* Botões */
   .btn-primary {
     @apply inline-flex items-center justify-center gap-2 px-8 py-4 bg-rose-gold text-white font-semibold rounded-full
-           hover:bg-[#B5785A] active:scale-[0.98] transition-all duration-200 shadow-lg shadow-rose-gold/25
+           active:scale-[0.98] transition-all duration-200
            focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-gold focus-visible:ring-offset-2;
+    background: var(--accent);
+    box-shadow: 0 4px 14px rgba(201,150,122,0.35);
+    transition: background var(--transition-base), box-shadow var(--transition-base), transform var(--transition-fast);
+  }
+  .btn-primary:hover {
+    background: var(--accent-hover);
+    box-shadow: 0 6px 20px rgba(201,150,122,0.45);
+    transform: translateY(-1px);
+  }
+  .btn-primary:active {
+    transform: translateY(0) scale(0.98);
+    box-shadow: 0 2px 8px rgba(201,150,122,0.25);
   }
 
   .btn-secondary {
-    @apply inline-flex items-center justify-center gap-2 px-8 py-4 border-2 border-rose-gold text-rose-gold font-semibold rounded-full
-           hover:bg-rose-gold hover:text-white active:scale-[0.98] transition-all duration-200
+    @apply inline-flex items-center justify-center gap-2 px-8 py-4 text-rose-gold font-semibold rounded-full
+           active:scale-[0.98]
            focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-gold focus-visible:ring-offset-2;
+    background: transparent;
+    box-shadow: inset 0 0 0 2px var(--accent);
+    transition: background var(--transition-base), box-shadow var(--transition-base), transform var(--transition-fast), color var(--transition-base);
+  }
+  .btn-secondary:hover {
+    background: var(--accent);
+    color: #fff;
+    box-shadow: 0 4px 14px rgba(201,150,122,0.35);
+    transform: translateY(-1px);
+  }
+  .btn-secondary:active {
+    transform: translateY(0) scale(0.98);
   }
 
   .btn-ghost {
@@ -116,7 +174,20 @@
 
   /* Cards */
   .card {
-    @apply bg-white rounded-2xl border border-blush shadow-sm;
+    background: var(--bg-card);
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-md);
+    transition: box-shadow var(--transition-base), transform var(--transition-base);
+  }
+  .card:hover {
+    box-shadow: var(--shadow-lg);
+    transform: translateY(-2px);
+  }
+  .card-sm {
+    background: var(--bg-card);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+    transition: box-shadow var(--transition-base), transform var(--transition-base);
   }
 
   /* Glass effect */
@@ -158,6 +229,39 @@
   /* Trust badge item */
   .trust-badge {
     @apply flex items-center gap-2 text-white/90 text-sm font-medium;
+  }
+
+  /* Surface */
+  .surface {
+    background: var(--bg-surface);
+    border-radius: var(--radius-lg);
+  }
+
+  /* Input */
+  .input-base {
+    background: var(--bg-input);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-inset);
+    color: var(--text-primary);
+    transition: box-shadow var(--transition-fast);
+    @apply w-full px-4 py-3;
+  }
+  .input-base:focus {
+    outline: none;
+    box-shadow: var(--shadow-inset), 0 0 0 2px var(--accent);
+  }
+
+  /* Navbar */
+  .navbar-landing {
+    backdrop-filter: blur(12px);
+    background: rgba(250,247,242,0.85);
+    box-shadow: var(--shadow-sm);
+  }
+
+  /* Divider */
+  .divider {
+    height: 1px;
+    background: var(--border-subtle);
   }
 }
 

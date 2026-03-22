@@ -126,8 +126,8 @@ function ServiceCard({ service }: { service: typeof SERVICES[0] }) {
       <div
         onMouseMove={handleMouseMove}
         onMouseLeave={handleMouseLeave}
-        className={`card preserve-3d p-7 h-full flex flex-col border-2 border-transparent transition-all duration-300 will-change-transform ${service.color} hover:shadow-xl hover:shadow-charcoal/8`}
-        style={{ transition: 'box-shadow 0.3s ease, border-color 0.3s ease' }}
+        className="card preserve-3d p-7 h-full flex flex-col will-change-transform"
+        style={{ transition: 'box-shadow 0.3s ease, transform 0.3s ease' }}
       >
         {/* Header do card */}
         <div className="flex items-start justify-between mb-5">
