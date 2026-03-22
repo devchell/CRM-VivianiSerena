@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { motion, useAnimationControls } from 'framer-motion'
-import { Star, ChevronLeft, ChevronRight, Quote } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Quote } from 'lucide-react'
 import { useInView } from '@/lib/hooks'
 
 interface TestimonialItem {
@@ -17,6 +17,12 @@ interface TestimonialItem {
   source?: 'manual' | 'google' | 'artificial'
 }
 
+// ── C3: Avatar DiceBear (Personas) por nome ────────────────────────────────────
+function getAvatar(name: string): string {
+  const seed = encodeURIComponent(name.split(' ')[0])
+  return `https://api.dicebear.com/9.x/personas/svg?seed=${seed}&backgroundColor=fde2d0,f5cbb6,e8b4a2,c9a96e`
+}
+
 // ── Banco de 20 depoimentos artificiais realistas ─────────────────────────────
 const ARTIFICIAL_TESTIMONIALS: TestimonialItem[] = [
   {
@@ -26,7 +32,7 @@ const ARTIFICIAL_TESTIMONIALS: TestimonialItem[] = [
     service: 'Remoção de sobrancelha micropigmentada',
     stars: 5.0,
     text: 'Fiz a remoção das sobrancelhas que tinham ficado escuras demais. A Viviani foi extremamente cuidadosa, explicou cada etapa e o resultado superou minhas expectativas. Recomendo muito!',
-    avatar: 'https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=96&h=96&fit=crop&crop=face',
+    avatar: getAvatar('Camila'),
     source: 'artificial',
   },
   {
@@ -36,7 +42,7 @@ const ARTIFICIAL_TESTIMONIALS: TestimonialItem[] = [
     service: 'Despigmentação labial',
     stars: 4.8,
     text: 'Sempre tive complexo com a cor dos meus lábios e finalmente resolvi tratar. O protocolo foi gentil, sem dor excessiva, e minha autoestima melhorou muito. Profissional incrível.',
-    avatar: 'https://images.unsplash.com/photo-1508214751196-bcfd4ca60f91?w=96&h=96&fit=crop&crop=face',
+    avatar: getAvatar('Beatriz'),
     source: 'artificial',
   },
   {
@@ -46,7 +52,7 @@ const ARTIFICIAL_TESTIMONIALS: TestimonialItem[] = [
     service: 'Remoção de eyeliner micropigmentado',
     stars: 4.5,
     text: 'O eyeliner tinha ficado muito grosso e assimétrico. Depois de 4 sessões com a Viviani, sumiu completamente. Atendimento super profissional e ambiente aconchegante.',
-    avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=96&h=96&fit=crop&crop=face',
+    avatar: getAvatar('Juliana'),
     source: 'artificial',
   },
   {
@@ -56,7 +62,7 @@ const ARTIFICIAL_TESTIMONIALS: TestimonialItem[] = [
     service: 'Remoção de tatuagem colorida',
     stars: 4.9,
     text: 'Tinha uma tatuagem no pulso que me incomodava há anos. A Viviani usou o laser Q-Switched e o resultado foi ótimo. Ela é honesta sobre o número de sessões necessárias, o que me passou muita confiança.',
-    avatar: 'https://images.unsplash.com/photo-1489424731084-a3d5bc5f3d20?w=96&h=96&fit=crop&crop=face',
+    avatar: getAvatar('Fernanda'),
     source: 'artificial',
   },
   {
@@ -66,7 +72,7 @@ const ARTIFICIAL_TESTIMONIALS: TestimonialItem[] = [
     service: 'Micropigmentação capilar (MSC)',
     stars: 3.8,
     text: 'Fiz o tratamento para reverter a micropigmentação capilar. Levou mais sessões do que eu esperava, mas a Viviani foi honesta sobre isso desde o início. O resultado foi satisfatório.',
-    avatar: 'https://images.unsplash.com/photo-1517365830460-955ce3be0547?w=96&h=96&fit=crop&crop=face',
+    avatar: getAvatar('Mariana'),
     source: 'artificial',
   },
   {
@@ -76,7 +82,7 @@ const ARTIFICIAL_TESTIMONIALS: TestimonialItem[] = [
     service: 'Remoção de sobrancelha micropigmentada',
     stars: 5.0,
     text: 'Melhor decisão que tomei! Minhas sobrancelhas estavam com um formato que eu odiava. Hoje estou com o rosto que sempre quis. A Viviani é paciente e muito técnica.',
-    avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=96&h=96&fit=crop&crop=face',
+    avatar: getAvatar('Ana'),
     source: 'artificial',
   },
   {
@@ -86,7 +92,7 @@ const ARTIFICIAL_TESTIMONIALS: TestimonialItem[] = [
     service: 'Remoção de tatuagem preta',
     stars: 4.3,
     text: 'Tratei uma tatuagem tribal no tornozelo. Processo demorou algumas sessões, mas ela sempre me orientou sobre os cuidados pós-sessão. Ficou muito bem, quase invisível.',
-    avatar: 'https://images.unsplash.com/photo-1552058544-f2b08422138a?w=96&h=96&fit=crop&crop=face',
+    avatar: getAvatar('Rafaela'),
     source: 'artificial',
   },
   {
@@ -96,7 +102,7 @@ const ARTIFICIAL_TESTIMONIALS: TestimonialItem[] = [
     service: 'Despigmentação labial',
     stars: 4.7,
     text: 'Comecei o tratamento com ceticismo, mas os resultados me surpreenderam desde a primeira sessão. Ambiente limpo, profissional atenciosa e preço justo. Voltarei com certeza.',
-    avatar: 'https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?w=96&h=96&fit=crop&crop=face',
+    avatar: getAvatar('Priscila'),
     source: 'artificial',
   },
   {
@@ -106,7 +112,7 @@ const ARTIFICIAL_TESTIMONIALS: TestimonialItem[] = [
     service: 'Remoção de eyeliner micropigmentado',
     stars: 2.5,
     text: 'O resultado demorou mais do que eu esperava para aparecer e precisei de mais sessões. A profissional é atenciosa, mas esperava resultados mais rápidos para o meu caso.',
-    avatar: 'https://images.unsplash.com/photo-1541823778819-1b9be26b3ef0?w=96&h=96&fit=crop&crop=face',
+    avatar: getAvatar('Tatiane'),
     source: 'artificial',
   },
   {
@@ -116,7 +122,7 @@ const ARTIFICIAL_TESTIMONIALS: TestimonialItem[] = [
     service: 'Remoção de sobrancelha micropigmentada',
     stars: 5.0,
     text: 'Fiz a remoção completa de sobrancelhas que tinham ficado com cor avermelhada. Em 5 sessões, o resultado foi perfeito. A Viviani explica tudo com muita clareza e segurança.',
-    avatar: 'https://images.unsplash.com/photo-1566616213894-2d4e1baee5d8?w=96&h=96&fit=crop&crop=face',
+    avatar: getAvatar('Luciana'),
     source: 'artificial',
   },
   {
@@ -126,7 +132,7 @@ const ARTIFICIAL_TESTIMONIALS: TestimonialItem[] = [
     service: 'Micropigmentação capilar (MSC)',
     stars: 4.6,
     text: 'Tinha feito MSC há 3 anos e queria remover. A Viviani foi super honesta sobre o processo e quanto tempo levaria. Hoje estou muito feliz com meu couro cabeludo natural de volta.',
-    avatar: 'https://images.unsplash.com/photo-1548142813-c348350df52b?w=96&h=96&fit=crop&crop=face',
+    avatar: getAvatar('Daniela'),
     source: 'artificial',
   },
   {
@@ -136,7 +142,7 @@ const ARTIFICIAL_TESTIMONIALS: TestimonialItem[] = [
     service: 'Remoção de tatuagem colorida',
     stars: 4.2,
     text: 'Tatuagem no ombro com várias cores. A Viviani foi transparente que cores vibrantes levam mais sessões. Já estou na 6ª sessão e o progresso é visível. Ótimo trabalho!',
-    avatar: 'https://images.unsplash.com/photo-1496440737103-cd596325d314?w=96&h=96&fit=crop&crop=face',
+    avatar: getAvatar('Carolina'),
     source: 'artificial',
   },
   {
@@ -146,7 +152,7 @@ const ARTIFICIAL_TESTIMONIALS: TestimonialItem[] = [
     service: 'Despigmentação labial',
     stars: 4.9,
     text: 'Resultado surpreendente já nas primeiras sessões. Minha autoestima melhorou demais. A Viviani é cuidadosa, explica os protocolos pós-sessão detalhadamente e está sempre disponível para tirar dúvidas.',
-    avatar: 'https://images.unsplash.com/photo-1524504388515-9a95c0c6e537?w=96&h=96&fit=crop&crop=face',
+    avatar: getAvatar('Vanessa'),
     source: 'artificial',
   },
   {
@@ -156,7 +162,7 @@ const ARTIFICIAL_TESTIMONIALS: TestimonialItem[] = [
     service: 'Remoção de tatuagem preta',
     stars: 3.4,
     text: 'Atendimento bom e profissional capacitada. Minha tatuagem era muito densa e o processo está sendo mais longo. Ela sempre é honesta sobre as expectativas, o que é muito importante.',
-    avatar: 'https://images.unsplash.com/photo-1536085680664-4d0b04b68b86?w=96&h=96&fit=crop&crop=face',
+    avatar: getAvatar('Isabela'),
     source: 'artificial',
   },
   {
@@ -166,7 +172,7 @@ const ARTIFICIAL_TESTIMONIALS: TestimonialItem[] = [
     service: 'Remoção de sobrancelha micropigmentada',
     stars: 5.0,
     text: 'Vim com sobrancelhas muito escuras e mal desenhadas feitas por outra profissional. A Viviani removeu tudo com muito cuidado e precisão. Agora posso fazer novamente do jeito certo.',
-    avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=96&h=96&fit=crop&crop=face',
+    avatar: getAvatar('Renata'),
     source: 'artificial',
   },
   {
@@ -176,7 +182,7 @@ const ARTIFICIAL_TESTIMONIALS: TestimonialItem[] = [
     service: 'Remoção de eyeliner micropigmentado',
     stars: 4.7,
     text: 'Tinha eyeliner inferior que envelheceu mal. Após 3 sessões, ficou quase imperceptível. Profissional delicada, ambiente impecável e resultado muito acima do que esperava.',
-    avatar: 'https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=96&h=96&fit=crop&crop=face',
+    avatar: getAvatar('Simone'),
     source: 'artificial',
   },
   {
@@ -186,7 +192,7 @@ const ARTIFICIAL_TESTIMONIALS: TestimonialItem[] = [
     service: 'Remoção de tatuagem colorida',
     stars: 4.1,
     text: 'Tratei uma tatuagem grande na costela. A Viviani foi muito honesta: disse que levaria bastante sessões por ser colorida e extensa. Já estou vendo resultados ótimos após 5 sessões.',
-    avatar: 'https://images.unsplash.com/photo-1508214751196-bcfd4ca60f91?w=96&h=96&fit=crop&crop=face',
+    avatar: getAvatar('Monique'),
     source: 'artificial',
   },
   {
@@ -196,7 +202,7 @@ const ARTIFICIAL_TESTIMONIALS: TestimonialItem[] = [
     service: 'Despigmentação labial',
     stars: 4.8,
     text: 'Sempre tive insegurança com meus lábios. A Viviani me recebeu com muito acolhimento, explicou o processo com clareza e os resultados foram chegando gradualmente. Estou muito satisfeita!',
-    avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=96&h=96&fit=crop&crop=face',
+    avatar: getAvatar('Thais'),
     source: 'artificial',
   },
   {
@@ -206,7 +212,7 @@ const ARTIFICIAL_TESTIMONIALS: TestimonialItem[] = [
     service: 'Micropigmentação capilar (MSC)',
     stars: 3.9,
     text: 'Decidi remover a MSC após mudança de estilo. Processo mais longo do que imaginei, mas a Viviani foi sempre transparente sobre isso. O resultado está ficando ótimo sessão a sessão.',
-    avatar: 'https://images.unsplash.com/photo-1489424731084-a3d5bc5f3d20?w=96&h=96&fit=crop&crop=face',
+    avatar: getAvatar('Gabriela'),
     source: 'artificial',
   },
   {
@@ -216,7 +222,7 @@ const ARTIFICIAL_TESTIMONIALS: TestimonialItem[] = [
     service: 'Remoção de sobrancelha micropigmentada',
     stars: 5.0,
     text: 'Atendimento impecável do início ao fim. A Viviani é apaixonada pelo que faz e isso reflete no resultado. Minhas sobrancelhas estão completamente removidas e já posso refazer do jeito que sempre quis.',
-    avatar: 'https://images.unsplash.com/photo-1517365830460-955ce3be0547?w=96&h=96&fit=crop&crop=face',
+    avatar: getAvatar('Letícia'),
     source: 'artificial',
   },
 ]
@@ -239,85 +245,48 @@ function selectRandomHighlight(items: TestimonialItem[]): TestimonialItem[] {
   return items.map((t, i) => ({ ...t, isHighlight: i === idx }))
 }
 
-function getInitials(name: string) {
-  const tokens = name.trim().split(/\s+/).filter(Boolean)
-  return tokens.slice(0, 2).map((token) => token[0]?.toUpperCase() ?? '').join('') || 'VS'
-}
-
-// ── StarRating com suporte a nota decimal e meia estrela ──────────────────────
+// ── C6+C7: StarRating com técnica Unicode ★ + overflow ────────────────────────
 function StarRating({ rating }: { rating: number }) {
   const clamped = Math.max(0, Math.min(5, rating))
-  const full = Math.floor(clamped)
-  const partial = Math.round((clamped - full) * 10) / 10
-
+  const pct = (clamped / 5) * 100
   return (
     <div className="flex items-center gap-1" aria-label={`${clamped.toFixed(1)} estrelas`}>
-      <div className="flex gap-0.5">
-        {Array.from({ length: 5 }).map((_, i) => {
-          if (i < full) {
-            return <Star key={i} className="h-4 w-4 fill-amber-400 text-amber-400" aria-hidden="true" />
-          }
-          if (i === full && partial > 0) {
-            return (
-              <span key={i} className="relative inline-block h-4 w-4" aria-hidden="true">
-                <Star className="h-4 w-4 fill-amber-200 text-amber-200" />
-                <span
-                  className="absolute inset-0 overflow-hidden"
-                  style={{ width: `${partial * 100}%` }}
-                >
-                  <Star className="h-4 w-4 fill-amber-400 text-amber-400" />
-                </span>
-              </span>
-            )
-          }
-          return <Star key={i} className="h-4 w-4 fill-amber-200 text-amber-200" aria-hidden="true" />
-        })}
-      </div>
+      <span className="relative inline-block text-base leading-none" aria-hidden="true">
+        <span className="text-amber-200">★★★★★</span>
+        <span
+          className="absolute left-0 top-0 overflow-hidden whitespace-nowrap text-amber-400"
+          style={{ width: `${pct}%` }}
+        >
+          ★★★★★
+        </span>
+      </span>
       <span className="text-[11px] font-semibold text-amber-700">{clamped.toFixed(1)}</span>
     </div>
   )
 }
 
-// ── Card base — neutro, sem estilo de destaque ─────────────────────────────────
+// ── C1+C2+C3: Card base — sem badge de fonte, altura mínima, avatares DiceBear ─
 function TestimonialCard({ item }: { item: TestimonialItem }) {
-  const sourceLabel =
-    item.source === 'google'
-      ? 'Google'
-      : item.source === 'artificial'
-        ? 'Exemplo'
-        : 'Depoimento'
-
   return (
     <div
-      className="rounded-xl border border-stone-100 bg-white p-6 shadow-[0_1px_4px_rgba(0,0,0,0.06)]"
+      className="flex min-h-[280px] flex-col rounded-xl border border-stone-100 bg-white p-6 shadow-[0_1px_4px_rgba(0,0,0,0.06)]"
       aria-label={`Depoimento de ${item.name}`}
     >
       <Quote className="mb-4 h-6 w-6 text-rose-gold/25" aria-hidden="true" />
 
-      <div className="flex items-center justify-between gap-3">
-        <StarRating rating={item.stars} />
-        <span className="rounded-full bg-cream px-2.5 py-1 text-[11px] font-semibold text-charcoal-500">
-          {sourceLabel}
-        </span>
-      </div>
+      <StarRating rating={item.stars} />
 
-      <p className="mb-5 mt-3 text-sm leading-relaxed text-charcoal-600">
+      <p className="mt-3 flex-1 text-sm leading-relaxed text-charcoal-600">
         &ldquo;{item.text}&rdquo;
       </p>
 
-      <div className="flex items-center gap-3">
-        {item.avatar ? (
-          <img
-            src={item.avatar}
-            alt={item.name}
-            className="h-10 w-10 flex-shrink-0 rounded-full object-cover"
-            loading="lazy"
-          />
-        ) : (
-          <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-blush text-sm font-bold text-rose-gold">
-            {getInitials(item.name)}
-          </div>
-        )}
+      <div className="mt-auto flex items-center gap-3">
+        <img
+          src={item.avatar ?? getAvatar(item.name)}
+          alt={item.name}
+          className="h-10 w-10 flex-shrink-0 rounded-full object-cover"
+          loading="lazy"
+        />
         <div>
           <p className="text-sm font-semibold text-charcoal">{item.name}</p>
           <p className="text-xs text-charcoal-500">{item.city}</p>
@@ -390,7 +359,8 @@ function CarouselCard({ item, pos, isCenter }: { item: TestimonialItem; pos: Car
     void controls.start({ ...CARD_VARIANTS[pos], transition: SPRING })
   }, [pos, controls])
 
-  const showHighlight = isCenter && Boolean(item.isHighlight)
+  // C5: destaque visível em qualquer posição do carrossel (não apenas no centro)
+  const showHighlight = Boolean(item.isHighlight)
 
   return (
     <motion.div
@@ -401,7 +371,7 @@ function CarouselCard({ item, pos, isCenter }: { item: TestimonialItem; pos: Car
       aria-hidden={!isCenter}
     >
       <div className="relative">
-        {/* Overlay dourado: apenas no card marcado como destaque quando centralizado */}
+        {/* Overlay dourado: card marcado como destaque */}
         {showHighlight && (
           <div
             className="pointer-events-none absolute inset-0 rounded-xl"
@@ -468,7 +438,13 @@ export default function Testimonials(props: {
     return sanitized
   }, [props.artificialEnabled, props.artificialCount, props.googleItems, props.manualItems])
 
-  const total = items.length
+  // C6+C7: contagem e média computadas a partir dos itens ativos
+  const computedTotal = items.length
+  const computedAverage = computedTotal > 0
+    ? Math.round((items.reduce((acc, t) => acc + t.stars, 0) / computedTotal) * 10) / 10
+    : null
+
+  const total = computedTotal
 
   useEffect(() => {
     setCurrent(0)
@@ -526,18 +502,23 @@ export default function Testimonials(props: {
             O que dizem as clientes
           </h2>
 
+          {/* C6+C7: badge com contagem e média reativas */}
           <div className="inline-flex items-center gap-2 rounded-full border border-amber-200 bg-amber-50 px-4 py-2">
-            <div className="flex gap-0.5">
-              {[1, 2, 3, 4, 5].map((index) => (
-                <Star key={index} className="h-3.5 w-3.5 fill-amber-400 text-amber-400" aria-hidden="true" />
-              ))}
-            </div>
+            <span className="relative inline-block text-base leading-none" aria-hidden="true">
+              <span className="text-amber-200">★★★★★</span>
+              <span
+                className="absolute left-0 top-0 overflow-hidden whitespace-nowrap text-amber-400"
+                style={{ width: `${computedAverage ? (computedAverage / 5) * 100 : 100}%` }}
+              >
+                ★★★★★
+              </span>
+            </span>
             <span className="text-sm font-semibold text-amber-800">
-              {props.publicReviewCount} avaliações públicas
+              {computedTotal} avaliações
             </span>
             <span className="text-sm text-amber-700">
-              {props.averageRating
-                ? `- nota média ${props.averageRating.toFixed(1)}`
+              {computedAverage
+                ? `- nota média ${computedAverage.toFixed(1)}`
                 : '- depoimentos configurados no painel'}
             </span>
           </div>
@@ -562,8 +543,8 @@ export default function Testimonials(props: {
             </button>
           ) : null}
 
-          {/* Trilha do carrossel */}
-          <div className="relative px-8 pt-4">
+          {/* C1: Trilha do carrossel com altura mínima fixa para evitar pulos de layout */}
+          <div className="relative min-h-[420px] overflow-hidden px-8 pt-4">
             {/*
               Ghost card: elemento invisível que define a altura do container
               para o card central atual sem interromper o fluxo de layout.

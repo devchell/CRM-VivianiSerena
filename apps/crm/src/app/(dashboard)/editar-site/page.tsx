@@ -20,6 +20,7 @@ import {
   crmFieldSelectIcon,
   crmFieldSelectWrapper,
 } from '@/components/ui/listStyles'
+import { InfoTooltip } from '@/components/ui/InfoTooltip'
 
 const API_URL = crmPublicEnv.apiBaseUrl
 const LANDING_URL = crmPublicEnv.landingUrl
@@ -212,7 +213,9 @@ const ToggleField = memo(function ToggleField({ enabled, onToggle, label, descri
       <div className="min-w-0 flex-1">
         <p className="text-sm font-medium text-charcoal dark:text-[#ECEAE6] leading-snug">{label}</p>
         {description && (
-          <p className="text-xs text-charcoal-400 dark:text-charcoal-300 mt-0.5 leading-snug">{description}</p>
+          description.length > 60
+            ? <span className="mt-1 flex items-center gap-1"><InfoTooltip text={description} /></span>
+            : <p className="text-xs text-charcoal-400 dark:text-charcoal-300 mt-0.5 leading-snug">{description}</p>
         )}
       </div>
       <div className="flex items-center gap-2.5 flex-shrink-0">
@@ -728,7 +731,9 @@ export default function EditarSitePage() {
     description: string
   }) => (
     <div className="space-y-3 rounded-lg border border-blush-200 bg-blush/20 p-4 dark:border-[#3a3835] dark:bg-[#252423]">
-      <p className="text-xs text-charcoal-400 dark:text-charcoal-300">{description}</p>
+      {description.length > 60
+        ? <span className="flex items-center gap-1"><InfoTooltip text={description} /></span>
+        : <p className="text-xs text-charcoal-400 dark:text-charcoal-300">{description}</p>}
       <ImageField section={section} fieldKey={fieldKey} label={label} />
     </div>
   )
@@ -771,9 +776,9 @@ export default function EditarSitePage() {
                     inputMode="numeric"
                   />
                 </div>
-                <p className="text-xs text-charcoal-400 dark:text-charcoal-300">
-                  O site soma automaticamente os leads reais cadastrados para atualizar Clientes registrados.
-                </p>
+                <span className="flex items-center gap-1">
+                  <InfoTooltip text="O site soma automaticamente os leads reais cadastrados para atualizar Clientes registrados." />
+                </span>
               </div>
             )
           })()}
@@ -1306,9 +1311,9 @@ export default function EditarSitePage() {
                   </button>
                 </div>
 
-                <p className="text-xs text-charcoal-400 dark:text-charcoal-300">
-                  Você pode vincular várias contas e selecionar mais de um perfil empresarial para alimentar a seção de depoimentos.
-                </p>
+                <span className="flex items-center gap-1">
+                  <InfoTooltip text="Você pode vincular várias contas e selecionar mais de um perfil empresarial para alimentar a seção de depoimentos." />
+                </span>
 
                 {linkedLocations.length > 0 && (
                   <div className="space-y-2">
