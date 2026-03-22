@@ -417,6 +417,74 @@ leadsRouter.get('/export', authorizePermission('leads.export'), async (req, res,
   }
 })
 
+leadsRouter.patch('/bulk', authorizePermission('leads.update'), async (req, res, next) => {
+  try {
+    const { ids, updates } = req.body as { ids?: unknown; updates?: unknown }
+    if (!Array.isArray(ids) || ids.length === 0) {
+      return res.status(400).json({ error: 'ids obrigatório' })
+    }
+    const allowed = ['status', 'source']
+    const safeUpdates = Object.fromEntries(
+      Object.entries(updates as Record<string, unknown>).filter(([k]) => allowed.includes(k))
+    )
+    if (safeUpdates.status) {
+      const parsed = leadStatusSchema.safeParse(safeUpdates.status)
+      if (!parsed.success) return res.status(400).json({ error: 'status inválido' })
+      safeUpdates.status = parsed.data
+      if (parsed.data === 'converted') safeUpdates.convertedAt = new Date()
+    }
+    if (safeUpdates.source) {
+      const parsed = leadSourceSchema.safeParse(safeUpdates.source)
+      if (!parsed.success) return res.status(400).json({ error: 'source inválido' })
+      safeUpdates.source = parsed.data
+    }
+    const result = await prisma.lead.updateMany({
+      where: { id: { in: ids as string[] } },
+      data: safeUpdates,
+    })
+    if (req.user?.sub) {
+      await AuditLogger.log({
+        userId: req.user.sub,
+        action: 'UPDATE',
+        resource: 'Lead',
+        details: { bulk: true, count: result.count, updates: safeUpdates },
+        ip: req.ip,
+      })
+    }
+    await deletePattern('leads:*')
+    await invalidateOperationalMetricCaches()
+    return res.json({ success: true, updated: result.count })
+  } catch (error) {
+    return next(error)
+  }
+})
+
+leadsRouter.delete('/bulk', authorizePermission('leads.delete'), async (req, res, next) => {
+  try {
+    const { ids } = req.body as { ids?: unknown }
+    if (!Array.isArray(ids) || ids.length === 0) {
+      return res.status(400).json({ error: 'ids obrigatório' })
+    }
+    const result = await prisma.lead.deleteMany({
+      where: { id: { in: ids as string[] } },
+    })
+    if (req.user?.sub) {
+      await AuditLogger.log({
+        userId: req.user.sub,
+        action: 'DELETE',
+        resource: 'Lead',
+        details: { bulk: true, count: result.count },
+        ip: req.ip,
+      })
+    }
+    await deletePattern('leads:*')
+    await invalidateOperationalMetricCaches()
+    return res.json({ success: true, deleted: result.count })
+  } catch (error) {
+    return next(error)
+  }
+})
+
 leadsRouter.get('/:id', authorizePermission('leads.view'), async (req, res, next) => {
   try {
     const leadId = String(req.params.id)
