@@ -139,11 +139,6 @@ const TextField = memo(function TextField({
   return (
     <div className={className}>
       <label className={labelClassName ?? labelCls}>{label}</label>
-      {description && (
-        <p style={{ fontSize: 11, color: 'var(--muted-foreground, #A09890)', margin: '2px 0 4px', lineHeight: 1.4, fontWeight: 400 }}>
-          {description}
-        </p>
-      )}
       {multiline ? (
         <textarea
           rows={rows}
@@ -161,6 +156,11 @@ const TextField = memo(function TextField({
           onChange={e => handleChange(e.target.value)}
           className={inputCls}
         />
+      )}
+      {description && (
+        <p style={{ fontSize: 11, color: 'var(--muted-foreground, #A09890)', margin: '4px 0 0', lineHeight: 1.4, fontWeight: 400 }}>
+          {description}
+        </p>
       )}
     </div>
   )
@@ -738,8 +738,8 @@ export default function EditarSitePage() {
     description: string
   }) => (
     <div className="space-y-3 rounded-lg border border-blush-200 bg-blush/20 p-4 dark:border-[#3a3835] dark:bg-[#252423]">
-      <p style={{ fontSize: 11, color: 'var(--muted-foreground, #A09890)', margin: '0 0 2px', lineHeight: 1.4, fontWeight: 400 }}>{description}</p>
       <ImageField section={section} fieldKey={fieldKey} label={label} />
+      <p style={{ fontSize: 11, color: 'var(--muted-foreground, #A09890)', margin: '4px 0 0', lineHeight: 1.4, fontWeight: 400 }}>{description}</p>
     </div>
   )
 
@@ -763,13 +763,13 @@ export default function EditarSitePage() {
                   enabled={socialProofEnabled}
                   onToggle={() => setSubVal('contact', 'social_proof', 'enabled', !socialProofEnabled)}
                   label="Box lateral de prova social"
-                  description="Card com clientes e avaliações no formulário"
+                  description="Exibe card de prova social"
                 />
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gridTemplateRows: 'auto auto auto', gap: '4px 12px', marginTop: 12 }}>
                   <label className={labelCls}>Clientes iniciais</label>
                   <label className={labelCls}>Avaliações iniciais</label>
-                  <p style={{ fontSize: 11, color: 'var(--muted-foreground,#A09890)', margin: 0, lineHeight: '1.4', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                    Soma com leads reais cadastrados
+                  <p style={{ fontSize: 11, color: 'var(--muted-foreground,#A09890)', margin: 0, lineHeight: '1.4' }}>
+                    Soma com leads cadastrados
                   </p>
                   <p style={{ fontSize: 11, margin: 0, lineHeight: '1.4', visibility: 'hidden' }}>&nbsp;</p>
                   <input
@@ -797,7 +797,7 @@ export default function EditarSitePage() {
             section="hero"
             fieldKey="background_image"
             label="Foto da Viviani (Início/Hero)"
-            description="Imagem principal da landing"
+            description="Foto principal do site"
           />
           {(() => {
             const urgencyBadge = get('hero', 'urgency_badge')
@@ -814,7 +814,7 @@ export default function EditarSitePage() {
                   enabled={urgencyBadgeEnabled}
                   onToggle={() => setSubVal('hero', 'urgency_badge', 'enabled', !urgencyBadgeEnabled)}
                   label="Badge de Urgência"
-                  description="Aviso de vagas limitadas no topo"
+                  description="Aviso de vagas no topo"
                 />
                 {urgencyBadgeEnabled && (
                   <TextField
@@ -871,7 +871,7 @@ export default function EditarSitePage() {
             section="about"
             fieldKey="photo_viviani"
             label="Foto da Viviani (Seção Sobre)"
-            description="Sem foto, o texto ocupa toda a largura"
+            description="Sem foto, texto centraliza"
           />
           <div>
             <label className={labelCls}>Texto Principal</label>
@@ -1042,7 +1042,7 @@ export default function EditarSitePage() {
               section="services"
               fieldKey="viviani_photo"
               label="Foto da Viviani (Resultados)"
-              description="Imagem no bloco de avaliação gratuita"
+              description="Foto do bloco de avaliação"
             />
 
             {results.map((item, idx) => (
@@ -1279,7 +1279,7 @@ export default function EditarSitePage() {
               enabled={artificialEnabled}
               onToggle={() => setSubVal('testimonials', 'display_options', 'artificialEnabled', !artificialEnabled)}
               label="Gerar depoimentos artificiais"
-              description="Preenche com exemplos enquanto não há reais"
+              description="Exemplos até ter depoimentos reais"
             />
 
             <div className="flex items-center gap-3 rounded-lg border border-blush-200 bg-blush/20 px-4 py-3 dark:border-[#3a3835] dark:bg-[#252423]">
@@ -1303,7 +1303,7 @@ export default function EditarSitePage() {
               enabled={googleEnabled}
               onToggle={() => setSubVal('testimonials', 'display_options', 'googleEnabled', !googleEnabled)}
               label="Exibir avaliações do Google Empresa"
-              description="Puxa reviews do Google Business vinculado"
+              description="Reviews do Google Business"
             />
 
             {googleEnabled && (

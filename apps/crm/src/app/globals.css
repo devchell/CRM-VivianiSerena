@@ -14,12 +14,27 @@
 /* ── Design system tokens ────────────────────────────────────────────────── */
 :root {
   /* Background hierarchy: page → surface → card → input */
-  --bg-page:    #EDEAE3;
-  --bg-surface: #F5F2EC;
-  --bg-card:    #FDFCF9;
+  --bg-page:    #E8E2D9;
+  --bg-surface: #F0EAE0;
+  --bg-card:    #FDFCFA;
   --bg-input:   #FFFFFF;
-  --bg-hover:   #F0EDE6;
-  --bg-active:  #E8E4DC;
+  --bg-hover:   #EDE7DC;
+  --bg-active:  #E3DDD4;
+
+  /* Shadcn-compatible aliases */
+  --background:            #E8E2D9;
+  --background-secondary:  #F0EAE0;
+  --card:                  #FDFCFA;
+  --card-foreground:       #18140F;
+  --input:                 #FFFFFF;
+  --popover:               #FFFFFF;
+  --foreground:            #18140F;
+  --muted:                 #EDE7DC;
+  --muted-foreground:      #7A7268;
+  --border:                rgba(30, 20, 10, 0.14);
+  --input-border:          rgba(30, 20, 10, 0.18);
+  --primary:               #C9A96E;
+  --primary-foreground:    #FFFFFF;
 
   /* Shadow system */
   --shadow-sm:    0 1px 2px rgba(44,35,28,0.06);
@@ -29,19 +44,20 @@
   --shadow-inset: inset 0 1px 3px rgba(44,35,28,0.08);
 
   /* Text hierarchy */
-  --text-primary:   #2C2320;
+  --text-primary:   #18140F;
   --text-secondary: #6B5E56;
-  --text-tertiary:  #9E8E84;
+  --text-tertiary:  #7A7268;
   --text-disabled:  #C4B5AC;
 
   /* Accent */
   --accent:        #C9967A;
   --accent-hover:  #B5785A;
   --accent-subtle: rgba(201,150,122,0.10);
+  --accent-foreground: #FFFFFF;
 
   /* Borders */
-  --border-subtle: rgba(44,35,28,0.08);
-  --border-medium: rgba(44,35,28,0.14);
+  --border-subtle: rgba(30,20,10,0.08);
+  --border-medium: rgba(30,20,10,0.14);
 
   /* Radius */
   --radius-sm: 6px;
@@ -56,12 +72,27 @@
 }
 
 .dark {
-  --bg-page:    #111110;
-  --bg-surface: #1A1917;
-  --bg-card:    #1F1E1C;
-  --bg-input:   #252321;
-  --bg-hover:   #272523;
-  --bg-active:  #2E2B28;
+  --bg-page:    #0C0B09;
+  --bg-surface: #141210;
+  --bg-card:    #1C1A17;
+  --bg-input:   #232018;
+  --bg-hover:   #272420;
+  --bg-active:  #2E2A25;
+
+  /* Shadcn-compatible aliases */
+  --background:            #0C0B09;
+  --background-secondary:  #141210;
+  --card:                  #1C1A17;
+  --card-foreground:       #F0EDE8;
+  --input:                 #232018;
+  --popover:               #1C1A17;
+  --foreground:            #F0EDE8;
+  --muted:                 #252219;
+  --muted-foreground:      #9A9088;
+  --border:                rgba(255, 248, 235, 0.10);
+  --input-border:          rgba(255, 248, 235, 0.14);
+  --primary:               #D4B882;
+  --primary-foreground:    #1C1A17;
 
   --shadow-sm:    0 1px 2px rgba(0,0,0,0.20);
   --shadow-md:    0 2px 8px rgba(0,0,0,0.30), 0 1px 2px rgba(0,0,0,0.20);
@@ -69,13 +100,18 @@
   --shadow-xl:    0 8px 32px rgba(0,0,0,0.40), 0 4px 8px rgba(0,0,0,0.25);
   --shadow-inset: inset 0 1px 3px rgba(0,0,0,0.30);
 
-  --text-primary:   #ECEAE6;
+  --text-primary:   #F0EDE8;
   --text-secondary: #A89F96;
-  --text-tertiary:  #706B65;
+  --text-tertiary:  #9A9088;
   --text-disabled:  #4A4540;
 
-  --border-subtle: rgba(255,255,255,0.06);
-  --border-medium: rgba(255,255,255,0.10);
+  --accent:        #C9967A;
+  --accent-hover:  #B5785A;
+  --accent-subtle: rgba(201,150,122,0.15);
+  --accent-foreground: #1C1A17;
+
+  --border-subtle: rgba(255,248,235,0.06);
+  --border-medium: rgba(255,248,235,0.10);
 }
 
 /* ── Financial theme variables ───────────────────────────────────────────── */
@@ -245,6 +281,51 @@
   .table-row:hover {
     background: var(--bg-hover);
   }
+}
+
+/* ── Extra contrast utilities ────────────────────────────────────────────── */
+
+/* Cards com sombra para diferenciar do fundo */
+[class*="card"], .card, [data-card] {
+  box-shadow: 0 1px 4px rgba(20, 14, 6, 0.08),
+              0 0 0 0.5px rgba(20, 14, 6, 0.06);
+}
+
+/* Inputs com sombra interna */
+input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+textarea,
+select {
+  box-shadow: inset 0 1px 3px rgba(20, 14, 6, 0.07);
+}
+
+input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):focus,
+textarea:focus,
+select:focus {
+  box-shadow: inset 0 1px 3px rgba(20, 14, 6, 0.07),
+              0 0 0 2px var(--accent);
+  outline: none;
+}
+
+/* Sidebar mais escura */
+[data-sidebar], .sidebar, aside {
+  background: #DDD7CD !important;
+}
+.dark [data-sidebar], .dark .sidebar, .dark aside {
+  background: #0A0908 !important;
+}
+
+/* Tabela — zebra e hover mais visíveis */
+tbody tr:nth-child(even) {
+  background: rgba(20, 14, 6, 0.03);
+}
+tbody tr:hover {
+  background: rgba(201, 150, 122, 0.08);
+}
+
+/* Cards internos (InfoItem, detalhes) */
+.info-item, [data-info-item] {
+  background: var(--card) !important;
+  box-shadow: 0 1px 3px rgba(20, 14, 6, 0.08);
 }
 
 .crm-calendar .fc {
