@@ -765,7 +765,7 @@ export default function EditarSitePage() {
                   label="Box lateral de prova social"
                   description="Card com clientes e avaliações no formulário"
                 />
-                <div className="grid gap-3 md:grid-cols-2">
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginTop: 12 }}>
                   <TextField
                     value={String(getNum('contact', 'social_proof', 'baseClients'))}
                     onChange={v => setSubVal('contact', 'social_proof', 'baseClients', Number(v) || 0)}

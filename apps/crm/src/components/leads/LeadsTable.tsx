@@ -181,13 +181,56 @@ function normalizeDateInput(value: string) {
   return value ? new Date(`${value}T00:00:00.000Z`).toISOString() : ''
 }
 
-function parsePagesVisited(value: unknown) {
-  if (!Array.isArray(value)) return [] as string[]
-  return value.filter((entry): entry is string => typeof entry === 'string' && entry.length > 0)
+
+const ORIGIN_LABELS: Record<string, string> = {
+  landing_form: 'Formulário da landing',
+  manual_crm: 'CRM manual',
+  instagram: 'Instagram',
+  facebook: 'Facebook',
+  google_ads: 'Google Ads',
+  whatsapp: 'WhatsApp',
+  organic: 'Orgânico',
+  referral: 'Indicação',
+}
+
+const SERVICE_LABELS_DETAIL: Record<string, string> = {
+  sobrancelhas: 'Sobrancelhas',
+  labios_eyeliner: 'Lábios / Eyeliner',
+  capilar: 'Micropigmentação capilar',
+  tatuagens: 'Tatuagens',
+  nao_sei: 'Não sei ao certo',
+}
+
+const PERIOD_LABELS: Record<string, string> = {
+  manha: 'Manhã',
+  tarde: 'Tarde',
+  qualquer: 'Qualquer horário',
+  nao_informado: 'Não informado',
+}
+
+function humanizeOrigin(utmSource?: string | null): string {
+  if (!utmSource) return '-'
+  return ORIGIN_LABELS[utmSource] ?? utmSource
+}
+
+function humanizeService(value?: string | null): string {
+  if (!value) return '-'
+  return SERVICE_LABELS_DETAIL[value] ?? value
+}
+
+function humanizePeriod(value?: string | null): string {
+  if (!value) return '-'
+  return PERIOD_LABELS[value] ?? value
+}
+
+function extractFromNotes(notes: string | null | undefined, key: 'service' | 'period'): string | null {
+  if (!notes) return null
+  const pattern = key === 'service' ? /Serviço:\s*([^|]+)/ : /Período:\s*([^|]+)/
+  return notes.match(pattern)?.[1]?.trim() ?? null
 }
 
 export function LeadsTable() {
-  const { accessToken, status, hasPermission } = useAuth()
+  const { accessToken, status, hasPermission, updateSession } = useAuth()
   const canCreateLeads = hasPermission('leads.create')
   const canUpdateLeads = hasPermission('leads.update')
   const canExportLeads = hasPermission('leads.export')
@@ -243,15 +286,19 @@ export function LeadsTable() {
       ])
       setLeads(listResponse.data ?? [])
       setLeadStats(statsResponse.data)
-    } catch {
-      toast.error('Erro ao carregar operação de leads')
+    } catch (error) {
+      if (error instanceof Error && error.message === 'HTTP 401') {
+        updateSession()
+      } else {
+        toast.error('Erro ao carregar operação de leads')
+      }
     } finally {
       setLoading(false)
     }
-  }, [accessToken, buildLeadParams])
+  }, [accessToken, buildLeadParams, updateSession])
 
   useEffect(() => {
-    if (status === 'loading') return
+    if (status !== 'authenticated') return
     fetchLeads()
   }, [fetchLeads, status])
 
@@ -724,75 +771,44 @@ export function LeadsTable() {
                                 Carregando rastreabilidade do lead...
                               </div>
                             ) : detail ? (
-                              <div className="grid gap-4 lg:grid-cols-[1.2fr_1fr]">
-                                <div className="space-y-4">
-                                  <div className="rounded-lg border border-blush-200 bg-white/80 p-4 dark:border-[#3a3835] dark:bg-[#1c1b1a]/70">
-                                    <div className="flex items-center gap-2 text-sm font-semibold text-charcoal dark:text-charcoal-100">
-                                      <ShieldCheck size={16} />
-                                      Captura e consentimento
-                                    </div>
-                                    <dl className="mt-3 grid gap-2 text-sm text-charcoal-500 dark:text-charcoal-300 md:grid-cols-2">
-                                      <div><dt className="text-xs uppercase tracking-[0.16em]">Origem</dt><dd className="mt-1">{SOURCE_LABELS[detail.source] ?? detail.source}</dd></div>
-                                      <div><dt className="text-xs uppercase tracking-[0.16em]">Origem detalhada</dt><dd className="mt-1">{detail.utmSource ?? '-'}</dd></div>
-                                      <div><dt className="text-xs uppercase tracking-[0.16em]">UTM medium</dt><dd className="mt-1">{detail.utmMedium ?? '-'}</dd></div>
-                                      <div><dt className="text-xs uppercase tracking-[0.16em]">UTM campaign</dt><dd className="mt-1">{detail.utmCampaign ?? '-'}</dd></div>
-                                      <div><dt className="text-xs uppercase tracking-[0.16em]">Consentido em</dt><dd className="mt-1">{detail.consentedAt ? new Date(detail.consentedAt).toLocaleString('pt-BR') : 'Não'}</dd></div>
-                                      <div><dt className="text-xs uppercase tracking-[0.16em]">Observação</dt><dd className="mt-1">{detail.notes ?? '-'}</dd></div>
-                                    </dl>
-                                    <div className="mt-4 flex flex-wrap gap-2">
-                                      {detail.consentLogs.length > 0 ? detail.consentLogs.map((log) => (
-                                        <span key={log.id} className="inline-flex items-center rounded-full border border-blush-200 bg-white px-3 py-1 text-[11px] font-medium text-charcoal-500 dark:border-[#3a3835] dark:bg-[#1c1b1a] dark:text-charcoal-300">
-                                          {log.channel} · {new Date(log.consentedAt).toLocaleDateString('pt-BR')}
-                                        </span>
-                                      )) : (
-                                        <span className="text-xs text-charcoal-400 dark:text-charcoal-300">Sem log adicional de consentimento.</span>
-                                      )}
-                                    </div>
+                              <div className="space-y-4">
+                                <div className="rounded-lg border border-blush-200 bg-white/80 p-4 dark:border-[#3a3835] dark:bg-[#1c1b1a]/70">
+                                  <div className="flex items-center gap-2 text-sm font-semibold text-charcoal dark:text-charcoal-100">
+                                    <ShieldCheck size={16} />
+                                    Captura e consentimento
                                   </div>
-                                  <div className="rounded-lg border border-blush-200 bg-white/80 p-4 dark:border-[#3a3835] dark:bg-[#1c1b1a]/70">
-                                    <div className="flex items-center gap-2 text-sm font-semibold text-charcoal dark:text-charcoal-100">
-                                      <CalendarClock size={16} />
-                                      Agenda e atividade
-                                    </div>
-                                    <div className="mt-3 space-y-2 text-sm text-charcoal-500 dark:text-charcoal-300">
-                                      {detail.appointments.length > 0 ? detail.appointments.map((appointment) => (
-                                        <div key={appointment.id} className="rounded border border-blush-100 bg-white/80 px-3 py-2 dark:border-[#3a3835] dark:bg-[#1c1b1a]">
-                                          {appointment.serviceType} · {appointment.status} · {new Date(appointment.date).toLocaleString('pt-BR')}
-                                        </div>
-                                      )) : (
-                                        <p>Nenhum agendamento vinculado.</p>
-                                      )}
-                                    </div>
+                                  <dl className="mt-3 grid gap-2 text-sm text-charcoal-500 dark:text-charcoal-300 md:grid-cols-2">
+                                    <div><dt className="text-xs uppercase tracking-[0.16em]">Origem</dt><dd className="mt-1">{SOURCE_LABELS[detail.source] ?? detail.source}</dd></div>
+                                    <div><dt className="text-xs uppercase tracking-[0.16em]">Canal</dt><dd className="mt-1">{humanizeOrigin(detail.utmSource)}</dd></div>
+                                    <div><dt className="text-xs uppercase tracking-[0.16em]">Serviço de interesse</dt><dd className="mt-1">{humanizeService(extractFromNotes(detail.notes, 'service'))}</dd></div>
+                                    <div><dt className="text-xs uppercase tracking-[0.16em]">Período preferido</dt><dd className="mt-1">{humanizePeriod(extractFromNotes(detail.notes, 'period'))}</dd></div>
+                                    <div><dt className="text-xs uppercase tracking-[0.16em]">UTM medium</dt><dd className="mt-1">{detail.utmMedium ?? '-'}</dd></div>
+                                    <div><dt className="text-xs uppercase tracking-[0.16em]">UTM campaign</dt><dd className="mt-1">{detail.utmCampaign ?? '-'}</dd></div>
+                                    <div><dt className="text-xs uppercase tracking-[0.16em]">Consentido em</dt><dd className="mt-1">{detail.consentedAt ? new Date(detail.consentedAt).toLocaleString('pt-BR') : 'Não'}</dd></div>
+                                  </dl>
+                                  <div className="mt-4 flex flex-wrap gap-2">
+                                    {detail.consentLogs.length > 0 ? detail.consentLogs.map((log) => (
+                                      <span key={log.id} className="inline-flex items-center rounded-full border border-blush-200 bg-white px-3 py-1 text-[11px] font-medium text-charcoal-500 dark:border-[#3a3835] dark:bg-[#1c1b1a] dark:text-charcoal-300">
+                                        {log.channel} · {new Date(log.consentedAt).toLocaleDateString('pt-BR')}
+                                      </span>
+                                    )) : (
+                                      <span className="text-xs text-charcoal-400 dark:text-charcoal-300">Sem log adicional de consentimento.</span>
+                                    )}
                                   </div>
                                 </div>
-                                <div className="space-y-4">
-                                  <div className="rounded-lg border border-blush-200 bg-white/80 p-4 dark:border-[#3a3835] dark:bg-[#1c1b1a]/70">
-                                    <div className="text-sm font-semibold text-charcoal dark:text-charcoal-100">Sessão e entrada</div>
-                                    <div className="mt-3 space-y-3 text-sm text-charcoal-500 dark:text-charcoal-300">
-                                      {detail.sessions.length > 0 ? detail.sessions.map((session) => (
-                                        <div key={session.id} className="rounded border border-blush-100 bg-white/80 px-3 py-3 dark:border-[#3a3835] dark:bg-[#1c1b1a]">
-                                          <p>Referrer: {session.referrer ?? '-'}</p>
-                                          <p className="mt-1">Páginas: {parsePagesVisited(session.pagesVisited).join(', ') || '-'}</p>
-                                          <p className="mt-1">Eventos: {session.analyticsEvents.length}</p>
-                                        </div>
-                                      )) : (
-                                        <p>Nenhuma sessão vinculada.</p>
-                                      )}
-                                    </div>
+                                <div className="rounded-lg border border-blush-200 bg-white/80 p-4 dark:border-[#3a3835] dark:bg-[#1c1b1a]/70">
+                                  <div className="flex items-center gap-2 text-sm font-semibold text-charcoal dark:text-charcoal-100">
+                                    <CalendarClock size={16} />
+                                    Agenda e atividade
                                   </div>
-                                  <div className="rounded-lg border border-blush-200 bg-white/80 p-4 dark:border-[#3a3835] dark:bg-[#1c1b1a]/70">
-                                    <div className="text-sm font-semibold text-charcoal dark:text-charcoal-100">Timeline</div>
-                                    <div className="mt-3 space-y-2 text-sm text-charcoal-500 dark:text-charcoal-300">
-                                      {detail.timeline.length > 0 ? detail.timeline.slice(0, 8).map((item) => (
-                                        <div key={item.id} className="rounded border border-blush-100 bg-white/80 px-3 py-2 dark:border-[#3a3835] dark:bg-[#1c1b1a]">
-                                          <p className="font-medium text-charcoal dark:text-charcoal-100">{item.title}</p>
-                                          <p className="mt-1">{item.description ?? '-'}</p>
-                                          <p className="mt-1 text-xs">{new Date(item.timestamp).toLocaleString('pt-BR')}</p>
-                                        </div>
-                                      )) : (
-                                        <p>Sem eventos adicionais.</p>
-                                      )}
-                                    </div>
+                                  <div className="mt-3 space-y-2 text-sm text-charcoal-500 dark:text-charcoal-300">
+                                    {detail.appointments.length > 0 ? detail.appointments.map((appointment) => (
+                                      <div key={appointment.id} className="rounded border border-blush-100 bg-white/80 px-3 py-2 dark:border-[#3a3835] dark:bg-[#1c1b1a]">
+                                        {humanizeService(appointment.serviceType)} · {appointment.status} · {new Date(appointment.date).toLocaleString('pt-BR')}
+                                      </div>
+                                    )) : (
+                                      <p>Nenhum agendamento vinculado.</p>
+                                    )}
                                   </div>
                                 </div>
                               </div>

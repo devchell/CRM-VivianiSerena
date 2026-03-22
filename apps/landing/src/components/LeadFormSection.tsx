@@ -112,9 +112,9 @@ function Step1({ onNext }: { onNext: (data: Step1Data) => void }) {
   }, [])
 
   const fields = [
-    { id: 'name', label: 'Seu nome completo', type: 'text', autoComplete: 'name', icon: User },
-    { id: 'email', label: 'Seu melhor e-mail', type: 'email', autoComplete: 'email', icon: Mail },
-    { id: 'phone', label: 'WhatsApp / Celular', type: 'tel', autoComplete: 'tel', icon: Phone },
+    { id: 'name', label: 'Seu nome completo', type: 'text', autoComplete: 'name', icon: User, placeholder: 'Maria Silva' },
+    { id: 'email', label: 'Seu melhor e-mail', type: 'email', autoComplete: 'email', icon: Mail, placeholder: 'maria@email.com' },
+    { id: 'phone', label: 'WhatsApp / Celular', type: 'tel', autoComplete: 'tel', icon: Phone, placeholder: '(11) 99999-9999' },
   ] as const
 
   return (
@@ -149,6 +149,7 @@ function Step1({ onNext }: { onNext: (data: Step1Data) => void }) {
                   id={field.id}
                   type={field.type}
                   autoComplete={field.autoComplete}
+                  placeholder={field.placeholder}
                   className={`h-12 w-full rounded-md border bg-white pl-11 pr-4 text-charcoal placeholder:text-charcoal/40 transition-all focus:outline-none focus:ring-2 focus:ring-rose-gold ${
                     error ? 'border-red-400 focus:ring-red-400' : 'border-blush focus:border-transparent'
                   }`}

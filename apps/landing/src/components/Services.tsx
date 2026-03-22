@@ -56,7 +56,7 @@ const SERVICES = [
     ],
     waMessage: 'Olá Viviani! Gostaria de remover micropigmentação capilar a laser. Pode me ajudar?',
     color: 'hover:border-rose-gold/40',
-    accentBg: 'bg-blush/50',
+    accentBg: 'bg-rose-gold/8',
   },
   {
     id: 'tatuagens',
