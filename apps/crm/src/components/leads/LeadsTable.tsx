@@ -173,9 +173,6 @@ function getStatusCount(stats: LeadStats | null, status: LeadStatusKey) {
   return stats?.byStatus.find((item) => item.status === status)?.count ?? 0
 }
 
-function getSourceCount(stats: LeadStats | null, source: LeadSourceKey) {
-  return stats?.bySource.find((item) => item.source === source)?.count ?? 0
-}
 
 function normalizeDateInput(value: string) {
   return value ? new Date(`${value}T00:00:00.000Z`).toISOString() : ''
@@ -188,9 +185,35 @@ const ORIGIN_LABELS: Record<string, string> = {
   instagram: 'Instagram',
   facebook: 'Facebook',
   google_ads: 'Google Ads',
+  google: 'Google',
   whatsapp: 'WhatsApp',
   organic: 'Orgânico',
   referral: 'Indicação',
+  direct: 'Acesso direto',
+  email: 'E-mail',
+  sms: 'SMS',
+  tiktok: 'TikTok',
+  youtube: 'YouTube',
+  linkedin: 'LinkedIn',
+  twitter: 'Twitter / X',
+  other: 'Outro',
+}
+
+function fallbackHumanize(value: string): string {
+  return value
+    .replace(/_/g, ' ')
+    .replace(/\b\w/g, (c) => c.toUpperCase())
+}
+
+const CHANNEL_LABELS: Record<string, string> = {
+  email: 'E-mail',
+  whatsapp: 'WhatsApp',
+  sms: 'SMS',
+  phone: 'Telefone',
+  landing_form: 'Formulário',
+  manual_crm: 'CRM manual',
+  instagram: 'Instagram',
+  facebook: 'Facebook',
 }
 
 const SERVICE_LABELS_DETAIL: Record<string, string> = {
@@ -210,7 +233,7 @@ const PERIOD_LABELS: Record<string, string> = {
 
 function humanizeOrigin(utmSource?: string | null): string {
   if (!utmSource) return '-'
-  return ORIGIN_LABELS[utmSource] ?? utmSource
+  return ORIGIN_LABELS[utmSource] ?? fallbackHumanize(utmSource)
 }
 
 function humanizeService(value?: string | null): string {
@@ -704,20 +727,6 @@ export function LeadsTable() {
             Exportar CSV
           </button>
         </div>
-        <div className="grid gap-3 border-t border-blush-100 bg-white/70 px-5 py-4 text-xs text-charcoal-400 dark:border-[#3a3835] dark:bg-[#1c1b1a]/40 dark:text-charcoal-300 md:grid-cols-3">
-          <div>
-            <span className="font-semibold uppercase tracking-[0.16em] text-charcoal-500 dark:text-charcoal-300">Fonte de verdade</span>
-            <p className="mt-1">Cards e contadores usam `/api/v1/leads/stats`; tabela e export usam os mesmos filtros de `/api/v1/leads`.</p>
-          </div>
-          <div>
-            <span className="font-semibold uppercase tracking-[0.16em] text-charcoal-500 dark:text-charcoal-300">Origens</span>
-            <p className="mt-1">Instagram {getSourceCount(leadStats, 'instagram')} · Google Ads {getSourceCount(leadStats, 'google_ads')} · WhatsApp {getSourceCount(leadStats, 'whatsapp')}</p>
-          </div>
-          <div>
-            <span className="font-semibold uppercase tracking-[0.16em] text-charcoal-500 dark:text-charcoal-300">Conversao</span>
-            <p className="mt-1">{leadStats?.conversionRate ?? 0}% · {leadStats?.converted ?? 0} convertidos · periodo {leadStats?.period ?? 'all'}</p>
-          </div>
-        </div>
       </div>
 
       <div className={crmListShell}>
@@ -782,14 +791,12 @@ export function LeadsTable() {
                                     <div><dt className="text-xs uppercase tracking-[0.16em]">Canal</dt><dd className="mt-1">{humanizeOrigin(detail.utmSource)}</dd></div>
                                     <div><dt className="text-xs uppercase tracking-[0.16em]">Serviço de interesse</dt><dd className="mt-1">{humanizeService(extractFromNotes(detail.notes, 'service'))}</dd></div>
                                     <div><dt className="text-xs uppercase tracking-[0.16em]">Período preferido</dt><dd className="mt-1">{humanizePeriod(extractFromNotes(detail.notes, 'period'))}</dd></div>
-                                    <div><dt className="text-xs uppercase tracking-[0.16em]">UTM medium</dt><dd className="mt-1">{detail.utmMedium ?? '-'}</dd></div>
-                                    <div><dt className="text-xs uppercase tracking-[0.16em]">UTM campaign</dt><dd className="mt-1">{detail.utmCampaign ?? '-'}</dd></div>
                                     <div><dt className="text-xs uppercase tracking-[0.16em]">Consentido em</dt><dd className="mt-1">{detail.consentedAt ? new Date(detail.consentedAt).toLocaleString('pt-BR') : 'Não'}</dd></div>
                                   </dl>
                                   <div className="mt-4 flex flex-wrap gap-2">
                                     {detail.consentLogs.length > 0 ? detail.consentLogs.map((log) => (
                                       <span key={log.id} className="inline-flex items-center rounded-full border border-blush-200 bg-white px-3 py-1 text-[11px] font-medium text-charcoal-500 dark:border-[#3a3835] dark:bg-[#1c1b1a] dark:text-charcoal-300">
-                                        {log.channel} · {new Date(log.consentedAt).toLocaleDateString('pt-BR')}
+                                        {CHANNEL_LABELS[log.channel] ?? fallbackHumanize(log.channel)} · {new Date(log.consentedAt).toLocaleDateString('pt-BR')}
                                       </span>
                                     )) : (
                                       <span className="text-xs text-charcoal-400 dark:text-charcoal-300">Sem log adicional de consentimento.</span>

@@ -766,21 +766,32 @@ export default function EditarSitePage() {
                   description="Card com clientes e avaliações no formulário"
                 />
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginTop: 12 }}>
-                  <TextField
-                    value={String(getNum('contact', 'social_proof', 'baseClients'))}
-                    onChange={v => setSubVal('contact', 'social_proof', 'baseClients', Number(v) || 0)}
-                    label="Clientes iniciais"
-                    description="Soma com leads reais cadastrados"
-                    placeholder="0"
-                    inputMode="numeric"
-                  />
-                  <TextField
-                    value={String(getNum('contact', 'social_proof', 'basePublicReviews'))}
-                    onChange={v => setSubVal('contact', 'social_proof', 'basePublicReviews', Number(v) || 0)}
-                    label="Avaliações iniciais"
-                    placeholder="0"
-                    inputMode="numeric"
-                  />
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                    <label className={labelCls}>Clientes iniciais</label>
+                    <p style={{ fontSize: 11, color: 'var(--muted-foreground,#A09890)', margin: 0, lineHeight: 1.4, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                      Soma com leads reais cadastrados
+                    </p>
+                    <input
+                      type="number"
+                      inputMode="numeric"
+                      placeholder="0"
+                      value={String(getNum('contact', 'social_proof', 'baseClients'))}
+                      onChange={e => setSubVal('contact', 'social_proof', 'baseClients', Number(e.target.value) || 0)}
+                      className={inputCls}
+                    />
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                    <label className={labelCls}>Avaliações iniciais</label>
+                    <p style={{ fontSize: 11, margin: 0, visibility: 'hidden' }}>&nbsp;</p>
+                    <input
+                      type="number"
+                      inputMode="numeric"
+                      placeholder="0"
+                      value={String(getNum('contact', 'social_proof', 'basePublicReviews'))}
+                      onChange={e => setSubVal('contact', 'social_proof', 'basePublicReviews', Number(e.target.value) || 0)}
+                      className={inputCls}
+                    />
+                  </div>
                 </div>
               </div>
             )
@@ -834,19 +845,27 @@ export default function EditarSitePage() {
             label="Subtítulo"
             multiline
           />
-          <TextField
-            key="cta-text"
-            value={getStr('hero', 'cta_primary', 'text')}
-            onChange={v => setSubVal('hero', 'cta_primary', 'text', v)}
-            label="Texto do Botão Principal"
-          />
-          <TextField
-            key="cta-url"
-            value={getStr('hero', 'cta_primary', 'url')}
-            onChange={v => setSubVal('hero', 'cta_primary', 'url', v)}
-            label="Link do Botão Principal"
-            placeholder="#agendamento"
-          />
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+            <div>
+              <label className={labelCls}>Texto do Botão Principal</label>
+              <input
+                type="text"
+                value={getStr('hero', 'cta_primary', 'text')}
+                onChange={e => setSubVal('hero', 'cta_primary', 'text', e.target.value)}
+                className={inputCls}
+              />
+            </div>
+            <div>
+              <label className={labelCls}>Link do Botão Principal</label>
+              <input
+                type="text"
+                value={getStr('hero', 'cta_primary', 'url')}
+                onChange={e => setSubVal('hero', 'cta_primary', 'url', e.target.value)}
+                placeholder="#agendamento"
+                className={inputCls}
+              />
+            </div>
+          </div>
         </div>
       )
 

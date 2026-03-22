@@ -136,6 +136,25 @@ const SOURCE_LABELS: Record<LeadSourceKey, string> = {
   other: 'Outro',
 }
 
+const STATUS_LABELS: Record<string, string> = {
+  new: 'Novo',
+  contacted: 'Contatado',
+  qualified: 'Qualificado',
+  converted: 'Convertido',
+  lost: 'Perdido',
+}
+
+const CHANNEL_LABELS: Record<string, string> = {
+  email: 'E-mail',
+  whatsapp: 'WhatsApp',
+  sms: 'SMS',
+  phone: 'Telefone',
+  landing_form: 'Formulário',
+  manual_crm: 'CRM manual',
+  instagram: 'Instagram',
+  facebook: 'Facebook',
+}
+
 const REASON_LABELS: Record<string, string> = {
   eligible: 'Apto',
   missing_email: 'Sem e-mail',
@@ -345,7 +364,14 @@ export function DispatchesPanel() {
           confirm: true,
           filters: {
             status: activeStatus,
-            ...filters,
+            ...(filters.source ? { source: filters.source } : {}),
+            ...(filters.from ? { from: new Date(`${filters.from}T00:00:00.000Z`).toISOString() } : {}),
+            ...(filters.to ? { to: new Date(`${filters.to}T00:00:00.000Z`).toISOString() } : {}),
+            activityState: filters.activityState,
+            consented: filters.consented,
+            emailEligibility: filters.emailEligibility,
+            whatsappEligibility: filters.whatsappEligibility,
+            ...(filters.search.trim() ? { search: filters.search.trim() } : {}),
           },
           draft,
         }),
@@ -630,7 +656,7 @@ export function DispatchesPanel() {
                       <p className="text-xs text-charcoal-400 dark:text-charcoal-300">{lead.email}</p>
                     </td>
                     <td className={crmListCell}>{SOURCE_LABELS[lead.source]}</td>
-                    <td className={crmListCell}>{lead.status}</td>
+                    <td className={crmListCell}>{STATUS_LABELS[lead.status] ?? lead.status}</td>
                     <td className={crmListCell}>{REASON_LABELS[lead.emailReason] ?? lead.emailReason}</td>
                     <td className={crmListCell}>{REASON_LABELS[lead.whatsappReason] ?? lead.whatsappReason}</td>
                   </tr>
