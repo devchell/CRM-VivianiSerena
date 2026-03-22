@@ -302,6 +302,20 @@ function extractFromNotes(notes: string | null | undefined, key: 'service' | 'pe
   return notes.match(pattern)?.[1]?.trim() ?? null
 }
 
+function InfoItem({ label, value }: { label: string; value?: string | null }) {
+  if (!value || value === '-' || value === '—') return null
+  return (
+    <div className="flex flex-col gap-0.5 rounded-lg bg-blush/30 px-3 py-2.5 dark:bg-[#252423]">
+      <span className="text-[10px] font-semibold uppercase tracking-[0.06em] text-charcoal-400 dark:text-charcoal-300">
+        {label}
+      </span>
+      <span className="text-[13px] font-medium leading-snug text-charcoal dark:text-charcoal-100">
+        {value}
+      </span>
+    </div>
+  )
+}
+
 export function LeadsTable() {
   const { accessToken, status, hasPermission, updateSession } = useAuth()
   const canCreateLeads = hasPermission('leads.create')
@@ -984,23 +998,27 @@ export function LeadsTable() {
                             ) : detail ? (
                               <div className="space-y-4">
                                 <div className="rounded-lg border border-blush-200 bg-white/80 p-4 dark:border-[#3a3835] dark:bg-[#1c1b1a]/70">
-                                  <div className="flex items-center gap-2 text-sm font-semibold text-charcoal dark:text-charcoal-100">
-                                    <ShieldCheck size={16} />
-                                    Captura e consentimento
+                                  <div className="mb-4 flex items-center gap-2 border-b border-blush-200 pb-3 dark:border-[#3a3835]">
+                                    <ShieldCheck size={15} className="text-charcoal dark:text-charcoal-100" />
+                                    <span className="text-sm font-semibold text-charcoal dark:text-charcoal-100">Captura e consentimento</span>
                                   </div>
-                                  <dl className="mt-3 grid gap-2 text-sm text-charcoal-500 dark:text-charcoal-300 md:grid-cols-2">
-                                    <div><dt className="text-xs uppercase tracking-[0.16em]">Origem</dt><dd className="mt-1">{SOURCE_LABELS[detail.source] ?? detail.source}</dd></div>
-                                    <div><dt className="text-xs uppercase tracking-[0.16em]">Canal</dt><dd className="mt-1">{humanizeOrigin(detail.utmSource)}</dd></div>
-                                    <div><dt className="text-xs uppercase tracking-[0.16em]">Serviço de interesse</dt><dd className="mt-1">{humanizeService(extractFromNotes(detail.notes, 'service'))}</dd></div>
-                                    <div><dt className="text-xs uppercase tracking-[0.16em]">Período preferido</dt><dd className="mt-1">{humanizePeriod(extractFromNotes(detail.notes, 'period'))}</dd></div>
-                                    <div><dt className="text-xs uppercase tracking-[0.16em]">Consentido em</dt><dd className="mt-1">{detail.consentedAt ? new Date(detail.consentedAt).toLocaleString('pt-BR') : 'Não'}</dd></div>
-                                  </dl>
-                                  <div className="mt-4 flex flex-wrap gap-2">
+                                  <div className="mb-4 grid grid-cols-2 gap-2 md:grid-cols-3">
+                                    <InfoItem label="Origem" value={SOURCE_LABELS[detail.source] ?? detail.source} />
+                                    <InfoItem label="Canal" value={humanizeOrigin(detail.utmSource)} />
+                                    <InfoItem label="Serviço de interesse" value={humanizeService(extractFromNotes(detail.notes, 'service'))} />
+                                    <InfoItem label="Período preferido" value={humanizePeriod(extractFromNotes(detail.notes, 'period'))} />
+                                    <InfoItem label="Consentido em" value={detail.consentedAt ? new Date(detail.consentedAt).toLocaleString('pt-BR') : undefined} />
+                                  </div>
+                                  <div className="flex flex-wrap gap-2 border-t border-blush-200 pt-3 dark:border-[#3a3835]">
                                     {detail.consentLogs.length > 0 ? detail.consentLogs.map((log) => (
                                       <span key={log.id} className="inline-flex items-center rounded-full border border-blush-200 bg-white px-3 py-1 text-[11px] font-medium text-charcoal-500 dark:border-[#3a3835] dark:bg-[#1c1b1a] dark:text-charcoal-300">
                                         {CHANNEL_LABELS[log.channel] ?? fallbackHumanize(log.channel)} · {new Date(log.consentedAt).toLocaleDateString('pt-BR')}
                                       </span>
-                                    )) : (
+                                    )) : detail.utmSource ? (
+                                      <span className="inline-flex items-center rounded-full bg-blush/40 px-3 py-1 text-[11px] text-charcoal-500 dark:bg-[#252423] dark:text-charcoal-300">
+                                        {humanizeOrigin(detail.utmSource)}{detail.consentedAt ? ` · ${new Date(detail.consentedAt).toLocaleDateString('pt-BR')}` : ''}
+                                      </span>
+                                    ) : (
                                       <span className="text-xs text-charcoal-400 dark:text-charcoal-300">Sem log adicional de consentimento.</span>
                                     )}
                                   </div>
