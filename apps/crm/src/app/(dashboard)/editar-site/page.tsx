@@ -20,6 +20,8 @@ import {
   crmFieldSelectIcon,
   crmFieldSelectWrapper,
 } from '@/components/ui/listStyles'
+import { InfoTooltip } from '@/components/ui/InfoTooltip'
+import { EmptyState } from '@/components/ui/EmptyState'
 
 const API_URL = crmPublicEnv.apiBaseUrl
 const LANDING_URL = crmPublicEnv.landingUrl
@@ -208,12 +210,10 @@ interface ToggleFieldProps {
 
 const ToggleField = memo(function ToggleField({ enabled, onToggle, label, description }: ToggleFieldProps) {
   return (
-    <div className="flex items-center justify-between gap-4 px-4 py-3 rounded-lg border border-blush-200 dark:border-[#3a3835] bg-white dark:bg-[#1c1b1a]">
+    <div className="relative flex items-center justify-between gap-4 px-4 py-3 rounded-lg border border-blush-200 dark:border-[#3a3835] bg-white dark:bg-[#1c1b1a]">
+      {description && <InfoTooltip title={label} description={description} />}
       <div className="min-w-0 flex-1">
         <p className="text-sm font-medium text-charcoal dark:text-[#ECEAE6] leading-snug">{label}</p>
-        {description && (
-          <p className="text-xs text-charcoal-400 dark:text-charcoal-300 mt-0.5 leading-snug">{description}</p>
-        )}
       </div>
       <div className="flex items-center gap-2.5 flex-shrink-0">
         <span className={`text-xs font-medium ${enabled ? 'text-green-600 dark:text-green-400' : 'text-charcoal-300 dark:text-charcoal-300'}`}>
@@ -727,8 +727,9 @@ export default function EditarSitePage() {
     label: string
     description: string
   }) => (
-    <div className="space-y-3 rounded-lg border border-blush-200 bg-blush/20 p-4 dark:border-[#3a3835] dark:bg-[#252423]">
-      <p className="text-xs text-charcoal-400 dark:text-charcoal-300">{description}</p>
+    <div className="relative space-y-3 rounded-lg border border-blush-200 bg-blush/20 p-4 dark:border-[#3a3835] dark:bg-[#252423]">
+      <InfoTooltip title={label} description={description} />
+      {description.length <= 60 && <p className="text-xs text-charcoal-400 dark:text-charcoal-300">{description}</p>}
       <ImageField section={section} fieldKey={fieldKey} label={label} />
     </div>
   )
@@ -748,7 +749,8 @@ export default function EditarSitePage() {
               : true
 
             return (
-              <div className="space-y-3 rounded-md border border-blush-200 bg-cream p-4 dark:border-[#3a3835] dark:bg-[#252423]">
+              <div className="relative space-y-3 rounded-md border border-blush-200 bg-cream p-4 dark:border-[#3a3835] dark:bg-[#252423]">
+                <InfoTooltip title="Soma automática" description="O site soma automaticamente os leads reais cadastrados para atualizar Clientes registrados." />
                 <ToggleField
                   enabled={socialProofEnabled}
                   onToggle={() => setSubVal('contact', 'social_proof', 'enabled', !socialProofEnabled)}
@@ -771,9 +773,6 @@ export default function EditarSitePage() {
                     inputMode="numeric"
                   />
                 </div>
-                <p className="text-xs text-charcoal-400 dark:text-charcoal-300">
-                  O site soma automaticamente os leads reais cadastrados para atualizar Clientes registrados.
-                </p>
               </div>
             )
           })()}
@@ -1221,7 +1220,7 @@ export default function EditarSitePage() {
                   ))}
                 </div>
               ) : (
-                <p className="text-xs text-charcoal-400">Nenhuma categoria cadastrada ainda.</p>
+                <EmptyState message="Nenhuma categoria cadastrada ainda." />
               )}
             </div>
 
@@ -1284,7 +1283,8 @@ export default function EditarSitePage() {
             />
 
             {googleEnabled && (
-              <div className="space-y-3 rounded-md border border-blush-200 bg-cream p-4 dark:border-[#3a3835] dark:bg-[#252423]">
+              <div className="relative space-y-3 rounded-md border border-blush-200 bg-cream p-4 dark:border-[#3a3835] dark:bg-[#252423]">
+                <InfoTooltip title="Google Business Profile" description="Você pode vincular várias contas e selecionar mais de um perfil empresarial para alimentar a seção de depoimentos." />
                 <div className="flex flex-wrap items-center gap-2">
                   <button
                     type="button"
@@ -1306,9 +1306,6 @@ export default function EditarSitePage() {
                   </button>
                 </div>
 
-                <p className="text-xs text-charcoal-400 dark:text-charcoal-300">
-                  Você pode vincular várias contas e selecionar mais de um perfil empresarial para alimentar a seção de depoimentos.
-                </p>
 
                 {linkedLocations.length > 0 && (
                   <div className="space-y-2">
@@ -1375,11 +1372,7 @@ export default function EditarSitePage() {
                       </div>
                     ))
                   ) : (
-                    <div className="rounded-md border border-dashed border-blush-200 px-3 py-4 text-center text-xs text-charcoal-400 dark:border-[#3a3835] dark:text-charcoal-300">
-                      {loadingGoogleLocations
-                        ? 'Buscando perfis do Google Empresa...'
-                        : 'Nenhum novo perfil encontrado. Use o botão acima para buscar novamente após vincular a conta.'}
-                    </div>
+                    <EmptyState message={loadingGoogleLocations ? 'Buscando perfis do Google Empresa...' : 'Nenhum novo perfil encontrado. Use o botão acima para buscar novamente após vincular a conta.'} />
                   )}
                 </div>
               </div>
