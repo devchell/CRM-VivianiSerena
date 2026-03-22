@@ -26,7 +26,7 @@ import {
   crmFieldSelectIcon,
   crmFieldSelectWrapper,
 } from '@/components/ui/listStyles'
-import { InfoTooltip } from '@/components/ui/InfoTooltip'
+
 
 const API_URL = `${crmPublicEnv.apiBaseUrl}/api/v1`
 
@@ -627,9 +627,9 @@ export default function AdministracaoPage() {
                   </div>
                 </label>
               </div>
-              <label className="relative space-y-2 text-sm">
-                <InfoTooltip title="Senha SMTP" description="Se a senha ficar vazia, o valor atual será preservado. As alterações entram em uso assim que forem salvas." />
+              <label className="space-y-2 text-sm">
                 <span className="font-medium text-charcoal dark:text-charcoal-100">Senha SMTP</span>
+                <p style={{ fontSize: 11, color: 'var(--muted-foreground, #A09890)', margin: '2px 0 0', lineHeight: 1.4, fontWeight: 400 }}>Vazio preserva a senha atual</p>
                 <input type="password" value={emailForm.password} onChange={(event) => updateEmailField('password', event.target.value)} className="w-full rounded-md border border-blush-200 bg-white px-4 py-3 text-sm text-charcoal outline-none transition focus:border-rose-gold dark:border-[#3a3835] dark:bg-[#1c1b1a] dark:text-charcoal-100" placeholder={overview.integrations.email.passwordConfigured ? (visibility.email ? 'Deixe em branco para manter a atual' : '****** senha configurada') : 'Digite a senha SMTP'} />
               </label>
               <div className="grid gap-3 md:grid-cols-2">

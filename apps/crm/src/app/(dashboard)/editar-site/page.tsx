@@ -20,7 +20,6 @@ import {
   crmFieldSelectIcon,
   crmFieldSelectWrapper,
 } from '@/components/ui/listStyles'
-import { InfoTooltip } from '@/components/ui/InfoTooltip'
 import { EmptyState } from '@/components/ui/EmptyState'
 
 const API_URL = crmPublicEnv.apiBaseUrl
@@ -98,6 +97,7 @@ interface TextFieldProps {
   value: string
   onChange: (v: string) => void
   label: string
+  description?: string
   multiline?: boolean
   rows?: number
   placeholder?: string
@@ -110,6 +110,7 @@ const TextField = memo(function TextField({
   value: propValue,
   onChange,
   label,
+  description,
   multiline,
   rows = 3,
   placeholder,
@@ -138,6 +139,11 @@ const TextField = memo(function TextField({
   return (
     <div className={className}>
       <label className={labelClassName ?? labelCls}>{label}</label>
+      {description && (
+        <p style={{ fontSize: 11, color: 'var(--muted-foreground, #A09890)', margin: '2px 0 4px', lineHeight: 1.4, fontWeight: 400 }}>
+          {description}
+        </p>
+      )}
       {multiline ? (
         <textarea
           rows={rows}
@@ -210,10 +216,14 @@ interface ToggleFieldProps {
 
 const ToggleField = memo(function ToggleField({ enabled, onToggle, label, description }: ToggleFieldProps) {
   return (
-    <div className="relative flex items-center justify-between gap-4 px-4 py-3 rounded-lg border border-blush-200 dark:border-[#3a3835] bg-white dark:bg-[#1c1b1a]">
-      {description && <InfoTooltip title={label} description={description} />}
+    <div className="flex items-center justify-between gap-4 px-4 py-3 rounded-lg border border-blush-200 dark:border-[#3a3835] bg-white dark:bg-[#1c1b1a]">
       <div className="min-w-0 flex-1">
         <p className="text-sm font-medium text-charcoal dark:text-[#ECEAE6] leading-snug">{label}</p>
+        {description && (
+          <p style={{ fontSize: 11, color: 'var(--muted-foreground, #A09890)', margin: '2px 0 0', lineHeight: 1.4, fontWeight: 400 }}>
+            {description}
+          </p>
+        )}
       </div>
       <div className="flex items-center gap-2.5 flex-shrink-0">
         <span className={`text-xs font-medium ${enabled ? 'text-green-600 dark:text-green-400' : 'text-charcoal-300 dark:text-charcoal-300'}`}>
@@ -727,9 +737,8 @@ export default function EditarSitePage() {
     label: string
     description: string
   }) => (
-    <div className="relative space-y-3 rounded-lg border border-blush-200 bg-blush/20 p-4 dark:border-[#3a3835] dark:bg-[#252423]">
-      <InfoTooltip title={label} description={description} />
-      {description.length <= 60 && <p className="text-xs text-charcoal-400 dark:text-charcoal-300">{description}</p>}
+    <div className="space-y-3 rounded-lg border border-blush-200 bg-blush/20 p-4 dark:border-[#3a3835] dark:bg-[#252423]">
+      <p style={{ fontSize: 11, color: 'var(--muted-foreground, #A09890)', margin: '0 0 2px', lineHeight: 1.4, fontWeight: 400 }}>{description}</p>
       <ImageField section={section} fieldKey={fieldKey} label={label} />
     </div>
   )
@@ -749,19 +758,19 @@ export default function EditarSitePage() {
               : true
 
             return (
-              <div className="relative space-y-3 rounded-md border border-blush-200 bg-cream p-4 dark:border-[#3a3835] dark:bg-[#252423]">
-                <InfoTooltip title="Soma automática" description="O site soma automaticamente os leads reais cadastrados para atualizar Clientes registrados." />
+              <div className="space-y-3 rounded-md border border-blush-200 bg-cream p-4 dark:border-[#3a3835] dark:bg-[#252423]">
                 <ToggleField
                   enabled={socialProofEnabled}
                   onToggle={() => setSubVal('contact', 'social_proof', 'enabled', !socialProofEnabled)}
                   label="Box lateral de prova social"
-                  description="Controla o card cinza com Clientes registrados e Avaliações públicas ao lado do formulário."
+                  description="Card com clientes e avaliações no formulário"
                 />
                 <div className="grid gap-3 md:grid-cols-2">
                   <TextField
                     value={String(getNum('contact', 'social_proof', 'baseClients'))}
                     onChange={v => setSubVal('contact', 'social_proof', 'baseClients', Number(v) || 0)}
                     label="Clientes iniciais"
+                    description="Soma com leads reais cadastrados"
                     placeholder="0"
                     inputMode="numeric"
                   />
@@ -781,7 +790,7 @@ export default function EditarSitePage() {
             section="hero"
             fieldKey="background_image"
             label="Foto da Viviani (Início/Hero)"
-            description="Imagem principal exibida na abertura da landing."
+            description="Imagem principal da landing"
           />
           {(() => {
             const urgencyBadge = get('hero', 'urgency_badge')
@@ -798,7 +807,7 @@ export default function EditarSitePage() {
                   enabled={urgencyBadgeEnabled}
                   onToggle={() => setSubVal('hero', 'urgency_badge', 'enabled', !urgencyBadgeEnabled)}
                   label="Badge de Urgência"
-                  description="Mostrar aviso de vagas limitadas no topo do site"
+                  description="Aviso de vagas limitadas no topo"
                 />
                 {urgencyBadgeEnabled && (
                   <TextField
@@ -847,7 +856,7 @@ export default function EditarSitePage() {
             section="about"
             fieldKey="photo_viviani"
             label="Foto da Viviani (Seção Sobre)"
-            description="Imagem exibida na coluna esquerda da seção Sobre. Sem foto, o texto ocupa toda a largura."
+            description="Sem foto, o texto ocupa toda a largura"
           />
           <div>
             <label className={labelCls}>Texto Principal</label>
@@ -1018,7 +1027,7 @@ export default function EditarSitePage() {
               section="services"
               fieldKey="viviani_photo"
               label="Foto da Viviani (Resultados)"
-              description="Imagem do bloco final de chamada para avaliação na seção Resultados."
+              description="Imagem no bloco de avaliação gratuita"
             />
 
             {results.map((item, idx) => (
@@ -1255,7 +1264,7 @@ export default function EditarSitePage() {
               enabled={artificialEnabled}
               onToggle={() => setSubVal('testimonials', 'display_options', 'artificialEnabled', !artificialEnabled)}
               label="Gerar depoimentos artificiais"
-              description="Preenche a seção com depoimentos de exemplo para deixar a vitrine mais completa."
+              description="Preenche com exemplos enquanto não há reais"
             />
 
             <div className="flex items-center gap-3 rounded-lg border border-blush-200 bg-blush/20 px-4 py-3 dark:border-[#3a3835] dark:bg-[#252423]">
@@ -1279,12 +1288,11 @@ export default function EditarSitePage() {
               enabled={googleEnabled}
               onToggle={() => setSubVal('testimonials', 'display_options', 'googleEnabled', !googleEnabled)}
               label="Exibir avaliações do Google Empresa"
-              description="Permite puxar reviews públicos das contas vinculadas do Google Business Profile."
+              description="Puxa reviews do Google Business vinculado"
             />
 
             {googleEnabled && (
-              <div className="relative space-y-3 rounded-md border border-blush-200 bg-cream p-4 dark:border-[#3a3835] dark:bg-[#252423]">
-                <InfoTooltip title="Google Business Profile" description="Você pode vincular várias contas e selecionar mais de um perfil empresarial para alimentar a seção de depoimentos." />
+              <div className="space-y-3 rounded-md border border-blush-200 bg-cream p-4 dark:border-[#3a3835] dark:bg-[#252423]">
                 <div className="flex flex-wrap items-center gap-2">
                   <button
                     type="button"
