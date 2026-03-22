@@ -843,6 +843,12 @@ export default function EditarSitePage() {
 
       case 'sobre': return (
         <div className="space-y-4">
+          <VivianiPhotoCard
+            section="about"
+            fieldKey="photo_viviani"
+            label="Foto da Viviani (Seção Sobre)"
+            description="Imagem exibida na coluna esquerda da seção Sobre. Sem foto, o texto ocupa toda a largura."
+          />
           <div>
             <label className={labelCls}>Texto Principal</label>
             <RichTextEditor
@@ -1234,6 +1240,8 @@ export default function EditarSitePage() {
         const linkedLocations = getArr<GoogleBusinessLocation>('testimonials', 'google_business_locations')
         const googleEnabled = getBool('testimonials', 'display_options', 'googleEnabled')
         const artificialEnabled = getBool('testimonials', 'display_options', 'artificialEnabled')
+        const artificialCountRaw = getNum('testimonials', 'display_options', 'artificialCount')
+        const artificialCount = artificialCountRaw > 0 ? Math.min(20, artificialCountRaw) : 3
         const availableLocations = googleLocations.filter((location) => (
           !linkedLocations.some((linked) => (
             linked.accountName === location.accountName
@@ -1247,14 +1255,31 @@ export default function EditarSitePage() {
               enabled={artificialEnabled}
               onToggle={() => setSubVal('testimonials', 'display_options', 'artificialEnabled', !artificialEnabled)}
               label="Gerar depoimentos artificiais"
-              description="Preenche a seção com alguns depoimentos fixos de exemplo para deixar a vitrine mais completa."
+              description="Preenche a seção com depoimentos de exemplo para deixar a vitrine mais completa."
             />
+
+            <div className="flex items-center gap-3 rounded-lg border border-blush-200 bg-blush/20 px-4 py-3 dark:border-[#3a3835] dark:bg-[#252423]">
+              <label className="text-xs font-medium text-charcoal-500 dark:text-charcoal-300 flex-1">
+                Quantidade de depoimentos (1–20)
+              </label>
+              <input
+                type="number"
+                min={1}
+                max={20}
+                value={artificialCount}
+                onChange={e => {
+                  const v = Math.min(20, Math.max(1, Number(e.target.value) || 1))
+                  setSubVal('testimonials', 'display_options', 'artificialCount', v)
+                }}
+                className="w-16 rounded-lg border border-blush-200 bg-white px-2 py-1.5 text-center text-sm font-semibold text-charcoal dark:border-[#3a3835] dark:bg-[#252423] dark:text-[#ECEAE6] focus:outline-none focus:ring-2 focus:ring-rose-gold/40"
+              />
+            </div>
 
             <ToggleField
               enabled={googleEnabled}
               onToggle={() => setSubVal('testimonials', 'display_options', 'googleEnabled', !googleEnabled)}
               label="Exibir avaliações do Google Empresa"
-              description="Permite puxar reviews publicos das contas vinculadas do Google Business Profile."
+              description="Permite puxar reviews públicos das contas vinculadas do Google Business Profile."
             />
 
             {googleEnabled && (

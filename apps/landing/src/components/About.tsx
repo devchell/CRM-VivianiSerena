@@ -95,28 +95,30 @@ export function About({ bio, photoUrl, whatsappNumber }: AboutProps = {}) {
       aria-labelledby="about-heading"
     >
       <div className="container-main">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 lg:gap-24 items-center">
+        <div className={aboutPhotoSrc
+          ? 'grid grid-cols-1 lg:grid-cols-2 gap-16 lg:gap-24 items-center'
+          : 'max-w-3xl mx-auto'
+        }>
 
-          {/* ── Coluna esquerda: imagem + destaque flutuante ── */}
-          <motion.div
-            className="relative"
-            variants={containerVariants}
-            initial="hidden"
-            animate={isInView ? 'visible' : 'hidden'}
-          >
-            {/* Decoração de fundo */}
-            <div
-              className="absolute -top-8 -left-8 w-72 h-72 rounded-full bg-blush/60 blur-3xl -z-10"
-              aria-hidden="true"
-            />
-
-            {/* Foto principal */}
+          {/* ── Coluna esquerda: imagem + destaque flutuante (só renderiza se tiver foto) ── */}
+          {aboutPhotoSrc && (
             <motion.div
-              variants={itemVariants}
-              className="relative rounded-lg overflow-hidden aspect-[4/5] bg-blush shadow-2xl shadow-charcoal/10"
+              className="relative"
+              variants={containerVariants}
+              initial="hidden"
+              animate={isInView ? 'visible' : 'hidden'}
             >
-              {/* Placeholder elegante enquanto a foto real não é fornecida */}
-              {aboutPhotoSrc ? (
+              {/* Decoração de fundo */}
+              <div
+                className="absolute -top-8 -left-8 w-72 h-72 rounded-full bg-blush/60 blur-3xl -z-10"
+                aria-hidden="true"
+              />
+
+              {/* Foto principal */}
+              <motion.div
+                variants={itemVariants}
+                className="relative rounded-lg overflow-hidden aspect-[4/5] bg-blush shadow-2xl shadow-charcoal/10"
+              >
                 <Image
                   src={aboutPhotoSrc}
                   alt="Foto de Viviani Serena"
@@ -124,48 +126,38 @@ export function About({ bio, photoUrl, whatsappNumber }: AboutProps = {}) {
                   sizes="(max-width: 1024px) 100vw, 40rem"
                   className="object-cover"
                 />
-              ) : (
-                <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-blush via-cream to-blush">
-                  <div className="text-center p-8">
-                    <div className="w-32 h-32 rounded-full bg-rose-gold/20 flex items-center justify-center mx-auto mb-4">
-                      <span className="font-heading text-5xl font-bold text-rose-gold">VS</span>
-                    </div>
-                    <p className="text-charcoal/50 text-sm">Imagem em definição</p>
+                {/* Overlay gradiente na base da imagem */}
+                <div className="absolute bottom-0 left-0 right-0 h-1/3 bg-gradient-to-t from-charcoal/40 to-transparent" aria-hidden="true" />
+              </motion.div>
+
+              {/* Badge flutuante: experiência */}
+              <motion.div
+                variants={itemVariants}
+                className="absolute -bottom-6 -right-4 lg:-right-8 glass rounded-lg px-6 py-5 border border-blush shadow-xl"
+              >
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-md bg-rose-gold flex items-center justify-center flex-shrink-0">
+                    <Award className="text-white" size={22} aria-hidden="true" />
+                  </div>
+                  <div>
+                    <p className="font-heading text-2xl font-bold text-charcoal leading-none">10+</p>
+                    <p className="text-charcoal/60 text-sm mt-0.5">Anos de experiência</p>
                   </div>
                 </div>
-              )}
+              </motion.div>
 
-              {/* Overlay gradiente na base da imagem */}
-              <div className="absolute bottom-0 left-0 right-0 h-1/3 bg-gradient-to-t from-charcoal/40 to-transparent" aria-hidden="true" />
-            </motion.div>
-
-            {/* Badge flutuante: experiência */}
-            <motion.div
-              variants={itemVariants}
-              className="absolute -bottom-6 -right-4 lg:-right-8 glass rounded-lg px-6 py-5 border border-blush shadow-xl"
-            >
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-md bg-rose-gold flex items-center justify-center flex-shrink-0">
-                  <Award className="text-white" size={22} aria-hidden="true" />
+              {/* Badge flutuante: ANVISA */}
+              <motion.div
+                variants={itemVariants}
+                className="absolute -top-4 -right-4 lg:right-4 glass rounded-md px-4 py-3 border border-blush shadow-lg"
+              >
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 rounded-full bg-sage animate-pulse" aria-hidden="true" />
+                  <span className="text-xs font-semibold text-charcoal">ANVISA Regulamentado</span>
                 </div>
-                <div>
-                  <p className="font-heading text-2xl font-bold text-charcoal leading-none">10+</p>
-                  <p className="text-charcoal/60 text-sm mt-0.5">Anos de experiência</p>
-                </div>
-              </div>
+              </motion.div>
             </motion.div>
-
-            {/* Badge flutuante: ANVISA */}
-            <motion.div
-              variants={itemVariants}
-              className="absolute -top-4 -right-4 lg:right-4 glass rounded-md px-4 py-3 border border-blush shadow-lg"
-            >
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 rounded-full bg-sage animate-pulse" aria-hidden="true" />
-                <span className="text-xs font-semibold text-charcoal">ANVISA Regulamentado</span>
-              </div>
-            </motion.div>
-          </motion.div>
+          )}
 
           {/* ── Coluna direita: texto ── */}
           <motion.div

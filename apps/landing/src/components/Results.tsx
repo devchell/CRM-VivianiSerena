@@ -114,86 +114,88 @@ export default function Results({ items, vivianiPhotoUrl }: { items: ResultItem[
   const normalizedVivianiPhoto = vivianiPhotoUrl ? normalizeImageUrl(vivianiPhotoUrl) : ''
   const hasVivianiPhoto = Boolean(normalizedVivianiPhoto) && !hasCtaImageError
 
+  const hasItems = items.length > 0
+
   return (
     <LazyMotion features={domAnimation}>
       <section id="resultados" className="section bg-cream" aria-labelledby="results-heading">
         <div className="container-main">
-          <motion.div
-            ref={headerRef as React.RefObject<HTMLDivElement>}
-            className="mb-12 text-center"
-            initial={{ opacity: 0, y: 30 }}
-            animate={headerInView ? { opacity: 1, y: 0 } : {}}
-            transition={{ duration: 0.6 }}
-          >
-            <span className="text-sm font-semibold uppercase tracking-[0.2em] text-rose-gold">
-              Transformações reais
-            </span>
-            <h2 id="results-heading" className="heading-lg mt-2 mb-4 text-charcoal">
-              Resultados que falam por si
-            </h2>
-            <p className="mx-auto max-w-xl text-charcoal-500">
-              Arraste o controle sobre cada imagem para comparar o antes e o depois.
-            </p>
-          </motion.div>
+          {/* Galeria: só renderiza se houver resultados cadastrados */}
+          {hasItems && (
+            <>
+              <motion.div
+                ref={headerRef as React.RefObject<HTMLDivElement>}
+                className="mb-12 text-center"
+                initial={{ opacity: 0, y: 30 }}
+                animate={headerInView ? { opacity: 1, y: 0 } : {}}
+                transition={{ duration: 0.6 }}
+              >
+                <span className="text-sm font-semibold uppercase tracking-[0.2em] text-rose-gold">
+                  Transformações reais
+                </span>
+                <h2 id="results-heading" className="heading-lg mt-2 mb-4 text-charcoal">
+                  Resultados que falam por si
+                </h2>
+                <p className="mx-auto max-w-xl text-charcoal-500">
+                  Arraste o controle sobre cada imagem para comparar o antes e o depois.
+                </p>
+              </motion.div>
 
-          {categories.length > 1 ? (
-            <div className="mb-10 flex flex-wrap justify-center gap-2" role="group" aria-label="Filtrar por categoria">
-              {categories.map((category) => (
-                <button
-                  key={category}
-                  onClick={() => { setActiveCategory(category); setShowAll(false) }}
-                  className={`rounded px-5 py-2 text-sm font-medium transition-all duration-200 ${
-                    activeCategory === category
-                      ? 'scale-105 bg-rose-gold text-white shadow-md'
-                      : 'border border-blush-300 bg-white text-charcoal-600 hover:border-rose-gold hover:text-rose-gold'
-                  }`}
-                  aria-pressed={activeCategory === category}
+              {categories.length > 1 ? (
+                <div className="mb-10 flex flex-wrap justify-center gap-2" role="group" aria-label="Filtrar por categoria">
+                  {categories.map((category) => (
+                    <button
+                      key={category}
+                      onClick={() => { setActiveCategory(category); setShowAll(false) }}
+                      className={`rounded px-5 py-2 text-sm font-medium transition-all duration-200 ${
+                        activeCategory === category
+                          ? 'scale-105 bg-rose-gold text-white shadow-md'
+                          : 'border border-blush-300 bg-white text-charcoal-600 hover:border-rose-gold hover:text-rose-gold'
+                      }`}
+                      aria-pressed={activeCategory === category}
+                    >
+                      {category}
+                    </button>
+                  ))}
+                </div>
+              ) : null}
+
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={activeCategory}
+                  className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.3 }}
                 >
-                  {category}
-                </button>
-              ))}
-            </div>
-          ) : null}
+                  {displayedItems.map((item, index) => (
+                    <ResultCard key={item.id} item={item} index={index} />
+                  ))}
+                </motion.div>
+              </AnimatePresence>
 
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={activeCategory}
-              className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.3 }}
-            >
-              {displayedItems.map((item, index) => (
-                <ResultCard key={item.id} item={item} index={index} />
-              ))}
-            </motion.div>
-          </AnimatePresence>
+              {isMobile && !showAll && filtered.length > 3 ? (
+                <div className="mt-6 text-center">
+                  <button onClick={() => setShowAll(true)} className="btn-secondary px-6 py-3 text-sm">
+                    Ver mais resultados
+                  </button>
+                </div>
+              ) : null}
+            </>
+          )}
 
-          {filtered.length === 0 ? (
-            <div className="rounded-lg border border-blush-300 bg-white px-6 py-8 text-center text-sm text-charcoal-400">
-              Nenhum resultado configurado para esta categoria ainda.
-            </div>
-          ) : null}
-
-          {isMobile && !showAll && filtered.length > 3 ? (
-            <div className="mt-6 text-center">
-              <button onClick={() => setShowAll(true)} className="btn-secondary px-6 py-3 text-sm">
-                Ver mais resultados
-              </button>
-            </div>
-          ) : null}
-
+          {/* CTA "Cada resultado é único" — sempre visível */}
           <motion.div
             ref={ctaRef as React.RefObject<HTMLDivElement>}
-            className="mt-16 overflow-hidden rounded-lg border border-blush-200 bg-white shadow-lg"
+            className={`overflow-hidden rounded-lg border border-blush-200 bg-white shadow-lg ${hasItems ? 'mt-16' : ''}`}
             initial={{ opacity: 0, y: 40 }}
             animate={ctaInView ? { opacity: 1, y: 0 } : {}}
             transition={{ duration: 0.7, ease: 'easeOut' }}
           >
-            <div className="grid items-stretch md:grid-cols-2">
-              <div className="relative h-72 min-h-[280px] md:h-auto">
-                {hasVivianiPhoto ? (
+            <div className={hasVivianiPhoto ? 'grid items-stretch md:grid-cols-2' : ''}>
+              {hasVivianiPhoto && (
+                <div className="relative h-72 min-h-[280px] md:h-auto">
                   <Image
                     src={normalizedVivianiPhoto}
                     alt="Viviani Serena - Especialista em remoção a laser"
@@ -202,17 +204,8 @@ export default function Results({ items, vivianiPhotoUrl }: { items: ResultItem[
                     sizes="(max-width: 768px) 100vw, 50vw"
                     onError={() => setHasCtaImageError(true)}
                   />
-                ) : (
-                  <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-blush via-cream to-blush">
-                    <div className="text-center p-8">
-                      <div className="w-24 h-24 rounded-full bg-rose-gold/20 flex items-center justify-center mx-auto mb-3">
-                        <span className="font-heading text-4xl font-bold text-rose-gold">VS</span>
-                      </div>
-                      <p className="text-charcoal/50 text-sm">Imagem em definição</p>
-                    </div>
-                  </div>
-                )}
-              </div>
+                </div>
+              )}
 
               <div className="flex flex-col justify-center p-8 md:p-12">
                 <span className="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-rose-gold">
