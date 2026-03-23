@@ -5,6 +5,7 @@ import { Suspense } from 'react'
 import './globals.css'
 import { PageTracker } from '@/components/PageTracker'
 import WhatsAppButton from '@/components/WhatsAppButton'
+import { landingServerEnv } from '@/lib/server-env'
 
 const SITE_URL = 'https://vivianicoaching.com'
 const WHATSAPP_NUMBER = '5511915751770'
@@ -155,10 +156,46 @@ const jsonLd = {
 
 const gaId = process.env.NEXT_PUBLIC_GA_ID?.trim() || null
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+async function getSiteColors(): Promise<Record<string, string>> {
+  try {
+    const res = await fetch(`${landingServerEnv.apiBaseUrl}/api/v1/content`, { cache: 'no-store' })
+    if (!res.ok) return {}
+    const data = await res.json() as { data?: Record<string, Record<string, unknown>> }
+    const colors = data.data?.seo?.site_colors
+    return (typeof colors === 'object' && colors !== null && !Array.isArray(colors))
+      ? colors as Record<string, string>
+      : {}
+  } catch {
+    return {}
+  }
+}
+
+function buildColorVars(c: Record<string, string>): string {
+  const v = (key: string, def: string) => c[key] ?? def
+  return [
+    `--site-primary:        ${v('primaryColor',    '#C9A96E')}`,
+    `--site-secondary:      ${v('secondaryColor',  '#2D7A5F')}`,
+    `--site-bg-page:        ${v('bgPage',          '#F5F0E8')}`,
+    `--site-bg-card:        ${v('bgCard',          '#FFFFFF')}`,
+    `--site-bg-section:     ${v('bgSection',       '#FDFCF9')}`,
+    `--site-text-primary:   ${v('textPrimary',     '#2D2D2D')}`,
+    `--site-text-secondary: ${v('textSecondary',   '#6B6560')}`,
+    `--site-text-accent:    ${v('textAccent',      '#C9A96E')}`,
+    `--site-btn-bg:         ${v('btnPrimaryBg',    '#C9A96E')}`,
+    `--site-btn-text:       ${v('btnPrimaryText',  '#FFFFFF')}`,
+    `--site-btn-outline:    ${v('btnOutlineBorder','#C9A96E')}`,
+    `--site-accent-line:    ${v('accentLine',      '#C9A96E')}`,
+  ].join('; ')
+}
+
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const siteColors = await getSiteColors()
+  const colorVars = buildColorVars(siteColors)
+
   return (
     <html lang="pt-BR" className={inter.variable}>
       <head>
+        <style dangerouslySetInnerHTML={{ __html: `:root { ${colorVars} }` }} />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}

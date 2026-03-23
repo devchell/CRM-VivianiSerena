@@ -79,7 +79,7 @@ function NavItemRow({
             : hovered
               ? 'rgba(255,255,255,0.06)'
               : 'transparent',
-          boxShadow: active ? 'inset 3px 0 0 #C9A96E' : 'none',
+          boxShadow: active ? 'inset 3px 0 0 var(--accent-cta, #C9A96E)' : 'none',
           fontWeight: active ? 500 : 400,
           fontSize: 14,
           whiteSpace: 'nowrap',
@@ -147,7 +147,7 @@ function Sidebar() {
               height: 36,
               borderRadius: 8,
               background: 'rgba(255,255,255,0.06)',
-              color: '#C9A96E',
+              color: 'var(--accent-cta, #C9A96E)',
               border: 'none',
               cursor: 'pointer',
               transition: 'background 150ms ease',
