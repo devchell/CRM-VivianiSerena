@@ -26,6 +26,7 @@ async function bootstrap() {
     const io = new SocketServer(httpServer, {
       cors: {
         origin: apiEnv.corsOrigins,
+        methods: ['GET', 'POST'],
         credentials: true,
       },
       transports: ['websocket', 'polling'],

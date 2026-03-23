@@ -19,7 +19,7 @@ import {
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { useAuth } from '@/lib/useAuth'
-import { apiFetchJson, buildAuthHeaders } from '@/lib/api-client'
+import { apiFetchJson, buildApiUrl, buildAuthHeaders } from '@/lib/api-client'
 import {
   crmFieldSelect,
   crmFieldSelectIcon,
@@ -150,7 +150,7 @@ function buildDefaultForm(): CreateAppointmentDto {
 }
 
 export default function AgendaPage() {
-  const { accessToken, hasPermission } = useAuth()
+  const { accessToken, hasPermission, updateSession } = useAuth()
   const [appointments, setAppointments] = useState<AppointmentListItem[]>([])
   const [leads, setLeads] = useState<Lead[]>([])
   const [loading, setLoading] = useState(true)
@@ -271,16 +271,26 @@ export default function AgendaPage() {
 
     setSubmitting(true)
     try {
-      await apiFetchJson('/api/v1/appointments', {
-        method: 'POST',
-        headers: buildAuthHeaders(accessToken, 'application/json'),
-        body: JSON.stringify({
-          leadId: form.leadId,
-          date: new Date(form.date).toISOString(),
-          serviceType: form.serviceType,
-          notes: form.notes?.trim() || undefined,
-        }),
+      const payload = JSON.stringify({
+        leadId: form.leadId,
+        date: new Date(form.date).toISOString(),
+        serviceType: form.serviceType,
+        notes: form.notes?.trim() || undefined,
       })
+
+      const doPost = (token: string) => fetch(buildApiUrl('/api/v1/appointments'), {
+        method: 'POST',
+        headers: buildAuthHeaders(token, 'application/json'),
+        body: payload,
+      })
+
+      let res = await doPost(accessToken)
+      if (res.status === 401) {
+        const refreshed = await updateSession()
+        const nextToken = (refreshed as { accessToken?: string } | null)?.accessToken ?? ''
+        if (nextToken) res = await doPost(nextToken)
+      }
+      if (!res.ok) throw new Error(`HTTP ${res.status}`)
 
       await refreshAppointments()
       setForm(buildDefaultForm())

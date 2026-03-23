@@ -398,7 +398,8 @@ export default function SegurancaPage() {
       const { io } = await import('socket.io-client')
       const socket = io(API_URL, {
         auth: { token: accessToken },
-        transports: ['polling'],
+        transports: ['websocket'],
+        withCredentials: true,
         reconnectionAttempts: 5,
       })
       socketRef.current = socket
