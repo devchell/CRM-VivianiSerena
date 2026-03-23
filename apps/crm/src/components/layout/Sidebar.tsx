@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { signOut } from 'next-auth/react'
 import { usePathname, useRouter } from 'next/navigation'
-import { useEffect, useMemo } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import type { AppPermission, CrmModule } from '@viviani/types'
 import {
   LayoutDashboard, Users, Calendar, DollarSign,
@@ -41,6 +41,59 @@ function getRoleLabel(profile: string | null, isAdmin: boolean) {
   return 'Viewer'
 }
 
+function NavItemRow({
+  href,
+  label,
+  icon: Icon,
+  active,
+  collapsed,
+  onClick,
+}: {
+  href: string
+  label: string
+  icon: React.ElementType
+  active: boolean
+  collapsed: boolean
+  onClick: () => void
+}) {
+  const [hovered, setHovered] = useState(false)
+
+  return (
+    <Link href={href} prefetch onClick={onClick}>
+      <div
+        title={collapsed ? label : undefined}
+        onMouseEnter={() => setHovered(true)}
+        onMouseLeave={() => setHovered(false)}
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: collapsed ? 0 : 10,
+          justifyContent: collapsed ? 'center' : 'flex-start',
+          padding: '9px 10px',
+          borderRadius: 8,
+          cursor: 'pointer',
+          transition: 'background 150ms ease, color 150ms ease',
+          color: active ? 'var(--sidebar-text-active)' : hovered ? 'var(--sidebar-text-active)' : 'var(--sidebar-text)',
+          background: active
+            ? 'var(--sidebar-active-bg)'
+            : hovered
+              ? 'rgba(255,255,255,0.06)'
+              : 'transparent',
+          boxShadow: active ? 'inset 3px 0 0 #C9A96E' : 'none',
+          fontWeight: active ? 500 : 400,
+          fontSize: 14,
+          whiteSpace: 'nowrap',
+        }}
+      >
+        <Icon size={17} style={{ flexShrink: 0, opacity: active ? 1 : hovered ? 0.9 : 0.65 }} />
+        {!collapsed && (
+          <span style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>{label}</span>
+        )}
+      </div>
+    </Link>
+  )
+}
+
 function Sidebar() {
   const { collapsed, toggle, mobileOpen, closeMobile } = useSidebar()
   const pathname = usePathname()
@@ -61,101 +114,195 @@ function Sidebar() {
     NAV_ITEMS.forEach((item) => router.prefetch(item.href))
   }, [router])
 
+  const sidebarStyle: React.CSSProperties = {
+    background: 'var(--sidebar-bg)',
+    borderRight: '1px solid var(--sidebar-border)',
+    color: 'var(--sidebar-text)',
+    display: 'flex',
+    flexDirection: 'column',
+    height: '100vh',
+  }
+
   const navContent = (
     <>
-      <div className="flex items-center h-16 px-3 flex-shrink-0 transition-colors duration-200" style={{ background: 'var(--bg-surface)', boxShadow: '0 1px 0 var(--border-subtle)' }}>
+      {/* Header / Logo */}
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          height: 60,
+          padding: collapsed ? '0 12px' : '0 12px 0 14px',
+          flexShrink: 0,
+          borderBottom: '1px solid var(--sidebar-border)',
+        }}
+      >
         {collapsed ? (
           <button
             onClick={toggle}
-            className="inline-flex items-center justify-center w-11 h-11 rounded-md text-[#c58b62] dark:text-[#d8b898] hover:bg-[#f0e8de] dark:hover:bg-[#272421] transition-all duration-200 hover:scale-[1.04] active:scale-[0.98]"
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              width: 36,
+              height: 36,
+              borderRadius: 8,
+              background: 'rgba(255,255,255,0.06)',
+              color: '#C9A96E',
+              border: 'none',
+              cursor: 'pointer',
+              transition: 'background 150ms ease',
+            }}
             aria-label="Expandir menu"
           >
-            <Sparkles size={20} />
+            <Sparkles size={18} />
           </button>
         ) : (
-          <div className="inline-flex items-center gap-2 px-1 py-1.5">
-            <Sparkles size={20} className="text-[#c58b62] dark:text-[#d8b898]" />
-            <span className="text-[#c58b62] dark:text-[#d8b898] font-heading font-semibold text-lg whitespace-nowrap overflow-hidden select-none">
-              Viviani Serena
-            </span>
-          </div>
-        )}
-        {!collapsed && (
-          <button
-            onClick={toggle}
-            className="ml-auto w-9 h-9 flex items-center justify-center rounded-lg text-[#9c8c7a] hover:text-[#6b5b4b] hover:bg-[#f0e8de] dark:text-[#c6b29b] dark:hover:text-white dark:hover:bg-[#272421] transition-colors flex-shrink-0"
-            aria-label="Recolher menu"
-          >
-            <PanelLeftClose size={18} />
-          </button>
+          <>
+            <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+              <Sparkles size={18} style={{ color: '#C9A96E', flexShrink: 0 }} />
+              <span style={{
+                color: 'var(--sidebar-logo)',
+                fontWeight: 600,
+                fontSize: 16,
+                whiteSpace: 'nowrap',
+                overflow: 'hidden',
+                letterSpacing: '-0.01em',
+              }}>
+                Viviani Serena
+              </span>
+            </div>
+            <button
+              onClick={toggle}
+              style={{
+                marginLeft: 'auto',
+                width: 32,
+                height: 32,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                borderRadius: 6,
+                background: 'transparent',
+                color: 'var(--sidebar-text)',
+                border: 'none',
+                cursor: 'pointer',
+                transition: 'background 150ms ease, color 150ms ease',
+                flexShrink: 0,
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = 'rgba(255,255,255,0.08)'
+                e.currentTarget.style.color = '#fff'
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = 'transparent'
+                e.currentTarget.style.color = 'var(--sidebar-text)'
+              }}
+              aria-label="Recolher menu"
+            >
+              <PanelLeftClose size={16} />
+            </button>
+          </>
         )}
       </div>
 
-      <nav className="flex-1 overflow-y-auto overflow-x-hidden py-4 px-3 space-y-1 transition-opacity duration-200 ease-out" style={{ background: 'var(--bg-surface)' }}>
-        {visibleItems.map(({ href, label, icon: Icon, exact }) => {
+      {/* Nav items */}
+      <nav
+        style={{
+          flex: 1,
+          overflowY: 'auto',
+          overflowX: 'hidden',
+          padding: '10px 8px',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 2,
+        }}
+      >
+        {visibleItems.map(({ href, label, icon, exact }) => {
           const active = exact
             ? pathname === href
             : pathname === href || (pathname?.startsWith(href + '/') ?? false)
-          const collapsedClasses = collapsed ? 'justify-center gap-0' : 'gap-3'
-          const hoverShift = collapsed ? '' : 'hover:translate-x-1'
-
           return (
-            <Link key={href} href={href} prefetch onClick={closeMobile}>
-              <div
-                title={collapsed ? label : undefined}
-                className={[
-                  'flex items-center px-2.5 py-2.5 rounded-lg cursor-pointer whitespace-nowrap border border-transparent transition-all duration-200',
-                  collapsedClasses,
-                  active
-                    ? 'bg-[#f7efe6] text-[#c58b62] border-[#f1e3d6] dark:bg-[#2a2622] dark:text-[#e4c9a6] dark:border-[#3a332c] shadow-[0_8px_20px_-15px_rgba(0,0,0,0.4)]'
-                    : `text-[#85786a] hover:text-[#c58b62] hover:bg-[#f7efe6] dark:text-[#b3a18f] dark:hover:text-[#e4c9a6] dark:hover:bg-[#2a2622] ${hoverShift}`,
-                ].join(' ')}
-              >
-                <Icon size={18} className="flex-shrink-0" />
-                {!collapsed && (
-                  <span className="text-sm font-medium overflow-hidden text-ellipsis transition-opacity duration-200 ease-out">
-                    {label}
-                  </span>
-                )}
-              </div>
-            </Link>
+            <NavItemRow
+              key={href}
+              href={href}
+              label={label}
+              icon={icon}
+              active={active}
+              collapsed={collapsed}
+              onClick={closeMobile}
+            />
           )
         })}
       </nav>
 
-      <div className="flex-shrink-0" style={{ background: 'var(--bg-surface)', boxShadow: '0 -1px 0 var(--border-subtle)' }}>
+      {/* Footer */}
+      <div style={{ flexShrink: 0, borderTop: '1px solid var(--sidebar-border)' }}>
         {collapsed ? (
-          <div className="flex flex-col items-center gap-2 p-3">
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, padding: 10 }}>
             <Link href="/configuracoes" title={`${userName} - ${roleLabel} - Configurações`}>
-              <div className="w-9 h-9 rounded-lg bg-[#f7efe6] hover:bg-[#f1e3d6] border border-[#eadfd2] dark:bg-[#2a2622] dark:hover:bg-[#322c26] dark:border-[#3a332c] flex items-center justify-center transition-colors group">
-                <Settings size={16} className="text-[#9c8c7a] dark:text-[#d8b898] group-hover:text-[#c58b62] transition-colors" />
+              <div style={{
+                width: 34, height: 34,
+                borderRadius: 8,
+                background: 'rgba(255,255,255,0.06)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                cursor: 'pointer',
+                transition: 'background 150ms ease',
+              }}>
+                <Settings size={15} style={{ color: 'var(--sidebar-text)' }} />
               </div>
             </Link>
             <button
               onClick={() => signOut({ callbackUrl: '/login' })}
               title="Sair"
-              className="w-9 h-9 rounded-lg hover:bg-[#f7efe6] dark:hover:bg-[#322c26] flex items-center justify-center transition-colors group"
+              style={{
+                width: 34, height: 34,
+                borderRadius: 8,
+                background: 'transparent',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                border: 'none', cursor: 'pointer',
+                transition: 'background 150ms ease',
+              }}
             >
-              <LogOut size={15} className="text-[#9c8c7a] dark:text-[#d8b898] group-hover:text-[#e06d5c] transition-colors" />
+              <LogOut size={15} style={{ color: 'var(--sidebar-text)' }} />
             </button>
           </div>
         ) : (
-          <div className="flex items-center gap-2 p-3">
-            <Link href="/configuracoes" className="flex-shrink-0" title="Configurações">
-              <div className="w-9 h-9 rounded-lg bg-[#f7efe6] hover:bg-[#f1e3d6] border border-[#eadfd2] dark:bg-[#2a2622] dark:hover:bg-[#322c26] dark:border-[#3a332c] flex items-center justify-center transition-colors group">
-                <Settings size={16} className="text-[#9c8c7a] dark:text-[#d8b898] group-hover:text-[#c58b62] transition-colors" />
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 12px' }}>
+            <Link href="/configuracoes" style={{ flexShrink: 0 }} title="Configurações">
+              <div style={{
+                width: 34, height: 34,
+                borderRadius: 8,
+                background: 'rgba(255,255,255,0.06)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                cursor: 'pointer',
+                transition: 'background 150ms ease',
+              }}>
+                <Settings size={15} style={{ color: 'var(--sidebar-text)' }} />
               </div>
             </Link>
-            <div className="flex-1 min-w-0">
-              <p className="text-[#56493d] dark:text-[#e6d7c6] text-sm font-semibold truncate leading-tight">{userName || 'Usuário'}</p>
-              <p className="text-[#9c8c7a] dark:text-[#c6b29b] text-[11px] truncate leading-tight">{roleLabel}</p>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <p style={{ color: 'var(--sidebar-text-active)', fontSize: 13, fontWeight: 500, margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', lineHeight: 1.3 }}>
+                {userName || 'Usuário'}
+              </p>
+              <p style={{ color: 'var(--sidebar-text)', fontSize: 11, margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', lineHeight: 1.4 }}>
+                {roleLabel}
+              </p>
             </div>
             <button
               onClick={() => signOut({ callbackUrl: '/login' })}
               title="Sair"
-              className="flex-shrink-0 w-9 h-9 rounded-lg hover:bg-[#f7efe6] dark:hover:bg-[#322c26] flex items-center justify-center transition-colors group"
+              style={{
+                flexShrink: 0,
+                width: 34, height: 34,
+                borderRadius: 8,
+                background: 'transparent',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                border: 'none', cursor: 'pointer',
+                transition: 'background 150ms ease',
+              }}
+              onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(239,68,68,0.12)' }}
+              onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent' }}
             >
-              <LogOut size={15} className="text-[#9c8c7a] dark:text-[#d8b898] group-hover:text-[#e06d5c] transition-colors" />
+              <LogOut size={15} style={{ color: '#94A3B8' }} />
             </button>
           </div>
         )}
@@ -163,12 +310,12 @@ function Sidebar() {
     </>
   )
 
-  const width = collapsed ? 72 : 240
+  const width = collapsed ? 60 : 240
 
   return (
     <>
       <aside
-        style={{ width, minWidth: width, background: 'var(--bg-surface)', boxShadow: '2px 0 8px rgba(44,35,28,0.07)' }}
+        style={{ ...sidebarStyle, width, minWidth: width }}
         className="h-screen hidden lg:flex flex-col transition-[width] duration-300 ease-in-out"
       >
         {navContent}
@@ -177,7 +324,10 @@ function Sidebar() {
       {mobileOpen && (
         <div className="lg:hidden fixed inset-0 z-50">
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={closeMobile} />
-          <aside className="absolute left-0 top-0 bottom-0 w-72 flex flex-col" style={{ background: 'var(--bg-surface)', boxShadow: 'var(--shadow-xl)' }}>
+          <aside
+            className="absolute left-0 top-0 bottom-0 w-72 flex flex-col"
+            style={{ ...sidebarStyle, width: 272 }}
+          >
             {navContent}
           </aside>
         </div>
@@ -193,7 +343,8 @@ export function MobileMenuButton({ onClick }: { onClick: () => void }) {
   return (
     <button
       onClick={onClick}
-      className="lg:hidden p-2 rounded-lg text-[#9c8c7a] hover:bg-[#f7efe6] transition-colors"
+      className="lg:hidden p-2 rounded-lg transition-colors"
+      style={{ color: 'var(--text-tertiary)' }}
       aria-label="Abrir menu"
     >
       <Menu size={20} />

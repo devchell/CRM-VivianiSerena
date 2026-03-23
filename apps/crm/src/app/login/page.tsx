@@ -42,8 +42,8 @@ interface TwoFactorResponseData {
   sessionToken?: string
 }
 
-const inputClass = 'w-full px-4 py-3 text-sm rounded-md border border-blush-300 bg-white text-charcoal placeholder-charcoal-300 focus:outline-none focus:ring-2 focus:ring-rose-gold/30 focus:border-rose-gold/40 transition-colors'
-const otpInputClass = 'w-full px-4 py-3 text-center text-2xl font-mono tracking-[0.5em] rounded-md border border-blush-300 bg-white text-charcoal placeholder-charcoal-300 focus:outline-none focus:ring-2 focus:ring-rose-gold/30 focus:border-rose-gold/40 transition-colors'
+const inputClass = 'w-full px-4 py-3 text-sm rounded-md border border-slate-200 bg-white text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400 transition-colors'
+const otpInputClass = 'w-full px-4 py-3 text-center text-2xl font-mono tracking-[0.5em] rounded-md border border-slate-200 bg-white text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400 transition-colors'
 
 function getStepForChannel(channel: TwoFactorChannel): Step {
   return channel === 'email' ? 'email-otp' : 'sms-otp'
@@ -264,9 +264,9 @@ export default function LoginPage() {
   const CurrentIcon = current.icon
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-cream p-4 relative overflow-hidden">
-      <div className="absolute top-16 -left-24 w-64 h-64 bg-rose-gold/15 rounded-full blur-3xl" />
-      <div className="absolute bottom-10 -right-20 w-72 h-72 bg-rose-gold/10 rounded-full blur-3xl" />
+    <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden" style={{ background: 'linear-gradient(135deg, #EFF6FF 0%, #F1F5F9 50%, #EFF6FF 100%)' }}>
+      <div className="absolute top-16 -left-24 w-64 h-64 rounded-full blur-3xl" style={{ background: 'rgba(59,130,246,0.12)' }} />
+      <div className="absolute bottom-10 -right-20 w-72 h-72 rounded-full blur-3xl" style={{ background: 'rgba(99,102,241,0.08)' }} />
 
       <motion.div
         initial={{ opacity: 0, y: 24 }}
@@ -275,13 +275,13 @@ export default function LoginPage() {
         className="w-full max-w-sm relative"
       >
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-14 h-14 rounded-lg bg-white shadow-sm border border-rose-gold/20 mb-4">
-            <Sparkles size={24} className="text-rose-gold" />
+          <div className="inline-flex items-center justify-center w-14 h-14 rounded-xl mb-4" style={{ background: '#0F172A', boxShadow: '0 4px 12px rgba(0,0,0,0.15)' }}>
+            <Sparkles size={24} style={{ color: '#C9A96E' }} />
           </div>
-          <h1 className="font-heading text-2xl font-bold text-charcoal">
-            Viviani <span className="text-rose-gold-600">Serena</span>
+          <h1 className="font-heading text-2xl font-bold" style={{ color: '#0F172A' }}>
+            Viviani <span style={{ color: '#C9A96E' }}>Serena</span>
           </h1>
-          <p className="text-charcoal-500 text-sm mt-1">Sistema de Gestão</p>
+          <p className="text-sm mt-1" style={{ color: '#64748B' }}>Sistema de Gestão</p>
         </div>
 
         {step !== 'credentials' && (
@@ -314,20 +314,20 @@ export default function LoginPage() {
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -20 }}
             transition={{ duration: 0.25 }}
-            className="bg-white border border-blush-200 rounded-lg shadow-xl p-8"
+            className="bg-white rounded-xl p-8" style={{ boxShadow: '0 20px 40px rgba(0,0,0,0.10)', border: '1px solid #E2E8F0' }}
           >
             <div className="mb-6">
-              <div className="w-10 h-10 bg-rose-gold/10 rounded-md flex items-center justify-center mb-4">
-                <CurrentIcon size={18} className="text-rose-gold" />
+              <div className="w-10 h-10 rounded-md flex items-center justify-center mb-4" style={{ background: '#EFF6FF' }}>
+                <CurrentIcon size={18} style={{ color: '#1D4ED8' }} />
               </div>
-              <h2 className="font-heading text-lg font-semibold text-charcoal">{current.title}</h2>
-              <p className="text-charcoal-500 text-sm mt-1">{current.subtitle}</p>
+              <h2 className="font-heading text-lg font-semibold" style={{ color: '#0F172A' }}>{current.title}</h2>
+              <p className="text-sm mt-1" style={{ color: '#64748B' }}>{current.subtitle}</p>
             </div>
 
             {step === 'credentials' && (
               <form onSubmit={handleCredentials} className="space-y-4">
                 <div>
-                  <label className="block text-xs font-medium text-charcoal-500 mb-1.5">E-mail</label>
+                  <label className="block text-xs font-medium mb-1.5" style={{ color: '#475569' }}>E-mail</label>
                   <input
                     type="email"
                     value={email}
@@ -337,7 +337,7 @@ export default function LoginPage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-charcoal-500 mb-1.5">Senha</label>
+                  <label className="block text-xs font-medium mb-1.5" style={{ color: '#475569' }}>Senha</label>
                   <div className="relative">
                     <input
                       type={showPassword ? 'text' : 'password'}
@@ -433,7 +433,7 @@ export default function LoginPage() {
           </motion.div>
         </AnimatePresence>
 
-        <p className="text-center text-xs text-charcoal-600 mt-6">
+        <p className="text-center text-xs mt-6" style={{ color: '#94A3B8' }}>
           Viviani Serena CRM (c) {new Date().getFullYear()}
         </p>
       </motion.div>
