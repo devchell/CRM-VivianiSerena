@@ -34,7 +34,7 @@
   --text-secondary:     #334155;
   --text-tertiary:      #64748B;
   --text-disabled:      #94A3B8;
-  --muted:              #F8FAFC;
+  --muted:              #F1F5F9;
   --muted-foreground:   #64748B;
 
   /* Borders & Inputs */
@@ -56,12 +56,14 @@
   /* Semânticos */
   --destructive:        #EF4444;
   --destructive-foreground: #FFFFFF;
-  --secondary:          #F1F5F9;
+  --secondary:          #F8FAFC;
   --secondary-foreground: #0F172A;
 
   /* Sidebar ESCURA */
   --sidebar-bg:         #0F172A;
+  --sidebar-item:       #94A3B8;
   --sidebar-text:       #94A3B8;
+  --sidebar-active:     #FFFFFF;
   --sidebar-text-active:#FFFFFF;
   --sidebar-active-bg:  #1E293B;
   --sidebar-border:     #1E293B;
@@ -129,7 +131,9 @@
   --secondary-foreground: #F8FAFC;
 
   --sidebar-bg:         #020817;
+  --sidebar-item:       #475569;
   --sidebar-text:       #64748B;
+  --sidebar-active:     #F8FAFC;
   --sidebar-text-active:#F8FAFC;
   --sidebar-active-bg:  #0F172A;
   --sidebar-border:     #1E293B;
@@ -449,3 +453,27 @@ tbody tr:hover { background: var(--bg-hover); }
 .dark .crm-calendar .fc-timegrid-col { background: #0F172A; }
 .dark .crm-calendar .fc-day-today { background: rgba(59,130,246,0.06) !important; }
 .dark .crm-calendar .fc-highlight { background: rgba(59,130,246,0.12) !important; }
+
+/* ── FullCalendar: hover apenas na célula, não na linha inteira ── */
+.fc .fc-timegrid-slot:hover {
+  background: transparent !important;
+}
+.fc .fc-timegrid-slot-lane:hover {
+  background: rgba(59,130,246,0.05) !important;
+  cursor: pointer;
+}
+.fc .fc-col-header-cell:hover {
+  background: #F8FAFC !important;
+}
+.fc-timegrid-slot:not(.fc-timegrid-slot-label):hover {
+  background: rgba(59,130,246,0.04) !important;
+}
+.fc-timegrid-col-bg .fc-highlight {
+  background: rgba(59,130,246,0.08) !important;
+}
+.dark .fc .fc-timegrid-slot-lane:hover {
+  background: rgba(59,130,246,0.06) !important;
+}
+.dark .fc .fc-col-header-cell:hover {
+  background: #020817 !important;
+}
