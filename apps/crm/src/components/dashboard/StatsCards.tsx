@@ -25,7 +25,7 @@ export function StatsCards({ overview, loading = false }: StatsCardsProps) {
       value: overview?.appointments.upcoming ?? 0,
       helper: `${overview?.appointments.scheduledInPeriod ?? 0} no período`,
       icon: Calendar,
-      tone: 'text-rose-gold bg-rose-gold/10 dark:bg-rose-gold/20',
+      tone: 'text-blue-600 bg-blue-500/10 dark:bg-blue-500/20',
       format: 'number' as const,
     },
     {

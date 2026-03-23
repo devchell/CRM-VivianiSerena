@@ -93,7 +93,7 @@ export function DefinirSenhaClient() {
   if (status === 'loading') {
     return (
       <div className="min-h-screen bg-slate-100 dark:bg-slate-950 flex items-center justify-center p-4">
-        <div className="w-8 h-8 border-2 border-rose-gold border-t-transparent rounded-full animate-spin" />
+        <div className="w-8 h-8 border-2 border-blue-400 border-t-transparent rounded-full animate-spin" />
       </div>
     )
   }
@@ -101,7 +101,7 @@ export function DefinirSenhaClient() {
   if (!done && (status !== 'authenticated' || !mustChangePassword)) {
     return (
       <div className="min-h-screen bg-slate-100 dark:bg-slate-950 flex items-center justify-center p-4">
-        <div className="w-8 h-8 border-2 border-rose-gold border-t-transparent rounded-full animate-spin" />
+        <div className="w-8 h-8 border-2 border-blue-400 border-t-transparent rounded-full animate-spin" />
       </div>
     )
   }
@@ -110,8 +110,8 @@ export function DefinirSenhaClient() {
     <div className="min-h-screen bg-slate-100 dark:bg-slate-950 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-14 h-14 rounded-lg bg-rose-gold/10 border border-rose-gold/20 mb-4">
-            <Sparkles size={24} className="text-rose-gold" />
+          <div className="inline-flex items-center justify-center w-14 h-14 rounded-lg bg-blue-500/10 border border-blue-200 mb-4">
+            <Sparkles size={24} className="text-blue-600" />
           </div>
           <h1 className="font-heading text-2xl font-bold text-slate-900 dark:text-slate-100">
             Criar sua senha
@@ -217,7 +217,7 @@ export function DefinirSenhaClient() {
               <button
                 type="submit"
                 disabled={saving || !accessToken || form.new !== form.confirm || form.new.length < 8}
-                className="w-full flex items-center justify-center gap-2 py-2.5 bg-rose-gold text-white rounded-md text-sm font-semibold hover:bg-rose-gold/90 transition-colors disabled:opacity-60"
+                className="w-full flex items-center justify-center gap-2 py-2.5 bg-blue-600 text-white rounded-md text-sm font-semibold hover:bg-blue-700 transition-colors disabled:opacity-60"
               >
                 {saving ? <Loader2 size={16} className="animate-spin" /> : <CheckCircle size={16} />}
                 Criar senha e entrar

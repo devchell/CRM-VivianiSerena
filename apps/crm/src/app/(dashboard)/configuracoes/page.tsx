@@ -317,7 +317,7 @@ export default function ConfiguracoesPage() {
                   onClick={() => setActiveTab(tab.key)}
                   className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
                     activeTab === tab.key
-                      ? 'bg-rose-gold/10 text-rose-gold'
+                      ? 'bg-blue-500/10 text-blue-600'
                       : 'text-slate-400 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
                   }`}
                 >
@@ -376,7 +376,7 @@ export default function ConfiguracoesPage() {
               <button
                 onClick={handleSaveProfile}
                 disabled={savingProfile}
-                className="flex items-center gap-2 px-5 py-2 bg-rose-gold text-white rounded-lg text-sm font-medium hover:bg-rose-gold/90 transition-colors disabled:opacity-60"
+                className="flex items-center gap-2 px-5 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors disabled:opacity-60"
               >
                 {savingProfile ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />}
                 Salvar Perfil
@@ -420,7 +420,7 @@ export default function ConfiguracoesPage() {
                 <button
                   onClick={handleChangePassword}
                   disabled={savingPassword || !passwordForm.current || !passwordForm.new || !passwordForm.confirm}
-                  className="flex items-center gap-2 px-5 py-2 bg-rose-gold text-white rounded-lg text-sm font-medium hover:bg-rose-gold/90 transition-colors disabled:opacity-60"
+                  className="flex items-center gap-2 px-5 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors disabled:opacity-60"
                 >
                   {savingPassword ? <Loader2 size={14} className="animate-spin" /> : <Lock size={14} />}
                   Alterar Senha
@@ -457,7 +457,7 @@ export default function ConfiguracoesPage() {
                     className={`flex-shrink-0 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                       twoFaDraft.enabled
                         ? 'bg-red-100 text-red-600 hover:bg-red-200 dark:bg-red-900/30 dark:text-red-400 dark:hover:bg-red-900/50'
-                        : 'bg-rose-gold/10 text-rose-gold hover:bg-rose-gold/20'
+                        : 'bg-blue-500/10 text-blue-600 hover:bg-blue-500/20'
                     }`}
                   >
                     {twoFaDraft.enabled ? 'Desligar' : 'Ativar'}
@@ -471,11 +471,11 @@ export default function ConfiguracoesPage() {
                       onClick={() => toggleTwoFaChannel('sms')}
                       className={`flex items-start gap-3 rounded-md border p-4 text-left transition-colors ${
                         twoFaDraft.smsEnabled
-                          ? 'border-rose-gold bg-rose-gold/5'
+                          ? 'border-blue-400 bg-blue-500/5'
                           : 'border-slate-200 dark:border-slate-700'
                       }`}
                     >
-                      <Smartphone size={18} className={twoFaDraft.smsEnabled ? 'text-rose-gold' : 'text-slate-400'} />
+                      <Smartphone size={18} className={twoFaDraft.smsEnabled ? 'text-blue-600' : 'text-slate-400'} />
                       <span>
                         <strong className="block text-sm text-slate-900 dark:text-slate-100">Celular</strong>
                         <span className="text-xs text-slate-400 dark:text-slate-400">
@@ -489,11 +489,11 @@ export default function ConfiguracoesPage() {
                       onClick={() => toggleTwoFaChannel('email')}
                       className={`flex items-start gap-3 rounded-md border p-4 text-left transition-colors ${
                         twoFaDraft.emailEnabled
-                          ? 'border-rose-gold bg-rose-gold/5'
+                          ? 'border-blue-400 bg-blue-500/5'
                           : 'border-slate-200 dark:border-slate-700'
                       }`}
                     >
-                      <Mail size={18} className={twoFaDraft.emailEnabled ? 'text-rose-gold' : 'text-slate-400'} />
+                      <Mail size={18} className={twoFaDraft.emailEnabled ? 'text-blue-600' : 'text-slate-400'} />
                       <span>
                         <strong className="block text-sm text-slate-900 dark:text-slate-100">E-mail</strong>
                         <span className="text-xs text-slate-400 dark:text-slate-400">
@@ -515,7 +515,7 @@ export default function ConfiguracoesPage() {
                     setTwoFaPasswordModal(true)
                   }}
                   disabled={!hasTwoFaChanges}
-                  className="flex items-center gap-2 px-5 py-2 bg-rose-gold text-white rounded-lg text-sm font-medium hover:bg-rose-gold/90 transition-colors disabled:opacity-50"
+                  className="flex items-center gap-2 px-5 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors disabled:opacity-50"
                 >
                   <Save size={14} />
                   Salvar configuração do 2FA
@@ -533,7 +533,7 @@ export default function ConfiguracoesPage() {
               <div className="grid grid-cols-2 gap-4 max-w-sm">
                 {[
                   { value: 'light', label: 'Claro', desc: 'Interface clara com tons creme' },
-                  { value: 'dark', label: 'Escuro', desc: 'Interface escura com acentos rose-gold' },
+                  { value: 'dark', label: 'Escuro', desc: 'Interface escura com acentos azul' },
                 ].map((item) => (
                   <button
                     key={item.value}
@@ -543,7 +543,7 @@ export default function ConfiguracoesPage() {
                     }}
                     className={`p-4 rounded-md border-2 text-left transition-all ${
                       theme === item.value
-                        ? 'border-rose-gold bg-rose-gold/5'
+                        ? 'border-blue-400 bg-blue-500/5'
                         : 'border-slate-200 dark:border-slate-700 hover:border-blue-400/60'
                     }`}
                   >
@@ -595,7 +595,7 @@ export default function ConfiguracoesPage() {
               <button
                 onClick={() => void handleSaveTwoFa()}
                 disabled={savingTwoFa || !twoFaPassword}
-                className="flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-60 bg-rose-gold text-white hover:bg-rose-gold/90"
+                className="flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-60 bg-blue-600 text-white hover:bg-blue-700"
               >
                 {savingTwoFa ? <Loader2 size={14} className="animate-spin" /> : null}
                 Confirmar

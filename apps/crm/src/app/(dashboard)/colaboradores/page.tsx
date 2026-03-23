@@ -415,7 +415,7 @@ export default function ColaboradoresPage() {
         </div>
         <button
           onClick={openCreate}
-          className="flex items-center gap-2 px-4 py-2 bg-rose-gold text-white rounded-lg text-sm font-medium hover:bg-rose-gold/90 transition-colors"
+          className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors"
         >
           <UserPlus size={16} />
           Adicionar colaborador
@@ -453,7 +453,7 @@ export default function ColaboradoresPage() {
             onClick={() => setActiveTab(tab.key)}
             className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
               activeTab === tab.key
-                ? 'bg-rose-gold text-white'
+                ? 'bg-blue-600 text-white'
                 : 'text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
             }`}
           >
@@ -666,8 +666,8 @@ export default function ColaboradoresPage() {
                         onClick={() => setProfile(profile)}
                         className={`p-4 rounded-md border-2 text-left transition-all ${
                           selected
-                            ? 'border-rose-gold bg-rose-gold/5'
-                            : 'border-slate-200 dark:border-slate-700 hover:border-rose-gold/30'
+                            ? 'border-blue-400 bg-blue-500/5'
+                            : 'border-slate-200 dark:border-slate-700 hover:border-blue-300'
                         }`}
                       >
                         <Icon size={20} className="mb-2 opacity-70" />
@@ -693,8 +693,8 @@ export default function ColaboradoresPage() {
                           onClick={() => toggleModule(module.key)}
                           className={`flex items-start gap-2.5 px-3 py-3 rounded-md border text-left transition-all text-sm ${
                             active
-                              ? 'border-rose-gold bg-rose-gold/5 text-rose-gold'
-                              : 'border-slate-200 dark:border-slate-700 text-slate-400 hover:border-rose-gold/30'
+                              ? 'border-blue-400 bg-blue-500/5 text-blue-600'
+                              : 'border-slate-200 dark:border-slate-700 text-slate-400 hover:border-blue-300'
                           }`}
                         >
                           {active ? <CheckSquare size={15} className="flex-shrink-0 mt-0.5" /> : <Square size={15} className="flex-shrink-0 mt-0.5" />}
@@ -726,7 +726,7 @@ export default function ColaboradoresPage() {
                 <button
                   type="submit"
                   disabled={saving}
-                  className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-md bg-rose-gold text-white text-sm font-semibold hover:bg-rose-gold/90 transition-colors disabled:opacity-60"
+                  className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-md bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700 transition-colors disabled:opacity-60"
                 >
                   {saving ? <Loader2 size={14} className="animate-spin" /> : null}
                   {editing ? 'Salvar alterações' : 'Criar colaborador'}

@@ -21,13 +21,10 @@ import {
   crmFieldSelectWrapper,
 } from '@/components/ui/listStyles'
 import { EmptyState } from '@/components/ui/EmptyState'
-import { ColorEditor } from '@/components/editar-site/ColorEditor'
-import type { SiteColors } from '@/components/editar-site/ColorEditor'
-
 const API_URL = crmPublicEnv.apiBaseUrl
 const LANDING_URL = crmPublicEnv.landingUrl
 
-type SectionKey = 'hero' | 'sobre' | 'resultados' | 'depoimentos' | 'cores'
+type SectionKey = 'hero' | 'sobre' | 'resultados' | 'depoimentos'
 
 interface SectionMeta { label: string; icon: string }
 const SECTIONS: [SectionKey, SectionMeta][] = [
@@ -35,7 +32,6 @@ const SECTIONS: [SectionKey, SectionMeta][] = [
   ['sobre',       { label: 'Sobre',        icon: '👤' }],
   ['resultados',  { label: 'Resultados',   icon: '📸' }],
   ['depoimentos', { label: 'Depoimentos',  icon: '💬' }],
-  ['cores',       { label: 'Cores do site',icon: '🎨' }],
 ]
 
 interface ContentStore { [section: string]: { [key: string]: unknown } }
@@ -240,8 +236,8 @@ const ToggleField = memo(function ToggleField({ enabled, onToggle, label, descri
           className={[
             'relative inline-flex h-5 w-9 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent',
             'transition-colors duration-200 ease-in-out',
-            'focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-gold focus-visible:ring-offset-2',
-            enabled ? 'bg-rose-gold' : 'bg-slate-200 dark:bg-slate-700',
+            'focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2',
+            enabled ? 'bg-blue-600' : 'bg-slate-200 dark:bg-slate-700',
           ].join(' ')}
         >
           <span
@@ -675,7 +671,7 @@ export default function EditarSitePage() {
       <div>
         <label className={labelCls}>{label}</label>
         <div
-          className="border border-dashed border-slate-200 dark:border-slate-700 rounded-lg transition-colors hover:border-rose-gold/50 cursor-pointer relative bg-slate-50 dark:bg-slate-900"
+          className="border border-dashed border-slate-200 dark:border-slate-700 rounded-lg transition-colors hover:border-blue-400/50 cursor-pointer relative bg-slate-50 dark:bg-slate-900"
           onDragOver={e => e.preventDefault()}
           onDrop={e => { e.preventDefault(); const f = e.dataTransfer.files[0]; if (f) handleImageUpload(section, fieldKey, f) }}
           onClick={() => {
@@ -719,7 +715,7 @@ export default function EditarSitePage() {
           ) : (
             <div className="h-20 flex items-center justify-center gap-2 text-xs text-slate-400 dark:text-slate-400">
               {isUp
-                ? <><Loader2 size={14} className="text-rose-gold animate-spin" /> Enviando...</>
+                ? <><Loader2 size={14} className="text-blue-600 animate-spin" /> Enviando...</>
                 : <><Upload size={14} /> Arraste ou clique para enviar</>
               }
             </div>
@@ -1122,7 +1118,7 @@ export default function EditarSitePage() {
                               <div className="flex h-full items-center justify-center text-xs text-slate-400">Sem imagem</div>
                             )}
                           </div>
-                          <label className="flex cursor-pointer items-center justify-center gap-2 rounded-md border-2 border-dashed border-slate-200 px-3 py-2 text-xs text-slate-400 transition-colors hover:border-rose-gold/50 hover:text-rose-gold dark:border-slate-700">
+                          <label className="flex cursor-pointer items-center justify-center gap-2 rounded-md border-2 border-dashed border-slate-200 px-3 py-2 text-xs text-slate-400 transition-colors hover:border-blue-400/50 hover:text-blue-600 dark:border-slate-700">
                             <Upload size={14} /> Adicionar imagem
                             <input
                               type="file"
@@ -1158,7 +1154,7 @@ export default function EditarSitePage() {
                               <div className="flex h-full items-center justify-center text-xs text-slate-400">Sem imagem</div>
                             )}
                           </div>
-                          <label className="flex cursor-pointer items-center justify-center gap-2 rounded-md border-2 border-dashed border-slate-200 px-3 py-2 text-xs text-slate-400 transition-colors hover:border-rose-gold/50 hover:text-rose-gold dark:border-slate-700">
+                          <label className="flex cursor-pointer items-center justify-center gap-2 rounded-md border-2 border-dashed border-slate-200 px-3 py-2 text-xs text-slate-400 transition-colors hover:border-blue-400/50 hover:text-blue-600 dark:border-slate-700">
                             <Upload size={14} /> Adicionar imagem
                             <input
                               type="file"
@@ -1184,7 +1180,7 @@ export default function EditarSitePage() {
                           type="button"
                           onClick={() => void handleSaveResult(item.id)}
                           disabled={savingResultId === item.id}
-                          className="inline-flex h-10 items-center justify-center gap-2 rounded-md bg-rose-gold px-4 text-sm font-medium text-white transition-colors hover:bg-rose-gold-500 disabled:cursor-not-allowed disabled:opacity-60"
+                          className="inline-flex h-10 items-center justify-center gap-2 rounded-md bg-blue-600 px-4 text-sm font-medium text-white transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
                         >
                           {savingResultId === item.id ? (
                             <>
@@ -1222,7 +1218,7 @@ export default function EditarSitePage() {
                 <button
                   type="button"
                   onClick={handleAddCategory}
-                  className="inline-flex h-10 items-center justify-center gap-2 rounded-md bg-rose-gold px-4 text-sm font-medium text-white transition-colors hover:bg-rose-gold-500"
+                  className="inline-flex h-10 items-center justify-center gap-2 rounded-md bg-blue-600 px-4 text-sm font-medium text-white transition-colors hover:bg-blue-700"
                 >
                   <Plus size={14} /> Salvar categoria
                 </button>
@@ -1250,7 +1246,7 @@ export default function EditarSitePage() {
             <button
               type="button"
               onClick={handleCreateResult}
-              className="flex w-full items-center justify-center gap-2 rounded-md border-2 border-dashed border-slate-200 py-2.5 text-sm text-slate-400 transition-colors hover:border-rose-gold/50 hover:text-rose-gold dark:border-slate-700"
+              className="flex w-full items-center justify-center gap-2 rounded-md border-2 border-dashed border-slate-200 py-2.5 text-sm text-slate-400 transition-colors hover:border-blue-400/50 hover:text-blue-600 dark:border-slate-700"
             >
               <Plus size={14} /> Criar novo resultado
             </button>
@@ -1312,7 +1308,7 @@ export default function EditarSitePage() {
                     type="button"
                     onClick={handleConnectGoogleAccount}
                     disabled={googleConnecting}
-                    className="inline-flex items-center gap-2 rounded-md bg-rose-gold px-3 py-2 text-xs font-semibold text-white transition-colors hover:bg-rose-gold/90 disabled:cursor-not-allowed disabled:opacity-70"
+                    className="inline-flex items-center gap-2 rounded-md bg-blue-600 px-3 py-2 text-xs font-semibold text-white transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-70"
                   >
                     {googleConnecting ? <Loader2 size={14} className="animate-spin" /> : <Link2 size={14} />}
                     Vincular sua conta do Google
@@ -1321,7 +1317,7 @@ export default function EditarSitePage() {
                     type="button"
                     onClick={fetchGoogleBusinessLocations}
                     disabled={loadingGoogleLocations}
-                    className="inline-flex items-center gap-2 rounded-md border border-slate-200 px-3 py-2 text-xs font-semibold text-slate-500 transition-colors hover:border-rose-gold/40 hover:text-rose-gold disabled:cursor-not-allowed disabled:opacity-70 dark:border-slate-700 dark:text-slate-400"
+                    className="inline-flex items-center gap-2 rounded-md border border-slate-200 px-3 py-2 text-xs font-semibold text-slate-500 transition-colors hover:border-blue-300 hover:text-blue-600 disabled:cursor-not-allowed disabled:opacity-70 dark:border-slate-700 dark:text-slate-400"
                   >
                     {loadingGoogleLocations ? <Loader2 size={14} className="animate-spin" /> : <RefreshCw size={14} />}
                     Buscar perfis do Google Empresa
@@ -1387,7 +1383,7 @@ export default function EditarSitePage() {
                         <button
                           type="button"
                           onClick={() => setVal('testimonials', 'google_business_locations', [...linkedLocations, location])}
-                          className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 px-2.5 py-1.5 text-xs font-medium text-slate-500 transition-colors hover:border-rose-gold/40 hover:text-rose-gold dark:border-slate-700 dark:text-slate-400"
+                          className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 px-2.5 py-1.5 text-xs font-medium text-slate-500 transition-colors hover:border-blue-300 hover:text-blue-600 dark:border-slate-700 dark:text-slate-400"
                         >
                           <Plus size={12} /> Adicionar
                         </button>
@@ -1482,25 +1478,10 @@ export default function EditarSitePage() {
                   isHighlight: false,
                 },
               ])}
-              className="w-full flex items-center justify-center gap-2 py-2.5 rounded-md border-2 border-dashed border-slate-200 dark:border-slate-700 text-slate-400 hover:text-rose-gold hover:border-rose-gold/50 transition-colors text-sm"
+              className="w-full flex items-center justify-center gap-2 py-2.5 rounded-md border-2 border-dashed border-slate-200 dark:border-slate-700 text-slate-400 hover:text-blue-600 hover:border-blue-400/50 transition-colors text-sm"
             >
               <Plus size={14} /> Adicionar depoimento
             </button>
-          </div>
-        )
-      }
-
-      case 'cores': {
-        const siteColors = (get('seo', 'site_colors') ?? {}) as Partial<SiteColors>
-        return (
-          <div className="space-y-3">
-            <p className="text-xs text-slate-400 dark:text-slate-500 leading-relaxed">
-              Personalize as cores da landing page. As alterações são salvas automaticamente e ficam visíveis ao publicar.
-            </p>
-            <ColorEditor
-              colors={siteColors}
-              onChange={(colors) => setVal('seo', 'site_colors', colors)}
-            />
           </div>
         )
       }
@@ -1528,7 +1509,7 @@ export default function EditarSitePage() {
           </div>
         </div>
         <div className="flex-1 bg-slate-50 dark:bg-slate-950 flex items-center justify-center">
-          <div className="w-8 h-8 border-2 border-rose-gold border-t-transparent rounded-full animate-spin" />
+          <div className="w-8 h-8 border-2 border-blue-400 border-t-transparent rounded-full animate-spin" />
         </div>
       </div>
     )
@@ -1559,14 +1540,14 @@ export default function EditarSitePage() {
           <div className="flex gap-1.5">
             <button
               onClick={fetchHistory}
-              className="p-2 rounded-lg text-slate-400 hover:text-rose-gold hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+              className="p-2 rounded-lg text-slate-400 hover:text-blue-600 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
               title="Histórico"
             >
               <History size={16} />
             </button>
             <button
               onClick={() => setShowPublishModal(true)}
-              className="flex items-center gap-1.5 px-3 py-2 bg-rose-gold text-white text-xs font-semibold rounded-lg hover:bg-rose-gold/90 transition-colors"
+              className="flex items-center gap-1.5 px-3 py-2 bg-blue-600 text-white text-xs font-semibold rounded-lg hover:bg-blue-700 transition-colors"
             >
               <Send size={13} /> Publicar
             </button>
@@ -1581,12 +1562,12 @@ export default function EditarSitePage() {
                 onClick={() => setExpanded(prev => prev === key ? null : key)}
                 className={`w-full flex items-center gap-3 px-5 py-3.5 text-left transition-colors ${
                   expanded === key
-                    ? 'bg-rose-gold/10 border-l-2 border-l-rose-gold'
+                    ? 'bg-blue-500/10 border-l-2 border-l-blue-500'
                     : 'hover:bg-slate-100 dark:hover:bg-slate-800/30 border-l-2 border-l-transparent'
                 }`}
               >
                 <span className="text-sm">{meta.icon}</span>
-                <span className={`flex-1 text-sm font-semibold ${expanded === key ? 'text-rose-gold' : 'text-slate-900 dark:text-slate-100'}`}>
+                <span className={`flex-1 text-sm font-semibold ${expanded === key ? 'text-blue-600' : 'text-slate-900 dark:text-slate-100'}`}>
                   {meta.label}
                 </span>
                 <motion.div
@@ -1655,8 +1636,8 @@ export default function EditarSitePage() {
       {showPublishModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
           <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg w-full max-w-sm shadow-2xl p-8 text-center">
-            <div className="w-14 h-14 bg-rose-gold/10 rounded-lg flex items-center justify-center mx-auto mb-4">
-              <Send size={24} className="text-rose-gold" />
+            <div className="w-14 h-14 bg-blue-500/10 rounded-lg flex items-center justify-center mx-auto mb-4">
+              <Send size={24} className="text-blue-600" />
             </div>
             <h3 className="font-heading text-lg font-bold text-slate-900 dark:text-slate-100 mb-2">Publicar Alterações</h3>
             <p className="text-sm text-slate-500 dark:text-slate-400 mb-6">
@@ -1669,7 +1650,7 @@ export default function EditarSitePage() {
               >Cancelar</button>
               <button
                 onClick={handlePublish}
-                className="flex-1 px-4 py-2.5 rounded-md bg-rose-gold text-white text-sm font-semibold hover:bg-rose-gold/90 transition-colors"
+                className="flex-1 px-4 py-2.5 rounded-md bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700 transition-colors"
               >Publicar</button>
             </div>
           </div>
@@ -1705,7 +1686,7 @@ export default function EditarSitePage() {
                   <button
                     onClick={() => handleRestoreHistory(h)}
                     disabled={restoringHistoryId === h.id}
-                    className="text-xs px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:bg-rose-gold/10 hover:text-rose-gold hover:border-rose-gold/30 transition-colors whitespace-nowrap disabled:opacity-60"
+                    className="text-xs px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:bg-blue-500/10 hover:text-blue-600 hover:border-blue-300 transition-colors whitespace-nowrap disabled:opacity-60"
                   >
                     {restoringHistoryId === h.id ? 'Restaurando...' : 'Restaurar'}
                   </button>
