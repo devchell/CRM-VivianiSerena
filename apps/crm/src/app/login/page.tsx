@@ -276,10 +276,10 @@ export default function LoginPage() {
       >
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center w-14 h-14 rounded-xl mb-4" style={{ background: '#0F172A', boxShadow: '0 4px 12px rgba(0,0,0,0.15)' }}>
-            <Sparkles size={24} style={{ color: '#C9A96E' }} />
+            <Sparkles size={24} strokeWidth={2.5} style={{ color: '#EFF6FF' }} />
           </div>
           <h1 className="font-heading text-2xl font-bold" style={{ color: '#0F172A' }}>
-            Viviani <span style={{ color: '#C9A96E' }}>Serena</span>
+            Viviani <span style={{ color: '#F5C518' }}>Serena</span>
           </h1>
           <p className="text-sm mt-1" style={{ color: '#64748B' }}>Sistema de Gestão</p>
         </div>
