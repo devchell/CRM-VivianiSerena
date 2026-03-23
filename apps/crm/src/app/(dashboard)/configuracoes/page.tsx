@@ -38,8 +38,8 @@ type TwoFactorDraft = {
   smsEnabled: boolean
 }
 
-const inputClass = 'w-full px-3 py-2 text-sm rounded-lg border border-blush-300 dark:border-[#3a3835] bg-white dark:bg-[#252423] text-charcoal dark:text-charcoal-100 focus:outline-none focus:ring-2 focus:ring-rose-gold/40'
-const labelClass = 'block text-xs font-medium text-charcoal-400 dark:text-charcoal-300 mb-1'
+const inputClass = 'w-full px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500/20'
+const labelClass = 'block text-xs font-medium text-slate-400 dark:text-slate-400 mb-1'
 
 function toTwoFactorDraft(profile: Pick<SettingsUserProfile, 'twoFactorEnabled' | 'twoFactorEmailEnabled' | 'twoFactorSmsEnabled'>): TwoFactorDraft {
   return {
@@ -294,7 +294,7 @@ export default function ConfiguracoesPage() {
   if (loadingProfile) {
     return (
       <div className="flex items-center justify-center h-64">
-        <Loader2 size={24} className="animate-spin text-rose-gold" />
+        <Loader2 size={24} className="animate-spin text-blue-500" />
       </div>
     )
   }
@@ -302,8 +302,8 @@ export default function ConfiguracoesPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="font-heading text-2xl font-bold text-charcoal dark:text-charcoal-50">Configurações</h1>
-        <p className="text-charcoal-400 dark:text-charcoal-300 mt-1 text-sm">Gerencie sua conta e preferências</p>
+        <h1 className="font-heading text-2xl font-bold text-slate-900 dark:text-slate-100">Configurações</h1>
+        <p className="text-slate-400 dark:text-slate-400 mt-1 text-sm">Gerencie sua conta e preferências</p>
       </div>
 
       <div className="flex flex-col lg:flex-row gap-6">
@@ -318,7 +318,7 @@ export default function ConfiguracoesPage() {
                   className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
                     activeTab === tab.key
                       ? 'bg-rose-gold/10 text-rose-gold'
-                      : 'text-charcoal-400 dark:text-charcoal-300 hover:bg-blush dark:hover:bg-[#252423]'
+                      : 'text-slate-400 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
                   }`}
                 >
                   <Icon size={16} />
@@ -332,7 +332,7 @@ export default function ConfiguracoesPage() {
         <div className="flex-1 card-dark shadow-sm">
           {activeTab === 'profile' && (
             <div className="p-6 space-y-5">
-              <h2 className="font-heading text-base font-semibold text-charcoal dark:text-charcoal-100 pb-4 border-b border-blush-200 dark:border-[#3a3835]">
+              <h2 className="font-heading text-base font-semibold text-slate-900 dark:text-slate-100 pb-4 border-b border-slate-200 dark:border-slate-700">
                 Informações do Perfil
               </h2>
 
@@ -352,9 +352,9 @@ export default function ConfiguracoesPage() {
                   type="email"
                   value={profileForm.email}
                   readOnly
-                  className="w-full px-3 py-2 text-sm rounded-lg border border-blush-300 dark:border-[#3a3835] bg-blush/30 dark:bg-[#1c1b1a] text-charcoal-400 dark:text-charcoal-300 cursor-not-allowed"
+                  className="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-slate-400 dark:text-slate-400 cursor-not-allowed"
                 />
-                <p className="text-xs text-charcoal-400 dark:text-charcoal-300 mt-1">
+                <p className="text-xs text-slate-400 dark:text-slate-400 mt-1">
                   Alterar o e-mail afeta o acesso ao sistema.
                 </p>
               </div>
@@ -368,7 +368,7 @@ export default function ConfiguracoesPage() {
                   placeholder="(11) 99999-9999"
                   className={inputClass}
                 />
-                <p className="text-xs text-charcoal-400 dark:text-charcoal-300 mt-1">
+                <p className="text-xs text-slate-400 dark:text-slate-400 mt-1">
                   Necessário para usar o 2FA por celular.
                 </p>
               </div>
@@ -387,7 +387,7 @@ export default function ConfiguracoesPage() {
           {activeTab === 'security' && (
             <div className="p-6 space-y-8">
               <div className="space-y-4">
-                <h2 className="font-heading text-base font-semibold text-charcoal dark:text-charcoal-100 pb-4 border-b border-blush-200 dark:border-[#3a3835]">
+                <h2 className="font-heading text-base font-semibold text-slate-900 dark:text-slate-100 pb-4 border-b border-slate-200 dark:border-slate-700">
                   Alterar Senha
                 </h2>
 
@@ -409,7 +409,7 @@ export default function ConfiguracoesPage() {
                       <button
                         type="button"
                         onClick={() => setShowPasswords((current) => ({ ...current, [field.key]: !current[field.key] }))}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-charcoal-400 hover:text-charcoal-600 transition-colors"
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
                       >
                         {showPasswords[field.key] ? <EyeOff size={14} /> : <Eye size={14} />}
                       </button>
@@ -428,22 +428,22 @@ export default function ConfiguracoesPage() {
               </div>
 
               <div className="space-y-4">
-                <h2 className="font-heading text-base font-semibold text-charcoal dark:text-charcoal-100 pb-4 border-b border-blush-200 dark:border-[#3a3835]">
+                <h2 className="font-heading text-base font-semibold text-slate-900 dark:text-slate-100 pb-4 border-b border-slate-200 dark:border-slate-700">
                   Autenticação de 2 Fatores
                 </h2>
 
-                <div className="rounded-md border border-blush-200 dark:border-[#3a3835] p-4 flex items-start gap-4">
-                  <div className={`mt-0.5 p-2 rounded ${twoFaDraft.enabled ? 'bg-green-100 dark:bg-green-900/30' : 'bg-charcoal-100 dark:bg-[#252423]'}`}>
+                <div className="rounded-md border border-slate-200 dark:border-slate-700 p-4 flex items-start gap-4">
+                  <div className={`mt-0.5 p-2 rounded ${twoFaDraft.enabled ? 'bg-green-100 dark:bg-green-900/30' : 'bg-slate-100 dark:bg-slate-800'}`}>
                     {twoFaDraft.enabled
                       ? <ShieldCheck size={20} className="text-green-600 dark:text-green-400" />
-                      : <ShieldOff size={20} className="text-charcoal-400" />
+                      : <ShieldOff size={20} className="text-slate-400" />
                     }
                   </div>
                   <div className="flex-1">
-                    <p className="text-sm font-medium text-charcoal dark:text-charcoal-100">
+                    <p className="text-sm font-medium text-slate-900 dark:text-slate-100">
                       {twoFaDraft.enabled ? '2FA ativo' : '2FA desativado'}
                     </p>
-                    <p className="text-xs text-charcoal-400 dark:text-charcoal-300 mt-0.5">
+                    <p className="text-xs text-slate-400 dark:text-slate-400 mt-0.5">
                       O 2FA sempre começa desligado. Ao ativar, o celular fica marcado por padrão e você pode manter celular, e-mail ou ambos.
                     </p>
                     {!profileForm.phone.trim() && (
@@ -472,13 +472,13 @@ export default function ConfiguracoesPage() {
                       className={`flex items-start gap-3 rounded-md border p-4 text-left transition-colors ${
                         twoFaDraft.smsEnabled
                           ? 'border-rose-gold bg-rose-gold/5'
-                          : 'border-blush-300 dark:border-[#3a3835]'
+                          : 'border-slate-200 dark:border-slate-700'
                       }`}
                     >
-                      <Smartphone size={18} className={twoFaDraft.smsEnabled ? 'text-rose-gold' : 'text-charcoal-400'} />
+                      <Smartphone size={18} className={twoFaDraft.smsEnabled ? 'text-rose-gold' : 'text-slate-400'} />
                       <span>
-                        <strong className="block text-sm text-charcoal dark:text-charcoal-100">Celular</strong>
-                        <span className="text-xs text-charcoal-400 dark:text-charcoal-300">
+                        <strong className="block text-sm text-slate-900 dark:text-slate-100">Celular</strong>
+                        <span className="text-xs text-slate-400 dark:text-slate-400">
                           Recebe o código por SMS. Padrão ao ativar.
                         </span>
                       </span>
@@ -490,13 +490,13 @@ export default function ConfiguracoesPage() {
                       className={`flex items-start gap-3 rounded-md border p-4 text-left transition-colors ${
                         twoFaDraft.emailEnabled
                           ? 'border-rose-gold bg-rose-gold/5'
-                          : 'border-blush-300 dark:border-[#3a3835]'
+                          : 'border-slate-200 dark:border-slate-700'
                       }`}
                     >
-                      <Mail size={18} className={twoFaDraft.emailEnabled ? 'text-rose-gold' : 'text-charcoal-400'} />
+                      <Mail size={18} className={twoFaDraft.emailEnabled ? 'text-rose-gold' : 'text-slate-400'} />
                       <span>
-                        <strong className="block text-sm text-charcoal dark:text-charcoal-100">E-mail</strong>
-                        <span className="text-xs text-charcoal-400 dark:text-charcoal-300">
+                        <strong className="block text-sm text-slate-900 dark:text-slate-100">E-mail</strong>
+                        <span className="text-xs text-slate-400 dark:text-slate-400">
                           Recebe o código pelo e-mail cadastrado.
                         </span>
                       </span>
@@ -504,7 +504,7 @@ export default function ConfiguracoesPage() {
                   </div>
                 )}
 
-                <div className="rounded-md border border-blush-200 dark:border-[#3a3835] bg-blush/40 dark:bg-[#1c1b1a]/60 p-4 text-sm text-charcoal-500 dark:text-charcoal-300">
+                <div className="rounded-md border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/60 p-4 text-sm text-slate-500 dark:text-slate-400">
                   Se celular e e-mail ficarem desligados, o 2FA será desativado automaticamente.
                 </div>
 
@@ -526,10 +526,10 @@ export default function ConfiguracoesPage() {
 
           {activeTab === 'theme' && (
             <div className="p-6 space-y-6">
-              <h2 className="font-heading text-base font-semibold text-charcoal dark:text-charcoal-100 pb-4 border-b border-blush-200 dark:border-[#3a3835]">
+              <h2 className="font-heading text-base font-semibold text-slate-900 dark:text-slate-100 pb-4 border-b border-slate-200 dark:border-slate-700">
                 Aparência
               </h2>
-              <p className="text-sm text-charcoal-500 dark:text-charcoal-300">Escolha o tema da interface</p>
+              <p className="text-sm text-slate-500 dark:text-slate-400">Escolha o tema da interface</p>
               <div className="grid grid-cols-2 gap-4 max-w-sm">
                 {[
                   { value: 'light', label: 'Claro', desc: 'Interface clara com tons creme' },
@@ -544,14 +544,14 @@ export default function ConfiguracoesPage() {
                     className={`p-4 rounded-md border-2 text-left transition-all ${
                       theme === item.value
                         ? 'border-rose-gold bg-rose-gold/5'
-                        : 'border-blush-300 dark:border-[#3a3835] hover:border-rose-gold/50'
+                        : 'border-slate-200 dark:border-slate-700 hover:border-blue-400/60'
                     }`}
                   >
-                    <div className={`w-full h-16 rounded mb-3 ${item.value === 'dark' ? 'bg-charcoal-900' : 'bg-cream'} border ${item.value === 'dark' ? 'border-charcoal-700' : 'border-blush-300'}`}>
-                      <div className={`h-4 rounded-t ${item.value === 'dark' ? 'bg-charcoal-800' : 'bg-white'}`} />
+                    <div className={`w-full h-16 rounded mb-3 ${item.value === 'dark' ? 'bg-slate-900' : 'bg-slate-50'} border ${item.value === 'dark' ? 'border-slate-700' : 'border-slate-200'}`}>
+                      <div className={`h-4 rounded-t ${item.value === 'dark' ? 'bg-slate-800' : 'bg-white'}`} />
                     </div>
-                    <p className="text-sm font-semibold text-charcoal dark:text-charcoal-100">{item.label}</p>
-                    <p className="text-xs text-charcoal-400 dark:text-charcoal-300 mt-0.5">{item.desc}</p>
+                    <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">{item.label}</p>
+                    <p className="text-xs text-slate-400 dark:text-slate-400 mt-0.5">{item.desc}</p>
                   </button>
                 ))}
               </div>
@@ -562,11 +562,11 @@ export default function ConfiguracoesPage() {
 
       {twoFaPasswordModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-          <div className="bg-white dark:bg-[#1c1b1a] rounded-lg shadow-2xl p-6 w-full max-w-sm">
-            <h3 className="font-heading text-base font-semibold text-charcoal dark:text-charcoal-100 mb-2">
+          <div className="bg-white dark:bg-slate-900 rounded-lg shadow-2xl p-6 w-full max-w-sm">
+            <h3 className="font-heading text-base font-semibold text-slate-900 dark:text-slate-100 mb-2">
               Confirmar configuração do 2FA
             </h3>
-            <p className="text-sm text-charcoal-400 dark:text-charcoal-300 mb-4">
+            <p className="text-sm text-slate-400 dark:text-slate-400 mb-4">
               Digite sua senha atual para aplicar a configuração escolhida.
             </p>
             <input
@@ -588,7 +588,7 @@ export default function ConfiguracoesPage() {
                   setTwoFaPasswordModal(false)
                   setTwoFaPassword('')
                 }}
-                className="flex-1 py-2 rounded-lg border border-blush-300 dark:border-[#3a3835] text-sm text-charcoal-400 hover:bg-blush dark:hover:bg-[#252423] transition-colors"
+                className="flex-1 py-2 rounded-lg border border-slate-200 dark:border-slate-700 text-sm text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
               >
                 Cancelar
               </button>

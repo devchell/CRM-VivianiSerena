@@ -32,12 +32,12 @@ export function LeadsFunnel({ data, loading = false }: LeadsFunnelProps) {
 
   return (
     <div className="card-dark p-6 shadow-sm">
-      <h3 className="mb-4 font-heading text-base font-semibold text-charcoal dark:text-charcoal-100">
+      <h3 className="mb-4 font-heading text-base font-semibold text-slate-900 dark:text-slate-100">
         Funil comercial
       </h3>
 
       {loading ? (
-        <div className="h-[220px] animate-pulse rounded-lg bg-blush-100 dark:bg-[#252423]/40" />
+        <div className="h-[220px] animate-pulse rounded-lg bg-slate-100 dark:bg-slate-800/40" />
       ) : (
         <ResponsiveContainer width="100%" height={220}>
           <BarChart data={chartData} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>

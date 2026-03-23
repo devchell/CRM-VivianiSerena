@@ -21,14 +21,14 @@ interface RevenueChartProps {
 export function RevenueChart({ data, loading = false }: RevenueChartProps) {
   return (
     <div className="card-dark p-6 shadow-sm">
-      <h3 className="mb-4 font-heading text-base font-semibold text-charcoal dark:text-charcoal-100">
+      <h3 className="mb-4 font-heading text-base font-semibold text-slate-900 dark:text-slate-100">
         Receita x despesas
       </h3>
 
       {loading ? (
-        <div className="h-[220px] animate-pulse rounded-lg bg-blush-100 dark:bg-[#252423]/40" />
+        <div className="h-[220px] animate-pulse rounded-lg bg-slate-100 dark:bg-slate-800/40" />
       ) : data.length === 0 ? (
-        <div className="flex h-[220px] items-center justify-center rounded-lg border border-dashed border-blush-200 text-sm text-charcoal-400 dark:border-[#3a3835] dark:text-charcoal-300">
+        <div className="flex h-[220px] items-center justify-center rounded-lg border border-dashed border-slate-200 text-sm text-slate-400 dark:border-slate-700 dark:text-slate-400">
           Sem dados financeiros consolidados para exibir.
         </div>
       ) : (

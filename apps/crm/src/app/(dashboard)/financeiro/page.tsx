@@ -324,14 +324,14 @@ export default function FinanceiroPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between border-b border-blush-200 pb-4 dark:border-[#3a3835]">
-        <h1 className="font-heading text-xl font-semibold text-charcoal dark:text-charcoal-50">Financeiro</h1>
+      <div className="flex items-center justify-between border-b border-slate-200 pb-4 dark:border-slate-700">
+        <h1 className="font-heading text-xl font-semibold text-slate-900 dark:text-slate-100">Financeiro</h1>
         <div className="flex flex-wrap items-center gap-2">
-          <button onClick={handleExportCsv} disabled={!canExportFinancial} className="flex items-center gap-1.5 rounded border border-blush-300 bg-white/75 px-4 py-2 text-sm text-charcoal-400 shadow-sm transition-colors hover:text-rose-gold disabled:opacity-50 disabled:cursor-not-allowed dark:border-[#3a3835] dark:bg-[#1c1b1a]/65 dark:text-charcoal-300">
+          <button onClick={handleExportCsv} disabled={!canExportFinancial} className="flex items-center gap-1.5 rounded border border-slate-200 bg-white/75 px-4 py-2 text-sm text-slate-400 shadow-sm transition-colors hover:text-blue-600 disabled:opacity-50 disabled:cursor-not-allowed dark:border-slate-700 dark:bg-slate-900/65 dark:text-slate-400">
             <Download size={14} />
             CSV
           </button>
-          <button onClick={() => void handleExportPdf()} disabled={!canExportFinancial} className="flex items-center gap-1.5 rounded border border-blush-300 bg-white/75 px-4 py-2 text-sm text-charcoal-400 shadow-sm transition-colors hover:text-rose-gold disabled:opacity-50 disabled:cursor-not-allowed dark:border-[#3a3835] dark:bg-[#1c1b1a]/65 dark:text-charcoal-300">
+          <button onClick={() => void handleExportPdf()} disabled={!canExportFinancial} className="flex items-center gap-1.5 rounded border border-slate-200 bg-white/75 px-4 py-2 text-sm text-slate-400 shadow-sm transition-colors hover:text-blue-600 disabled:opacity-50 disabled:cursor-not-allowed dark:border-slate-700 dark:bg-slate-900/65 dark:text-slate-400">
             <FileText size={14} />
             PDF
           </button>
@@ -350,8 +350,8 @@ export default function FinanceiroPage() {
                 R$
               </span>
             </div>
-            <p className="text-[11px] font-medium uppercase tracking-[0.16em] text-charcoal-400 dark:text-charcoal-300">{kpi.label}</p>
-            <p className="mt-1 font-heading text-2xl font-bold text-charcoal dark:text-charcoal-50">
+            <p className="text-[11px] font-medium uppercase tracking-[0.16em] text-slate-400 dark:text-slate-400">{kpi.label}</p>
+            <p className="mt-1 font-heading text-2xl font-bold text-slate-900 dark:text-slate-100">
               {loading ? '...' : formatCurrency(kpi.value)}
             </p>
           </div>
@@ -360,11 +360,11 @@ export default function FinanceiroPage() {
 
       <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
         <div className="card-dark rounded-lg p-5 shadow-sm">
-          <h3 className="mb-4 font-heading text-sm font-semibold text-charcoal dark:text-charcoal-100">
+          <h3 className="mb-4 font-heading text-sm font-semibold text-slate-900 dark:text-slate-100">
             Evolução mensal
           </h3>
           {loading ? (
-            <div className="h-[240px] animate-pulse rounded-lg bg-blush-100 dark:bg-[#252423]/40" />
+            <div className="h-[240px] animate-pulse rounded-lg bg-slate-100 dark:bg-slate-800/40" />
           ) : (
             <ResponsiveContainer width="100%" height={240}>
               <BarChart data={charts?.monthly ?? []}>
@@ -381,11 +381,11 @@ export default function FinanceiroPage() {
         </div>
 
         <div className="card-dark rounded-lg p-5 shadow-sm">
-          <h3 className="mb-4 font-heading text-sm font-semibold text-charcoal dark:text-charcoal-100">
+          <h3 className="mb-4 font-heading text-sm font-semibold text-slate-900 dark:text-slate-100">
             Despesas por categoria
           </h3>
           {loading ? (
-            <div className="h-[240px] animate-pulse rounded-lg bg-blush-100 dark:bg-[#252423]/40" />
+            <div className="h-[240px] animate-pulse rounded-lg bg-slate-100 dark:bg-slate-800/40" />
           ) : (
             <ResponsiveContainer width="100%" height={240}>
               <PieChart>
@@ -457,7 +457,7 @@ export default function FinanceiroPage() {
                 Array.from({ length: 5 }).map((_, index) => (
                   <tr key={index}>
                     <td colSpan={6} className="px-4 py-3">
-                      <div className="h-8 animate-pulse rounded bg-blush-100 dark:bg-[#252423]/30" />
+                      <div className="h-8 animate-pulse rounded bg-slate-100 dark:bg-slate-800/30" />
                     </td>
                   </tr>
                 ))
@@ -471,7 +471,7 @@ export default function FinanceiroPage() {
                 pagedTransactions.map((transaction) => (
                   <tr key={transaction.id} className={crmListRow}>
                     <td className={crmListCell}>
-                      <span className="text-xs text-charcoal-400 dark:text-charcoal-300">
+                      <span className="text-xs text-slate-400 dark:text-slate-400">
                         {new Date(transaction.date).toLocaleDateString('pt-BR')}
                       </span>
                     </td>
@@ -483,12 +483,12 @@ export default function FinanceiroPage() {
                       </span>
                     </td>
                     <td className={crmListCell}>
-                      <span className="text-xs text-charcoal-500 dark:text-charcoal-300">
+                      <span className="text-xs text-slate-500 dark:text-slate-400">
                         {FINANCIAL_CATEGORY_LABELS[transaction.category]}
                       </span>
                     </td>
                     <td className={crmListCell}>
-                      <span className="text-sm text-charcoal dark:text-charcoal-100">{transaction.description}</span>
+                      <span className="text-sm text-slate-900 dark:text-slate-100">{transaction.description}</span>
                     </td>
                     <td className={crmListCell}>
                       <span className="text-sm font-semibold" style={{ color: transaction.type === 'income' ? colors.income.text : colors.expense.text }}>
@@ -497,10 +497,10 @@ export default function FinanceiroPage() {
                     </td>
                     <td className={crmListCell}>
                       <div className="flex items-center justify-end gap-1 opacity-0 transition-opacity group-hover:opacity-100">
-                        <button onClick={() => openEditModal(transaction)} disabled={!canUpdateFinancial} className="rounded-lg p-1.5 text-charcoal-400 transition-colors hover:bg-rose-gold/10 hover:text-rose-gold disabled:opacity-40 disabled:cursor-not-allowed">
+                        <button onClick={() => openEditModal(transaction)} disabled={!canUpdateFinancial} className="rounded-lg p-1.5 text-slate-400 transition-colors hover:bg-blue-50 hover:text-blue-600 disabled:opacity-40 disabled:cursor-not-allowed">
                           <Pencil size={13} />
                         </button>
-                        <button onClick={() => void handleDelete(transaction.id)} disabled={!canDeleteFinancial} className="rounded-lg p-1.5 text-charcoal-400 transition-colors hover:bg-red-500/10 hover:text-red-500 disabled:opacity-40 disabled:cursor-not-allowed">
+                        <button onClick={() => void handleDelete(transaction.id)} disabled={!canDeleteFinancial} className="rounded-lg p-1.5 text-slate-400 transition-colors hover:bg-red-500/10 hover:text-red-500 disabled:opacity-40 disabled:cursor-not-allowed">
                           <Trash2 size={13} />
                         </button>
                       </div>
@@ -529,11 +529,11 @@ export default function FinanceiroPage() {
       {showModal ? (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm" onClick={(event) => event.target === event.currentTarget && setShowModal(false)}>
           <div className="card-dark w-full max-w-lg shadow-2xl">
-            <div className="flex items-center justify-between border-b border-blush-200 p-6 dark:border-[#3a3835]">
-              <h2 className="font-heading text-lg font-semibold text-charcoal dark:text-charcoal-50">
+            <div className="flex items-center justify-between border-b border-slate-200 p-6 dark:border-slate-700">
+              <h2 className="font-heading text-lg font-semibold text-slate-900 dark:text-slate-100">
                 {editing ? 'Editar lançamento' : 'Novo lançamento'}
               </h2>
-              <button onClick={() => setShowModal(false)} className="text-charcoal-400 transition-colors hover:text-charcoal dark:hover:text-charcoal-100">
+              <button onClick={() => setShowModal(false)} className="text-slate-400 transition-colors hover:text-slate-900 dark:hover:text-slate-100">
                 <X size={20} />
               </button>
             </div>
@@ -562,7 +562,7 @@ export default function FinanceiroPage() {
               </div>
 
               <div>
-                <label className="mb-1 block text-xs font-medium text-charcoal-400 dark:text-charcoal-300">Categoria</label>
+                <label className="mb-1 block text-xs font-medium text-slate-400 dark:text-slate-400">Categoria</label>
                 <div className={crmFieldSelectWrapper}>
                   <select
                     value={form.category}
@@ -581,48 +581,48 @@ export default function FinanceiroPage() {
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="mb-1 block text-xs font-medium text-charcoal-400 dark:text-charcoal-300">Valor</label>
+                  <label className="mb-1 block text-xs font-medium text-slate-400 dark:text-slate-400">Valor</label>
                   <input
                     required
                     inputMode="decimal"
                     value={form.amount}
                     onChange={(event) => setForm((current) => ({ ...current, amount: event.target.value }))}
-                    className="w-full rounded-lg border border-blush-300 bg-white px-3 py-2 text-sm text-charcoal focus:outline-none focus:ring-2 focus:ring-rose-gold/40 dark:border-[#3a3835] dark:bg-[#252423] dark:text-charcoal-100"
+                    className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
                   />
                 </div>
                 <div>
-                  <label className="mb-1 block text-xs font-medium text-charcoal-400 dark:text-charcoal-300">Data</label>
+                  <label className="mb-1 block text-xs font-medium text-slate-400 dark:text-slate-400">Data</label>
                   <input
                     type="date"
                     required
                     value={form.date}
                     onChange={(event) => setForm((current) => ({ ...current, date: event.target.value }))}
-                    className="w-full rounded-lg border border-blush-300 bg-white px-3 py-2 text-sm text-charcoal focus:outline-none focus:ring-2 focus:ring-rose-gold/40 dark:border-[#3a3835] dark:bg-[#252423] dark:text-charcoal-100"
+                    className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="mb-1 block text-xs font-medium text-charcoal-400 dark:text-charcoal-300">Descrição</label>
+                <label className="mb-1 block text-xs font-medium text-slate-400 dark:text-slate-400">Descrição</label>
                 <input
                   required
                   value={form.description}
                   onChange={(event) => setForm((current) => ({ ...current, description: event.target.value }))}
-                  className="w-full rounded-lg border border-blush-300 bg-white px-3 py-2 text-sm text-charcoal focus:outline-none focus:ring-2 focus:ring-rose-gold/40 dark:border-[#3a3835] dark:bg-[#252423] dark:text-charcoal-100"
+                  className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
                 />
               </div>
 
               <div>
-                <label className="mb-1 block text-xs font-medium text-charcoal-400 dark:text-charcoal-300">Tags</label>
+                <label className="mb-1 block text-xs font-medium text-slate-400 dark:text-slate-400">Tags</label>
                 <input
                   value={form.tags}
                   onChange={(event) => setForm((current) => ({ ...current, tags: event.target.value }))}
                   placeholder="Ex: pix, recorrente, parceria"
-                  className="w-full rounded-lg border border-blush-300 bg-white px-3 py-2 text-sm text-charcoal focus:outline-none focus:ring-2 focus:ring-rose-gold/40 dark:border-[#3a3835] dark:bg-[#252423] dark:text-charcoal-100"
+                  className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
                 />
               </div>
 
-              <label className="flex items-center gap-2 text-sm text-charcoal-500 dark:text-charcoal-300">
+              <label className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
                 <input
                   type="checkbox"
                   checked={form.recurring}
@@ -632,7 +632,7 @@ export default function FinanceiroPage() {
               </label>
 
               <div className="flex gap-3 pt-2">
-                <button type="button" onClick={() => setShowModal(false)} className="flex-1 rounded-lg border border-blush-300 px-4 py-2 text-sm text-charcoal-400 transition-colors hover:bg-blush dark:border-[#3a3835] dark:hover:bg-[#252423]">
+                <button type="button" onClick={() => setShowModal(false)} className="flex-1 rounded-lg border border-slate-200 px-4 py-2 text-sm text-slate-400 transition-colors hover:bg-slate-100 dark:border-slate-700 dark:hover:bg-slate-800">
                   Cancelar
                 </button>
                 <button type="submit" disabled={submitting} className="flex-1 rounded-lg bg-rose-gold px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-rose-gold-500 disabled:opacity-60">

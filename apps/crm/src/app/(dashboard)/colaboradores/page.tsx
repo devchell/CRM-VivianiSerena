@@ -147,16 +147,16 @@ function ConfirmDeleteModal(props: {
 
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="bg-white dark:bg-[#1e1e1e] border border-blush-200 dark:border-[#2a2a2a] rounded-lg shadow-2xl max-w-md w-full p-6">
+      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg shadow-2xl max-w-md w-full p-6">
         <div className="flex flex-col items-center text-center mb-5">
           <div className="w-14 h-14 rounded-md bg-red-100 dark:bg-red-900/20 flex items-center justify-center mb-4">
             <UserX size={24} className="text-red-500" />
           </div>
-          <h3 className="text-lg font-semibold text-charcoal dark:text-[#e5e5e5]">Remover colaborador</h3>
+          <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100">Remover colaborador</h3>
           <p className="text-sm text-[#888] mt-2">
-            Tem certeza que deseja remover <strong className="text-charcoal dark:text-[#e5e5e5]">{props.state.name ?? 'este colaborador'}</strong>?
+            Tem certeza que deseja remover <strong className="text-slate-900 dark:text-slate-100">{props.state.name ?? 'este colaborador'}</strong>?
           </p>
-          <p className="text-xs text-charcoal-400 mt-2">{props.state.email}</p>
+          <p className="text-xs text-slate-400 mt-2">{props.state.email}</p>
         </div>
 
         <div className="flex items-start gap-2 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700/40 rounded-lg px-3 py-2.5 mb-5">
@@ -172,7 +172,7 @@ function ConfirmDeleteModal(props: {
           <button
             onClick={props.onClose}
             disabled={props.isLoading}
-            className="flex-1 bg-blush dark:bg-[#2a2a2a] hover:bg-blush-200 dark:hover:bg-[#333] text-charcoal dark:text-[#e5e5e5] px-4 py-2.5 rounded-lg text-sm font-medium transition-colors disabled:opacity-50"
+            className="flex-1 bg-slate-100 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-900 dark:text-slate-100 px-4 py-2.5 rounded-lg text-sm font-medium transition-colors disabled:opacity-50"
           >
             Cancelar
           </button>
@@ -400,8 +400,8 @@ export default function ColaboradoresPage() {
   if (!canManageUsers) {
     return (
       <div className="flex flex-col items-center justify-center h-64 text-center">
-        <Shield size={40} className="text-charcoal-300 mb-3" />
-        <p className="text-charcoal-400 text-sm">Acesso restrito a administradores.</p>
+        <Shield size={40} className="text-slate-400 mb-3" />
+        <p className="text-slate-400 text-sm">Acesso restrito a administradores.</p>
       </div>
     )
   }
@@ -410,8 +410,8 @@ export default function ColaboradoresPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="font-heading text-2xl font-bold text-charcoal dark:text-charcoal-50">Colaboradores</h1>
-          <p className="mt-1 text-sm text-charcoal-400">Perfis disponíveis: Admin, Colaborador e Viewer.</p>
+          <h1 className="font-heading text-2xl font-bold text-slate-900 dark:text-slate-100">Colaboradores</h1>
+          <p className="mt-1 text-sm text-slate-400">Perfis disponíveis: Admin, Colaborador e Viewer.</p>
         </div>
         <button
           onClick={openCreate}
@@ -424,7 +424,7 @@ export default function ColaboradoresPage() {
 
       <div className="grid grid-cols-2 sm:grid-cols-6 gap-4">
         {[
-          { label: 'Total', value: stats.total, icon: Users, color: 'text-rose-gold', bg: 'bg-rose-gold/10' },
+          { label: 'Total', value: stats.total, icon: Users, color: 'text-blue-600', bg: 'bg-blue-50' },
           { label: 'Admins', value: stats.admins, icon: Crown, color: 'text-amber-500', bg: 'bg-amber-500/10' },
           { label: 'Colaboradores', value: stats.collaborators, icon: Users, color: 'text-blue-500', bg: 'bg-blue-500/10' },
           { label: 'Viewers', value: stats.viewers, icon: Eye, color: 'text-emerald-500', bg: 'bg-emerald-500/10' },
@@ -436,14 +436,14 @@ export default function ColaboradoresPage() {
               <item.icon size={18} className={item.color} />
             </div>
             <div>
-              <p className="text-xs text-charcoal-400">{item.label}</p>
-              <p className="text-xl font-bold font-heading text-charcoal dark:text-charcoal-50">{item.value}</p>
+              <p className="text-xs text-slate-400">{item.label}</p>
+              <p className="text-xl font-bold font-heading text-slate-900 dark:text-slate-100">{item.value}</p>
             </div>
           </div>
         ))}
       </div>
 
-      <div className={`${crmListToolbar} rounded-lg border border-blush-200/80 dark:border-[#3a3835]`}>
+      <div className={`${crmListToolbar} rounded-lg border border-slate-200/80 dark:border-slate-700`}>
         {([
           { key: 'ACTIVE', label: `Ativos (${stats.active})` },
           { key: 'INACTIVE', label: `Inativos (${stats.inactive})` },
@@ -454,7 +454,7 @@ export default function ColaboradoresPage() {
             className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
               activeTab === tab.key
                 ? 'bg-rose-gold text-white'
-                : 'text-charcoal-400 hover:bg-blush dark:hover:bg-[#252423]'
+                : 'text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
             }`}
           >
             {tab.label}
@@ -465,7 +465,7 @@ export default function ColaboradoresPage() {
       <div className={crmListShell}>
         {loading ? (
           <div className="flex items-center justify-center py-16">
-            <Loader2 size={24} className="animate-spin text-rose-gold" />
+            <Loader2 size={24} className="animate-spin text-blue-500" />
           </div>
         ) : visibleUsers.length === 0 ? (
           <EmptyState message={activeTab === 'ACTIVE' ? 'Nenhum colaborador ativo encontrado.' : 'Nenhum colaborador inativo encontrado.'} />
@@ -494,13 +494,13 @@ export default function ColaboradoresPage() {
                     <tr key={user.id} className={crmListRow}>
                       <td className={crmListCell}>
                         <div className="min-w-0">
-                          <p className="text-sm font-medium text-charcoal dark:text-charcoal-100 truncate">{user.name ?? 'Sem nome'}</p>
-                          <div className="flex items-center gap-1 text-xs text-charcoal-400">
+                          <p className="text-sm font-medium text-slate-900 dark:text-slate-100 truncate">{user.name ?? 'Sem nome'}</p>
+                          <div className="flex items-center gap-1 text-xs text-slate-400">
                             <Mail size={10} />
                             <span className="truncate">{user.email}</span>
                           </div>
                           {user.phone ? (
-                            <div className="flex items-center gap-1 text-xs text-charcoal-400">
+                            <div className="flex items-center gap-1 text-xs text-slate-400">
                               <Phone size={10} />
                               {user.phone}
                             </div>
@@ -518,11 +518,11 @@ export default function ColaboradoresPage() {
                       </td>
                       <td className={crmListCell}>
                         {user.profile === 'ADMIN' ? (
-                          <span className="text-xs text-charcoal-400">Todos</span>
+                          <span className="text-xs text-slate-400">Todos</span>
                         ) : (
                           <div className="flex flex-wrap gap-1 max-w-[240px]">
                             {user.allowedModules.map((module) => (
-                              <span key={module} className="text-xs px-1.5 py-0.5 rounded bg-charcoal-100 dark:bg-[#252423] text-charcoal-500 dark:text-charcoal-300">
+                              <span key={module} className="text-xs px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400">
                                 {MODULES.find((item) => item.key === module)?.label ?? module}
                               </span>
                             ))}
@@ -530,7 +530,7 @@ export default function ColaboradoresPage() {
                         )}
                       </td>
                       <td className={crmListCell}>
-                        <span className="text-xs text-charcoal-400">
+                        <span className="text-xs text-slate-400">
                         {activeTab === 'ACTIVE'
                           ? new Date(user.lastLogin ?? '').toLocaleDateString('pt-BR')
                           : 'Aguardando primeiro acesso'}
@@ -540,7 +540,7 @@ export default function ColaboradoresPage() {
                         <div className="flex items-center gap-1 justify-end">
                           <button
                             onClick={() => openEdit(user)}
-                            className="p-1.5 rounded-lg text-charcoal-400 hover:text-rose-gold hover:bg-rose-gold/10 transition-colors"
+                            className="p-1.5 rounded-lg text-slate-400 hover:text-blue-600 hover:bg-blue-50 transition-colors"
                             title="Editar colaborador"
                           >
                             <Pencil size={13} />
@@ -549,7 +549,7 @@ export default function ColaboradoresPage() {
                             <button
                               onClick={() => void handleResendInvite(user)}
                               disabled={Boolean(actionKey)}
-                              className="p-1.5 rounded-lg text-charcoal-400 hover:text-blue-500 hover:bg-blue-500/10 transition-colors disabled:opacity-50"
+                              className="p-1.5 rounded-lg text-slate-400 hover:text-blue-500 hover:bg-blue-500/10 transition-colors disabled:opacity-50"
                               title="Reenviar e-mail"
                             >
                               {isInviting ? <Loader2 size={13} className="animate-spin" /> : <Send size={13} />}
@@ -564,7 +564,7 @@ export default function ColaboradoresPage() {
                                 accountStatus: user.accountStatus,
                               })}
                               disabled={Boolean(actionKey)}
-                              className="p-1.5 rounded-lg text-charcoal-400 hover:text-red-400 hover:bg-red-400/10 transition-colors disabled:opacity-50"
+                              className="p-1.5 rounded-lg text-slate-400 hover:text-red-400 hover:bg-red-400/10 transition-colors disabled:opacity-50"
                               title="Excluir colaborador"
                             >
                               {isDeleting ? <Loader2 size={13} className="animate-spin" /> : <Trash2 size={13} />}
@@ -596,22 +596,22 @@ export default function ColaboradoresPage() {
           }}
         >
           <div className="card-dark w-full max-w-3xl shadow-2xl max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between p-6 border-b border-blush-200 dark:border-[#3a3835] sticky top-0 bg-white dark:bg-[#1c1b1a] z-10">
+            <div className="flex items-center justify-between p-6 border-b border-slate-200 dark:border-slate-700 sticky top-0 bg-white dark:bg-slate-900 z-10">
               <div>
-                <h2 className="font-heading text-lg font-semibold text-charcoal dark:text-charcoal-50">
+                <h2 className="font-heading text-lg font-semibold text-slate-900 dark:text-slate-100">
                   {editing ? 'Editar colaborador' : 'Adicionar colaborador'}
                 </h2>
                 {!editing ? (
-                  <p className="text-xs text-charcoal-400 mt-0.5">
+                  <p className="text-xs text-slate-400 mt-0.5">
                     Se o e-mail falhar, o colaborador ficará em Inativos para ajuste e reenvio.
                   </p>
                 ) : editing.accountStatus === 'INACTIVE' ? (
-                  <p className="text-xs text-charcoal-400 mt-0.5">
+                  <p className="text-xs text-slate-400 mt-0.5">
                     Conta inativa: todos os campos podem ser corrigidos antes do primeiro acesso.
                   </p>
                 ) : null}
               </div>
-              <button onClick={() => setShowModal(false)} className="text-charcoal-400 hover:text-charcoal dark:hover:text-charcoal-100">
+              <button onClick={() => setShowModal(false)} className="text-slate-400 hover:text-slate-900 dark:hover:text-slate-100">
                 <X size={20} />
               </button>
             </div>
@@ -619,40 +619,40 @@ export default function ColaboradoresPage() {
             <form onSubmit={handleSubmit} className="p-6 space-y-5">
               <div className="grid gap-4 md:grid-cols-2">
                 <div>
-                  <label className="block text-xs font-medium text-charcoal-400 mb-1">Nome completo *</label>
+                  <label className="block text-xs font-medium text-slate-400 mb-1">Nome completo *</label>
                   <input
                     required
                     value={form.name}
                     onChange={(event) => setForm((current) => ({ ...current, name: event.target.value }))}
-                    className="w-full px-3 py-2 text-sm rounded-lg border border-blush-300 dark:border-[#3a3835] bg-white dark:bg-[#252423] text-charcoal dark:text-charcoal-100 focus:outline-none focus:ring-2 focus:ring-rose-gold/40"
+                    className="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-medium text-charcoal-400 mb-1">Telefone / WhatsApp</label>
+                  <label className="block text-xs font-medium text-slate-400 mb-1">Telefone / WhatsApp</label>
                   <input
                     type="tel"
                     value={form.phone}
                     onChange={(event) => setForm((current) => ({ ...current, phone: event.target.value }))}
-                    className="w-full px-3 py-2 text-sm rounded-lg border border-blush-300 dark:border-[#3a3835] bg-white dark:bg-[#252423] text-charcoal dark:text-charcoal-100 focus:outline-none focus:ring-2 focus:ring-rose-gold/40"
+                    className="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-charcoal-400 mb-1">E-mail *</label>
+                <label className="block text-xs font-medium text-slate-400 mb-1">E-mail *</label>
                 <input
                   required
                   type="email"
                   value={form.email}
                   disabled={Boolean(editing && editing.accountStatus === 'ACTIVE')}
                   onChange={(event) => setForm((current) => ({ ...current, email: event.target.value }))}
-                  className="w-full px-3 py-2 text-sm rounded-lg border border-blush-300 dark:border-[#3a3835] bg-white dark:bg-[#252423] text-charcoal dark:text-charcoal-100 focus:outline-none focus:ring-2 focus:ring-rose-gold/40 disabled:opacity-60 disabled:cursor-not-allowed"
+                  className="w-full px-3 py-2 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500/20 disabled:opacity-60 disabled:cursor-not-allowed"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-charcoal-400 mb-2">Perfil *</label>
+                <label className="block text-xs font-medium text-slate-400 mb-2">Perfil *</label>
                 <div className="grid grid-cols-1 gap-3 lg:grid-cols-3">
                   {(Object.keys(PROFILE_META) as UserProfile[]).map((profile) => {
                     const meta = PROFILE_META[profile]
@@ -667,7 +667,7 @@ export default function ColaboradoresPage() {
                         className={`p-4 rounded-md border-2 text-left transition-all ${
                           selected
                             ? 'border-rose-gold bg-rose-gold/5'
-                            : 'border-blush-300 dark:border-[#3a3835] hover:border-rose-gold/30'
+                            : 'border-slate-200 dark:border-slate-700 hover:border-rose-gold/30'
                         }`}
                       >
                         <Icon size={20} className="mb-2 opacity-70" />
@@ -681,7 +681,7 @@ export default function ColaboradoresPage() {
 
               {form.profile !== 'ADMIN' ? (
                 <div>
-                  <label className="block text-xs font-medium text-charcoal-400 mb-2">Módulos liberados</label>
+                  <label className="block text-xs font-medium text-slate-400 mb-2">Módulos liberados</label>
                   <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
                     {MODULES.map((module) => {
                       const active = form.allowedModules.includes(module.key)
@@ -694,7 +694,7 @@ export default function ColaboradoresPage() {
                           className={`flex items-start gap-2.5 px-3 py-3 rounded-md border text-left transition-all text-sm ${
                             active
                               ? 'border-rose-gold bg-rose-gold/5 text-rose-gold'
-                              : 'border-blush-300 dark:border-[#3a3835] text-charcoal-400 hover:border-rose-gold/30'
+                              : 'border-slate-200 dark:border-slate-700 text-slate-400 hover:border-rose-gold/30'
                           }`}
                         >
                           {active ? <CheckSquare size={15} className="flex-shrink-0 mt-0.5" /> : <Square size={15} className="flex-shrink-0 mt-0.5" />}
@@ -709,7 +709,7 @@ export default function ColaboradoresPage() {
                 </div>
               ) : null}
 
-              <div className="rounded border border-blush-200 dark:border-[#3a3835] bg-blush/40 dark:bg-[#1c1b1a]/60 p-4 text-sm text-charcoal-500 dark:text-charcoal-300">
+              <div className="rounded border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/60 p-4 text-sm text-slate-500 dark:text-slate-400">
                 {form.profile === 'ADMIN'
                   ? 'Admin recebe acesso total, incluindo Editar Site, Segurança e Colaboradores.'
                   : PROFILE_META[form.profile].description}
@@ -719,7 +719,7 @@ export default function ColaboradoresPage() {
                 <button
                   type="button"
                   onClick={() => setShowModal(false)}
-                  className="flex-1 py-2.5 rounded-md border border-blush-300 dark:border-[#3a3835] text-charcoal-400 text-sm hover:bg-blush dark:hover:bg-[#252423] transition-colors"
+                  className="flex-1 py-2.5 rounded-md border border-slate-200 dark:border-slate-700 text-slate-400 text-sm hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
                 >
                   Cancelar
                 </button>

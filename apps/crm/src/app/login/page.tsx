@@ -299,7 +299,7 @@ export default function LoginPage() {
                       ? 'w-8 bg-rose-gold'
                       : isDone
                         ? 'w-4 bg-rose-gold/60'
-                        : 'w-4 bg-charcoal-600'
+                        : 'w-4 bg-slate-600'
                   }`}
                 />
               )
@@ -349,7 +349,7 @@ export default function LoginPage() {
                     <button
                       type="button"
                       onClick={() => setShowPassword((currentState) => !currentState)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-charcoal-500 hover:text-charcoal-500 transition-colors"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-500 transition-colors"
                     >
                       {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                     </button>
@@ -369,7 +369,7 @@ export default function LoginPage() {
 
             {step === 'email-otp' && (
               <form onSubmit={handleEmailOtp} className="space-y-4">
-                <p className="text-xs text-charcoal-400">Digite o código de 6 dígitos enviado para o e-mail acima.</p>
+                <p className="text-xs text-slate-400">Digite o código de 6 dígitos enviado para o e-mail acima.</p>
                 <input
                   type="text"
                   inputMode="numeric"
@@ -392,7 +392,7 @@ export default function LoginPage() {
                 <button
                   type="button"
                   onClick={resetTwoFactorFlow}
-                  className="w-full flex items-center justify-center gap-2 py-2 text-charcoal-400 text-sm hover:text-charcoal-600 transition-colors"
+                  className="w-full flex items-center justify-center gap-2 py-2 text-slate-400 text-sm hover:text-slate-600 transition-colors"
                 >
                   <ArrowLeft size={14} /> Voltar
                 </button>
@@ -401,7 +401,7 @@ export default function LoginPage() {
 
             {step === 'sms-otp' && (
               <form onSubmit={handleSmsOtp} className="space-y-4">
-                <p className="text-xs text-charcoal-400">Digite o código de 6 dígitos enviado para o celular acima.</p>
+                <p className="text-xs text-slate-400">Digite o código de 6 dígitos enviado para o celular acima.</p>
                 <input
                   type="text"
                   inputMode="numeric"
@@ -424,7 +424,7 @@ export default function LoginPage() {
                 <button
                   type="button"
                   onClick={resetTwoFactorFlow}
-                  className="w-full flex items-center justify-center gap-2 py-2 text-charcoal-400 text-sm hover:text-charcoal-600 transition-colors"
+                  className="w-full flex items-center justify-center gap-2 py-2 text-slate-400 text-sm hover:text-slate-600 transition-colors"
                 >
                   <ArrowLeft size={14} /> Voltar
                 </button>
