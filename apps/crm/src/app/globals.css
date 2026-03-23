@@ -56,10 +56,10 @@
   --primary-hover:       #1D4ED8;
   --primary-foreground:  #FFFFFF;
 
-  /* CTA: rose-gold — botões especiais (Publicar, Agendar) */
-  --accent-cta:          #C9A96E;
-  --accent-cta-hover:    #B8944E;
-  --accent-cta-fg:       #FFFFFF;
+  /* CTA: gold — botões especiais (Publicar, Agendar) */
+  --accent-cta:          #F5C518;
+  --accent-cta-hover:    #D4A80E;
+  --accent-cta-fg:       #0D1B2A;
 
   /* Semânticos */
   --destructive:         #DC2626;
@@ -85,9 +85,9 @@
   --sidebar-logo:        #FFFFFF;
 
   /* Aliases para compat */
-  --accent-rose:         #C9A96E;
-  --accent-rose-hover:   #B8944E;
-  --accent-subtle:       rgba(201,169,110,0.10);
+  --accent-rose:         #F5C518;
+  --accent-rose-hover:   #D4A80E;
+  --accent-subtle:       rgba(245,197,24,0.10);
 
   /* Shadows */
   --shadow-sm:    0 1px 2px rgba(13,27,42,0.06);
@@ -158,9 +158,9 @@
   --sidebar-border:      #112236;
   --sidebar-hover-bg:    #0D1B2A;
 
-  --accent-rose:         #D4B882;
-  --accent-rose-hover:   #C9A96E;
-  --accent-subtle:       rgba(212,184,130,0.15);
+  --accent-rose:         #F5C518;
+  --accent-rose-hover:   #D4A80E;
+  --accent-subtle:       rgba(245,197,24,0.12);
 
   --shadow-sm:    0 1px 2px rgba(0,0,0,0.20);
   --shadow-md:    0 4px 6px rgba(0,0,0,0.30), 0 1px 3px rgba(0,0,0,0.20);

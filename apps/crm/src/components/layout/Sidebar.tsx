@@ -79,7 +79,7 @@ function NavItemRow({
             : hovered
               ? 'rgba(255,255,255,0.06)'
               : 'transparent',
-          boxShadow: active ? 'inset 3px 0 0 var(--accent-cta, #C9A96E)' : 'none',
+          boxShadow: active ? 'inset 3px 0 0 var(--accent-cta, #F5C518)' : 'none',
           fontWeight: active ? 500 : 400,
           fontSize: 14,
           whiteSpace: 'nowrap',
@@ -147,19 +147,19 @@ function Sidebar() {
               height: 36,
               borderRadius: 8,
               background: 'rgba(255,255,255,0.06)',
-              color: 'var(--accent-cta, #C9A96E)',
+              color: '#EFF6FF',
               border: 'none',
               cursor: 'pointer',
               transition: 'background 150ms ease',
             }}
             aria-label="Expandir menu"
           >
-            <Sparkles size={18} />
+            <Sparkles size={18} strokeWidth={2.5} />
           </button>
         ) : (
           <>
             <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
-              <Sparkles size={18} style={{ color: '#C9A96E', flexShrink: 0 }} />
+              <Sparkles size={18} strokeWidth={2.5} style={{ color: '#EFF6FF', flexShrink: 0 }} />
               <span style={{
                 color: 'var(--sidebar-logo)',
                 fontWeight: 600,
