@@ -21,11 +21,13 @@ import {
   crmFieldSelectWrapper,
 } from '@/components/ui/listStyles'
 import { EmptyState } from '@/components/ui/EmptyState'
+import { ColorEditor } from '@/components/editar-site/ColorEditor'
+import type { SiteColors } from '@/components/editar-site/ColorEditor'
 
 const API_URL = crmPublicEnv.apiBaseUrl
 const LANDING_URL = crmPublicEnv.landingUrl
 
-type SectionKey = 'hero' | 'sobre' | 'resultados' | 'depoimentos'
+type SectionKey = 'hero' | 'sobre' | 'resultados' | 'depoimentos' | 'cores'
 
 interface SectionMeta { label: string; icon: string }
 const SECTIONS: [SectionKey, SectionMeta][] = [
@@ -33,6 +35,7 @@ const SECTIONS: [SectionKey, SectionMeta][] = [
   ['sobre',       { label: 'Sobre',        icon: '👤' }],
   ['resultados',  { label: 'Resultados',   icon: '📸' }],
   ['depoimentos', { label: 'Depoimentos',  icon: '💬' }],
+  ['cores',       { label: 'Cores do site',icon: '🎨' }],
 ]
 
 interface ContentStore { [section: string]: { [key: string]: unknown } }
@@ -82,14 +85,14 @@ interface HistoryEntry {
 
 const inputCls = [
   'w-full px-3 py-2 text-sm rounded-lg transition-colors',
-  'border border-blush-200 dark:border-[#3a3835]',
-  'bg-white dark:bg-[#252423]',
-  'text-charcoal dark:text-[#ECEAE6]',
-  'placeholder-charcoal-300 dark:placeholder-[#706b65]',
-  'focus:outline-none focus:ring-2 focus:ring-rose-gold/50 focus:border-rose-gold/50',
+  'border border-slate-200 dark:border-slate-700',
+  'bg-white dark:bg-slate-800',
+  'text-slate-900 dark:text-slate-100',
+  'placeholder-slate-400 dark:placeholder-slate-500',
+  'focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400',
 ].join(' ')
 
-const labelCls = 'block text-xs font-medium text-charcoal-500 dark:text-charcoal-300 mb-1.5'
+const labelCls = 'block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1.5'
 
 // ── TextField ─────────────────────────────────────────────────────────────────
 
@@ -1483,6 +1486,21 @@ export default function EditarSitePage() {
             >
               <Plus size={14} /> Adicionar depoimento
             </button>
+          </div>
+        )
+      }
+
+      case 'cores': {
+        const siteColors = (get('seo', 'site_colors') ?? {}) as Partial<SiteColors>
+        return (
+          <div className="space-y-3">
+            <p className="text-xs text-slate-400 dark:text-slate-500 leading-relaxed">
+              Personalize as cores da landing page. As alterações são salvas automaticamente e ficam visíveis ao publicar.
+            </p>
+            <ColorEditor
+              colors={siteColors}
+              onChange={(colors) => setVal('seo', 'site_colors', colors)}
+            />
           </div>
         )
       }

@@ -14,73 +14,88 @@
 /* ── Design system tokens ────────────────────────────────────────────────── */
 :root {
   /* Backgrounds */
-  --background:         #F1F5F9;
-  --bg-page:            #F1F5F9;
-  --bg-surface:         #FFFFFF;
-  --bg-card:            #FFFFFF;
-  --bg-input:           #FFFFFF;
-  --bg-hover:           #F8FAFC;
-  --bg-active:          #EFF6FF;
+  --background:          #F0F4F8;
+  --bg-page:             #F0F4F8;
+  --bg-surface:          #FFFFFF;
+  --bg-card:             #FFFFFF;
+  --bg-input:            #E8EFF7;
+  --bg-hover:            #F8FAFF;
+  --bg-active:           #EFF6FF;
+  --panel:               #EEF3FA;
 
   /* Cards & Popovers */
-  --card:               #FFFFFF;
-  --card-foreground:    #0F172A;
-  --popover:            #FFFFFF;
-  --popover-foreground: #0F172A;
+  --card:                #FFFFFF;
+  --card-foreground:     #0D1B2A;
+  --popover:             #FFFFFF;
+  --popover-foreground:  #0D1B2A;
 
   /* Text */
-  --foreground:         #0F172A;
-  --text-primary:       #0F172A;
-  --text-secondary:     #334155;
-  --text-tertiary:      #64748B;
-  --text-disabled:      #94A3B8;
-  --muted:              #F1F5F9;
-  --muted-foreground:   #64748B;
+  --foreground:          #0D1B2A;
+  --text-primary:        #0D1B2A;
+  --text-secondary:      #334E68;
+  --text-tertiary:       #627D98;
+  --text-disabled:       #829AB1;
+  --muted:               #EEF3FA;
+  --muted-foreground:    #627D98;
 
   /* Borders & Inputs */
-  --border:             #E2E8F0;
-  --border-subtle:      #F1F5F9;
-  --border-medium:      #E2E8F0;
-  --input:              #FFFFFF;
-  --input-border:       #CBD5E1;
-  --ring:               #3B82F6;
+  --border:              #BCCCDC;
+  --border-subtle:       #D9E2EC;
+  --border-medium:       #BCCCDC;
+  --border-focus:        #2D6ECA;
+  --input:               #E8EFF7;
+  --input-border:        #BCCCDC;
+  --ring:                #2563EB;
 
-  /* Accent: azul — links, info, status */
-  --accent:             #EFF6FF;
-  --accent-foreground:  #1D4ED8;
+  /* Accent: azul */
+  --accent:              #EFF6FF;
+  --accent-foreground:   #1D4ED8;
 
-  /* Primary: rose-gold — apenas botões de ação */
-  --primary:            #C9A96E;
-  --primary-foreground: #FFFFFF;
+  /* Primary: azul — botões padrão */
+  --primary:             #2563EB;
+  --primary-hover:       #1D4ED8;
+  --primary-foreground:  #FFFFFF;
+
+  /* CTA: rose-gold — botões especiais (Publicar, Agendar) */
+  --accent-cta:          #C9A96E;
+  --accent-cta-hover:    #B8944E;
+  --accent-cta-fg:       #FFFFFF;
 
   /* Semânticos */
-  --destructive:        #EF4444;
+  --destructive:         #DC2626;
   --destructive-foreground: #FFFFFF;
-  --secondary:          #F8FAFC;
-  --secondary-foreground: #0F172A;
+  --secondary:           #F0F4F8;
+  --secondary-foreground:#0D1B2A;
+  --success:             #16A34A;
+  --success-bg:          #F0FDF4;
+  --warning:             #D97706;
+  --warning-bg:          #FFFBEB;
+  --info:                #0284C7;
+  --info-bg:             #F0F9FF;
 
-  /* Sidebar ESCURA */
-  --sidebar-bg:         #0F172A;
-  --sidebar-item:       #94A3B8;
-  --sidebar-text:       #94A3B8;
-  --sidebar-active:     #FFFFFF;
-  --sidebar-text-active:#FFFFFF;
-  --sidebar-active-bg:  #1E293B;
-  --sidebar-border:     #1E293B;
-  --sidebar-logo:       #FFFFFF;
+  /* Sidebar ESCURA — azul marinho */
+  --sidebar-bg:          #0D1B2A;
+  --sidebar-item:        #829AB1;
+  --sidebar-text:        #829AB1;
+  --sidebar-active:      #FFFFFF;
+  --sidebar-text-active: #FFFFFF;
+  --sidebar-active-bg:   #1A3350;
+  --sidebar-border:      #1A3350;
+  --sidebar-hover-bg:    #142840;
+  --sidebar-logo:        #FFFFFF;
 
-  /* Accent rose-gold interno */
-  --accent-rose:        #C9A96E;
-  --accent-rose-hover:  #B8934A;
-  --accent-subtle:      rgba(201,169,110,0.10);
+  /* Aliases para compat */
+  --accent-rose:         #C9A96E;
+  --accent-rose-hover:   #B8944E;
+  --accent-subtle:       rgba(201,169,110,0.10);
 
   /* Shadows */
-  --shadow-sm:    0 1px 2px rgba(0,0,0,0.05);
-  --shadow-md:    0 4px 6px rgba(0,0,0,0.07), 0 1px 3px rgba(0,0,0,0.06);
-  --shadow-lg:    0 10px 15px rgba(0,0,0,0.10), 0 4px 6px rgba(0,0,0,0.05);
-  --shadow-xl:    0 20px 25px rgba(0,0,0,0.10), 0 8px 10px rgba(0,0,0,0.04);
-  --shadow-inset: inset 0 1px 2px rgba(0,0,0,0.05);
-  --shadow-card:  0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+  --shadow-sm:    0 1px 2px rgba(13,27,42,0.06);
+  --shadow-md:    0 4px 8px rgba(13,27,42,0.08), 0 1px 3px rgba(13,27,42,0.05);
+  --shadow-lg:    0 10px 20px rgba(13,27,42,0.10), 0 4px 6px rgba(13,27,42,0.06);
+  --shadow-xl:    0 20px 30px rgba(13,27,42,0.12), 0 8px 10px rgba(13,27,42,0.07);
+  --shadow-inset: inset 0 1px 2px rgba(13,27,42,0.05);
+  --shadow-card:  0 1px 3px rgba(13,27,42,0.06), 0 1px 2px rgba(13,27,42,0.04);
 
   /* Radius */
   --radius-sm: 6px;
@@ -95,52 +110,57 @@
 }
 
 .dark {
-  --background:         #020817;
-  --bg-page:            #020817;
-  --bg-surface:         #0F172A;
-  --bg-card:            #0F172A;
-  --bg-input:           #1E293B;
-  --bg-hover:           #1E293B;
-  --bg-active:          #1E3A5F;
+  --background:          #060D16;
+  --bg-page:             #060D16;
+  --bg-surface:          #0D1B2A;
+  --bg-card:             #0D1B2A;
+  --bg-input:            #1A3350;
+  --bg-hover:            #112236;
+  --bg-active:           #1E3A5F;
+  --panel:               #112236;
 
-  --card:               #0F172A;
-  --card-foreground:    #F8FAFC;
-  --popover:            #0F172A;
-  --popover-foreground: #F8FAFC;
+  --card:                #0D1B2A;
+  --card-foreground:     #F0F4F8;
+  --popover:             #0D1B2A;
+  --popover-foreground:  #F0F4F8;
 
-  --foreground:         #F8FAFC;
-  --text-primary:       #F8FAFC;
-  --text-secondary:     #CBD5E1;
-  --text-tertiary:      #94A3B8;
-  --text-disabled:      #475569;
-  --muted:              #1E293B;
-  --muted-foreground:   #94A3B8;
+  --foreground:          #F0F4F8;
+  --text-primary:        #F0F4F8;
+  --text-secondary:      #BCCCDC;
+  --text-tertiary:       #627D98;
+  --text-disabled:       #486581;
+  --muted:               #1A3350;
+  --muted-foreground:    #627D98;
 
-  --border:             #1E293B;
-  --border-subtle:      #0F172A;
-  --border-medium:      #1E293B;
-  --input:              #1E293B;
-  --input-border:       #334155;
-  --ring:               #60A5FA;
+  --border:              #1A3350;
+  --border-subtle:       #0D1B2A;
+  --border-medium:       #1A3350;
+  --border-focus:        #60A5FA;
+  --input:               #1A3350;
+  --input-border:        #243B55;
+  --ring:                #3B82F6;
 
-  --accent:             #1E3A5F;
-  --accent-foreground:  #93C5FD;
-  --primary:            #D4B882;
-  --primary-foreground: #0F172A;
-  --secondary:          #1E293B;
-  --secondary-foreground: #F8FAFC;
+  --accent:              #1E3A5F;
+  --accent-foreground:   #93C5FD;
+  --primary:             #3B82F6;
+  --primary-hover:       #2563EB;
+  --primary-foreground:  #FFFFFF;
 
-  --sidebar-bg:         #020817;
-  --sidebar-item:       #475569;
-  --sidebar-text:       #64748B;
-  --sidebar-active:     #F8FAFC;
-  --sidebar-text-active:#F8FAFC;
-  --sidebar-active-bg:  #0F172A;
-  --sidebar-border:     #1E293B;
+  --secondary:           #1A3350;
+  --secondary-foreground:#F0F4F8;
 
-  --accent-rose:        #D4B882;
-  --accent-rose-hover:  #C9A96E;
-  --accent-subtle:      rgba(212,184,130,0.15);
+  --sidebar-bg:          #060D16;
+  --sidebar-item:        #486581;
+  --sidebar-text:        #486581;
+  --sidebar-active:      #F0F4F8;
+  --sidebar-text-active: #F0F4F8;
+  --sidebar-active-bg:   #0D1B2A;
+  --sidebar-border:      #112236;
+  --sidebar-hover-bg:    #0D1B2A;
+
+  --accent-rose:         #D4B882;
+  --accent-rose-hover:   #C9A96E;
+  --accent-subtle:       rgba(212,184,130,0.15);
 
   --shadow-sm:    0 1px 2px rgba(0,0,0,0.20);
   --shadow-md:    0 4px 6px rgba(0,0,0,0.30), 0 1px 3px rgba(0,0,0,0.20);
