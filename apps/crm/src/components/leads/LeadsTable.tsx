@@ -305,11 +305,11 @@ function extractFromNotes(notes: string | null | undefined, key: 'service' | 'pe
 function InfoItem({ label, value }: { label: string; value?: string | null }) {
   if (!value || value === '-' || value === '—') return null
   return (
-    <div className="flex flex-col gap-0.5 rounded-lg bg-blush/30 px-3 py-2.5 dark:bg-[#252423]">
-      <span className="text-[10px] font-semibold uppercase tracking-[0.06em] text-charcoal-400 dark:text-charcoal-300">
+    <div className="flex flex-col gap-0.5 rounded-lg bg-slate-50 px-3 py-2.5 dark:bg-slate-800">
+      <span className="text-[10px] font-semibold uppercase tracking-[0.06em] text-slate-400 dark:text-slate-400">
         {label}
       </span>
-      <span className="text-[13px] font-medium leading-snug text-charcoal dark:text-charcoal-100">
+      <span className="text-[13px] font-medium leading-snug text-slate-900 dark:text-slate-100">
         {value}
       </span>
     </div>
@@ -576,14 +576,14 @@ export function LeadsTable() {
     {
       accessorKey: 'name',
       header: ({ column }) => (
-        <button onClick={() => column.toggleSorting()} className="flex items-center gap-1 hover:text-rose-gold transition-colors">
+        <button onClick={() => column.toggleSorting()} className="flex items-center gap-1 hover:text-blue-600 transition-colors">
           Nome {column.getIsSorted() === 'asc' ? <ChevronUp size={13} /> : column.getIsSorted() === 'desc' ? <ChevronDown size={13} /> : <ArrowUpDown size={13} className="opacity-40" />}
         </button>
       ),
       cell: info => (
         <div>
-          <p className="font-medium text-charcoal dark:text-charcoal-100">{info.getValue() as string}</p>
-          <p className="text-xs text-charcoal-400 dark:text-charcoal-300">{info.row.original.email}</p>
+          <p className="font-medium text-slate-900 dark:text-slate-100">{info.getValue() as string}</p>
+          <p className="text-xs text-slate-400 dark:text-slate-400">{info.row.original.email}</p>
         </div>
       ),
     },
@@ -592,7 +592,7 @@ export function LeadsTable() {
       header: 'Telefone',
       cell: info => {
         const phone = info.getValue() as string | null
-        if (!phone) return <span className="text-sm text-charcoal-400 dark:text-charcoal-300">-</span>
+        if (!phone) return <span className="text-sm text-slate-400 dark:text-slate-400">-</span>
         return (
           <a href={`https://wa.me/55${phone.replace(/\D/g, '')}`} target="_blank" rel="noopener noreferrer" className="text-sm text-rose-gold hover:underline">
             {phone}
@@ -603,7 +603,7 @@ export function LeadsTable() {
     {
       accessorKey: 'source',
       header: 'Origem',
-      cell: info => <span className="text-sm text-charcoal-500 dark:text-charcoal-300">{SOURCE_LABELS[info.getValue() as string] ?? info.getValue() as string}</span>,
+      cell: info => <span className="text-sm text-slate-500 dark:text-slate-400">{SOURCE_LABELS[info.getValue() as string] ?? info.getValue() as string}</span>,
     },
     {
       accessorKey: 'status',
@@ -620,7 +620,7 @@ export function LeadsTable() {
               className={`text-xs font-semibold px-3 py-1.5 rounded-full border border-transparent outline-none cursor-pointer shadow-[0_8px_20px_-18px_rgba(0,0,0,0.6)] backdrop-blur pr-7 transition-all duration-150 ${crmSelectReset} ${cfg.color}`}
             >
               {STATUS_OPTIONS.map(([k, v]) => (
-                <option key={k} value={k} className="bg-white dark:bg-[#111110] text-charcoal dark:text-charcoal-100">
+                <option key={k} value={k} className="bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100">
                   {v.label}
                 </option>
               ))}
@@ -633,12 +633,12 @@ export function LeadsTable() {
     {
       accessorKey: 'createdAt',
       header: ({ column }) => (
-        <button onClick={() => column.toggleSorting()} className="flex items-center gap-1 hover:text-rose-gold transition-colors">
+        <button onClick={() => column.toggleSorting()} className="flex items-center gap-1 hover:text-blue-600 transition-colors">
           Criado {column.getIsSorted() === 'asc' ? <ChevronUp size={13} /> : column.getIsSorted() === 'desc' ? <ChevronDown size={13} /> : <ArrowUpDown size={13} className="opacity-40" />}
         </button>
       ),
       cell: info => (
-        <span className="text-xs text-charcoal-400 dark:text-charcoal-300">
+        <span className="text-xs text-slate-400 dark:text-slate-400">
           {formatDistanceToNow(new Date(info.getValue() as string), { locale: ptBR, addSuffix: true })}
         </span>
       ),
@@ -655,7 +655,7 @@ export function LeadsTable() {
             <button
               type="button"
               onClick={() => void handleExpandLead(row.original.id)}
-              className="inline-flex items-center gap-1 rounded border border-blush-300 px-3 py-2 text-xs font-medium text-charcoal-500 transition-colors hover:border-rose-gold/40 hover:text-rose-gold dark:border-[#3a3835] dark:text-charcoal-300"
+              className="inline-flex items-center gap-1 rounded border border-slate-200 px-3 py-2 text-xs font-medium text-slate-500 transition-colors hover:border-blue-400/60 hover:text-blue-600 dark:border-slate-700 dark:text-slate-400"
             >
               <ChevronRight size={14} className={isExpanded ? 'rotate-90 transition-transform' : 'transition-transform'} />
               Detalhes
@@ -664,7 +664,7 @@ export function LeadsTable() {
               type="button"
               onClick={() => openEditModal(row.original)}
               disabled={!canUpdateLeads}
-              className="inline-flex items-center gap-1 rounded border border-blush-300 px-3 py-2 text-xs font-medium text-charcoal-500 transition-colors hover:border-rose-gold/40 hover:text-rose-gold disabled:cursor-not-allowed disabled:opacity-50 dark:border-[#3a3835] dark:text-charcoal-300"
+              className="inline-flex items-center gap-1 rounded border border-slate-200 px-3 py-2 text-xs font-medium text-slate-500 transition-colors hover:border-blue-400/60 hover:text-blue-600 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-700 dark:text-slate-400"
             >
               <Pencil size={14} />
               Editar
@@ -785,10 +785,10 @@ export function LeadsTable() {
             <div key={item.label} className="card-dark rounded-lg p-5 shadow-sm">
               <div className="flex items-center justify-between gap-3">
                 <div>
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-charcoal-400 dark:text-charcoal-300">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-400 dark:text-slate-400">
                     {item.label}
                   </p>
-                  <p className="mt-2 font-heading text-3xl font-bold text-charcoal dark:text-charcoal-50">
+                  <p className="mt-2 font-heading text-3xl font-bold text-slate-900 dark:text-slate-100">
                     {item.value}
                   </p>
                 </div>
@@ -804,7 +804,7 @@ export function LeadsTable() {
       <div className={crmListShell}>
         <div className={crmListToolbar}>
           <div className={crmListSearchWrapper}>
-            <Search size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-charcoal-400" />
+            <Search size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
             <input
               value={searchFilter}
               onChange={e => setSearchFilter(e.target.value)}
@@ -850,36 +850,36 @@ export function LeadsTable() {
             value={sourceDetailFilter}
             onChange={e => setSourceDetailFilter(e.target.value)}
             placeholder="Origem detalhada / campanha"
-            className="h-12 min-w-[220px] rounded-lg border border-blush-300 bg-white/95 px-4 text-sm text-charcoal shadow-sm outline-none transition focus:border-rose-gold/40 focus:ring-2 focus:ring-rose-gold/20 dark:border-[#3a3835] dark:bg-[#1c1b1a] dark:text-charcoal-100"
+            className="h-12 min-w-[220px] rounded-lg border border-slate-200 bg-white/95 px-4 text-sm text-slate-900 shadow-sm outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
           />
           <input
             type="date"
             value={fromFilter}
             onChange={e => setFromFilter(e.target.value)}
-            className="h-12 min-w-[170px] rounded-lg border border-blush-300 bg-white/95 px-4 text-sm text-charcoal shadow-sm outline-none transition focus:border-rose-gold/40 focus:ring-2 focus:ring-rose-gold/20 dark:border-[#3a3835] dark:bg-[#1c1b1a] dark:text-charcoal-100"
+            className="h-12 min-w-[170px] rounded-lg border border-slate-200 bg-white/95 px-4 text-sm text-slate-900 shadow-sm outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
           />
           <input
             type="date"
             value={toFilter}
             onChange={e => setToFilter(e.target.value)}
-            className="h-12 min-w-[170px] rounded-lg border border-blush-300 bg-white/95 px-4 text-sm text-charcoal shadow-sm outline-none transition focus:border-rose-gold/40 focus:ring-2 focus:ring-rose-gold/20 dark:border-[#3a3835] dark:bg-[#1c1b1a] dark:text-charcoal-100"
+            className="h-12 min-w-[170px] rounded-lg border border-slate-200 bg-white/95 px-4 text-sm text-slate-900 shadow-sm outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
           />
           <button
             type="button"
             onClick={handleResetFilters}
-            className="inline-flex items-center gap-2 rounded border border-blush-300 px-4 py-3 text-sm font-medium text-charcoal-500 transition-colors hover:border-rose-gold/40 hover:text-rose-gold dark:border-[#3a3835] dark:text-charcoal-300"
+            className="inline-flex items-center gap-2 rounded border border-slate-200 px-4 py-3 text-sm font-medium text-slate-500 transition-colors hover:border-blue-400/60 hover:text-blue-600 dark:border-slate-700 dark:text-slate-400"
           >
             <FilterX size={14} />
             Limpar
           </button>
-          <button onClick={fetchLeads} className="rounded-lg border border-blush-300 p-3 text-charcoal-400 transition-colors hover:text-rose-gold dark:border-[#3a3835]" title="Atualizar">
+          <button onClick={fetchLeads} className="rounded-lg border border-slate-200 p-3 text-slate-400 transition-colors hover:text-blue-600 dark:border-slate-700" title="Atualizar">
             <RefreshCw size={16} className={loading ? 'animate-spin' : ''} />
           </button>
           <button
             type="button"
             onClick={openCreateModal}
             disabled={!canCreateLeads}
-            className="inline-flex items-center gap-2 rounded border border-blush-300 px-4 py-3 text-sm font-medium text-charcoal-500 transition-colors hover:border-rose-gold/40 hover:text-rose-gold disabled:cursor-not-allowed disabled:opacity-50 dark:border-[#3a3835] dark:text-charcoal-300"
+            className="inline-flex items-center gap-2 rounded border border-slate-200 px-4 py-3 text-sm font-medium text-slate-500 transition-colors hover:border-blue-400/60 hover:text-blue-600 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-700 dark:text-slate-400"
           >
             <Plus size={14} />
             Novo lead
@@ -896,16 +896,16 @@ export function LeadsTable() {
       </div>
 
       {selectedCount > 0 && (
-        <div className="flex flex-wrap items-center gap-2 rounded-lg border border-blush-200 bg-[#FDFCF9] px-4 py-3 shadow-[0_4px_16px_rgba(45,35,20,0.12)] animate-[slideDown_0.2s_ease] dark:border-[#3a3835] dark:bg-[#1c1b1a]">
-          <span className="text-sm font-medium text-charcoal dark:text-charcoal-100">
+        <div className="flex flex-wrap items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 shadow-[0_4px_16px_rgba(45,35,20,0.12)] animate-[slideDown_0.2s_ease] dark:border-slate-700 dark:bg-slate-900">
+          <span className="text-sm font-medium text-slate-900 dark:text-slate-100">
             {selectedCount} lead{selectedCount > 1 ? 's' : ''} selecionado{selectedCount > 1 ? 's' : ''}
           </span>
-          <div className="h-4 w-px bg-blush-300 dark:bg-[#3a3835]" />
+          <div className="h-4 w-px bg-slate-200 dark:bg-slate-700" />
           <button
             type="button"
             onClick={() => setBulkStatusModal(true)}
             disabled={!canUpdateLeads}
-            className="inline-flex items-center gap-1.5 rounded border border-blush-300 px-3 py-1.5 text-xs font-medium text-charcoal-500 transition-colors hover:border-rose-gold/40 hover:text-rose-gold disabled:opacity-50 dark:border-[#3a3835] dark:text-charcoal-300"
+            className="inline-flex items-center gap-1.5 rounded border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-500 transition-colors hover:border-blue-400/60 hover:text-blue-600 disabled:opacity-50 dark:border-slate-700 dark:text-slate-400"
           >
             Alterar status
           </button>
@@ -913,7 +913,7 @@ export function LeadsTable() {
             type="button"
             onClick={() => setBulkOriginModal(true)}
             disabled={!canUpdateLeads}
-            className="inline-flex items-center gap-1.5 rounded border border-blush-300 px-3 py-1.5 text-xs font-medium text-charcoal-500 transition-colors hover:border-rose-gold/40 hover:text-rose-gold disabled:opacity-50 dark:border-[#3a3835] dark:text-charcoal-300"
+            className="inline-flex items-center gap-1.5 rounded border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-500 transition-colors hover:border-blue-400/60 hover:text-blue-600 disabled:opacity-50 dark:border-slate-700 dark:text-slate-400"
           >
             Alterar origem
           </button>
@@ -921,7 +921,7 @@ export function LeadsTable() {
             type="button"
             onClick={handleBulkExportSelected}
             disabled={!canExportLeads}
-            className="inline-flex items-center gap-1.5 rounded border border-blush-300 px-3 py-1.5 text-xs font-medium text-charcoal-500 transition-colors hover:border-rose-gold/40 hover:text-rose-gold disabled:opacity-50 dark:border-[#3a3835] dark:text-charcoal-300"
+            className="inline-flex items-center gap-1.5 rounded border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-500 transition-colors hover:border-blue-400/60 hover:text-blue-600 disabled:opacity-50 dark:border-slate-700 dark:text-slate-400"
           >
             <Download size={12} />
             Exportar selecionados
@@ -938,7 +938,7 @@ export function LeadsTable() {
           <button
             type="button"
             onClick={() => setRowSelection({})}
-            className="ml-auto inline-flex items-center gap-1.5 rounded border border-blush-300 px-3 py-1.5 text-xs font-medium text-charcoal-400 transition-colors hover:text-charcoal dark:border-[#3a3835] dark:text-charcoal-300"
+            className="ml-auto inline-flex items-center gap-1.5 rounded border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-400 transition-colors hover:text-slate-900 dark:border-slate-700 dark:text-slate-400"
           >
             Cancelar
           </button>
@@ -988,19 +988,19 @@ export function LeadsTable() {
                         ))}
                       </tr>
                       {isExpanded ? (
-                        <tr className="bg-blush/35 dark:bg-[#1c1b1a]/35">
+                        <tr className="bg-slate-50 dark:bg-slate-900/35">
                           <td colSpan={columns.length} className="px-4 py-5">
                             {isDetailLoading ? (
-                              <div className="flex items-center gap-2 text-sm text-charcoal-400 dark:text-charcoal-300">
+                              <div className="flex items-center gap-2 text-sm text-slate-400 dark:text-slate-400">
                                 <Loader2 size={16} className="animate-spin" />
                                 Carregando rastreabilidade do lead...
                               </div>
                             ) : detail ? (
                               <div className="space-y-4">
-                                <div className="rounded-lg border border-blush-200 bg-white/80 p-4 dark:border-[#3a3835] dark:bg-[#1c1b1a]/70">
-                                  <div className="mb-4 flex items-center gap-2 border-b border-blush-200 pb-3 dark:border-[#3a3835]">
-                                    <ShieldCheck size={15} className="text-charcoal dark:text-charcoal-100" />
-                                    <span className="text-sm font-semibold text-charcoal dark:text-charcoal-100">Captura e consentimento</span>
+                                <div className="rounded-lg border border-slate-200 bg-white/80 p-4 dark:border-slate-700 dark:bg-slate-900/70">
+                                  <div className="mb-4 flex items-center gap-2 border-b border-slate-200 pb-3 dark:border-slate-700">
+                                    <ShieldCheck size={15} className="text-slate-900 dark:text-slate-100" />
+                                    <span className="text-sm font-semibold text-slate-900 dark:text-slate-100">Captura e consentimento</span>
                                   </div>
                                   <div className="mb-4 grid grid-cols-2 gap-2 md:grid-cols-3">
                                     <InfoItem label="Origem" value={SOURCE_LABELS[detail.source] ?? detail.source} />
@@ -1009,28 +1009,28 @@ export function LeadsTable() {
                                     <InfoItem label="Período preferido" value={humanizePeriod(extractFromNotes(detail.notes, 'period'))} />
                                     <InfoItem label="Consentido em" value={detail.consentedAt ? new Date(detail.consentedAt).toLocaleString('pt-BR') : undefined} />
                                   </div>
-                                  <div className="flex flex-wrap gap-2 border-t border-blush-200 pt-3 dark:border-[#3a3835]">
+                                  <div className="flex flex-wrap gap-2 border-t border-slate-200 pt-3 dark:border-slate-700">
                                     {detail.consentLogs.length > 0 ? detail.consentLogs.map((log) => (
-                                      <span key={log.id} className="inline-flex items-center rounded-full border border-blush-200 bg-white px-3 py-1 text-[11px] font-medium text-charcoal-500 dark:border-[#3a3835] dark:bg-[#1c1b1a] dark:text-charcoal-300">
+                                      <span key={log.id} className="inline-flex items-center rounded-full border border-slate-200 bg-white px-3 py-1 text-[11px] font-medium text-slate-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400">
                                         {CHANNEL_LABELS[log.channel] ?? fallbackHumanize(log.channel)} · {new Date(log.consentedAt).toLocaleDateString('pt-BR')}
                                       </span>
                                     )) : detail.utmSource ? (
-                                      <span className="inline-flex items-center rounded-full bg-blush/40 px-3 py-1 text-[11px] text-charcoal-500 dark:bg-[#252423] dark:text-charcoal-300">
+                                      <span className="inline-flex items-center rounded-full bg-slate-50 px-3 py-1 text-[11px] text-slate-500 dark:bg-slate-800 dark:text-slate-400">
                                         {humanizeOrigin(detail.utmSource)}{detail.consentedAt ? ` · ${new Date(detail.consentedAt).toLocaleDateString('pt-BR')}` : ''}
                                       </span>
                                     ) : (
-                                      <span className="text-xs text-charcoal-400 dark:text-charcoal-300">Sem log adicional de consentimento.</span>
+                                      <span className="text-xs text-slate-400 dark:text-slate-400">Sem log adicional de consentimento.</span>
                                     )}
                                   </div>
                                 </div>
-                                <div className="rounded-lg border border-blush-200 bg-white/80 p-4 dark:border-[#3a3835] dark:bg-[#1c1b1a]/70">
-                                  <div className="flex items-center gap-2 text-sm font-semibold text-charcoal dark:text-charcoal-100">
+                                <div className="rounded-lg border border-slate-200 bg-white/80 p-4 dark:border-slate-700 dark:bg-slate-900/70">
+                                  <div className="flex items-center gap-2 text-sm font-semibold text-slate-900 dark:text-slate-100">
                                     <CalendarClock size={16} />
                                     Agenda e atividade
                                   </div>
-                                  <div className="mt-3 space-y-2 text-sm text-charcoal-500 dark:text-charcoal-300">
+                                  <div className="mt-3 space-y-2 text-sm text-slate-500 dark:text-slate-400">
                                     {detail.appointments.length > 0 ? detail.appointments.map((appointment) => (
-                                      <div key={appointment.id} className="rounded border border-blush-100 bg-white/80 px-3 py-2 dark:border-[#3a3835] dark:bg-[#1c1b1a]">
+                                      <div key={appointment.id} className="rounded border border-slate-100 bg-white/80 px-3 py-2 dark:border-slate-700 dark:bg-slate-900">
                                         {humanizeService(appointment.serviceType)} · {appointment.status} · {new Date(appointment.date).toLocaleString('pt-BR')}
                                       </div>
                                     )) : (
@@ -1040,7 +1040,7 @@ export function LeadsTable() {
                                 </div>
                               </div>
                             ) : (
-                              <p className="text-sm text-charcoal-400 dark:text-charcoal-300">Nenhum detalhe disponível para este lead.</p>
+                              <p className="text-sm text-slate-400 dark:text-slate-400">Nenhum detalhe disponível para este lead.</p>
                             )}
                           </td>
                         </tr>
@@ -1061,16 +1061,16 @@ export function LeadsTable() {
       {showModal ? (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm" onClick={(event) => event.target === event.currentTarget && setShowModal(false)}>
           <div className="card-dark w-full max-w-2xl shadow-2xl">
-            <div className="flex items-center justify-between border-b border-blush-200 p-6 dark:border-[#3a3835]">
+            <div className="flex items-center justify-between border-b border-slate-200 p-6 dark:border-slate-700">
               <div>
-                <h2 className="font-heading text-lg font-semibold text-charcoal dark:text-charcoal-50">
+                <h2 className="font-heading text-lg font-semibold text-slate-900 dark:text-slate-100">
                   {editingLead ? 'Editar lead' : 'Cadastrar lead manualmente'}
                 </h2>
-                <p className="mt-1 text-xs text-charcoal-400 dark:text-charcoal-300">
+                <p className="mt-1 text-xs text-slate-400 dark:text-slate-400">
                   Edite as informações do lead. As alterações ficam registradas no histórico.
                 </p>
               </div>
-              <button type="button" onClick={() => setShowModal(false)} className="text-charcoal-400 transition-colors hover:text-charcoal dark:hover:text-charcoal-100">
+              <button type="button" onClick={() => setShowModal(false)} className="text-slate-400 transition-colors hover:text-slate-900 dark:hover:text-slate-100">
                 <XCircle size={20} />
               </button>
             </div>
@@ -1078,38 +1078,38 @@ export function LeadsTable() {
             <form onSubmit={handleSubmit} className="space-y-4 p-6">
               <div className="grid gap-4 md:grid-cols-2">
                 <div>
-                  <label className="mb-1 block text-xs font-medium text-charcoal-400">Nome *</label>
+                  <label className="mb-1 block text-xs font-medium text-slate-400">Nome *</label>
                   <input
                     required
                     value={form.name}
                     onChange={(event) => setForm((current) => ({ ...current, name: event.target.value }))}
-                    className="w-full rounded-md border border-blush-300 bg-white px-3 py-2 text-sm text-charcoal focus:outline-none focus:ring-2 focus:ring-rose-gold/40 dark:border-[#3a3835] dark:bg-[#252423] dark:text-charcoal-100"
+                    className="w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
                   />
                 </div>
                 <div>
-                  <label className="mb-1 block text-xs font-medium text-charcoal-400">E-mail *</label>
+                  <label className="mb-1 block text-xs font-medium text-slate-400">E-mail *</label>
                   <input
                     required
                     type="email"
                     value={form.email}
                     onChange={(event) => setForm((current) => ({ ...current, email: event.target.value }))}
-                    className="w-full rounded-md border border-blush-300 bg-white px-3 py-2 text-sm text-charcoal focus:outline-none focus:ring-2 focus:ring-rose-gold/40 dark:border-[#3a3835] dark:bg-[#252423] dark:text-charcoal-100"
+                    className="w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
                   />
                 </div>
               </div>
 
               <div className="grid gap-4 md:grid-cols-2">
                 <div>
-                  <label className="mb-1 block text-xs font-medium text-charcoal-400">Telefone</label>
+                  <label className="mb-1 block text-xs font-medium text-slate-400">Telefone</label>
                   <input
                     type="tel"
                     value={form.phone}
                     onChange={(event) => setForm((current) => ({ ...current, phone: event.target.value }))}
-                    className="w-full rounded-md border border-blush-300 bg-white px-3 py-2 text-sm text-charcoal focus:outline-none focus:ring-2 focus:ring-rose-gold/40 dark:border-[#3a3835] dark:bg-[#252423] dark:text-charcoal-100"
+                    className="w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
                   />
                 </div>
                 <div>
-                  <label className="mb-1 block text-xs font-medium text-charcoal-400">Status</label>
+                  <label className="mb-1 block text-xs font-medium text-slate-400">Status</label>
                   <div className={crmFieldSelectWrapper}>
                     <select
                       value={form.status}
@@ -1125,7 +1125,7 @@ export function LeadsTable() {
 
               <div className="grid gap-4 md:grid-cols-2">
                 <div>
-                  <label className="mb-1 block text-xs font-medium text-charcoal-400">Origem</label>
+                  <label className="mb-1 block text-xs font-medium text-slate-400">Origem</label>
                   <div className={crmFieldSelectWrapper}>
                     <select
                       value={form.source}
@@ -1138,7 +1138,7 @@ export function LeadsTable() {
                   </div>
                 </div>
                 <div>
-                  <label className="mb-1 block text-xs font-medium text-charcoal-400">Origem detalhada</label>
+                  <label className="mb-1 block text-xs font-medium text-slate-400">Origem detalhada</label>
                   <div className={crmFieldSelectWrapper}>
                     <select
                       value={form.sourceDetail}
@@ -1157,7 +1157,7 @@ export function LeadsTable() {
 
               <div className="grid gap-4 md:grid-cols-2">
                 <div>
-                  <label className="mb-1 block text-xs font-medium text-charcoal-400">Serviço de interesse</label>
+                  <label className="mb-1 block text-xs font-medium text-slate-400">Serviço de interesse</label>
                   <div className={crmFieldSelectWrapper}>
                     <select
                       value={form.notesService}
@@ -1173,7 +1173,7 @@ export function LeadsTable() {
                   </div>
                 </div>
                 <div>
-                  <label className="mb-1 block text-xs font-medium text-charcoal-400">Período preferido</label>
+                  <label className="mb-1 block text-xs font-medium text-slate-400">Período preferido</label>
                   <div className={crmFieldSelectWrapper}>
                     <select
                       value={form.notesPeriod}
@@ -1190,17 +1190,17 @@ export function LeadsTable() {
                 </div>
               </div>
               <div>
-                <label className="mb-1 block text-xs font-medium text-charcoal-400">Observação adicional (opcional)</label>
+                <label className="mb-1 block text-xs font-medium text-slate-400">Observação adicional (opcional)</label>
                 <textarea
                   rows={3}
                   value={form.notesExtra}
                   onChange={(event) => setForm((current) => ({ ...current, notesExtra: event.target.value }))}
                   placeholder="Alguma informação extra sobre o lead..."
-                  className="w-full rounded-md border border-blush-300 bg-white px-3 py-2 text-sm text-charcoal focus:outline-none focus:ring-2 focus:ring-rose-gold/40 dark:border-[#3a3835] dark:bg-[#252423] dark:text-charcoal-100"
+                  className="w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
                 />
               </div>
 
-              <label className="flex items-center gap-2 text-sm text-charcoal-500 dark:text-charcoal-300">
+              <label className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
                 <input
                   type="checkbox"
                   checked={form.consented}
@@ -1210,7 +1210,7 @@ export function LeadsTable() {
               </label>
 
               <div className="flex gap-3 pt-2">
-                <button type="button" onClick={() => setShowModal(false)} className="flex-1 rounded border border-blush-300 px-4 py-2 text-sm text-charcoal-400 transition-colors hover:bg-blush dark:border-[#3a3835] dark:hover:bg-[#252423]">
+                <button type="button" onClick={() => setShowModal(false)} className="flex-1 rounded border border-slate-200 px-4 py-2 text-sm text-slate-400 transition-colors hover:bg-slate-100 dark:border-slate-700 dark:hover:bg-slate-800">
                   Cancelar
                 </button>
                 <button type="submit" disabled={submitting} className="flex-1 rounded bg-rose-gold px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-rose-gold-500 disabled:opacity-60">
@@ -1225,12 +1225,12 @@ export function LeadsTable() {
       {bulkStatusModal ? (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm" onClick={(e) => e.target === e.currentTarget && setBulkStatusModal(false)}>
           <div className="card-dark w-full max-w-sm shadow-2xl">
-            <div className="flex items-center justify-between border-b border-blush-200 p-5 dark:border-[#3a3835]">
-              <h2 className="font-heading text-base font-semibold text-charcoal dark:text-charcoal-50">Alterar status em massa</h2>
-              <button type="button" onClick={() => setBulkStatusModal(false)} className="text-charcoal-400 hover:text-charcoal dark:hover:text-charcoal-100"><XCircle size={18} /></button>
+            <div className="flex items-center justify-between border-b border-slate-200 p-5 dark:border-slate-700">
+              <h2 className="font-heading text-base font-semibold text-slate-900 dark:text-slate-100">Alterar status em massa</h2>
+              <button type="button" onClick={() => setBulkStatusModal(false)} className="text-slate-400 hover:text-slate-900 dark:hover:text-slate-100"><XCircle size={18} /></button>
             </div>
             <div className="space-y-4 p-5">
-              <p className="text-sm text-charcoal-500 dark:text-charcoal-300">Aplicar a {selectedCount} lead{selectedCount > 1 ? 's' : ''} selecionado{selectedCount > 1 ? 's' : ''}.</p>
+              <p className="text-sm text-slate-500 dark:text-slate-400">Aplicar a {selectedCount} lead{selectedCount > 1 ? 's' : ''} selecionado{selectedCount > 1 ? 's' : ''}.</p>
               <div className={crmFieldSelectWrapper}>
                 <select value={bulkStatus} onChange={e => setBulkStatus(e.target.value as LeadStatusKey)} className={crmFieldSelect}>
                   {STATUS_OPTIONS.map(([k, v]) => <option key={k} value={k}>{v.label}</option>)}
@@ -1238,7 +1238,7 @@ export function LeadsTable() {
                 <ChevronDown size={16} className={crmFieldSelectIcon} />
               </div>
               <div className="flex gap-3">
-                <button type="button" onClick={() => setBulkStatusModal(false)} className="flex-1 rounded border border-blush-300 px-4 py-2 text-sm text-charcoal-400 hover:bg-blush dark:border-[#3a3835] dark:hover:bg-[#252423]">Cancelar</button>
+                <button type="button" onClick={() => setBulkStatusModal(false)} className="flex-1 rounded border border-slate-200 px-4 py-2 text-sm text-slate-400 hover:bg-slate-100 dark:border-slate-700 dark:hover:bg-slate-800">Cancelar</button>
                 <button type="button" onClick={() => void handleBulkStatus()} disabled={bulkSubmitting} className="flex-1 rounded bg-rose-gold px-4 py-2 text-sm font-medium text-white hover:bg-rose-gold-500 disabled:opacity-60">
                   {bulkSubmitting ? 'Salvando...' : 'Confirmar'}
                 </button>
@@ -1251,12 +1251,12 @@ export function LeadsTable() {
       {bulkOriginModal ? (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm" onClick={(e) => e.target === e.currentTarget && setBulkOriginModal(false)}>
           <div className="card-dark w-full max-w-sm shadow-2xl">
-            <div className="flex items-center justify-between border-b border-blush-200 p-5 dark:border-[#3a3835]">
-              <h2 className="font-heading text-base font-semibold text-charcoal dark:text-charcoal-50">Alterar origem em massa</h2>
-              <button type="button" onClick={() => setBulkOriginModal(false)} className="text-charcoal-400 hover:text-charcoal dark:hover:text-charcoal-100"><XCircle size={18} /></button>
+            <div className="flex items-center justify-between border-b border-slate-200 p-5 dark:border-slate-700">
+              <h2 className="font-heading text-base font-semibold text-slate-900 dark:text-slate-100">Alterar origem em massa</h2>
+              <button type="button" onClick={() => setBulkOriginModal(false)} className="text-slate-400 hover:text-slate-900 dark:hover:text-slate-100"><XCircle size={18} /></button>
             </div>
             <div className="space-y-4 p-5">
-              <p className="text-sm text-charcoal-500 dark:text-charcoal-300">Aplicar a {selectedCount} lead{selectedCount > 1 ? 's' : ''} selecionado{selectedCount > 1 ? 's' : ''}.</p>
+              <p className="text-sm text-slate-500 dark:text-slate-400">Aplicar a {selectedCount} lead{selectedCount > 1 ? 's' : ''} selecionado{selectedCount > 1 ? 's' : ''}.</p>
               <div className={crmFieldSelectWrapper}>
                 <select value={bulkOrigin} onChange={e => setBulkOrigin(e.target.value)} className={crmFieldSelect}>
                   <option value="">Selecionar origem...</option>
@@ -1265,7 +1265,7 @@ export function LeadsTable() {
                 <ChevronDown size={16} className={crmFieldSelectIcon} />
               </div>
               <div className="flex gap-3">
-                <button type="button" onClick={() => setBulkOriginModal(false)} className="flex-1 rounded border border-blush-300 px-4 py-2 text-sm text-charcoal-400 hover:bg-blush dark:border-[#3a3835] dark:hover:bg-[#252423]">Cancelar</button>
+                <button type="button" onClick={() => setBulkOriginModal(false)} className="flex-1 rounded border border-slate-200 px-4 py-2 text-sm text-slate-400 hover:bg-slate-100 dark:border-slate-700 dark:hover:bg-slate-800">Cancelar</button>
                 <button type="button" onClick={() => void handleBulkOrigin()} disabled={bulkSubmitting || !bulkOrigin} className="flex-1 rounded bg-rose-gold px-4 py-2 text-sm font-medium text-white hover:bg-rose-gold-500 disabled:opacity-60">
                   {bulkSubmitting ? 'Salvando...' : 'Confirmar'}
                 </button>
@@ -1278,16 +1278,16 @@ export function LeadsTable() {
       {bulkDeleteConfirm ? (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm" onClick={(e) => e.target === e.currentTarget && setBulkDeleteConfirm(false)}>
           <div className="card-dark w-full max-w-sm shadow-2xl">
-            <div className="flex items-center justify-between border-b border-blush-200 p-5 dark:border-[#3a3835]">
-              <h2 className="font-heading text-base font-semibold text-charcoal dark:text-charcoal-50">Confirmar exclusão</h2>
-              <button type="button" onClick={() => setBulkDeleteConfirm(false)} className="text-charcoal-400 hover:text-charcoal dark:hover:text-charcoal-100"><XCircle size={18} /></button>
+            <div className="flex items-center justify-between border-b border-slate-200 p-5 dark:border-slate-700">
+              <h2 className="font-heading text-base font-semibold text-slate-900 dark:text-slate-100">Confirmar exclusão</h2>
+              <button type="button" onClick={() => setBulkDeleteConfirm(false)} className="text-slate-400 hover:text-slate-900 dark:hover:text-slate-100"><XCircle size={18} /></button>
             </div>
             <div className="space-y-4 p-5">
-              <p className="text-sm text-charcoal-500 dark:text-charcoal-300">
-                Tem certeza que deseja excluir <strong className="text-charcoal dark:text-charcoal-100">{selectedCount} lead{selectedCount > 1 ? 's' : ''}</strong>? Esta ação é irreversível.
+              <p className="text-sm text-slate-500 dark:text-slate-400">
+                Tem certeza que deseja excluir <strong className="text-slate-900 dark:text-slate-100">{selectedCount} lead{selectedCount > 1 ? 's' : ''}</strong>? Esta ação é irreversível.
               </p>
               <div className="flex gap-3">
-                <button type="button" onClick={() => setBulkDeleteConfirm(false)} className="flex-1 rounded border border-blush-300 px-4 py-2 text-sm text-charcoal-400 hover:bg-blush dark:border-[#3a3835] dark:hover:bg-[#252423]">Cancelar</button>
+                <button type="button" onClick={() => setBulkDeleteConfirm(false)} className="flex-1 rounded border border-slate-200 px-4 py-2 text-sm text-slate-400 hover:bg-slate-100 dark:border-slate-700 dark:hover:bg-slate-800">Cancelar</button>
                 <button type="button" onClick={() => void handleBulkDelete()} disabled={bulkSubmitting} className="flex-1 rounded bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 disabled:opacity-60">
                   {bulkSubmitting ? 'Excluindo...' : `Excluir ${selectedCount} lead${selectedCount > 1 ? 's' : ''}`}
                 </button>

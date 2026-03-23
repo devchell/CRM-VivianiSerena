@@ -102,7 +102,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   if (status === 'loading') {
     return (
-      <div className="flex h-screen items-center justify-center bg-cream-200 dark:bg-[#111110]">
+      <div className="flex h-screen items-center justify-center bg-slate-100 dark:bg-slate-950">
         <div className="w-8 h-8 border-2 border-rose-gold border-t-transparent rounded-full animate-spin" />
       </div>
     )
@@ -110,7 +110,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   if (mustChangePassword) {
     return (
-      <div className="flex h-screen items-center justify-center bg-cream-200 dark:bg-[#111110]">
+      <div className="flex h-screen items-center justify-center bg-slate-100 dark:bg-slate-950">
         <div className="w-8 h-8 border-2 border-rose-gold border-t-transparent rounded-full animate-spin" />
       </div>
     )
@@ -138,7 +138,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   return (
     <DashboardProvider value={contextValue}>
-      <div className="flex h-screen overflow-hidden bg-cream-200 dark:bg-[#111110]">
+      <div className="flex h-screen overflow-hidden bg-slate-100 dark:bg-slate-950">
         <Sidebar />
         <div className="flex flex-col flex-1 overflow-hidden min-w-0">
           <Header />

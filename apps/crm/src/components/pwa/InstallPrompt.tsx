@@ -43,7 +43,7 @@ export function InstallPrompt() {
     <button
       onClick={handleInstall}
       title="Instalar app"
-      className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-semibold rounded-lg bg-rose-gold/10 text-rose-gold border border-rose-gold/30 hover:bg-rose-gold/20 transition-colors"
+      className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-semibold rounded-lg bg-blue-50 text-blue-600 border border-blue-200 hover:bg-blue-100 transition-colors"
     >
       <Download size={13} />
       <span className="hidden sm:inline">Instalar App</span>

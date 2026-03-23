@@ -9,7 +9,7 @@ export default function OfflinePage() {
         </svg>
       </div>
       <h1 className="font-heading text-2xl font-bold text-white mb-2">Sem conexão</h1>
-      <p className="text-charcoal-400 text-sm mb-8 max-w-xs">
+      <p className="text-slate-400 text-sm mb-8 max-w-xs">
         Você está offline. Verifique sua conexão com a internet e tente novamente.
       </p>
       <button
