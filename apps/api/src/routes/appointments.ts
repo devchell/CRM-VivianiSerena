@@ -16,6 +16,7 @@ const schema = z.object({
   leadId: z.string(),
   date: z.string().datetime(),
   serviceType: z.enum(['coaching_individual', 'coaching_group', 'workshop', 'mentoring', 'consultation']),
+  durationMinutes: z.number().int().min(15).max(480).optional(),
   notes: z.string().optional(),
 })
 
@@ -36,20 +37,22 @@ appointmentsRouter.get('/', authorizePermission('agenda.view'), async (req, res,
     })
     res.json({
       success: true,
-      data: appointments.map((appointment) => ({
-        id: appointment.id,
-        leadId: appointment.leadId,
-        leadName: appointment.lead.name,
-        leadEmail: appointment.lead.email,
-        leadPhone: appointment.lead.phone,
-        startTime: appointment.date.toISOString(),
-        endTime: new Date(
-          appointment.date.getTime() + DEFAULT_APPOINTMENT_DURATION_MINUTES * 60 * 1000
-        ).toISOString(),
-        serviceType: appointment.serviceType,
-        status: appointment.status,
-        notes: appointment.notes,
-      })),
+      data: appointments.map((appointment) => {
+        const duration = appointment.durationMinutes ?? DEFAULT_APPOINTMENT_DURATION_MINUTES
+        return {
+          id: appointment.id,
+          leadId: appointment.leadId,
+          leadName: appointment.lead.name,
+          leadEmail: appointment.lead.email,
+          leadPhone: appointment.lead.phone,
+          startTime: appointment.date.toISOString(),
+          endTime: new Date(appointment.date.getTime() + duration * 60 * 1000).toISOString(),
+          durationMinutes: duration,
+          serviceType: appointment.serviceType,
+          status: appointment.status,
+          notes: appointment.notes,
+        }
+      }),
     })
   } catch (error) { next(error) }
 })
@@ -67,10 +70,9 @@ appointmentsRouter.post('/', authorizePermission('agenda.create'), async (req, r
     const lead = await prisma.lead.findUnique({ where: { id: data.leadId }, select: { name: true, email: true } })
     if (!lead) throw new AppError(404, 'Lead not found')
 
+    const duration = data.durationMinutes ?? DEFAULT_APPOINTMENT_DURATION_MINUTES
     const startDate = new Date(data.date)
-    const endDate = new Date(
-      startDate.getTime() + DEFAULT_APPOINTMENT_DURATION_MINUTES * 60 * 1000
-    )
+    const endDate = new Date(startDate.getTime() + duration * 60 * 1000)
 
     const calEvent = await googleCalendar.createEvent({
       summary: data.serviceType.replace(/_/g, ' ') + ' - ' + lead.name,
@@ -81,7 +83,7 @@ appointmentsRouter.post('/', authorizePermission('agenda.create'), async (req, r
     })
 
     const appointment = await prisma.appointment.create({
-      data: { leadId: data.leadId, date: startDate, serviceType: data.serviceType, notes: data.notes, googleEventId: calEvent?.id ?? null },
+      data: { leadId: data.leadId, date: startDate, durationMinutes: duration, serviceType: data.serviceType, notes: data.notes, googleEventId: calEvent?.id ?? null },
     })
 
     emailService.appointmentConfirmation({ clientEmail: lead.email, clientName: lead.name, date: startDate, serviceType: data.serviceType }).catch(() => {})
@@ -95,16 +97,45 @@ appointmentsRouter.patch('/:id', authorizePermission('agenda.update'), async (re
   try {
     const appointmentId = String(req.params.id)
     const data = schema.partial().parse(req.body)
-    const existing = await prisma.appointment.findUnique({ where: { id: appointmentId } })
+    const existing = await prisma.appointment.findUnique({
+      where: { id: appointmentId },
+      include: { lead: { select: { name: true, email: true } } },
+    })
     if (!existing) throw new AppError(404, 'Appointment not found')
+
+    const updateData: Record<string, unknown> = { ...data }
+    if (data.date) updateData.date = new Date(data.date)
+    delete updateData.leadId
 
     const appointment = await prisma.appointment.update({
       where: { id: appointmentId },
-      data: data.date ? { ...data, date: new Date(data.date) } : data,
+      data: updateData,
     })
 
-    if (existing.googleEventId && data.date) {
-      await googleCalendar.updateEvent(existing.googleEventId, { start: new Date(data.date), description: data.notes })
+    // Sync to Google Calendar — create event if missing, update if exists
+    const newStart = data.date ? new Date(data.date) : existing.date
+    const duration = data.durationMinutes ?? existing.durationMinutes ?? DEFAULT_APPOINTMENT_DURATION_MINUTES
+    const newEnd = new Date(newStart.getTime() + duration * 60 * 1000)
+    const summary = (data.serviceType ?? existing.serviceType).replace(/_/g, ' ') + ' - ' + existing.lead.name
+
+    if (existing.googleEventId) {
+      await googleCalendar.updateEvent(existing.googleEventId, {
+        summary,
+        start: newStart,
+        end: newEnd,
+        description: data.notes ?? existing.notes ?? undefined,
+      })
+    } else {
+      const calEvent = await googleCalendar.createEvent({
+        summary,
+        description: data.notes ?? existing.notes ?? undefined,
+        start: newStart,
+        end: newEnd,
+        attendeeEmail: existing.lead.email,
+      })
+      if (calEvent?.id) {
+        await prisma.appointment.update({ where: { id: appointmentId }, data: { googleEventId: calEvent.id } })
+      }
     }
 
     await invalidateOperationalMetricCaches()

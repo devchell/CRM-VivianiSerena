@@ -14,50 +14,59 @@
 /* ── Design system tokens ────────────────────────────────────────────────── */
 :root {
   /* Background hierarchy: page → surface → card → input */
-  --bg-page:    #D5CEC5;
-  --bg-surface: #E6DFD5;
-  --bg-card:    #FDFCFA;
+  --bg-page:    #F0F2F5;
+  --bg-surface: #E8EBF0;
+  --bg-card:    #FFFFFF;
   --bg-input:   #FFFFFF;
-  --bg-hover:   #EDE7DC;
-  --bg-active:  #E3DDD4;
+  --bg-hover:   #F3F4F6;
+  --bg-active:  #EFF6FF;
 
   /* Shadcn-compatible aliases */
-  --background:            #D5CEC5;
-  --background-secondary:  #E6DFD5;
-  --card:                  #FDFCFA;
-  --card-foreground:       #18140F;
+  --background:            #F0F2F5;
+  --background-secondary:  #E8EBF0;
+  --card:                  #FFFFFF;
+  --card-foreground:       #111827;
   --input:                 #FFFFFF;
   --popover:               #FFFFFF;
-  --foreground:            #18140F;
-  --muted:                 #EDE7DC;
-  --muted-foreground:      #7A7268;
-  --border:                rgba(30, 20, 10, 0.14);
-  --input-border:          rgba(30, 20, 10, 0.18);
+  --popover-foreground:    #111827;
+  --foreground:            #111827;
+  --muted:                 #F3F4F6;
+  --muted-foreground:      #6B7280;
+  --border:                #E5E7EB;
+  --input-border:          #D1D5DB;
+  --ring:                  #3B82F6;
   --primary:               #C9A96E;
   --primary-foreground:    #FFFFFF;
+  --accent:                #EFF6FF;
+  --accent-foreground:     #1D4ED8;
 
   /* Shadow system */
-  --shadow-sm:    0 1px 2px rgba(44,35,28,0.06);
-  --shadow-md:    0 2px 8px rgba(44,35,28,0.08), 0 1px 2px rgba(44,35,28,0.04);
-  --shadow-lg:    0 4px 16px rgba(44,35,28,0.10), 0 2px 4px rgba(44,35,28,0.06);
-  --shadow-xl:    0 8px 32px rgba(44,35,28,0.12), 0 4px 8px rgba(44,35,28,0.08);
-  --shadow-inset: inset 0 1px 3px rgba(44,35,28,0.08);
+  --shadow-sm:    0 1px 2px rgba(0,0,0,0.06);
+  --shadow-md:    0 1px 3px rgba(0,0,0,0.08), 0 0 0 1px rgba(0,0,0,0.04);
+  --shadow-lg:    0 4px 12px rgba(0,0,0,0.10);
+  --shadow-xl:    0 8px 32px rgba(0,0,0,0.12), 0 4px 8px rgba(0,0,0,0.08);
+  --shadow-inset: inset 0 1px 3px rgba(0,0,0,0.06);
+  --shadow-card:  0 1px 3px rgba(0,0,0,0.08), 0 0 0 1px rgba(0,0,0,0.04);
+  --shadow-hover: 0 4px 12px rgba(0,0,0,0.10);
 
   /* Text hierarchy */
-  --text-primary:   #18140F;
-  --text-secondary: #6B5E56;
-  --text-tertiary:  #7A7268;
-  --text-disabled:  #C4B5AC;
+  --text-primary:   #111827;
+  --text-secondary: #374151;
+  --text-tertiary:  #6B7280;
+  --text-disabled:  #9CA3AF;
 
-  /* Accent */
-  --accent:        #C9967A;
-  --accent-hover:  #B5785A;
-  --accent-subtle: rgba(201,150,122,0.10);
-  --accent-foreground: #FFFFFF;
+  /* Accent (rose-gold for actions) */
+  --accent-rose:       #C9A96E;
+  --accent-rose-hover: #B8934A;
+  --accent-subtle:     rgba(201,169,110,0.10);
+
+  /* Sidebar */
+  --sidebar:        #FFFFFF;
+  --sidebar-border: #E5E7EB;
 
   /* Borders */
-  --border-subtle: rgba(30,20,10,0.08);
-  --border-medium: rgba(30,20,10,0.14);
+  --border-subtle: rgba(0,0,0,0.06);
+  --border-medium: #E5E7EB;
 
   /* Radius */
   --radius-sm: 6px;
@@ -72,46 +81,53 @@
 }
 
 .dark {
-  --bg-page:    #0C0B09;
-  --bg-surface: #141210;
-  --bg-card:    #1C1A17;
-  --bg-input:   #232018;
-  --bg-hover:   #272420;
-  --bg-active:  #2E2A25;
+  --bg-page:    #0F1117;
+  --bg-surface: #141720;
+  --bg-card:    #1A1D27;
+  --bg-input:   #1F2937;
+  --bg-hover:   #1F2937;
+  --bg-active:  #1E3A5F;
 
   /* Shadcn-compatible aliases */
-  --background:            #0C0B09;
-  --background-secondary:  #141210;
-  --card:                  #1C1A17;
-  --card-foreground:       #F0EDE8;
-  --input:                 #232018;
-  --popover:               #1C1A17;
-  --foreground:            #F0EDE8;
-  --muted:                 #252219;
-  --muted-foreground:      #9A9088;
-  --border:                rgba(255, 248, 235, 0.10);
-  --input-border:          rgba(255, 248, 235, 0.14);
+  --background:            #0F1117;
+  --background-secondary:  #141720;
+  --card:                  #1A1D27;
+  --card-foreground:       #F9FAFB;
+  --input:                 #1F2937;
+  --popover:               #1A1D27;
+  --popover-foreground:    #F9FAFB;
+  --foreground:            #F9FAFB;
+  --muted:                 #1F2937;
+  --muted-foreground:      #9CA3AF;
+  --border:                #2D3748;
+  --input-border:          #374151;
+  --ring:                  #60A5FA;
   --primary:               #D4B882;
-  --primary-foreground:    #1C1A17;
+  --primary-foreground:    #111827;
+  --accent:                #1E3A5F;
+  --accent-foreground:     #93C5FD;
 
   --shadow-sm:    0 1px 2px rgba(0,0,0,0.20);
   --shadow-md:    0 2px 8px rgba(0,0,0,0.30), 0 1px 2px rgba(0,0,0,0.20);
   --shadow-lg:    0 4px 16px rgba(0,0,0,0.35), 0 2px 4px rgba(0,0,0,0.20);
   --shadow-xl:    0 8px 32px rgba(0,0,0,0.40), 0 4px 8px rgba(0,0,0,0.25);
   --shadow-inset: inset 0 1px 3px rgba(0,0,0,0.30);
+  --shadow-card:  0 1px 3px rgba(0,0,0,0.30), 0 0 0 1px rgba(255,255,255,0.04);
 
-  --text-primary:   #F0EDE8;
-  --text-secondary: #A89F96;
-  --text-tertiary:  #9A9088;
-  --text-disabled:  #4A4540;
+  --text-primary:   #F9FAFB;
+  --text-secondary: #E5E7EB;
+  --text-tertiary:  #9CA3AF;
+  --text-disabled:  #4B5563;
 
-  --accent:        #C9967A;
-  --accent-hover:  #B5785A;
-  --accent-subtle: rgba(201,150,122,0.15);
-  --accent-foreground: #1C1A17;
+  --accent-rose:       #D4B882;
+  --accent-rose-hover: #C9A96E;
+  --accent-subtle:     rgba(212,184,130,0.15);
 
-  --border-subtle: rgba(255,248,235,0.06);
-  --border-medium: rgba(255,248,235,0.10);
+  --sidebar:        #111827;
+  --sidebar-border: #1F2937;
+
+  --border-subtle: rgba(255,255,255,0.06);
+  --border-medium: #2D3748;
 }
 
 /* ── Financial theme variables ───────────────────────────────────────────── */
@@ -167,7 +183,8 @@
   html { scroll-behavior: smooth; }
   body {
     background-color: var(--bg-page);
-    @apply text-charcoal dark:text-[#ECEAE6] transition-colors duration-200;
+    color: var(--text-primary);
+    @apply transition-colors duration-200;
   }
   h1, h2, h3, h4, h5, h6 { @apply font-heading; }
 }
@@ -175,11 +192,18 @@
 @layer components {
   /* ── Sidebar ──────────────────────────────────────────────────────────── */
   .sidebar-link {
-    @apply flex items-center gap-3 px-3 py-2 rounded-lg text-charcoal-400 hover:bg-blush hover:text-charcoal dark:text-charcoal-300 dark:hover:bg-charcoal-700 dark:hover:text-charcoal-50 transition-all duration-150 text-sm font-medium;
+    @apply flex items-center gap-3 px-3 py-2 rounded-lg text-charcoal-400 hover:text-charcoal dark:text-charcoal-300 dark:hover:text-charcoal-50 transition-all duration-150 text-sm font-medium;
+    &:hover { background: var(--muted); }
   }
   .sidebar-link.active {
-    @apply bg-rose-gold/10 text-rose-gold dark:bg-rose-gold/20 dark:text-rose-gold-300;
-    box-shadow: inset 3px 0 0 var(--accent);
+    background: rgba(201,169,110,0.10);
+    color: #C9A96E;
+    box-shadow: inset 3px 0 0 #C9A96E;
+  }
+  .dark .sidebar-link.active {
+    background: rgba(212,184,130,0.15);
+    color: #D4B882;
+    box-shadow: inset 3px 0 0 #D4B882;
   }
 
   /* ── Cards ────────────────────────────────────────────────────────────── */
@@ -309,20 +333,22 @@ select:focus {
   outline: none;
 }
 
-/* Sidebar mais escura */
-[data-sidebar], .sidebar, aside {
-  background: #DDD7CD !important;
+/* Sidebar — branca com borda direita */
+[data-sidebar], .sidebar {
+  background: var(--sidebar) !important;
+  border-right: 1px solid var(--sidebar-border) !important;
 }
-.dark [data-sidebar], .dark .sidebar, .dark aside {
-  background: #0A0908 !important;
+.dark [data-sidebar], .dark .sidebar {
+  background: var(--sidebar) !important;
+  border-right: 1px solid var(--sidebar-border) !important;
 }
 
 /* Tabela — zebra e hover mais visíveis */
 tbody tr:nth-child(even) {
-  background: rgba(20, 14, 6, 0.03);
+  background: rgba(0, 0, 0, 0.02);
 }
 tbody tr:hover {
-  background: rgba(201, 150, 122, 0.08);
+  background: rgba(59, 130, 246, 0.05);
 }
 
 /* Cards internos (InfoItem, detalhes) */
@@ -332,80 +358,95 @@ tbody tr:hover {
 }
 
 .crm-calendar .fc {
-  color: #3f342c;
+  color: #111827;
 }
 
 .crm-calendar .fc-toolbar {
   gap: 0.75rem;
-  margin-bottom: 1rem !important;
-  padding: 0.5rem 0.35rem 0.9rem;
+  margin-bottom: 0.75rem !important;
+  padding: 0.4rem 0.35rem 0.75rem;
 }
 
 .crm-calendar .fc-toolbar-title {
-  color: #3f342c;
-  font-size: 1.3rem;
-  font-weight: 600;
-  letter-spacing: -0.02em;
+  color: #111827;
+  font-size: 1.2rem;
+  font-weight: 500;
+  letter-spacing: -0.01em;
 }
 
 .crm-calendar .fc-button-primary {
-  background: #fffaf5;
-  border-color: #eadfd2;
-  color: #7a5b48;
-  box-shadow: none;
+  background: #FFFFFF;
+  border-color: #E5E7EB;
+  color: #374151;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.06);
   border-radius: 999px;
-  padding: 0.5rem 0.85rem;
-  font-weight: 600;
+  padding: 0.4rem 0.85rem;
+  font-weight: 500;
+  transition: all 150ms ease;
 }
 
 .crm-calendar .fc-button-primary:hover,
 .crm-calendar .fc-button-primary:focus {
-  background: #f7efe6;
-  border-color: #dcc7b4;
-  color: #5f4636;
+  background: #F3F4F6;
+  border-color: #D1D5DB;
+  color: #111827;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
 }
 
 .crm-calendar .fc-button-primary:not(:disabled).fc-button-active,
 .crm-calendar .fc-button-primary:not(:disabled):active {
-  background: #c9967a;
-  border-color: #c9967a;
+  background: #C9A96E;
+  border-color: #C9A96E;
   color: #fff;
+  box-shadow: none;
+}
+
+.crm-calendar .fc-today-button:not(:disabled) {
+  background: #EFF6FF;
+  border-color: #BFDBFE;
+  color: #1D4ED8;
+}
+
+.crm-calendar .fc-today-button:not(:disabled):hover {
+  background: #DBEAFE;
+  border-color: #93C5FD;
+  color: #1E40AF;
 }
 
 .crm-calendar .fc-theme-standard td,
 .crm-calendar .fc-theme-standard th,
 .crm-calendar .fc-theme-standard .fc-scrollgrid {
-  border-color: #efe4d9;
+  border-color: rgba(0,0,0,0.06);
 }
 
 .crm-calendar .fc-scrollgrid {
-  border-radius: 1.35rem;
+  border-radius: 1rem;
   overflow: hidden;
-  background: rgba(255, 255, 255, 0.9);
+  background: #FFFFFF;
 }
 
 .crm-calendar .fc-col-header-cell {
-  background: #fffaf6;
+  background: #F9FAFB;
 }
 
 .crm-calendar .fc-col-header-cell-cushion,
 .crm-calendar .fc-daygrid-day-number {
-  color: #7f6a58;
+  color: #374151;
   font-weight: 600;
 }
 
 .crm-calendar .fc-timegrid-slot-label-cushion,
 .crm-calendar .fc-timegrid-axis-cushion {
-  color: #a28c7b;
+  color: #9CA3AF;
   font-size: 0.75rem;
 }
 
 .crm-calendar .fc-timegrid-slot {
-  height: 3.75rem;
+  height: 3.5rem;
 }
 
 .crm-calendar .fc-timegrid-col {
-  background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.84), rgba(255, 250, 246, 0.72));
+  background: #FFFFFF;
 }
 
 .crm-calendar .fc .fc-timegrid-col-frame {
@@ -413,25 +454,32 @@ tbody tr:hover {
 }
 
 .crm-calendar .fc-timegrid-now-indicator-line {
-  border-color: #c9967a;
+  border-color: #C9A96E;
+  border-width: 2px;
 }
 
 .crm-calendar .fc-timegrid-now-indicator-arrow {
-  border-color: #c9967a;
+  border-color: #C9A96E;
 }
 
 .crm-calendar .fc-day-today {
-  background: rgba(201, 150, 122, 0.08) !important;
+  background: rgba(201, 169, 110, 0.06) !important;
 }
 
 .crm-calendar .fc-highlight {
-  background: rgba(201, 150, 122, 0.16) !important;
+  background: rgba(59, 130, 246, 0.08) !important;
+}
+
+.crm-calendar .fc-day:hover {
+  background: rgba(0,0,0,0.02);
 }
 
 .crm-calendar .fc-event {
   background: transparent;
   border: 0;
   padding: 0;
+  border-radius: 6px !important;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.12) !important;
   transition: transform 0.16s ease, filter 0.16s ease;
 }
 
@@ -445,89 +493,101 @@ tbody tr:hover {
 }
 
 .crm-calendar .crm-calendar-event-consultation {
-  --calendar-accent: #f59e0b;
+  --calendar-accent: #3B82F6;
 }
 
 .crm-calendar .crm-calendar-event-individual {
-  --calendar-accent: #f43f5e;
+  --calendar-accent: #22C55E;
 }
 
 .crm-calendar .crm-calendar-event-group {
-  --calendar-accent: #0ea5e9;
+  --calendar-accent: #A855F7;
 }
 
 .crm-calendar .crm-calendar-event-mentoring {
-  --calendar-accent: #10b981;
+  --calendar-accent: #F97316;
 }
 
 .crm-calendar .crm-calendar-event-workshop {
-  --calendar-accent: #8b5cf6;
+  --calendar-accent: #EAB308;
 }
 
 .crm-calendar .fc-event .rounded-xl {
-  border-left: 3px solid var(--calendar-accent, #c9967a);
+  border-left: 3px solid var(--calendar-accent, #C9A96E);
 }
 
 .dark .crm-calendar .fc {
-  color: #f5f5f5;
+  color: #F9FAFB;
 }
 
 .dark .crm-calendar .fc-toolbar-title {
-  color: #f5f5f5;
+  color: #F9FAFB;
 }
 
 .dark .crm-calendar .fc-button-primary {
-  background: #2a2622;
-  border-color: #3a332c;
-  color: #e6d7c6;
+  background: #1F2937;
+  border-color: #374151;
+  color: #E5E7EB;
 }
 
 .dark .crm-calendar .fc-button-primary:hover,
 .dark .crm-calendar .fc-button-primary:focus {
-  background: #322c26;
-  border-color: #4a4037;
+  background: #2D3748;
+  border-color: #4B5563;
   color: #fff;
 }
 
 .dark .crm-calendar .fc-button-primary:not(:disabled).fc-button-active,
 .dark .crm-calendar .fc-button-primary:not(:disabled):active {
-  background: #c9967a;
-  border-color: #c9967a;
-  color: #fff;
+  background: #D4B882;
+  border-color: #D4B882;
+  color: #111827;
+}
+
+.dark .crm-calendar .fc-today-button:not(:disabled) {
+  background: #1E3A5F;
+  border-color: #1D4ED8;
+  color: #93C5FD;
+}
+
+.dark .crm-calendar .fc-today-button:not(:disabled):hover {
+  background: #1E40AF;
+  border-color: #3B82F6;
+  color: #BFDBFE;
 }
 
 .dark .crm-calendar .fc-theme-standard td,
 .dark .crm-calendar .fc-theme-standard th,
 .dark .crm-calendar .fc-theme-standard .fc-scrollgrid {
-  border-color: #3c3c3c;
+  border-color: #2D3748;
 }
 
 .dark .crm-calendar .fc-scrollgrid {
-  background: rgba(24, 21, 19, 0.92);
+  background: #1A1D27;
 }
 
 .dark .crm-calendar .fc-col-header-cell {
-  background: rgba(255, 255, 255, 0.02);
+  background: #111827;
 }
 
 .dark .crm-calendar .fc-col-header-cell-cushion,
 .dark .crm-calendar .fc-daygrid-day-number {
-  color: #d0d0d0;
+  color: #E5E7EB;
 }
 
 .dark .crm-calendar .fc-timegrid-slot-label-cushion,
 .dark .crm-calendar .fc-timegrid-axis-cushion {
-  color: #9b9b9b;
+  color: #6B7280;
 }
 
 .dark .crm-calendar .fc-timegrid-col {
-  background-image: linear-gradient(180deg, rgba(29, 25, 22, 0.92), rgba(20, 17, 16, 0.86));
+  background: #1A1D27;
 }
 
 .dark .crm-calendar .fc-day-today {
-  background: rgba(201, 150, 122, 0.14) !important;
+  background: rgba(201, 169, 110, 0.08) !important;
 }
 
 .dark .crm-calendar .fc-highlight {
-  background: rgba(201, 150, 122, 0.18) !important;
+  background: rgba(59, 130, 246, 0.12) !important;
 }
