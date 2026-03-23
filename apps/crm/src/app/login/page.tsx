@@ -279,7 +279,7 @@ export default function LoginPage() {
             <Sparkles size={24} strokeWidth={2.5} style={{ color: '#EFF6FF' }} />
           </div>
           <h1 className="font-heading text-2xl font-bold" style={{ color: '#0F172A' }}>
-            Viviani <span style={{ color: '#F5C518' }}>Serena</span>
+            Viviani <span style={{ color: '#3B82F6' }}>Serena</span>
           </h1>
           <p className="text-sm mt-1" style={{ color: '#64748B' }}>Sistema de Gestão</p>
         </div>
