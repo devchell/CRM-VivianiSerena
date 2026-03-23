@@ -104,7 +104,7 @@ const STATUS_META = {
   },
   cancelled: {
     label: 'Cancelado',
-    badgeClassName: 'bg-stone-100 text-stone-600 border-stone-200',
+    badgeClassName: 'bg-slate-100 text-slate-600 border-slate-200',
   },
   no_show: {
     label: 'Não compareceu',
@@ -254,7 +254,7 @@ export default function AgendaPage() {
           appointment,
           serviceLabel: service?.label ?? appointment.serviceType,
           serviceShortLabel: service?.shortLabel ?? appointment.serviceType,
-          serviceBadgeClassName: service?.badgeClassName ?? 'bg-stone-100 text-stone-700 border-stone-200',
+          serviceBadgeClassName: service?.badgeClassName ?? 'bg-slate-100 text-slate-600 border-slate-200',
           statusMeta: STATUS_META[appointment.status],
         },
       }
@@ -340,12 +340,12 @@ export default function AgendaPage() {
     const statusMeta = info.event.extendedProps.statusMeta as (typeof STATUS_META)[keyof typeof STATUS_META]
 
     return (
-      <div className="min-w-0 overflow-hidden rounded-lg border border-white/80 bg-[linear-gradient(180deg,rgba(255,255,255,0.98)_0%,rgba(252,247,242,0.96)_100%)] shadow-[0_16px_28px_-24px_rgba(66,46,31,0.55)] backdrop-blur-sm">
-        <div className="h-1.5 w-full bg-[linear-gradient(90deg,rgba(201,150,122,0.98),rgba(232,180,154,0.78))]" />
+      <div className="min-w-0 overflow-hidden rounded-lg border border-slate-200/80 bg-white shadow-sm backdrop-blur-sm dark:border-slate-700/80 dark:bg-slate-900">
+        <div className="h-1.5 w-full bg-blue-400" />
         <div className="px-2.5 py-2.5">
           <div className="mb-1.5 flex items-center justify-between gap-2">
             <div className="flex items-center gap-1.5">
-              <span className="h-2 w-2 rounded-full bg-rose-gold" />
+              <span className="h-2 w-2 rounded-full bg-blue-500" />
               <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.14em] ${serviceBadgeClassName}`}>
                 {serviceShortLabel}
               </span>
@@ -355,8 +355,8 @@ export default function AgendaPage() {
             </span>
           </div>
 
-          <p className="truncate text-xs font-semibold text-charcoal">{appointment.leadName}</p>
-          <p className="mt-1 truncate text-[11px] text-charcoal-500">
+          <p className="truncate text-xs font-semibold text-slate-900 dark:text-slate-100">{appointment.leadName}</p>
+          <p className="mt-1 truncate text-[11px] text-slate-500 dark:text-slate-400">
             {info.timeText || formatDateLabel(appointment.startTime)}
           </p>
         </div>
@@ -366,10 +366,10 @@ export default function AgendaPage() {
 
   return (
     <div className="space-y-3">
-      <div className="flex items-center justify-between border-b border-blush-200 pb-2 dark:border-[#3a3835]">
+      <div className="flex items-center justify-between border-b border-slate-200 pb-2 dark:border-slate-700">
         <div className="flex items-center gap-3">
-          <h1 className="font-heading text-xl font-semibold text-charcoal dark:text-charcoal-50">Agenda</h1>
-          <span className="text-sm text-charcoal-400 dark:text-charcoal-300">{totalDuration} min</span>
+          <h1 className="font-heading text-xl font-semibold text-slate-900 dark:text-slate-100">Agenda</h1>
+          <span className="text-sm text-slate-400 dark:text-slate-500">{totalDuration} min</span>
         </div>
         <button
           onClick={() => setShowModal(true)}
@@ -409,10 +409,10 @@ export default function AgendaPage() {
                 <div key={item.label} className="card-dark rounded-lg px-4 py-3 shadow-sm">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-[11px] font-medium uppercase tracking-[0.16em] text-charcoal-400">
+                      <p className="text-[11px] font-medium uppercase tracking-[0.16em] text-slate-400">
                         {item.label}
                       </p>
-                      <p className="mt-1 font-heading text-2xl font-bold text-charcoal dark:text-charcoal-50">
+                      <p className="mt-1 font-heading text-2xl font-bold text-slate-900 dark:text-slate-100">
                         {item.value}
                       </p>
                     </div>
@@ -425,11 +425,11 @@ export default function AgendaPage() {
             })}
           </div>
 
-          <div className="card-dark overflow-hidden rounded-lg p-4 shadow-sm">
+          <div className="card-dark overflow-hidden rounded-lg p-3 shadow-sm">
             {loading ? (
-              <div className="h-[760px] animate-pulse rounded-lg bg-blush-100 dark:bg-[#252423]/40" />
+              <div className="h-[680px] animate-pulse rounded-lg bg-slate-100 dark:bg-slate-800/40" />
             ) : (
-              <div className="crm-calendar rounded-lg border border-blush-100 bg-[linear-gradient(180deg,#fffdfa_0%,#fffaf7_100%)] p-3 dark:border-[#3a3835] dark:bg-[linear-gradient(180deg,#181513_0%,#141110_100%)]">
+              <div className="crm-calendar rounded-lg border border-slate-200 bg-white p-2 dark:border-slate-700 dark:bg-slate-900">
                 <FullCalendarView
                   plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
                   initialView="timeGridWeek"
@@ -464,17 +464,17 @@ export default function AgendaPage() {
           <div className="card-dark rounded-lg p-5 shadow-sm">
             <div className="mb-4 flex items-center gap-2">
               <Sparkles size={16} className="text-rose-gold" />
-              <h2 className="font-heading text-base font-semibold text-charcoal dark:text-charcoal-50">
+              <h2 className="font-heading text-base font-semibold text-slate-900 dark:text-slate-100">
                 Legenda visual
               </h2>
             </div>
 
             <div className="space-y-3">
               {SERVICE_OPTIONS.map((service) => (
-                <div key={service.value} className="flex items-center justify-between gap-3 rounded-lg border border-blush-200 bg-cream/70 px-3 py-3 dark:border-[#3a3835] dark:bg-[#1c1b1a]/70">
+                <div key={service.value} className="flex items-center justify-between gap-3 rounded-lg border border-slate-200 bg-white px-3 py-3 dark:border-slate-700 dark:bg-slate-800/70">
                   <div>
-                    <p className="text-sm font-medium text-charcoal dark:text-charcoal-100">{service.label}</p>
-                    <p className="text-xs text-charcoal-400 dark:text-charcoal-300">Categoria do atendimento</p>
+                    <p className="text-sm font-medium text-slate-900 dark:text-slate-100">{service.label}</p>
+                    <p className="text-xs text-slate-400 dark:text-slate-500">Categoria do atendimento</p>
                   </div>
                   <span className={`inline-flex rounded-full border px-2.5 py-1 text-[11px] font-semibold ${service.badgeClassName}`}>
                     {service.shortLabel}
@@ -487,10 +487,10 @@ export default function AgendaPage() {
           <div className="card-dark rounded-lg p-5 shadow-sm">
             <div className="mb-4 flex items-center justify-between gap-3">
               <div>
-                <h2 className="font-heading text-base font-semibold text-charcoal dark:text-charcoal-50">
+                <h2 className="font-heading text-base font-semibold text-slate-900 dark:text-slate-100">
                   Próximos atendimentos
                 </h2>
-                <p className="mt-1 text-xs text-charcoal-400 dark:text-charcoal-300">
+                <p className="mt-1 text-xs text-slate-400 dark:text-slate-500">
                   Janela operacional mais imediata da agenda.
                 </p>
               </div>
@@ -510,14 +510,14 @@ export default function AgendaPage() {
                   return (
                     <div
                       key={appointment.id}
-                      className="rounded-lg border border-blush-200 bg-cream/60 px-4 py-3 shadow-sm dark:border-[#3a3835] dark:bg-[#1c1b1a]/70"
+                      className="rounded-lg border border-slate-200 bg-white px-4 py-3 shadow-sm dark:border-slate-700 dark:bg-slate-800/70"
                     >
                       <div className="flex items-start justify-between gap-3">
                         <div className="min-w-0">
-                          <p className="truncate text-sm font-semibold text-charcoal dark:text-charcoal-100">
+                          <p className="truncate text-sm font-semibold text-slate-900 dark:text-slate-100">
                             {appointment.leadName}
                           </p>
-                          <p className="mt-1 text-xs text-charcoal-400 dark:text-charcoal-300">
+                          <p className="mt-1 text-xs text-slate-400 dark:text-slate-500">
                             {formatDateLabel(appointment.startTime)}
                           </p>
                         </div>
@@ -527,11 +527,11 @@ export default function AgendaPage() {
                       </div>
 
                       <div className="mt-3 flex flex-wrap items-center gap-2">
-                        <span className={`inline-flex rounded-full border px-2.5 py-1 text-[11px] font-semibold ${service?.badgeClassName ?? 'bg-stone-100 text-stone-700 border-stone-200'}`}>
+                        <span className={`inline-flex rounded-full border px-2.5 py-1 text-[11px] font-semibold ${service?.badgeClassName ?? 'bg-slate-100 text-slate-600 border-slate-200'}`}>
                           {service?.label ?? appointment.serviceType}
                         </span>
                         {appointment.notes ? (
-                          <span className="inline-flex items-center gap-1 rounded-full bg-white px-2.5 py-1 text-[11px] text-charcoal-500 dark:bg-[#252423] dark:text-charcoal-300">
+                          <span className="inline-flex items-center gap-1 rounded-full bg-slate-50 px-2.5 py-1 text-[11px] text-slate-500 dark:bg-slate-800 dark:text-slate-400">
                             <Dot size={14} className="-mx-1" />
                             {appointment.notes}
                           </span>
@@ -545,10 +545,10 @@ export default function AgendaPage() {
           </div>
 
           <div className="card-dark rounded-lg p-5 shadow-sm">
-            <h2 className="font-heading text-base font-semibold text-charcoal dark:text-charcoal-50">
+            <h2 className="font-heading text-base font-semibold text-slate-900 dark:text-slate-100">
               Ritmo da agenda
             </h2>
-            <div className="mt-4 space-y-3 text-sm text-charcoal-500 dark:text-charcoal-300">
+            <div className="mt-4 space-y-3 text-sm text-slate-500 dark:text-slate-400">
               <p>Selecione direto no calendário para abrir um agendamento no horário exato.</p>
               <p>Clique em qualquer bloco para ler rapidamente cliente, serviço, status e observações.</p>
               <p>As cores foram separadas por tipo de atendimento para bater o olho e entender a semana.</p>
@@ -559,25 +559,25 @@ export default function AgendaPage() {
 
       {showModal ? (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-charcoal/25 p-4 backdrop-blur-md"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/25 p-4 backdrop-blur-md"
           onClick={(event) => event.target === event.currentTarget && setShowModal(false)}
         >
-          <div className="w-full max-w-lg overflow-hidden rounded-lg border border-white/70 bg-white shadow-[0_30px_80px_-35px_rgba(27,22,18,0.35)] dark:border-[#3a3835] dark:bg-[#1c1b1a]">
-            <div className="border-b border-blush-200 bg-gradient-to-r from-white via-cream to-blush/70 p-6 dark:border-[#3a3835] dark:from-charcoal-800 dark:via-charcoal-800 dark:to-charcoal-700">
+          <div className="w-full max-w-lg overflow-hidden rounded-lg border border-slate-200 bg-white shadow-[0_30px_80px_-35px_rgba(15,23,42,0.30)] dark:border-slate-700 dark:bg-slate-900">
+            <div className="border-b border-slate-200 bg-white p-6 dark:border-slate-700 dark:bg-slate-900">
               <div className="flex items-start justify-between gap-4">
                 <div>
                   <p className="text-xs font-semibold uppercase tracking-[0.18em] text-rose-gold">Agenda</p>
-                  <h2 className="mt-1 font-heading text-xl font-semibold text-charcoal dark:text-charcoal-50">
+                  <h2 className="mt-1 font-heading text-xl font-semibold text-slate-900 dark:text-slate-100">
                     Novo agendamento
                   </h2>
-                  <p className="mt-1 text-sm text-charcoal-400 dark:text-charcoal-300">
+                  <p className="mt-1 text-sm text-slate-400 dark:text-slate-500">
                     Preencha os detalhes do atendimento e mantenha o calendário consistente com o CRM.
                   </p>
                 </div>
 
                 <button
                   onClick={() => setShowModal(false)}
-                  className="rounded-md p-2 text-charcoal-400 transition-colors hover:bg-white hover:text-charcoal dark:hover:bg-[#252423] dark:hover:text-charcoal-100"
+                  className="rounded-md p-2 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-900 dark:hover:bg-slate-800 dark:hover:text-slate-100"
                 >
                   <X size={18} />
                 </button>
@@ -586,7 +586,7 @@ export default function AgendaPage() {
 
             <form onSubmit={(event) => void handleSubmit(event)} className="space-y-4 p-6">
               <div>
-                <label className="mb-1.5 block text-xs font-medium uppercase tracking-[0.12em] text-charcoal-400 dark:text-charcoal-300">
+                <label className="mb-1.5 block text-xs font-medium uppercase tracking-[0.12em] text-slate-400 dark:text-slate-500">
                   Lead
                 </label>
                 <div className={crmFieldSelectWrapper}>
@@ -606,7 +606,7 @@ export default function AgendaPage() {
                   <ChevronDown size={16} className={crmFieldSelectIcon} />
                 </div>
                 {!canViewLeads ? (
-                  <p className="mt-1 text-[11px] text-charcoal-400 dark:text-charcoal-300">
+                  <p className="mt-1 text-[11px] text-slate-400 dark:text-slate-500">
                     Este perfil precisa de acesso a leads para criar agendamentos.
                   </p>
                 ) : null}
@@ -614,7 +614,7 @@ export default function AgendaPage() {
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="mb-1.5 block text-xs font-medium uppercase tracking-[0.12em] text-charcoal-400 dark:text-charcoal-300">
+                  <label className="mb-1.5 block text-xs font-medium uppercase tracking-[0.12em] text-slate-400 dark:text-slate-500">
                     Data e hora
                   </label>
                   <input
@@ -622,12 +622,12 @@ export default function AgendaPage() {
                     required
                     value={form.date}
                     onChange={(event) => setForm((current) => ({ ...current, date: event.target.value }))}
-                    className="w-full rounded-md border border-blush-300 bg-white px-4 py-3 text-sm text-charcoal shadow-sm focus:outline-none focus:ring-2 focus:ring-rose-gold/30 dark:border-[#3a3835] dark:bg-[#252423] dark:text-charcoal-100"
+                    className="w-full rounded-md border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
                   />
                 </div>
 
                 <div>
-                  <label className="mb-1.5 block text-xs font-medium uppercase tracking-[0.12em] text-charcoal-400 dark:text-charcoal-300">
+                  <label className="mb-1.5 block text-xs font-medium uppercase tracking-[0.12em] text-slate-400 dark:text-slate-500">
                     Duração
                   </label>
                   <div className={crmFieldSelectWrapper}>
@@ -646,7 +646,7 @@ export default function AgendaPage() {
               </div>
 
               <div>
-                <label className="mb-1.5 block text-xs font-medium uppercase tracking-[0.12em] text-charcoal-400 dark:text-charcoal-300">
+                <label className="mb-1.5 block text-xs font-medium uppercase tracking-[0.12em] text-slate-400 dark:text-slate-500">
                   Serviço
                 </label>
                 <div className="grid grid-cols-2 gap-2">
@@ -659,14 +659,14 @@ export default function AgendaPage() {
                         onClick={() => setForm((current) => ({ ...current, serviceType: service.value }))}
                         className={`rounded border px-3 py-3 text-left transition-all ${
                           active
-                            ? 'border-rose-gold bg-rose-gold/8 shadow-sm'
-                            : 'border-blush-200 bg-white hover:border-rose-gold/40 hover:bg-blush/50 dark:border-[#3a3835] dark:bg-[#252423] dark:hover:border-rose-gold/40 dark:hover:bg-[#252423]/80'
+                            ? 'border-blue-400 bg-blue-50/60 shadow-sm dark:border-blue-500 dark:bg-blue-950/30'
+                            : 'border-slate-200 bg-white hover:border-blue-300 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:hover:border-blue-500/40 dark:hover:bg-slate-800/80'
                         }`}
                       >
                         <span className={`inline-flex rounded-full border px-2 py-0.5 text-[10px] font-semibold ${service.badgeClassName}`}>
                           {service.shortLabel}
                         </span>
-                        <p className="mt-2 text-sm font-medium text-charcoal dark:text-charcoal-100">{service.label}</p>
+                        <p className="mt-2 text-sm font-medium text-slate-900 dark:text-slate-100">{service.label}</p>
                       </button>
                     )
                   })}
@@ -674,14 +674,14 @@ export default function AgendaPage() {
               </div>
 
               <div>
-                <label className="mb-1.5 block text-xs font-medium uppercase tracking-[0.12em] text-charcoal-400 dark:text-charcoal-300">
+                <label className="mb-1.5 block text-xs font-medium uppercase tracking-[0.12em] text-slate-400 dark:text-slate-500">
                   Observações
                 </label>
                 <textarea
                   value={form.notes ?? ''}
                   onChange={(event) => setForm((current) => ({ ...current, notes: event.target.value }))}
                   rows={4}
-                  className="w-full resize-none rounded-md border border-blush-300 bg-white px-4 py-3 text-sm text-charcoal shadow-sm focus:outline-none focus:ring-2 focus:ring-rose-gold/30 dark:border-[#3a3835] dark:bg-[#252423] dark:text-charcoal-100"
+                  className="w-full resize-none rounded-md border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm focus:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
                   placeholder="Ex.: primeira avaliação, retorno, observações clínicas..."
                 />
               </div>
@@ -690,7 +690,7 @@ export default function AgendaPage() {
                 <button
                   type="button"
                   onClick={() => setShowModal(false)}
-                  className="flex-1 rounded border border-blush-300 px-4 py-3 text-sm font-medium text-charcoal-500 transition-colors hover:bg-blush dark:border-[#3a3835] dark:text-charcoal-300 dark:hover:bg-[#252423]"
+                  className="flex-1 rounded border border-slate-200 px-4 py-3 text-sm font-medium text-slate-500 transition-colors hover:bg-slate-50 dark:border-slate-700 dark:text-slate-400 dark:hover:bg-slate-800"
                 >
                   Cancelar
                 </button>
