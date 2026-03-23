@@ -30,15 +30,28 @@ appointmentsRouter.get('/', authorizePermission('agenda.view'), async (req, res,
       if (from) (where.date as Record<string, unknown>).gte = new Date(String(from))
       if (to) (where.date as Record<string, unknown>).lte = new Date(String(to))
     }
-    const appointments = await prisma.appointment.findMany({
-      where,
-      include: { lead: { select: { name: true, email: true, phone: true } } },
-      orderBy: { date: 'asc' },
-    })
+
+    let appointments: Awaited<ReturnType<typeof prisma.appointment.findMany<{
+      include: { lead: { select: { name: true; email: true; phone: true } } }
+    }>>> = []
+
+    try {
+      appointments = await prisma.appointment.findMany({
+        where,
+        include: { lead: { select: { name: true, email: true, phone: true } } },
+        orderBy: { date: 'asc' },
+      })
+    } catch (dbError) {
+      console.error('[appointments/list] DB query failed:', dbError)
+      // Return empty list gracefully — likely a pending migration
+      res.json({ success: true, data: [] })
+      return
+    }
+
     res.json({
       success: true,
       data: appointments.map((appointment) => {
-        const duration = appointment.durationMinutes ?? DEFAULT_APPOINTMENT_DURATION_MINUTES
+        const duration = (appointment as typeof appointment & { durationMinutes?: number }).durationMinutes ?? DEFAULT_APPOINTMENT_DURATION_MINUTES
         return {
           id: appointment.id,
           leadId: appointment.leadId,

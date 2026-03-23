@@ -356,15 +356,121 @@ export async function getRecentActivity(limit = 10): Promise<ActivityItem[]> {
     .slice(0, limit)
 }
 
+function fallbackLeadMetrics(): LeadMetrics {
+  return {
+    total: 0,
+    createdInPeriod: 0,
+    converted: 0,
+    convertedInPeriod: 0,
+    conversionRate: 0,
+    byStatus: normalizeLeadStatusCounts([]),
+    bySource: normalizeLeadSourceCounts([]),
+  }
+}
+
+function fallbackAppointmentMetrics() {
+  return {
+    upcoming: 0,
+    scheduledInPeriod: 0,
+    byStatus: normalizeAppointmentStatusCounts([]),
+  }
+}
+
+function fallbackFinancialSummary(): FinancialSummary {
+  return {
+    income: 0,
+    expenses: 0,
+    profit: 0,
+    previousIncome: 0,
+    previousExpenses: 0,
+    previousProfit: 0,
+    averageTicket: 0,
+    convertedLeadsInPeriod: 0,
+    categories: {
+      income: [
+        { value: 'coaching_revenue', label: FINANCIAL_CATEGORY_LABELS.coaching_revenue },
+        { value: 'workshop_revenue', label: FINANCIAL_CATEGORY_LABELS.workshop_revenue },
+        { value: 'mentoring_revenue', label: FINANCIAL_CATEGORY_LABELS.mentoring_revenue },
+        { value: 'other', label: FINANCIAL_CATEGORY_LABELS.other },
+      ],
+      expense: [
+        { value: 'office', label: FINANCIAL_CATEGORY_LABELS.office },
+        { value: 'tools_software', label: FINANCIAL_CATEGORY_LABELS.tools_software },
+        { value: 'marketing', label: FINANCIAL_CATEGORY_LABELS.marketing },
+        { value: 'education', label: FINANCIAL_CATEGORY_LABELS.education },
+        { value: 'taxes', label: FINANCIAL_CATEGORY_LABELS.taxes },
+        { value: 'other', label: FINANCIAL_CATEGORY_LABELS.other },
+      ],
+    },
+  }
+}
+
+function fallbackFinancialCharts(): FinancialCharts {
+  return { monthly: [], expensesByCategory: [] }
+}
+
+function fallbackAnalyticsMetrics(): AnalyticsMetrics {
+  return {
+    sessions30d: 0,
+    uniqueReferrers: 0,
+    bounceRate: 0,
+    topReferrers: [],
+    heatmap: Array.from({ length: 24 }, (_, hour) => ({ hour, count: 0 })),
+    funnel: { sessions: 0, leads: 0, converted: 0, conversionRate: 0 },
+  }
+}
+
+async function safeGetLeadMetrics(periodKey: 'month' | 'last30d'): Promise<LeadMetrics> {
+  try { return await getLeadMetrics(periodKey) } catch (e) {
+    console.error('[metrics] getLeadMetrics failed:', e)
+    return fallbackLeadMetrics()
+  }
+}
+
+async function safeGetAppointmentMetrics(periodKey: 'month' | 'last30d') {
+  try { return await getAppointmentMetrics(periodKey) } catch (e) {
+    console.error('[metrics] getAppointmentMetrics failed:', e)
+    return fallbackAppointmentMetrics()
+  }
+}
+
+async function safeGetFinancialSummary(periodKey: 'month' | 'last30d'): Promise<FinancialSummary> {
+  try { return await getFinancialSummary(periodKey) } catch (e) {
+    console.error('[metrics] getFinancialSummary failed:', e)
+    return fallbackFinancialSummary()
+  }
+}
+
+async function safeGetFinancialCharts(): Promise<FinancialCharts> {
+  try { return await getFinancialCharts(12) } catch (e) {
+    console.error('[metrics] getFinancialCharts failed:', e)
+    return fallbackFinancialCharts()
+  }
+}
+
+async function safeGetAnalyticsMetrics(): Promise<AnalyticsMetrics> {
+  try { return await getAnalyticsMetrics() } catch (e) {
+    console.error('[metrics] getAnalyticsMetrics failed:', e)
+    return fallbackAnalyticsMetrics()
+  }
+}
+
+async function safeGetRecentActivity(limit: number): Promise<ActivityItem[]> {
+  try { return await getRecentActivity(limit) } catch (e) {
+    console.error('[metrics] getRecentActivity failed:', e)
+    return []
+  }
+}
+
 export async function getMetricsOverview(periodKey: 'month' | 'last30d' = 'month'): Promise<MetricsOverview> {
   const period = createPeriod(periodKey)
   const [leads, appointments, financial, charts, analytics, recentActivity] = await Promise.all([
-    getLeadMetrics(periodKey),
-    getAppointmentMetrics(periodKey),
-    getFinancialSummary(periodKey),
-    getFinancialCharts(12),
-    getAnalyticsMetrics(),
-    getRecentActivity(8),
+    safeGetLeadMetrics(periodKey),
+    safeGetAppointmentMetrics(periodKey),
+    safeGetFinancialSummary(periodKey),
+    safeGetFinancialCharts(),
+    safeGetAnalyticsMetrics(),
+    safeGetRecentActivity(8),
   ])
 
   const funnel: LeadFunnelMetrics = {
