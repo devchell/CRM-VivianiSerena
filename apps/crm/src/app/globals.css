@@ -14,16 +14,16 @@
 /* ── Design system tokens ────────────────────────────────────────────────── */
 :root {
   /* Background hierarchy: page → surface → card → input */
-  --bg-page:    #E8E2D9;
-  --bg-surface: #F0EAE0;
+  --bg-page:    #D5CEC5;
+  --bg-surface: #E6DFD5;
   --bg-card:    #FDFCFA;
   --bg-input:   #FFFFFF;
   --bg-hover:   #EDE7DC;
   --bg-active:  #E3DDD4;
 
   /* Shadcn-compatible aliases */
-  --background:            #E8E2D9;
-  --background-secondary:  #F0EAE0;
+  --background:            #D5CEC5;
+  --background-secondary:  #E6DFD5;
   --card:                  #FDFCFA;
   --card-foreground:       #18140F;
   --input:                 #FFFFFF;
@@ -165,7 +165,10 @@
 
 @layer base {
   html { scroll-behavior: smooth; }
-  body { @apply bg-cream-200 text-charcoal dark:bg-[#111110] dark:text-[#ECEAE6] transition-colors duration-200; }
+  body {
+    background-color: var(--bg-page);
+    @apply text-charcoal dark:text-[#ECEAE6] transition-colors duration-200;
+  }
   h1, h2, h3, h4, h5, h6 { @apply font-heading; }
 }
 

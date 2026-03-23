@@ -765,13 +765,9 @@ export default function EditarSitePage() {
                   label="Box lateral de prova social"
                   description="Exibe card de prova social"
                 />
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gridTemplateRows: 'auto auto auto', gap: '4px 12px', marginTop: 12 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4px 12px', marginTop: 12 }}>
                   <label className={labelCls}>Clientes iniciais</label>
                   <label className={labelCls}>Avaliações iniciais</label>
-                  <p style={{ fontSize: 11, color: 'var(--muted-foreground,#A09890)', margin: 0, lineHeight: '1.4' }}>
-                    Soma com leads cadastrados
-                  </p>
-                  <p style={{ fontSize: 11, margin: 0, lineHeight: '1.4', visibility: 'hidden' }}>&nbsp;</p>
                   <input
                     type="number"
                     inputMode="numeric"
