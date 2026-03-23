@@ -172,15 +172,16 @@ model Session {
 }
 
 model Appointment {
-  id            String            @id @default(cuid())
-  leadId        String            @map("lead_id")
-  googleEventId String?           @map("google_event_id")
-  date          DateTime
-  serviceType   ServiceType       @map("service_type")
-  status        AppointmentStatus @default(scheduled)
-  notes         String?           @db.Text
-  createdAt     DateTime          @default(now()) @map("created_at")
-  updatedAt     DateTime          @updatedAt @map("updated_at")
+  id              String            @id @default(cuid())
+  leadId          String            @map("lead_id")
+  googleEventId   String?           @map("google_event_id")
+  date            DateTime
+  durationMinutes Int               @default(60) @map("duration_minutes")
+  serviceType     ServiceType       @map("service_type")
+  status          AppointmentStatus @default(scheduled)
+  notes           String?           @db.Text
+  createdAt       DateTime          @default(now()) @map("created_at")
+  updatedAt       DateTime          @updatedAt @map("updated_at")
 
   lead Lead @relation(fields: [leadId], references: [id], onDelete: Cascade)
 

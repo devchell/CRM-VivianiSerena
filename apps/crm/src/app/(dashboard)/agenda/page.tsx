@@ -37,6 +37,14 @@ interface LeadsResponse {
   data: Lead[]
 }
 
+const DURATION_OPTIONS = [
+  { value: 30,  label: '30 minutos' },
+  { value: 45,  label: '45 minutos' },
+  { value: 60,  label: '1 hora' },
+  { value: 90,  label: '1h 30min' },
+  { value: 120, label: '2 horas' },
+]
+
 const SERVICE_OPTIONS: Array<{
   value: ServiceType
   label: string
@@ -48,35 +56,35 @@ const SERVICE_OPTIONS: Array<{
     value: 'consultation',
     label: 'Consulta',
     shortLabel: 'Consulta',
-    badgeClassName: 'bg-amber-50 text-amber-700 border-amber-200',
+    badgeClassName: 'bg-blue-50 text-blue-700 border-blue-200',
     eventClassName: 'crm-calendar-event crm-calendar-event-consultation',
   },
   {
     value: 'coaching_individual',
     label: 'Sessão individual',
     shortLabel: 'Individual',
-    badgeClassName: 'bg-rose-50 text-rose-700 border-rose-200',
+    badgeClassName: 'bg-green-50 text-green-700 border-green-200',
     eventClassName: 'crm-calendar-event crm-calendar-event-individual',
   },
   {
     value: 'coaching_group',
     label: 'Sessão em grupo',
     shortLabel: 'Grupo',
-    badgeClassName: 'bg-sky-50 text-sky-700 border-sky-200',
+    badgeClassName: 'bg-purple-50 text-purple-700 border-purple-200',
     eventClassName: 'crm-calendar-event crm-calendar-event-group',
   },
   {
     value: 'mentoring',
     label: 'Mentoria',
     shortLabel: 'Mentoria',
-    badgeClassName: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+    badgeClassName: 'bg-orange-50 text-orange-700 border-orange-200',
     eventClassName: 'crm-calendar-event crm-calendar-event-mentoring',
   },
   {
     value: 'workshop',
     label: 'Workshop',
     shortLabel: 'Workshop',
-    badgeClassName: 'bg-violet-50 text-violet-700 border-violet-200',
+    badgeClassName: 'bg-yellow-50 text-yellow-700 border-yellow-200',
     eventClassName: 'crm-calendar-event crm-calendar-event-workshop',
   },
 ]
@@ -157,6 +165,7 @@ export default function AgendaPage() {
   const [showModal, setShowModal] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [form, setForm] = useState<CreateAppointmentDto>(buildDefaultForm())
+  const [duration, setDuration] = useState(60)
 
   const canViewLeads = hasPermission('leads.view')
   const canCreateAppointments = hasPermission('agenda.create') && canViewLeads
@@ -275,6 +284,7 @@ export default function AgendaPage() {
         leadId: form.leadId,
         date: new Date(form.date).toISOString(),
         serviceType: form.serviceType,
+        durationMinutes: duration,
         notes: form.notes?.trim() || undefined,
       })
 
@@ -294,6 +304,7 @@ export default function AgendaPage() {
 
       await refreshAppointments()
       setForm(buildDefaultForm())
+      setDuration(60)
       setShowModal(false)
       toast.success('Agendamento criado.')
     } catch (error) {
@@ -354,8 +365,8 @@ export default function AgendaPage() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between border-b border-blush-200 pb-4 dark:border-[#3a3835]">
+    <div className="space-y-3">
+      <div className="flex items-center justify-between border-b border-blush-200 pb-2 dark:border-[#3a3835]">
         <div className="flex items-center gap-3">
           <h1 className="font-heading text-xl font-semibold text-charcoal dark:text-charcoal-50">Agenda</h1>
           <span className="text-sm text-charcoal-400 dark:text-charcoal-300">{totalDuration} min</span>
@@ -370,15 +381,15 @@ export default function AgendaPage() {
         </button>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 xl:grid-cols-[minmax(0,1fr)_360px]">
-        <div className="space-y-4">
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+      <div className="grid grid-cols-1 gap-3 xl:grid-cols-[minmax(0,1fr)_360px]">
+        <div className="space-y-3">
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
             {[
               {
                 label: 'Agendamentos totais',
                 value: summary.total,
                 icon: CalendarDays,
-                tone: 'bg-rose-50 text-rose-700 ring-rose-100',
+                tone: 'bg-blue-50 text-blue-700 ring-blue-100',
               },
               {
                 label: 'Próximos atendimentos',
@@ -395,18 +406,18 @@ export default function AgendaPage() {
             ].map((item) => {
               const Icon = item.icon
               return (
-                <div key={item.label} className="card-dark rounded-lg p-5 shadow-sm">
+                <div key={item.label} className="card-dark rounded-lg px-4 py-3 shadow-sm">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-xs font-medium uppercase tracking-[0.16em] text-charcoal-400">
+                      <p className="text-[11px] font-medium uppercase tracking-[0.16em] text-charcoal-400">
                         {item.label}
                       </p>
-                      <p className="mt-2 font-heading text-3xl font-bold text-charcoal dark:text-charcoal-50">
+                      <p className="mt-1 font-heading text-2xl font-bold text-charcoal dark:text-charcoal-50">
                         {item.value}
                       </p>
                     </div>
-                    <div className={`flex h-11 w-11 items-center justify-center rounded-lg ring-1 ${item.tone}`}>
-                      <Icon size={18} />
+                    <div className={`flex h-9 w-9 items-center justify-center rounded-lg ring-1 ${item.tone}`}>
+                      <Icon size={16} />
                     </div>
                   </div>
                 </div>
@@ -619,12 +630,18 @@ export default function AgendaPage() {
                   <label className="mb-1.5 block text-xs font-medium uppercase tracking-[0.12em] text-charcoal-400 dark:text-charcoal-300">
                     Duração
                   </label>
-                  <div className="flex h-[50px] items-center rounded-md border border-blush-300 bg-blush-50 px-4 text-sm font-medium text-charcoal-500 shadow-sm dark:border-[#3a3835] dark:bg-[#252423]/60 dark:text-charcoal-300">
-                    60 min padrão
+                  <div className={crmFieldSelectWrapper}>
+                    <select
+                      value={duration}
+                      onChange={(e) => setDuration(Number(e.target.value))}
+                      className={crmFieldSelect}
+                    >
+                      {DURATION_OPTIONS.map((o) => (
+                        <option key={o.value} value={o.value}>{o.label}</option>
+                      ))}
+                    </select>
+                    <ChevronDown size={16} className={crmFieldSelectIcon} />
                   </div>
-                  <p className="mt-1 text-[11px] text-charcoal-400 dark:text-charcoal-300">
-                    A duração operacional atual do CRM é fixa em 1 hora por agendamento.
-                  </p>
                 </div>
               </div>
 

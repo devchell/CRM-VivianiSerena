@@ -90,6 +90,7 @@ export interface AppointmentListItem {
   leadPhone?: string | null
   startTime: string
   endTime: string
+  durationMinutes: number
   serviceType: ServiceType
   status: AppointmentStatus
   notes?: string | null
@@ -99,5 +100,6 @@ export interface CreateAppointmentDto {
   leadId: string
   date: string
   serviceType: ServiceType
+  durationMinutes?: number
   notes?: string
 }
