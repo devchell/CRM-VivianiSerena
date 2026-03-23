@@ -432,7 +432,7 @@ export function DispatchesPanel() {
             onClick={() => setActiveStatus(tab.key)}
             className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
               activeStatus === tab.key
-                ? 'bg-rose-gold text-white'
+                ? 'bg-blue-600 text-white'
                 : 'text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
             }`}
           >
@@ -443,7 +443,7 @@ export function DispatchesPanel() {
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
         {[
-          { label: 'Audiência', value: audience?.totalAudience ?? 0, icon: Users, tone: 'text-rose-gold bg-rose-gold/10' },
+          { label: 'Audiência', value: audience?.totalAudience ?? 0, icon: Users, tone: 'text-blue-600 bg-blue-500/10' },
           { label: 'E-mail apto', value: audience?.email.eligible ?? 0, icon: Mail, tone: 'text-blue-500 bg-blue-500/10' },
           { label: 'WhatsApp apto', value: audience?.whatsapp.eligible ?? 0, icon: MessageCircle, tone: 'text-emerald-500 bg-emerald-500/10' },
           { label: 'Inelegíveis', value: audience?.fullyIneligible ?? 0, icon: ShieldAlert, tone: 'text-amber-500 bg-amber-500/10' },
@@ -511,7 +511,7 @@ export function DispatchesPanel() {
           <button type="button" onClick={() => void loadAudience()} className="rounded border border-slate-200 p-3 text-slate-400 transition-colors hover:text-blue-600 dark:border-slate-700" title="Atualizar">
             <RefreshCw size={16} className={loading ? 'animate-spin' : ''} />
           </button>
-          <button type="button" onClick={handleExport} disabled={!canExport} className="inline-flex items-center gap-2 rounded bg-rose-gold px-4 py-3 text-sm font-medium text-white shadow-sm transition-colors hover:bg-rose-gold-500 disabled:cursor-not-allowed disabled:opacity-50">
+          <button type="button" onClick={handleExport} disabled={!canExport} className="inline-flex items-center gap-2 rounded bg-blue-600 px-4 py-3 text-sm font-medium text-white shadow-sm transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50">
             <Download size={14} />
             Exportar audiência
           </button>
@@ -562,7 +562,7 @@ export function DispatchesPanel() {
                   {savingDraft ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />}
                   Salvar rascunho
                 </button>
-                <button type="button" onClick={() => setShowConfirm(true)} disabled={!canBroadcast || sending || (!draft.emailEnabled && !draft.whatsappEnabled)} className="inline-flex items-center gap-2 rounded bg-rose-gold px-4 py-3 text-sm font-medium text-white shadow-sm transition-colors hover:bg-rose-gold-500 disabled:cursor-not-allowed disabled:opacity-50">
+                <button type="button" onClick={() => setShowConfirm(true)} disabled={!canBroadcast || sending || (!draft.emailEnabled && !draft.whatsappEnabled)} className="inline-flex items-center gap-2 rounded bg-blue-600 px-4 py-3 text-sm font-medium text-white shadow-sm transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50">
                   <Send size={14} />
                   Disparar
                 </button>
@@ -646,7 +646,7 @@ export function DispatchesPanel() {
               </thead>
               <tbody className={crmListBody}>
                 {loading ? (
-                  <tr><td colSpan={5} className="px-4 py-12 text-center"><Loader2 size={20} className="mx-auto animate-spin text-rose-gold" /></td></tr>
+                  <tr><td colSpan={5} className="px-4 py-12 text-center"><Loader2 size={20} className="mx-auto animate-spin text-blue-600" /></td></tr>
                 ) : sample.length === 0 ? (
                   <tr><td colSpan={5} className="p-4"><EmptyState message="Nenhum lead encontrado para os filtros atuais." /></td></tr>
                 ) : sample.map((lead) => (
@@ -750,7 +750,7 @@ export function DispatchesPanel() {
               <button type="button" onClick={() => setShowConfirm(false)} className="flex-1 rounded-md border border-slate-200 px-4 py-2 text-sm text-slate-400 transition-colors hover:bg-slate-100 dark:border-slate-700 dark:hover:bg-slate-800">
                 Cancelar
               </button>
-              <button type="button" onClick={() => void handleSend()} disabled={sending} className="flex-1 rounded-md bg-rose-gold px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-rose-gold-500 disabled:opacity-60">
+              <button type="button" onClick={() => void handleSend()} disabled={sending} className="flex-1 rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700 disabled:opacity-60">
                 {sending ? 'Processando...' : 'Continuar'}
               </button>
             </div>

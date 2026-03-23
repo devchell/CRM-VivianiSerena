@@ -566,10 +566,10 @@ export function LeadsTable() {
     {
       id: 'select',
       header: ({ table }) => (
-        <input type="checkbox" checked={table.getIsAllPageRowsSelected()} onChange={table.getToggleAllPageRowsSelectedHandler()} className="rounded accent-rose-gold" />
+        <input type="checkbox" checked={table.getIsAllPageRowsSelected()} onChange={table.getToggleAllPageRowsSelectedHandler()} className="rounded accent-blue-600" />
       ),
       cell: ({ row }) => (
-        <input type="checkbox" checked={row.getIsSelected()} onChange={row.getToggleSelectedHandler()} className="rounded accent-rose-gold" />
+        <input type="checkbox" checked={row.getIsSelected()} onChange={row.getToggleSelectedHandler()} className="rounded accent-blue-600" />
       ),
       size: 40,
     },
@@ -594,7 +594,7 @@ export function LeadsTable() {
         const phone = info.getValue() as string | null
         if (!phone) return <span className="text-sm text-slate-400 dark:text-slate-400">-</span>
         return (
-          <a href={`https://wa.me/55${phone.replace(/\D/g, '')}`} target="_blank" rel="noopener noreferrer" className="text-sm text-rose-gold hover:underline">
+          <a href={`https://wa.me/55${phone.replace(/\D/g, '')}`} target="_blank" rel="noopener noreferrer" className="text-sm text-blue-600 hover:underline">
             {phone}
           </a>
         )
@@ -887,7 +887,7 @@ export function LeadsTable() {
           <button
             onClick={handleExport}
             disabled={!canExportLeads}
-            className="inline-flex items-center gap-2 rounded bg-rose-gold px-4 py-3 text-sm font-medium text-white shadow-sm transition-colors hover:bg-rose-gold-500 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="inline-flex items-center gap-2 rounded bg-blue-600 px-4 py-3 text-sm font-medium text-white shadow-sm transition-colors hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <Download size={14} />
             Exportar CSV
@@ -963,7 +963,7 @@ export function LeadsTable() {
               {loading ? (
                 <tr>
                   <td colSpan={columns.length} className="px-4 py-12 text-center">
-                    <div className="flex justify-center"><div className="w-6 h-6 border-2 border-rose-gold border-t-transparent rounded-full animate-spin" /></div>
+                    <div className="flex justify-center"><div className="w-6 h-6 border-2 border-blue-400 border-t-transparent rounded-full animate-spin" /></div>
                   </td>
                 </tr>
               ) : table.getRowModel().rows.length === 0 ? (
@@ -1213,7 +1213,7 @@ export function LeadsTable() {
                 <button type="button" onClick={() => setShowModal(false)} className="flex-1 rounded border border-slate-200 px-4 py-2 text-sm text-slate-400 transition-colors hover:bg-slate-100 dark:border-slate-700 dark:hover:bg-slate-800">
                   Cancelar
                 </button>
-                <button type="submit" disabled={submitting} className="flex-1 rounded bg-rose-gold px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-rose-gold-500 disabled:opacity-60">
+                <button type="submit" disabled={submitting} className="flex-1 rounded bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700 disabled:opacity-60">
                   {submitting ? 'Salvando...' : editingLead ? 'Salvar alterações' : 'Criar lead'}
                 </button>
               </div>
@@ -1239,7 +1239,7 @@ export function LeadsTable() {
               </div>
               <div className="flex gap-3">
                 <button type="button" onClick={() => setBulkStatusModal(false)} className="flex-1 rounded border border-slate-200 px-4 py-2 text-sm text-slate-400 hover:bg-slate-100 dark:border-slate-700 dark:hover:bg-slate-800">Cancelar</button>
-                <button type="button" onClick={() => void handleBulkStatus()} disabled={bulkSubmitting} className="flex-1 rounded bg-rose-gold px-4 py-2 text-sm font-medium text-white hover:bg-rose-gold-500 disabled:opacity-60">
+                <button type="button" onClick={() => void handleBulkStatus()} disabled={bulkSubmitting} className="flex-1 rounded bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-60">
                   {bulkSubmitting ? 'Salvando...' : 'Confirmar'}
                 </button>
               </div>
@@ -1266,7 +1266,7 @@ export function LeadsTable() {
               </div>
               <div className="flex gap-3">
                 <button type="button" onClick={() => setBulkOriginModal(false)} className="flex-1 rounded border border-slate-200 px-4 py-2 text-sm text-slate-400 hover:bg-slate-100 dark:border-slate-700 dark:hover:bg-slate-800">Cancelar</button>
-                <button type="button" onClick={() => void handleBulkOrigin()} disabled={bulkSubmitting || !bulkOrigin} className="flex-1 rounded bg-rose-gold px-4 py-2 text-sm font-medium text-white hover:bg-rose-gold-500 disabled:opacity-60">
+                <button type="button" onClick={() => void handleBulkOrigin()} disabled={bulkSubmitting || !bulkOrigin} className="flex-1 rounded bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-60">
                   {bulkSubmitting ? 'Salvando...' : 'Confirmar'}
                 </button>
               </div>

@@ -319,7 +319,7 @@ export default function FinanceiroPage() {
     { label: 'Receita', value: summary?.income ?? 0, color: colors.income.text, background: colors.income.bg },
     { label: 'Despesas', value: summary?.expenses ?? 0, color: colors.expense.text, background: colors.expense.bg },
     { label: 'Lucro', value: summary?.profit ?? 0, color: (summary?.profit ?? 0) >= 0 ? colors.profit.text : colors.expense.text, background: (summary?.profit ?? 0) >= 0 ? colors.profit.bg : colors.expense.bg },
-    { label: 'Ticket médio', value: summary?.averageTicket ?? 0, color: 'var(--color-rose-gold, #C9967A)', background: 'rgba(201,150,122,0.1)' },
+    { label: 'Ticket médio', value: summary?.averageTicket ?? 0, color: '#2563EB', background: 'rgba(37,99,235,0.08)' },
   ]
 
   return (
@@ -335,7 +335,7 @@ export default function FinanceiroPage() {
             <FileText size={14} />
             PDF
           </button>
-          <button onClick={() => openCreateModal('income')} disabled={!canCreateFinancial} className="flex items-center gap-2 rounded bg-rose-gold px-5 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-rose-gold-500 disabled:opacity-50 disabled:cursor-not-allowed">
+          <button onClick={() => openCreateModal('income')} disabled={!canCreateFinancial} className="flex items-center gap-2 rounded bg-blue-600 px-5 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed">
             <Plus size={16} />
             Novo lançamento
           </button>
@@ -635,7 +635,7 @@ export default function FinanceiroPage() {
                 <button type="button" onClick={() => setShowModal(false)} className="flex-1 rounded-lg border border-slate-200 px-4 py-2 text-sm text-slate-400 transition-colors hover:bg-slate-100 dark:border-slate-700 dark:hover:bg-slate-800">
                   Cancelar
                 </button>
-                <button type="submit" disabled={submitting} className="flex-1 rounded-lg bg-rose-gold px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-rose-gold-500 disabled:opacity-60">
+                <button type="submit" disabled={submitting} className="flex-1 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700 disabled:opacity-60">
                   {submitting ? 'Salvando...' : editing ? 'Atualizar' : 'Salvar'}
                 </button>
               </div>

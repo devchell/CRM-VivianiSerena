@@ -637,7 +637,7 @@ export default function SegurancaPage() {
               const sev = SEVERITY_CFG[ev.severity] ?? SEVERITY_CFG.low
               const isRecent = new Date(ev.timestamp) > new Date(Date.now() - 3600_000)
               return (
-                <div key={ev.id} className={`px-6 py-4 flex items-start gap-3 ${isRecent && !ev.resolved ? 'border-l-2 border-l-rose-gold bg-rose-gold/5 dark:bg-rose-gold/10' : crmListRow}`}>
+                <div key={ev.id} className={`px-6 py-4 flex items-start gap-3 ${isRecent && !ev.resolved ? 'border-l-2 border-l-blue-500 bg-blue-500/5 dark:bg-blue-500/10' : crmListRow}`}>
                   <div className={`w-2 h-2 rounded-full flex-shrink-0 mt-2 ${sev.dot}`} />
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
@@ -749,7 +749,7 @@ export default function SegurancaPage() {
                         <span className="text-xs text-slate-400 font-medium ml-2">{t.count}</span>
                       </div>
                       <div className="h-1.5 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
-                        <div className="h-full rounded-full bg-rose-gold transition-all" style={{ width: `${pct}%` }} />
+                        <div className="h-full rounded-full bg-blue-600 transition-all" style={{ width: `${pct}%` }} />
                       </div>
                     </div>
                   )

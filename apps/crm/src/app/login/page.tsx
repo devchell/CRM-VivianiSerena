@@ -296,9 +296,9 @@ export default function LoginPage() {
                   key={`${sequenceStep}-${index}`}
                   className={`h-1.5 rounded-full transition-all ${
                     isCurrent
-                      ? 'w-8 bg-rose-gold'
+                      ? 'w-8 bg-blue-600'
                       : isDone
-                        ? 'w-4 bg-rose-gold/60'
+                        ? 'w-4 bg-blue-600/60'
                         : 'w-4 bg-slate-600'
                   }`}
                 />
@@ -359,7 +359,7 @@ export default function LoginPage() {
                 <button
                   type="submit"
                   disabled={isLoading}
-                  className="w-full flex items-center justify-center gap-2 py-3 rounded-md bg-rose-gold text-white font-medium text-sm hover:bg-rose-gold/90 disabled:opacity-60 transition-colors mt-2"
+                  className="w-full flex items-center justify-center gap-2 py-3 rounded-md bg-blue-600 text-white font-medium text-sm hover:bg-blue-700 disabled:opacity-60 transition-colors mt-2"
                 >
                   {isLoading ? <Loader2 size={16} className="animate-spin" /> : <Lock size={16} />}
                   {isLoading ? 'Verificando...' : 'Entrar'}
@@ -384,7 +384,7 @@ export default function LoginPage() {
                 <button
                   type="submit"
                   disabled={emailCode.length !== 6 || isLoading}
-                  className="w-full flex items-center justify-center gap-2 py-3 rounded-md bg-rose-gold text-white font-medium text-sm hover:bg-rose-gold/90 disabled:opacity-60 transition-colors"
+                  className="w-full flex items-center justify-center gap-2 py-3 rounded-md bg-blue-600 text-white font-medium text-sm hover:bg-blue-700 disabled:opacity-60 transition-colors"
                 >
                   {isLoading ? <Loader2 size={16} className="animate-spin" /> : <Mail size={16} />}
                   {isLoading ? 'Verificando...' : 'Confirmar Código'}
@@ -416,7 +416,7 @@ export default function LoginPage() {
                 <button
                   type="submit"
                   disabled={smsCode.length !== 6 || isLoading}
-                  className="w-full flex items-center justify-center gap-2 py-3 rounded-md bg-rose-gold text-white font-medium text-sm hover:bg-rose-gold/90 disabled:opacity-60 transition-colors"
+                  className="w-full flex items-center justify-center gap-2 py-3 rounded-md bg-blue-600 text-white font-medium text-sm hover:bg-blue-700 disabled:opacity-60 transition-colors"
                 >
                   {isLoading ? <Loader2 size={16} className="animate-spin" /> : <Smartphone size={16} />}
                   {isLoading ? 'Verificando...' : 'Confirmar Código'}

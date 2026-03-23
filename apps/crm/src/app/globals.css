@@ -399,8 +399,8 @@ tbody tr:hover { background: var(--bg-hover); }
 }
 .crm-calendar .fc-button-primary:not(:disabled).fc-button-active,
 .crm-calendar .fc-button-primary:not(:disabled):active {
-  background: #C9A96E;
-  border-color: #C9A96E;
+  background: #2563EB;
+  border-color: #2563EB;
   color: #fff;
 }
 .crm-calendar .fc-today-button:not(:disabled) {
@@ -431,8 +431,8 @@ tbody tr:hover { background: var(--bg-hover); }
 .crm-calendar .fc-timegrid-slot { height: 3.5rem; }
 .crm-calendar .fc-timegrid-col { background: #FFFFFF; }
 .crm-calendar .fc .fc-timegrid-col-frame { min-height: 100%; }
-.crm-calendar .fc-timegrid-now-indicator-line { border-color: #C9A96E; border-width: 2px; }
-.crm-calendar .fc-timegrid-now-indicator-arrow { border-color: #C9A96E; }
+.crm-calendar .fc-timegrid-now-indicator-line { border-color: #2563EB; border-width: 2px; }
+.crm-calendar .fc-timegrid-now-indicator-arrow { border-color: #2563EB; }
 .crm-calendar .fc-day-today { background: rgba(59,130,246,0.04) !important; }
 .crm-calendar .fc-highlight { background: rgba(59,130,246,0.08) !important; }
 .crm-calendar .fc-event {
@@ -451,7 +451,7 @@ tbody tr:hover { background: var(--bg-hover); }
 .crm-calendar .crm-calendar-event-group        { --calendar-accent: #A855F7; }
 .crm-calendar .crm-calendar-event-mentoring    { --calendar-accent: #F97316; }
 .crm-calendar .crm-calendar-event-workshop     { --calendar-accent: #EAB308; }
-.crm-calendar .fc-event .rounded-xl { border-left: 3px solid var(--calendar-accent, #C9A96E); }
+.crm-calendar .fc-event .rounded-xl { border-left: 3px solid var(--calendar-accent, #3B82F6); }
 
 /* Dark mode calendar */
 .dark .crm-calendar .fc { color: #F8FAFC; }
@@ -459,7 +459,7 @@ tbody tr:hover { background: var(--bg-hover); }
 .dark .crm-calendar .fc-button-primary { background: #1E293B; border-color: #334155; color: #CBD5E1; }
 .dark .crm-calendar .fc-button-primary:hover { background: #334155; border-color: #475569; color: #fff; }
 .dark .crm-calendar .fc-button-primary:not(:disabled).fc-button-active,
-.dark .crm-calendar .fc-button-primary:not(:disabled):active { background: #D4B882; border-color: #D4B882; color: #0F172A; }
+.dark .crm-calendar .fc-button-primary:not(:disabled):active { background: #3B82F6; border-color: #3B82F6; color: #fff; }
 .dark .crm-calendar .fc-today-button:not(:disabled) { background: #1E3A5F; border-color: #1D4ED8; color: #93C5FD; }
 .dark .crm-calendar .fc-theme-standard td,
 .dark .crm-calendar .fc-theme-standard th,

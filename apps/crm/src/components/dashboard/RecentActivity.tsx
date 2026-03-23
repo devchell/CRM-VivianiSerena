@@ -8,7 +8,7 @@ import { crmSoftListItem } from '@/components/ui/listStyles'
 
 const ICONS = {
   lead: { icon: Users, color: 'text-blue-400 bg-blue-500/10' },
-  appointment: { icon: Calendar, color: 'text-rose-gold bg-rose-gold/10' },
+  appointment: { icon: Calendar, color: 'text-blue-600 bg-blue-500/10' },
   financial: { icon: DollarSign, color: 'text-green-500 bg-green-500/10' },
   security: { icon: Shield, color: 'text-red-400 bg-red-500/10' },
 } as const
