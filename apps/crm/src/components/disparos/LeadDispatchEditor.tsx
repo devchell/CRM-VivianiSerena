@@ -78,9 +78,9 @@ export function LeadDispatchEditor({ status, label, leadsCount, onDispatch }: Le
         headers: buildAuthHeaders(accessToken, 'application/json'),
         body: JSON.stringify({ subject: channel === 'email' ? subject : undefined, body }),
       })
-      toast.success('Template salvo!')
+      toast.success('Mensagem salva!')
     } catch {
-      toast.error('Erro ao salvar template.')
+      toast.error('Erro ao salvar mensagem.')
     } finally {
       setSaving(false)
     }
@@ -142,7 +142,7 @@ export function LeadDispatchEditor({ status, label, leadsCount, onDispatch }: Le
       {loading ? (
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '20px 0', color: 'var(--muted-foreground)' }}>
           <Loader2 size={16} style={{ animation: 'spin 1s linear infinite' }} />
-          <span style={{ fontSize: 13 }}>Carregando template...</span>
+          <span style={{ fontSize: 13 }}>Carregando mensagem...</span>
         </div>
       ) : (
         <>
@@ -216,7 +216,7 @@ export function LeadDispatchEditor({ status, label, leadsCount, onDispatch }: Le
               }}
             >
               {saving ? <Loader2 size={14} style={{ animation: 'spin 1s linear infinite' }} /> : <Save size={14} />}
-              Salvar template
+              Salvar mensagem
             </button>
             <button
               type="button"
