@@ -130,7 +130,7 @@ function DonutSection({ transactions, loading }: { transactions: FinancialRecord
     for (const t of transactions) {
       const key = `${t.type}:${t.category}`
       if (!byCategory[key]) byCategory[key] = { type: t.type, amount: 0 }
-      byCategory[key].amount += t.amount
+      byCategory[key].amount += Number(t.amount)
     }
 
     const receita: DonutEntry[] = []
@@ -335,7 +335,7 @@ export default function FinanceiroPage() {
     setForm({
       type: transaction.type,
       category: transaction.category,
-      amount: transaction.amount.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
+      amount: Number(transaction.amount).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
       description: transaction.description,
       date: transaction.date.slice(0, 10),
       recurring: transaction.recurring,
@@ -424,7 +424,7 @@ export default function FinanceiroPage() {
         transaction.type === 'income' ? 'Receita' : 'Despesa',
         FINANCIAL_CATEGORY_LABELS[transaction.category],
         `"${transaction.description.replace(/"/g, '""')}"`,
-        transaction.amount.toFixed(2),
+        Number(transaction.amount).toFixed(2),
         transaction.recurring ? 'Sim' : 'Não',
       ].join(',')
     })
