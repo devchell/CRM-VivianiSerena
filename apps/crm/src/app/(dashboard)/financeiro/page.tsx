@@ -176,7 +176,7 @@ export default function FinanceiroPage() {
     setForm({
       type: transaction.type,
       category: transaction.category,
-      amount: transaction.amount.toFixed(2),
+      amount: transaction.amount.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
       description: transaction.description,
       date: transaction.date.slice(0, 10),
       recurring: transaction.recurring,
@@ -214,7 +214,7 @@ export default function FinanceiroPage() {
       const payload = {
         type: form.type,
         category: form.category,
-        amount: Number(form.amount.replace(',', '.')),
+        amount: Number(form.amount.replace(/\./g, '').replace(',', '.')),
         description: form.description.trim(),
         date: new Date(`${form.date}T12:00:00`).toISOString(),
         recurring: form.recurring,
@@ -582,13 +582,30 @@ export default function FinanceiroPage() {
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="mb-1 block text-xs font-medium text-slate-400 dark:text-slate-400">Valor</label>
-                  <input
-                    required
-                    inputMode="decimal"
-                    value={form.amount}
-                    onChange={(event) => setForm((current) => ({ ...current, amount: event.target.value }))}
-                    className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
-                  />
+                  <div className="flex items-center overflow-hidden rounded-lg border border-slate-200 bg-white transition-colors focus-within:ring-2 focus-within:ring-blue-500/20 dark:border-slate-700 dark:bg-slate-800">
+                    <span className="select-none pl-3 text-sm font-medium text-slate-400 dark:text-slate-500">R$</span>
+                    <input
+                      required
+                      type="text"
+                      inputMode="numeric"
+                      placeholder="0,00"
+                      value={form.amount}
+                      onChange={(event) => {
+                        const digits = event.target.value.replace(/\D/g, '')
+                        if (!digits) {
+                          setForm((current) => ({ ...current, amount: '' }))
+                          return
+                        }
+                        const cents = parseInt(digits, 10)
+                        const formatted = (cents / 100).toLocaleString('pt-BR', {
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2,
+                        })
+                        setForm((current) => ({ ...current, amount: formatted }))
+                      }}
+                      className="w-full border-none bg-transparent px-2 py-2 text-right text-sm tabular-nums text-slate-900 focus:outline-none dark:text-slate-100"
+                    />
+                  </div>
                 </div>
                 <div>
                   <label className="mb-1 block text-xs font-medium text-slate-400 dark:text-slate-400">Data</label>
