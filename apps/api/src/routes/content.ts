@@ -483,6 +483,52 @@ contentRouter.get('/:section/:key/history', authenticate, authorizePermission('e
   }
 })
 
+// ── Auto-templates ──────────────────────────────────────────────────────────
+
+const autoTemplateBodySchema = z.object({
+  emailHtml: z.string().max(100000).optional(),
+  whatsappText: z.string().max(10000).optional(),
+})
+
+const VALID_TEMPLATE_IDS = [
+  'appointment_confirmation',
+  'appointment_reminder_24h',
+  'appointment_reminder_1h',
+  'appointment_cancellation',
+  'lead_welcome',
+  'lead_converted',
+  'auth_2fa',
+]
+
+contentRouter.get('/auto-templates', authenticate, async (_req, res, next) => {
+  try {
+    const templates = await prisma.autoTemplate.findMany()
+    res.json({ success: true, data: templates })
+  } catch (error) {
+    next(error)
+  }
+})
+
+contentRouter.put('/auto-templates/:templateId', authenticate, authorizePermission('editar-site.update'), async (req, res, next) => {
+  try {
+    const templateId = String(req.params.templateId)
+    if (!VALID_TEMPLATE_IDS.includes(templateId)) {
+      throw new AppError(400, `templateId inválido: ${templateId}`)
+    }
+    const body = autoTemplateBodySchema.parse(req.body)
+    const template = await prisma.autoTemplate.upsert({
+      where: { templateId },
+      update: { emailHtml: body.emailHtml ?? null, whatsappText: body.whatsappText ?? null },
+      create: { templateId, emailHtml: body.emailHtml ?? null, whatsappText: body.whatsappText ?? null },
+    })
+    res.json({ success: true, data: template })
+  } catch (error) {
+    next(error)
+  }
+})
+
+// ── Section / key wildcard routes (keep AFTER specific routes) ───────────────
+
 contentRouter.get('/:section', async (req, res, next) => {
   try {
     const contents = await prisma.content.findMany({ where: { section: normalizeSectionAlias(String(req.params.section)) } })

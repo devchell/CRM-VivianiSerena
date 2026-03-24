@@ -1,6 +1,7 @@
 import nodemailer from 'nodemailer'
 import { logger } from '../lib/logger'
 import { getActiveEmailSettings } from './emailSettings'
+import { prisma } from '../lib/prisma'
 
 const WHATSAPP_NUMBER = '5511915751770'
 
@@ -91,17 +92,28 @@ async function sendAdminEmail(subject: string, html: string) {
 
 export const emailService = {
   async sendOtp(params: { to: string; code: string; type: 'email' | 'login' }) {
+    const customTemplate = await prisma.autoTemplate.findUnique({
+      where: { templateId: 'auth_2fa' },
+    })
     const isLogin = params.type === 'login'
-    const content = `
-      <span class="badge">${isLogin ? 'Verificação de Login' : 'Código de Verificação'}</span>
-      <p>Use o código abaixo para concluir sua autenticação no CRM:</p>
-      <div class="info-box" style="text-align:center;padding:24px;">
-        <p style="font-size:32px;font-weight:700;letter-spacing:12px;color:#C9967A;margin:0;font-family:monospace">${params.code}</p>
-      </div>
-      <p style="font-size:13px;color:#666">Este código é válido por <strong>5 minutos</strong>. Não compartilhe com ninguém.</p>
-      <p style="font-size:12px;color:#999">Se você não solicitou este código, ignore este e-mail.</p>
-    `
-    return send(params.to, 'Seu código de verificação - Viviani Serena CRM', baseTemplate('Código de Verificação', content))
+    let html: string
+    if (customTemplate?.emailHtml) {
+      html = customTemplate.emailHtml
+        .replace(/\{codigo\}/g, params.code)
+        .replace(/\{code\}/g, params.code)
+    } else {
+      const content = `
+        <span class="badge">${isLogin ? 'Verificação de Login' : 'Código de Verificação'}</span>
+        <p>Use o código abaixo para concluir sua autenticação no CRM:</p>
+        <div class="info-box" style="text-align:center;padding:24px;">
+          <p style="font-size:32px;font-weight:700;letter-spacing:12px;color:#C9967A;margin:0;font-family:monospace">${params.code}</p>
+        </div>
+        <p style="font-size:13px;color:#666">Este código é válido por <strong>5 minutos</strong>. Não compartilhe com ninguém.</p>
+        <p style="font-size:12px;color:#999">Se você não solicitou este código, ignore este e-mail.</p>
+      `
+      html = baseTemplate('Código de Verificação', content)
+    }
+    return send(params.to, 'Seu código de verificação - Viviani Serena CRM', html)
   },
 
   async newLead(lead: { name: string; email: string; phone?: string; source: string }) {
@@ -124,20 +136,32 @@ export const emailService = {
     date: Date
     serviceType: string
   }) {
+    const customTemplate = await prisma.autoTemplate.findUnique({
+      where: { templateId: 'appointment_confirmation' },
+    })
     const dateStr = params.date.toLocaleDateString('pt-BR', {
       weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit',
     })
-    const content = `
-      <p>Olá, <strong>${params.clientName}</strong>!</p>
-      <p>Seu agendamento foi confirmado com sucesso.</p>
-      <div class="info-box">
-        <p><strong>Serviço:</strong> ${params.serviceType}</p>
-        <p><strong>Data:</strong> ${dateStr}</p>
-      </div>
-      <p>Se precisar reagendar, entre em contato conosco com antecedência de 24 horas.</p>
-      <a href="https://wa.me/${WHATSAPP_NUMBER}" class="btn">Falar no WhatsApp</a>
-    `
-    return send(params.clientEmail, 'Seu agendamento foi confirmado', baseTemplate('Agendamento Confirmado', content))
+    let html: string
+    if (customTemplate?.emailHtml) {
+      html = customTemplate.emailHtml
+        .replace(/\{nome\}/g, params.clientName)
+        .replace(/\{servico\}/g, params.serviceType)
+        .replace(/\{data\}/g, dateStr)
+    } else {
+      const content = `
+        <p>Olá, <strong>${params.clientName}</strong>!</p>
+        <p>Seu agendamento foi confirmado com sucesso.</p>
+        <div class="info-box">
+          <p><strong>Serviço:</strong> ${params.serviceType}</p>
+          <p><strong>Data:</strong> ${dateStr}</p>
+        </div>
+        <p>Se precisar reagendar, entre em contato conosco com antecedência de 24 horas.</p>
+        <a href="https://wa.me/${WHATSAPP_NUMBER}" class="btn">Falar no WhatsApp</a>
+      `
+      html = baseTemplate('Agendamento Confirmado', content)
+    }
+    return send(params.clientEmail, 'Seu agendamento foi confirmado', html)
   },
 
   async sendCollaboratorInvite(params: {
