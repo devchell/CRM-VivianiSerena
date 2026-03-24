@@ -44,6 +44,165 @@ import {
 
 type FinancialRecord = Omit<Financial, 'date'> & { date: string }
 
+// ── Paletas de cores para os gráficos de rosca ──────────────────────────
+const RECEITA_COLORS = [
+  '#16A34A', '#15803D', '#14532D',
+  '#0D9488', '#0F766E', '#134E4A',
+  '#059669', '#047857', '#065F46',
+  '#0891B2',
+]
+
+const DESPESA_COLORS = [
+  '#DC2626', '#B91C1C', '#991B1B',
+  '#EA580C', '#C2410C', '#9A3412',
+  '#D97706', '#B45309', '#92400E',
+  '#EAB308',
+]
+
+// ── DonutChart reutilizável ─────────────────────────────────────────────
+interface DonutEntry { name: string; value: number; color: string }
+
+function DonutChart({ title, subtitle, data, totalLabel, totalValue, emptyMessage }: {
+  title: string
+  subtitle?: string
+  data: DonutEntry[]
+  totalLabel?: string
+  totalValue?: string
+  emptyMessage?: string
+}) {
+  const hasData = data.length > 0 && data.some(d => d.value > 0)
+
+  return (
+    <div className="card-dark flex flex-col gap-3 rounded-lg p-5 shadow-sm">
+      <div>
+        <h3 className="font-heading text-sm font-semibold text-slate-900 dark:text-slate-100">{title}</h3>
+        {subtitle && <p className="mt-0.5 text-[11px] text-slate-400">{subtitle}</p>}
+      </div>
+
+      {!hasData ? (
+        <div className="flex min-h-[180px] flex-1 items-center justify-center text-xs text-slate-400">
+          {emptyMessage ?? 'Sem dados no período'}
+        </div>
+      ) : (
+        <>
+          <div className="relative">
+            <ResponsiveContainer width="100%" height={180}>
+              <PieChart>
+                <Pie data={data} cx="50%" cy="50%" innerRadius={50} outerRadius={75} paddingAngle={2} dataKey="value">
+                  {data.map((entry, i) => (
+                    <Cell key={i} fill={entry.color} />
+                  ))}
+                </Pie>
+                <Tooltip formatter={(value: number) => [formatCurrency(value), 'Total']} />
+              </PieChart>
+            </ResponsiveContainer>
+            {totalValue && (
+              <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
+                <span className="text-[10px] text-slate-400">{totalLabel ?? 'Total'}</span>
+                <span className="text-sm font-bold text-slate-900 dark:text-slate-100">{totalValue}</span>
+              </div>
+            )}
+          </div>
+
+          <div className="flex flex-col gap-1">
+            {data.map((item, i) => (
+              <div key={i} className="flex items-center justify-between gap-2">
+                <div className="flex min-w-0 items-center gap-1.5">
+                  <div className="h-2 w-2 flex-shrink-0 rounded-full" style={{ background: item.color }} />
+                  <span className="truncate text-xs text-slate-500 dark:text-slate-400">{item.name}</span>
+                </div>
+                <span className="flex-shrink-0 text-xs font-medium tabular-nums text-slate-900 dark:text-slate-100">
+                  {formatCurrency(item.value)}
+                </span>
+              </div>
+            ))}
+          </div>
+        </>
+      )}
+    </div>
+  )
+}
+
+// ── Seção dos 3 gráficos de rosca ───────────────────────────────────────
+function DonutSection({ transactions, loading }: { transactions: FinancialRecord[]; loading: boolean }) {
+  const { receitaData, despesaData, geralData, totalReceita, totalDespesa, totalGeral } = useMemo(() => {
+    const byCategory: Record<string, { type: 'income' | 'expense'; amount: number }> = {}
+    for (const t of transactions) {
+      const key = `${t.type}:${t.category}`
+      if (!byCategory[key]) byCategory[key] = { type: t.type, amount: 0 }
+      byCategory[key].amount += t.amount
+    }
+
+    const receita: DonutEntry[] = []
+    const despesa: DonutEntry[] = []
+    let ri = 0, di = 0
+
+    for (const [key, val] of Object.entries(byCategory)) {
+      const cat = key.split(':')[1] as keyof typeof FINANCIAL_CATEGORY_LABELS
+      const name = FINANCIAL_CATEGORY_LABELS[cat] ?? cat
+      if (val.type === 'income') {
+        receita.push({ name, value: val.amount, color: RECEITA_COLORS[ri++ % RECEITA_COLORS.length] })
+      } else {
+        despesa.push({ name, value: val.amount, color: DESPESA_COLORS[di++ % DESPESA_COLORS.length] })
+      }
+    }
+
+    receita.sort((a, b) => b.value - a.value)
+    despesa.sort((a, b) => b.value - a.value)
+
+    const totalR = receita.reduce((s, d) => s + d.value, 0)
+    const totalD = despesa.reduce((s, d) => s + d.value, 0)
+
+    return {
+      receitaData: receita,
+      despesaData: despesa,
+      geralData: [...receita, ...despesa],
+      totalReceita: totalR,
+      totalDespesa: totalD,
+      totalGeral: totalR + totalD,
+    }
+  }, [transactions])
+
+  if (loading) {
+    return (
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+        {[0, 1, 2].map(i => (
+          <div key={i} className="h-[340px] animate-pulse rounded-lg bg-slate-100 dark:bg-slate-800/40" />
+        ))}
+      </div>
+    )
+  }
+
+  return (
+    <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+      <DonutChart
+        title="Visão geral"
+        subtitle="Receitas e despesas por categoria"
+        data={geralData}
+        totalLabel="Movimentação"
+        totalValue={formatCurrency(totalGeral)}
+        emptyMessage="Sem lançamentos no período"
+      />
+      <DonutChart
+        title="Receitas"
+        subtitle="Por categoria"
+        data={receitaData}
+        totalLabel="Total receitas"
+        totalValue={formatCurrency(totalReceita)}
+        emptyMessage="Sem receitas no período"
+      />
+      <DonutChart
+        title="Despesas"
+        subtitle="Por categoria"
+        data={despesaData}
+        totalLabel="Total despesas"
+        totalValue={formatCurrency(totalDespesa)}
+        emptyMessage="Sem despesas no período"
+      />
+    </div>
+  )
+}
+
 interface FinancialListResponse {
   success: true
   data: FinancialRecord[]
@@ -358,49 +517,30 @@ export default function FinanceiroPage() {
         ))}
       </div>
 
-      <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
-        <div className="card-dark rounded-lg p-5 shadow-sm">
-          <h3 className="mb-4 font-heading text-sm font-semibold text-slate-900 dark:text-slate-100">
-            Evolução mensal
-          </h3>
-          {loading ? (
-            <div className="h-[240px] animate-pulse rounded-lg bg-slate-100 dark:bg-slate-800/40" />
-          ) : (
-            <ResponsiveContainer width="100%" height={240}>
-              <BarChart data={charts?.monthly ?? []}>
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(120,120,120,0.1)" />
-                <XAxis dataKey="label" tick={{ fontSize: 11, fill: '#787878' }} axisLine={false} tickLine={false} />
-                <YAxis tick={{ fontSize: 11, fill: '#787878' }} axisLine={false} tickLine={false} tickFormatter={(value) => `${(value / 1000).toFixed(0)}k`} />
-                <Tooltip formatter={(value: number, name: string) => [formatCurrency(value), name === 'income' ? 'Receita' : 'Despesas']} />
-                <Legend formatter={(value) => (value === 'income' ? 'Receita' : 'Despesas')} />
-                <Bar dataKey="income" fill={colors.area.income} radius={[4, 4, 0, 0]} />
-                <Bar dataKey="expenses" fill={colors.area.expense} radius={[4, 4, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          )}
-        </div>
-
-        <div className="card-dark rounded-lg p-5 shadow-sm">
-          <h3 className="mb-4 font-heading text-sm font-semibold text-slate-900 dark:text-slate-100">
-            Despesas por categoria
-          </h3>
-          {loading ? (
-            <div className="h-[240px] animate-pulse rounded-lg bg-slate-100 dark:bg-slate-800/40" />
-          ) : (
-            <ResponsiveContainer width="100%" height={240}>
-              <PieChart>
-                <Pie data={charts?.expensesByCategory ?? []} dataKey="amount" nameKey="label" innerRadius={56} outerRadius={86}>
-                  {(charts?.expensesByCategory ?? []).map((entry, index) => (
-                    <Cell key={entry.category} fill={colors.pie[index % colors.pie.length]} />
-                  ))}
-                </Pie>
-                <Tooltip formatter={(value: number) => [formatCurrency(value), 'Total']} />
-                <Legend formatter={(value) => String(value)} wrapperStyle={{ fontSize: 11 }} />
-              </PieChart>
-            </ResponsiveContainer>
-          )}
-        </div>
+      {/* Evolução mensal */}
+      <div className="card-dark rounded-lg p-5 shadow-sm">
+        <h3 className="mb-4 font-heading text-sm font-semibold text-slate-900 dark:text-slate-100">
+          Evolução mensal
+        </h3>
+        {loading ? (
+          <div className="h-[240px] animate-pulse rounded-lg bg-slate-100 dark:bg-slate-800/40" />
+        ) : (
+          <ResponsiveContainer width="100%" height={240}>
+            <BarChart data={charts?.monthly ?? []}>
+              <CartesianGrid strokeDasharray="3 3" stroke="rgba(120,120,120,0.1)" />
+              <XAxis dataKey="label" tick={{ fontSize: 11, fill: '#787878' }} axisLine={false} tickLine={false} />
+              <YAxis tick={{ fontSize: 11, fill: '#787878' }} axisLine={false} tickLine={false} tickFormatter={(value) => `${(value / 1000).toFixed(0)}k`} />
+              <Tooltip formatter={(value: number, name: string) => [formatCurrency(value), name === 'income' ? 'Receita' : 'Despesas']} />
+              <Legend formatter={(value) => (value === 'income' ? 'Receita' : 'Despesas')} />
+              <Bar dataKey="income" fill={colors.area.income} radius={[4, 4, 0, 0]} />
+              <Bar dataKey="expenses" fill={colors.area.expense} radius={[4, 4, 0, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
+        )}
       </div>
+
+      {/* 3 gráficos de rosca */}
+      <DonutSection transactions={transactions} loading={loading} />
 
       <div className={crmListShell}>
         <div className={crmListToolbar}>
