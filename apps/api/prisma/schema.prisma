@@ -327,6 +327,16 @@ model NotificationRead {
   @@map("notification_reads")
 }
 
+model AutoTemplate {
+  id           String   @id @default(cuid())
+  templateId   String   @unique
+  emailHtml    String?  @db.Text
+  whatsappText String?  @db.Text
+  updatedAt    DateTime @updatedAt
+
+  @@map("auto_templates")
+}
+
 // LGPD — Registro de consentimento de uso de dados
 model ConsentLog {
   id             String   @id @default(cuid())
