@@ -12,12 +12,12 @@ import {
   MessageCircle,
   RefreshCw,
   Save,
-  Send,
   ShieldAlert,
   Users,
   Zap,
 } from 'lucide-react'
 import { apiFetchJson, buildApiUrl, buildAuthHeaders } from '@/lib/api-client'
+import { LeadDispatchEditor } from '@/components/disparos/LeadDispatchEditor'
 import { useAuth } from '@/lib/useAuth'
 import {
   crmListBody,
@@ -225,7 +225,6 @@ export function DispatchesPanel() {
   const [history, setHistory] = useState<HistoryResponse['data'] | null>(null)
   const [tabCounts, setTabCounts] = useState<Record<string, number>>({})
   const [loading, setLoading] = useState(true)
-  const [savingDraft, setSavingDraft] = useState(false)
   const [savingSettings, setSavingSettings] = useState(false)
   const [sending, setSending] = useState(false)
   const [showConfirm, setShowConfirm] = useState(false)
@@ -377,23 +376,6 @@ export function DispatchesPanel() {
     }
   }, [selectedAutoTemplate])
 
-  const handleSaveDraft = async () => {
-    if (!accessToken || !draft || !canBroadcast) return
-    setSavingDraft(true)
-    try {
-      await apiFetchJson(`/api/v1/dispatches/drafts/${activeStatus}`, {
-        method: 'PUT',
-        headers: buildAuthHeaders(accessToken, 'application/json'),
-        body: JSON.stringify(draft),
-      })
-      toast.success('Rascunho salvo')
-    } catch {
-      toast.error('Erro ao salvar rascunho')
-    } finally {
-      setSavingDraft(false)
-    }
-  }
-
   const handleSaveSettings = async () => {
     if (!accessToken || !settings || !canBroadcast) return
     setSavingSettings(true)
@@ -464,6 +446,47 @@ export function DispatchesPanel() {
       toast.success('CSV exportado')
     } catch {
       toast.error('Erro ao exportar audiência')
+    }
+  }
+
+  const handleDispatchFromEditor = async (channel: 'email' | 'whatsapp', subject: string, body: string) => {
+    if (!accessToken || !canBroadcast) return
+    setSending(true)
+    try {
+      await apiFetchJson('/api/v1/dispatches/send', {
+        method: 'POST',
+        headers: buildAuthHeaders(accessToken, 'application/json'),
+        body: JSON.stringify({
+          idempotencyKey,
+          confirm: true,
+          filters: {
+            status: activeStatus,
+            ...(filters.source ? { source: filters.source } : {}),
+            ...(filters.from ? { from: new Date(`${filters.from}T00:00:00.000Z`).toISOString() } : {}),
+            ...(filters.to ? { to: new Date(`${filters.to}T00:00:00.000Z`).toISOString() } : {}),
+            activityState: filters.activityState,
+            consented: filters.consented,
+            emailEligibility: filters.emailEligibility,
+            whatsappEligibility: filters.whatsappEligibility,
+            ...(filters.search.trim() ? { search: filters.search.trim() } : {}),
+          },
+          draft: {
+            status: activeStatus,
+            emailEnabled: channel === 'email',
+            emailSubject: channel === 'email' ? subject : '',
+            emailBody: channel === 'email' ? body : '',
+            whatsappEnabled: channel === 'whatsapp',
+            whatsappBody: channel === 'whatsapp' ? body : '',
+          },
+        }),
+      })
+      toast.success('Disparo operacional registrado')
+      setIdempotencyKey(createIdempotencyKey())
+      await Promise.all([loadAudience(), loadHistory()])
+    } catch {
+      toast.error('Erro ao disparar campanha')
+    } finally {
+      setSending(false)
     }
   }
 
@@ -780,83 +803,14 @@ export function DispatchesPanel() {
               <div className="border-b border-slate-200/90 px-5 py-4 dark:border-slate-700">
                 <h2 className="font-heading text-xl font-semibold text-slate-900 dark:text-slate-100">Canais e mensagem</h2>
               </div>
-              {draft ? (
-                <div style={{ display: 'flex', flexDirection: 'column', flex: 1, gap: 12, padding: '20px' }}>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, alignItems: 'stretch', minHeight: 500 }}>
-                    {/* Email panel */}
-                    <div style={{ display: 'flex', flexDirection: 'column', flex: 1, gap: 12 }} className="rounded-lg border border-slate-200 bg-white/80 p-4 dark:border-slate-700 dark:bg-slate-900/70">
-                      <label className="flex items-center gap-2 text-sm font-medium text-slate-900 dark:text-slate-100">
-                        <input type="checkbox" checked={draft.emailEnabled} onChange={(event) => setDraft((current) => current ? { ...current, emailEnabled: event.target.checked } : current)} />
-                        Ativar disparo por e-mail
-                      </label>
-                      <p className="text-xs text-slate-400 dark:text-slate-400">
-                        Restante hoje: {audience?.email.remainingToday ?? 0} / {settings?.emailDailyLimit ?? 0} · SMTP {audience?.email.providerConfigured ? 'ok' : 'não configurado'}
-                      </p>
-                      <input value={draft.emailSubject} onChange={(event) => setDraft((current) => current ? { ...current, emailSubject: event.target.value } : current)} placeholder="Assunto do e-mail" className="w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100" />
-                      <textarea
-                        value={draft.emailBody}
-                        onChange={(e) => setDraft((current) => current ? { ...current, emailBody: e.target.value } : current)}
-                        placeholder={`<p>Olá {nome},</p>\n<p>Sua mensagem aqui...</p>`}
-                        style={{
-                          width: '100%',
-                          flex: 1,
-                          minHeight: 320,
-                          fontFamily: '"Fira Code", "Consolas", "Monaco", monospace',
-                          fontSize: 13,
-                          lineHeight: 1.6,
-                          padding: '12px 14px',
-                          borderRadius: 8,
-                          border: '1px solid var(--border)',
-                          background: 'var(--bg-input)',
-                          color: 'var(--foreground)',
-                          resize: 'vertical',
-                        }}
-                      />
-                      <EmailVariablesLegend />
-                    </div>
-                    {/* WhatsApp panel */}
-                    <div style={{ display: 'flex', flexDirection: 'column', flex: 1, gap: 12 }} className="rounded-lg border border-slate-200 bg-white/80 p-4 dark:border-slate-700 dark:bg-slate-900/70">
-                      <label className="flex items-center gap-2 text-sm font-medium text-slate-900 dark:text-slate-100">
-                        <input type="checkbox" checked={draft.whatsappEnabled} onChange={(event) => setDraft((current) => current ? { ...current, whatsappEnabled: event.target.checked } : current)} />
-                        Ativar disparo por WhatsApp
-                      </label>
-                      <p className="text-xs text-slate-400 dark:text-slate-400">
-                        Restante hoje: {audience?.whatsapp.remainingToday ?? 0} / {settings?.whatsappDailyLimit ?? 0} · Provider {audience?.whatsapp.providerConfigured ? 'ok' : 'pendente'}
-                      </p>
-                      <textarea
-                        value={draft.whatsappBody}
-                        onChange={(e) => setDraft((current) => current ? { ...current, whatsappBody: e.target.value } : current)}
-                        placeholder="Olá {nome}! Sua mensagem aqui."
-                        style={{
-                          width: '100%',
-                          flex: 1,
-                          minHeight: 200,
-                          fontSize: 13,
-                          lineHeight: 1.6,
-                          padding: '12px 14px',
-                          borderRadius: 8,
-                          border: '1px solid var(--border)',
-                          background: 'var(--bg-input)',
-                          color: 'var(--foreground)',
-                          resize: 'vertical',
-                        }}
-                      />
-                      <EmailVariablesLegend />
-                    </div>
-                  </div>
-
-                  <div className="flex flex-wrap gap-3">
-                    <button type="button" onClick={handleSaveDraft} disabled={!canBroadcast || savingDraft} className="inline-flex items-center gap-2 rounded border border-slate-200 px-4 py-3 text-sm font-medium text-slate-500 transition-colors hover:border-blue-400/60 hover:text-blue-600 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-700 dark:text-slate-400">
-                      {savingDraft ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />}
-                      Salvar rascunho
-                    </button>
-                    <button type="button" onClick={() => setShowConfirm(true)} disabled={!canBroadcast || sending || (!draft.emailEnabled && !draft.whatsappEnabled)} className="inline-flex items-center gap-2 rounded bg-blue-600 px-4 py-3 text-sm font-medium text-white shadow-sm transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50">
-                      <Send size={14} />
-                      Disparar
-                    </button>
-                  </div>
-                </div>
-              ) : null}
+              <div style={{ padding: '20px' }}>
+                <LeadDispatchEditor
+                  status={activeStatus}
+                  label={STATUS_TABS.find((t) => t.key === activeStatus)?.label ?? activeStatus}
+                  leadsCount={tabCounts[activeStatus] ?? 0}
+                  onDispatch={handleDispatchFromEditor}
+                />
+              </div>
             </div>
 
             <div className={crmListShell}>
