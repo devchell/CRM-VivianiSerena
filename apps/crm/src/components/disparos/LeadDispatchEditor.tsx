@@ -207,12 +207,11 @@ export function LeadDispatchEditor({ status, label, leadsCount, onDispatch }: Le
               type="button"
               onClick={() => void handleSave()}
               disabled={saving}
+              className="btn-secondary"
               style={{
                 display: 'flex', alignItems: 'center', gap: 6,
                 padding: '8px 20px', borderRadius: 6, fontSize: 13,
-                border: '1px solid var(--border)', background: 'var(--card)',
-                color: 'var(--foreground)', cursor: saving ? 'not-allowed' : 'pointer',
-                opacity: saving ? 0.7 : 1,
+                cursor: saving ? 'not-allowed' : 'pointer',
               }}
             >
               {saving ? <Loader2 size={14} style={{ animation: 'spin 1s linear infinite' }} /> : <Save size={14} />}

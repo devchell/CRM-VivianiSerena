@@ -500,12 +500,13 @@ const VALID_TEMPLATE_IDS = [
   'auth_2fa',
 ]
 
-contentRouter.get('/auto-templates', authenticate, async (_req, res, next) => {
+contentRouter.get('/auto-templates', authenticate, async (_req, res) => {
   try {
     const templates = await prisma.autoTemplate.findMany()
-    res.json({ success: true, data: templates })
+    return res.json({ success: true, data: templates })
   } catch (error) {
-    next(error)
+    console.error('[auto-templates GET]', error)
+    return res.json({ success: true, data: [] })
   }
 })
 
@@ -521,8 +522,9 @@ contentRouter.put('/auto-templates/:templateId', authenticate, authorizePermissi
       update: { emailHtml: body.emailHtml ?? null, whatsappText: body.whatsappText ?? null },
       create: { templateId, emailHtml: body.emailHtml ?? null, whatsappText: body.whatsappText ?? null },
     })
-    res.json({ success: true, data: template })
+    return res.json({ success: true, data: template })
   } catch (error) {
+    console.error('[auto-templates PUT]', error)
     next(error)
   }
 })

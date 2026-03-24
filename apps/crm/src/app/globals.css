@@ -497,3 +497,37 @@ tbody tr:hover { background: var(--bg-hover); }
 .dark .fc .fc-col-header-cell:hover {
   background: #020817 !important;
 }
+
+/* ── Secondary buttons: clearly visible and clickable ──────────────────── */
+
+/* Ensure non-primary active buttons have visible text and border */
+.btn-secondary {
+  background: #FFFFFF;
+  color: #1E3A5F;
+  border: 1.5px solid #BCCCDC;
+  font-weight: 500;
+  transition: background 150ms ease, border-color 150ms ease, color 150ms ease;
+}
+.btn-secondary:hover:not(:disabled) {
+  background: #EEF3FA;
+  border-color: #2563EB;
+  color: #1D4ED8;
+}
+.btn-secondary:disabled {
+  background: #F1F5F9;
+  color: #94A3B8;
+  border-color: #E2E8F0;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.dark .btn-secondary {
+  background: #1A3350;
+  color: #BCCCDC;
+  border-color: #243B55;
+}
+.dark .btn-secondary:hover:not(:disabled) {
+  background: #1E3A5F;
+  border-color: #3B82F6;
+  color: #93C5FD;
+}
