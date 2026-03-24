@@ -184,7 +184,6 @@ const AUTO_TEMPLATES = [
   { id: 'appointment_reminder_1h', label: 'Lembrete 1h antes', trigger: 'Automático: 1h antes do agendamento', channels: ['whatsapp'] as string[] },
   { id: 'appointment_cancellation', label: 'Cancelamento de agendamento', trigger: 'Quando um agendamento é cancelado', channels: ['email', 'whatsapp'] as string[] },
   { id: 'lead_welcome', label: 'Boas-vindas ao novo lead', trigger: 'Quando um lead preenche o formulário', channels: ['email', 'whatsapp'] as string[] },
-  { id: 'lead_converted', label: 'Lead convertido', trigger: 'Quando o status muda para Convertido', channels: ['email'] as string[] },
   { id: 'auth_2fa', label: 'Código de verificação (2FA)', trigger: 'Login com 2FA ativado', channels: ['email'] as string[] },
 ]
 
@@ -502,10 +501,10 @@ export function DispatchesPanel() {
           whatsappText: autoWhatsappBody || null,
         }),
       })
-      toast.success('Template automático salvo')
+      toast.success('Mensagem automática salva')
       await loadAutoTemplates()
     } catch {
-      toast.error('Erro ao salvar template automático')
+      toast.error('Erro ao salvar mensagem automática')
     } finally {
       setSavingAutoTemplate(false)
     }
@@ -567,7 +566,7 @@ export function DispatchesPanel() {
           {/* Left: template list */}
           <div className={crmListShell}>
             <div className="border-b border-slate-200/90 px-4 py-3 dark:border-slate-700">
-              <h2 className="font-heading text-sm font-semibold text-slate-900 dark:text-slate-100">Templates</h2>
+              <h2 className="font-heading text-sm font-semibold text-slate-900 dark:text-slate-100">Avisos automáticos</h2>
             </div>
             <div className="p-2">
               {loadingAutoTemplates ? (
@@ -692,7 +691,7 @@ export function DispatchesPanel() {
                     <div className="mt-3 flex items-start gap-2 rounded-lg border border-blue-200 bg-blue-50 p-3 dark:border-blue-800/50 dark:bg-blue-950/20">
                       <Info size={14} className="mt-0.5 shrink-0 text-blue-500" />
                       <p className="text-xs text-blue-700 dark:text-blue-300">
-                        Este template é enviado automaticamente pelo sistema. Salve as alterações para que entrem em vigor imediatamente.
+                        Esta mensagem é enviada automaticamente pelo sistema. Salve as alterações para que entrem em vigor imediatamente.
                       </p>
                     </div>
 
@@ -705,7 +704,7 @@ export function DispatchesPanel() {
                         className="inline-flex items-center gap-2 rounded bg-violet-600 px-4 py-2.5 text-sm font-medium text-white shadow-sm transition-colors hover:bg-violet-700 disabled:cursor-not-allowed disabled:opacity-50"
                       >
                         {savingAutoTemplate ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />}
-                        Salvar template
+                        Salvar mensagem
                       </button>
                     </div>
                   </div>
@@ -713,7 +712,7 @@ export function DispatchesPanel() {
               </>
             ) : (
               <div className="flex items-center justify-center p-12 text-sm text-slate-400 dark:text-slate-500">
-                Selecione um template à esquerda.
+                Selecione um aviso à esquerda.
               </div>
             )}
           </div>
