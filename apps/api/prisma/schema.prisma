@@ -337,6 +337,18 @@ model AutoTemplate {
   @@map("auto_templates")
 }
 
+model LeadStatusTemplate {
+  id        String   @id @default(cuid())
+  status    String
+  channel   String
+  subject   String?
+  body      String   @db.Text
+  updatedAt DateTime @updatedAt
+
+  @@unique([status, channel])
+  @@map("lead_status_templates")
+}
+
 // LGPD — Registro de consentimento de uso de dados
 model ConsentLog {
   id             String   @id @default(cuid())
