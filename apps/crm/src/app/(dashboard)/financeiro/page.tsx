@@ -60,7 +60,44 @@ const DESPESA_COLORS = [
 ]
 
 // ── DonutChart reutilizável ─────────────────────────────────────────────
-interface DonutEntry { name: string; value: number; color: string }
+interface DonutItem { description: string; value: number; date: string }
+interface DonutEntry { name: string; value: number; color: string; items: DonutItem[] }
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function DonutTooltip({ active, payload }: { active?: boolean; payload?: any[] }) {
+  if (!active || !payload?.length) return null
+  const data: DonutEntry = payload[0].payload
+
+  return (
+    <div className="rounded-lg border border-slate-200 bg-white p-3 shadow-lg dark:border-slate-700 dark:bg-slate-800" style={{ maxWidth: 240, minWidth: 170 }}>
+      <div className="mb-2 flex items-center gap-1.5 border-b border-slate-100 pb-2 dark:border-slate-700">
+        <div className="h-2 w-2 flex-shrink-0 rounded-full" style={{ background: data.color }} />
+        <span className="text-xs font-semibold uppercase tracking-wide text-slate-900 dark:text-slate-100">{data.name}</span>
+      </div>
+      <div className="mb-2 flex flex-col gap-1">
+        {data.items.slice(0, 6).map((item, i) => (
+          <div key={i} className="flex items-baseline justify-between gap-2">
+            <span className="flex-1 truncate text-[11px] text-slate-500 dark:text-slate-400" style={{ maxWidth: 120 }}>
+              {item.description}
+            </span>
+            <span className="flex-shrink-0 text-[11px] font-medium tabular-nums text-slate-700 dark:text-slate-300">
+              {formatCurrency(item.value)}
+            </span>
+          </div>
+        ))}
+        {data.items.length > 6 && (
+          <span className="text-[11px] text-slate-400">+{data.items.length - 6} mais...</span>
+        )}
+      </div>
+      <div className="flex items-center justify-between border-t border-slate-100 pt-2 dark:border-slate-700">
+        <span className="text-xs font-medium text-slate-500">Total</span>
+        <span className="text-[13px] font-bold tabular-nums" style={{ color: data.color }}>
+          {formatCurrency(data.value)}
+        </span>
+      </div>
+    </div>
+  )
+}
 
 function DonutChart({ title, subtitle, data, totalLabel, totalValue, emptyMessage }: {
   title: string
@@ -93,7 +130,7 @@ function DonutChart({ title, subtitle, data, totalLabel, totalValue, emptyMessag
                     <Cell key={i} fill={entry.color} />
                   ))}
                 </Pie>
-                <Tooltip formatter={(value: number) => [formatCurrency(value), 'Total']} />
+                <Tooltip content={<DonutTooltip />} />
               </PieChart>
             </ResponsiveContainer>
             {totalValue && (
@@ -126,11 +163,17 @@ function DonutChart({ title, subtitle, data, totalLabel, totalValue, emptyMessag
 // ── Seção dos 3 gráficos de rosca ───────────────────────────────────────
 function DonutSection({ transactions, loading }: { transactions: FinancialRecord[]; loading: boolean }) {
   const { receitaData, despesaData, geralData, totalReceita, totalDespesa, totalGeral } = useMemo(() => {
-    const byCategory: Record<string, { type: 'income' | 'expense'; amount: number }> = {}
+    const byCategory: Record<string, { type: 'income' | 'expense'; amount: number; items: DonutItem[] }> = {}
     for (const t of transactions) {
       const key = `${t.type}:${t.category}`
-      if (!byCategory[key]) byCategory[key] = { type: t.type, amount: 0 }
-      byCategory[key].amount += Number(t.amount)
+      if (!byCategory[key]) byCategory[key] = { type: t.type, amount: 0, items: [] }
+      const amt = Number(t.amount)
+      byCategory[key].amount += amt
+      byCategory[key].items.push({
+        description: t.description || FINANCIAL_CATEGORY_LABELS[t.category as keyof typeof FINANCIAL_CATEGORY_LABELS] || 'Sem descrição',
+        value: amt,
+        date: new Date(t.date).toLocaleDateString('pt-BR'),
+      })
     }
 
     const receita: DonutEntry[] = []
@@ -141,9 +184,9 @@ function DonutSection({ transactions, loading }: { transactions: FinancialRecord
       const cat = key.split(':')[1] as keyof typeof FINANCIAL_CATEGORY_LABELS
       const name = FINANCIAL_CATEGORY_LABELS[cat] ?? cat
       if (val.type === 'income') {
-        receita.push({ name, value: val.amount, color: RECEITA_COLORS[ri++ % RECEITA_COLORS.length] })
+        receita.push({ name, value: val.amount, color: RECEITA_COLORS[ri++ % RECEITA_COLORS.length], items: val.items })
       } else {
-        despesa.push({ name, value: val.amount, color: DESPESA_COLORS[di++ % DESPESA_COLORS.length] })
+        despesa.push({ name, value: val.amount, color: DESPESA_COLORS[di++ % DESPESA_COLORS.length], items: val.items })
       }
     }
 
