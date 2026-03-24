@@ -2,6 +2,7 @@ import { Router } from 'express'
 import { prisma } from '../lib/prisma'
 import { authenticate, authorizePermission } from '../middleware/authenticate'
 import { AppError } from '../middleware/errorHandler'
+import { getDefaultTemplate, getDefaultAutoTemplate, DEFAULT_TEMPLATES, DEFAULT_AUTO_TEMPLATES, ORIGIN_TEMPLATES } from '../domain/defaultTemplates'
 
 export const templatesRouter: Router = Router()
 templatesRouter.use(authenticate)
@@ -11,10 +12,15 @@ templatesRouter.get('/lead/:status/:channel', authorizePermission('leads.broadca
   try {
     const status = String(req.params.status)
     const channel = String(req.params.channel)
-    const template = await prisma.leadStatusTemplate.findUnique({
+    const saved = await prisma.leadStatusTemplate.findUnique({
       where: { status_channel: { status, channel } },
     })
-    res.json({ success: true, data: template ?? null })
+    if (saved) {
+      res.json({ success: true, data: saved })
+      return
+    }
+    const fallback = getDefaultTemplate(status, channel)
+    res.json({ success: true, data: fallback ? { status, channel, subject: fallback.subject, body: fallback.body, isDefault: true } : null })
   } catch (error) {
     next(error)
   }
@@ -34,6 +40,40 @@ templatesRouter.put('/lead/:status/:channel', authorizePermission('leads.broadca
       update: { subject, body },
     })
     res.json({ success: true, data: template })
+  } catch (error) {
+    next(error)
+  }
+})
+
+// GET /api/v1/templates/defaults — all default templates for reference
+templatesRouter.get('/defaults', authorizePermission('leads.broadcast'), async (_req, res, next) => {
+  try {
+    res.json({
+      success: true,
+      data: {
+        statuses: DEFAULT_TEMPLATES,
+        origins: ORIGIN_TEMPLATES,
+        auto: DEFAULT_AUTO_TEMPLATES,
+      },
+    })
+  } catch (error) {
+    next(error)
+  }
+})
+
+// GET /api/v1/templates/auto/:templateId
+templatesRouter.get('/auto/:templateId', authorizePermission('leads.broadcast'), async (req, res, next) => {
+  try {
+    const templateId = String(req.params.templateId)
+    const saved = await prisma.autoTemplate.findUnique({
+      where: { templateId },
+    })
+    if (saved) {
+      res.json({ success: true, data: saved })
+      return
+    }
+    const fallback = getDefaultAutoTemplate(templateId)
+    res.json({ success: true, data: fallback ? { templateId, ...fallback, isDefault: true } : null })
   } catch (error) {
     next(error)
   }

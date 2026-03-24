@@ -232,6 +232,10 @@ export const emailService = {
     title: string
     body: string
   }) {
+    const isHtml = /<[a-z][\s\S]*>/i.test(params.body)
+    if (isHtml) {
+      return send(params.to, params.subject, params.body)
+    }
     const content = `
       <span class="badge">Comunicado</span>
       ${renderRichText(params.body)}
