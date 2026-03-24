@@ -9,6 +9,7 @@ import { buildCommercialLeadWhere } from '../domain/metrics/service'
 import { emailService } from '../infrastructure/email'
 import { getActiveEmailSettings } from '../infrastructure/emailSettings'
 import { getWhatsAppChannelStatus, sendWhatsAppBusinessMessage } from '../infrastructure/whatsapp'
+import { getDefaultTemplate } from '../domain/defaultTemplates'
 
 export const dispatchesRouter: Router = Router()
 dispatchesRouter.use(authenticate)
@@ -173,7 +174,9 @@ function interpolateVariables(template: string, lead: LeadRow): string {
     .replace(/\{servico\}/gi,  extractNoteValue(lead.notes, 'service'))
     .replace(/\{periodo\}/gi,  extractNoteValue(lead.notes, 'period'))
     .replace(/\{origem\}/gi,   SOURCE_NAMES[lead.source] ?? lead.source)
+    .replace(/\{canal\}/gi,    SOURCE_NAMES[lead.utmSource ?? ''] ?? lead.utmSource ?? '')
     .replace(/\{data\}/gi,     new Date().toLocaleDateString('pt-BR'))
+    .replace(/\{hora\}/gi,     new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }))
 }
 
 function normalizePhoneToE164(value: string | null) {
@@ -588,6 +591,21 @@ dispatchesRouter.post('/send', authorizePermission('leads.broadcast'), async (re
     const audience = await buildAudience(input.filters, settings)
     const emailProvider = await getActiveEmailSettings()
     const campaignId = randomUUID()
+
+    // Load saved or default templates as fallback
+    const savedEmailTemplate = input.draft.emailEnabled
+      ? await prisma.leadStatusTemplate.findUnique({ where: { status_channel: { status: input.draft.status, channel: 'email' } } })
+      : null
+    const savedWhatsappTemplate = input.draft.whatsappEnabled
+      ? await prisma.leadStatusTemplate.findUnique({ where: { status_channel: { status: input.draft.status, channel: 'whatsapp' } } })
+      : null
+    const defaultEmail = getDefaultTemplate(input.draft.status, 'email')
+    const defaultWhatsapp = getDefaultTemplate(input.draft.status, 'whatsapp')
+
+    const effectiveEmailSubject = input.draft.emailSubject || savedEmailTemplate?.subject || defaultEmail?.subject || `Contato Viviani Serena - ${input.draft.status}`
+    const effectiveEmailBody = input.draft.emailBody || savedEmailTemplate?.body || defaultEmail?.body || ''
+    const effectiveWhatsappBody = input.draft.whatsappBody || savedWhatsappTemplate?.body || defaultWhatsapp?.body || ''
+
     const emailCandidates = input.draft.emailEnabled
       ? audience.rows.filter((lead) => lead.emailReason === 'eligible')
       : []
@@ -606,9 +624,9 @@ dispatchesRouter.post('/send', authorizePermission('leads.broadcast'), async (re
       const success = emailProvider.configured
         ? await emailService.sendCampaignMessage({
           to: lead.email,
-          subject: interpolateVariables(input.draft.emailSubject || `Contato Viviani Serena - ${lead.status}`, lead),
+          subject: interpolateVariables(effectiveEmailSubject, lead),
           title: 'Viviani Serena',
-          body: interpolateVariables(input.draft.emailBody, lead),
+          body: interpolateVariables(effectiveEmailBody, lead),
         })
         : false
 
@@ -676,7 +694,7 @@ dispatchesRouter.post('/send', authorizePermission('leads.broadcast'), async (re
       try {
         const response = await sendWhatsAppBusinessMessage({
           to: lead.whatsappE164 ?? '',
-          body: interpolateVariables(input.draft.whatsappBody, lead),
+          body: interpolateVariables(effectiveWhatsappBody, lead),
         })
         providerMessageId = response.providerMessageId
         providerFailed = false
