@@ -23,7 +23,7 @@ async function createSecurityEvent(
   details: Record<string, unknown>
 ) {
   try {
-    await prisma.securityEvent.create({ data: { type, severity, sourceIp: sourceIp ?? null, details: details as Prisma.InputJsonObject } })
+    await prisma.securityEvent.create({ data: { type, severity, sourceIp: sourceIp ?? null, details: details as Prisma.JsonObject } })
   } catch (err) {
     logger.error('Failed to create security event:', err)
   }

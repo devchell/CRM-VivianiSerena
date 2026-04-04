@@ -433,7 +433,7 @@ dispatchesRouter.put('/settings', authorizePermission('leads.broadcast'), async 
         action: 'UPSERT',
         resource: 'DispatchSettings',
         ip: req.ip,
-        details: { settings } as Prisma.InputJsonObject,
+        details: { settings } as Prisma.JsonObject,
       },
     })
 
@@ -464,7 +464,7 @@ dispatchesRouter.put('/drafts/:status', authorizePermission('leads.broadcast'), 
         action: 'UPSERT',
         resource: 'DispatchDraft',
         ip: req.ip,
-        details: draft as unknown as Prisma.InputJsonObject,
+        details: draft as unknown as Prisma.JsonObject,
       },
     })
 
@@ -651,7 +651,7 @@ dispatchesRouter.post('/send', authorizePermission('leads.broadcast'), async (re
           action: success ? 'SENT' : 'FAILED',
           resource: 'DispatchRecipient',
           ip: req.ip,
-          details: summary as Prisma.InputJsonObject,
+          details: summary as Prisma.JsonObject,
         },
       })
 
@@ -682,7 +682,7 @@ dispatchesRouter.post('/send', authorizePermission('leads.broadcast'), async (re
           action: 'BLOCKED',
           resource: 'DispatchRecipient',
           ip: req.ip,
-          details: summary as Prisma.InputJsonObject,
+          details: summary as Prisma.JsonObject,
         },
       })
     }
@@ -729,7 +729,7 @@ dispatchesRouter.post('/send', authorizePermission('leads.broadcast'), async (re
           action: providerFailed ? 'FAILED' : 'SENT',
           resource: 'DispatchRecipient',
           ip: req.ip,
-          details: summary as Prisma.InputJsonObject,
+          details: summary as Prisma.JsonObject,
         },
       })
 
@@ -761,7 +761,7 @@ dispatchesRouter.post('/send', authorizePermission('leads.broadcast'), async (re
           action: 'BLOCKED',
           resource: 'DispatchRecipient',
           ip: req.ip,
-          details: summary as Prisma.InputJsonObject,
+          details: summary as Prisma.JsonObject,
         },
       })
     }
@@ -793,7 +793,7 @@ dispatchesRouter.post('/send', authorizePermission('leads.broadcast'), async (re
         action: 'SEND',
         resource: 'DispatchCampaign',
         ip: req.ip,
-        details: payload as unknown as Prisma.InputJsonObject,
+        details: payload as unknown as Prisma.JsonObject,
       },
     })
 

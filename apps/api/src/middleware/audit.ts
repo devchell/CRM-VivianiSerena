@@ -21,7 +21,7 @@ export function auditLog(options: AuditOptions) {
             resource: options.resource,
             details: (options.getDetails
               ? options.getDetails(req, res)
-              : { method: req.method, path: req.path }) as Prisma.InputJsonObject,
+              : { method: req.method, path: req.path }) as Prisma.JsonObject,
             ip: req.ip ?? null,
           },
         })

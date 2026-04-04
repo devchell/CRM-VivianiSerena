@@ -84,7 +84,7 @@ securityRouter.post('/events', authorizePermission('seguranca.manage'), async (r
         type: data.type,
         severity: data.severity,
         sourceIp: data.sourceIp ?? null,
-        details: (data.details ?? {}) as Prisma.InputJsonObject,
+        details: (data.details ?? {}) as Prisma.JsonObject,
       },
     })
     await invalidateSecurityCaches()
@@ -194,7 +194,7 @@ securityRouter.post('/block-ip', authorizePermission('seguranca.manage'), async 
         type: 'IP_MANUALLY_BLOCKED',
         severity: 'medium',
         sourceIp: ip,
-        details: { reason, ttlMinutes, blockedBy: 'admin' } as Prisma.InputJsonObject,
+        details: { reason, ttlMinutes, blockedBy: 'admin' } as Prisma.JsonObject,
       },
     })
 
@@ -222,7 +222,7 @@ securityRouter.post('/test-alert', authorizePermission('seguranca.manage'), asyn
         type: 'TEST_ALERT',
         severity: 'medium',
         sourceIp: '0.0.0.0',
-        details: { message: 'Evento de teste disparado pelo painel de segurança', manual: true } as Prisma.InputJsonObject,
+        details: { message: 'Evento de teste disparado pelo painel de segurança', manual: true } as Prisma.JsonObject,
       },
     })
 

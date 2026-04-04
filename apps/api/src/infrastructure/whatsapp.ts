@@ -315,7 +315,7 @@ export async function connectWhatsAppBusinessChannel(input: WhatsAppConnectInput
       action: 'UPSERT',
       resource: 'WhatsappChannelConfig',
       ip: actor.ip ?? null,
-      details: details as unknown as Prisma.InputJsonObject,
+      details: details as unknown as Prisma.JsonObject,
     },
   })
 
@@ -345,7 +345,7 @@ export async function disconnectWhatsAppBusinessChannel(actor: { userId: string;
       action: 'DISCONNECT',
       resource: 'WhatsappChannelConfig',
       ip: actor.ip ?? null,
-      details: details as unknown as Prisma.InputJsonObject,
+      details: details as unknown as Prisma.JsonObject,
     },
   })
 
@@ -452,7 +452,7 @@ export async function ingestWhatsAppWebhook(payload: unknown) {
               timestamp: asOptionalString(statusObject.timestamp),
               pricingCategory: asOptionalString(asJsonObject(statusObject.pricing).category),
               errorMessage: asOptionalString(asJsonObject((Array.isArray(statusObject.errors) ? statusObject.errors[0] : null)).message),
-            } as Prisma.InputJsonObject,
+            } as Prisma.JsonObject,
           },
         })
         processed += 1

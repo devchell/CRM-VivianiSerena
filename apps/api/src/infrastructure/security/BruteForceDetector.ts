@@ -61,7 +61,7 @@ export class BruteForceDetector {
           type: 'BRUTE_FORCE_LOCKOUT',
           severity: cycles >= 2 ? 'critical' : 'high',
           sourceIp: ip,
-          details: { attempts: count, path, cycle: cycles + 1, lockout: label } as Prisma.InputJsonObject,
+          details: { attempts: count, path, cycle: cycles + 1, lockout: label } as Prisma.JsonObject,
         },
       })
     } catch { /* never fail a request due to logging */ }

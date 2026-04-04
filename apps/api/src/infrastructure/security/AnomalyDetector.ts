@@ -91,7 +91,7 @@ export class AnomalyDetector {
             path: req.path,
             method: req.method,
             ua: (req.headers['user-agent'] ?? '').substring(0, 200),
-          } as Prisma.InputJsonObject,
+          } as Prisma.JsonObject,
         },
       })
     } catch { /* non-blocking */ }
