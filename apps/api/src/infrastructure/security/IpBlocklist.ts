@@ -6,10 +6,9 @@ const PREFIX = 'ip:blocked:'
 export class IpBlocklist {
   static async block(ip: string, ttlSeconds: number = 900, reason = 'manual'): Promise<void> {
     if (ttlSeconds === -1) {
-      // Permanent
       await redis.set(`${PREFIX}${ip}`, reason)
     } else {
-      await redis.setex(`${PREFIX}${ip}`, ttlSeconds, reason)
+      await redis.set(`${PREFIX}${ip}`, reason, { ex: ttlSeconds })
     }
     logger.warn('IP blocked', { ip, ttl: ttlSeconds, reason })
   }

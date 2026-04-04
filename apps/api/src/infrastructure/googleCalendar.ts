@@ -28,7 +28,7 @@ function createOAuth2Client(): InstanceType<typeof google.auth.OAuth2> {
 }
 
 async function persistGoogleTokens(tokens: Record<string, unknown>) {
-  await redis.setex(GOOGLE_OAUTH_TOKEN_KEY, 365 * 24 * 60 * 60, JSON.stringify(tokens))
+  await redis.set(GOOGLE_OAUTH_TOKEN_KEY, tokens, { ex: 365 * 24 * 60 * 60 })
 }
 
 function getMissingGoogleCalendarEnv() {
@@ -49,18 +49,17 @@ export async function getAuthenticatedGoogleClient(): Promise<InstanceType<typeo
   }
 
   const oauth2Client = createOAuth2Client()
-  const tokenData = await redis.get(GOOGLE_OAUTH_TOKEN_KEY)
-  if (!tokenData) {
+  const tokens = await redis.get<GoogleOAuthTokens>(GOOGLE_OAUTH_TOKEN_KEY)
+  if (!tokens) {
     throw new Error('Google Calendar not connected. Please authorize via OAuth.')
   }
-  const tokens = JSON.parse(tokenData) as GoogleOAuthTokens
   oauth2Client.setCredentials(tokens)
 
   // Auto-refresh if near expiry
   if (tokens.expiry_date && tokens.expiry_date - Date.now() < 5 * 60 * 1000) {
     const { credentials } = await oauth2Client.refreshAccessToken()
     const mergedTokens = mergeGoogleTokens(tokens, credentials as GoogleOAuthTokens)
-    await persistGoogleTokens(mergedTokens as Record<string, unknown>)
+    await persistGoogleTokens(mergedTokens as unknown as Record<string, unknown>)
     oauth2Client.setCredentials(mergedTokens)
   }
 
@@ -86,12 +85,12 @@ export function isGoogleCalendarConfigured() {
 }
 
 export async function getGoogleCalendarConnectionStatus() {
-  const tokenData = await redis.get(GOOGLE_OAUTH_TOKEN_KEY)
+  const tokens = await redis.get<GoogleOAuthTokens>(GOOGLE_OAUTH_TOKEN_KEY)
   const missingConfiguration = getMissingGoogleCalendarEnv()
   const redirectUri = process.env.GOOGLE_REDIRECT_URI?.trim() ?? null
   const configured = missingConfiguration.length === 0
 
-  if (!tokenData) {
+  if (!tokens) {
     return {
       configured,
       connected: false,
@@ -103,8 +102,6 @@ export async function getGoogleCalendarConnectionStatus() {
       missingConfiguration,
     }
   }
-
-  const tokens = JSON.parse(tokenData) as GoogleOAuthTokens
 
   return {
     configured,

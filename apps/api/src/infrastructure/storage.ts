@@ -1,53 +1,22 @@
 import fs from 'fs/promises'
 import path from 'path'
-import {
-  DeleteObjectCommand,
-  HeadBucketCommand,
-  PutObjectCommand,
-  S3Client,
-} from '@aws-sdk/client-s3'
+import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 import { apiEnv } from '../lib/env'
 
-type StorageMode = 'local' | 's3'
+type StorageMode = 'local' | 'supabase'
 
-let s3Client: S3Client | null = null
+let supabaseClient: SupabaseClient | null = null
 
-function requireS3Config() {
-  if (!apiEnv.s3) {
-    throw new Error('S3 storage is not configured.')
-  }
+function getSupabaseClient(): SupabaseClient {
+  if (supabaseClient) return supabaseClient
 
-  return apiEnv.s3
-}
+  const cfg = apiEnv.supabaseStorage
+  if (!cfg) throw new Error('Supabase storage is not configured')
 
-function getS3Client(): S3Client {
-  if (s3Client) {
-    return s3Client
-  }
-
-  if (apiEnv.storageDriver !== 's3' || !apiEnv.s3) {
-    throw new Error('S3 storage is not configured')
-  }
-
-  s3Client = new S3Client({
-    region: apiEnv.s3.region,
-    endpoint: apiEnv.s3.endpoint,
-    forcePathStyle: apiEnv.s3.forcePathStyle,
-    credentials: {
-      accessKeyId: apiEnv.s3.accessKeyId,
-      secretAccessKey: apiEnv.s3.secretAccessKey,
-    },
+  supabaseClient = createClient(cfg.url, cfg.serviceRoleKey, {
+    auth: { persistSession: false },
   })
-
-  return s3Client
-}
-
-function buildStorageKey(filename: string): string {
-  if (apiEnv.storageDriver !== 's3' || !apiEnv.s3?.prefix) {
-    return filename
-  }
-
-  return path.posix.join(apiEnv.s3.prefix, filename)
+  return supabaseClient
 }
 
 export function getUploadStorageMode(): StorageMode {
@@ -59,7 +28,10 @@ export function buildUploadUrl(filename: string): string {
     return `${apiEnv.apiBaseUrl}/uploads/${filename}`
   }
 
-  return `${apiEnv.uploadPublicBaseUrl}/${filename}`
+  const cfg = apiEnv.supabaseStorage!
+  const client = getSupabaseClient()
+  const { data } = client.storage.from(cfg.bucket).getPublicUrl(filename)
+  return data.publicUrl
 }
 
 export async function ensureUploadStorageReady(): Promise<void> {
@@ -68,9 +40,20 @@ export async function ensureUploadStorageReady(): Promise<void> {
     return
   }
 
-  const s3 = requireS3Config()
-  const client = getS3Client()
-  await client.send(new HeadBucketCommand({ Bucket: s3.bucket }))
+  const cfg = apiEnv.supabaseStorage!
+  const client = getSupabaseClient()
+
+  // Create bucket if it doesn't exist (idempotent)
+  const { error: createError } = await client.storage.createBucket(cfg.bucket, {
+    public: true,
+    allowedMimeTypes: ['image/*', 'application/pdf', 'video/*'],
+    fileSizeLimit: 52428800, // 50 MB
+  })
+
+  // Ignore "already exists" error
+  if (createError && !createError.message.includes('already exists') && !createError.message.includes('Duplicate')) {
+    throw new Error(`Failed to ensure Supabase bucket: ${createError.message}`)
+  }
 }
 
 export async function uploadFile(params: {
@@ -85,14 +68,15 @@ export async function uploadFile(params: {
     return buildUploadUrl(params.filename)
   }
 
-  const s3 = requireS3Config()
-  const client = getS3Client()
-  await client.send(new PutObjectCommand({
-    Bucket: s3.bucket,
-    Key: buildStorageKey(params.filename),
-    Body: params.buffer,
-    ContentType: params.contentType ?? 'application/octet-stream',
-  }))
+  const cfg = apiEnv.supabaseStorage!
+  const client = getSupabaseClient()
+
+  const { error } = await client.storage.from(cfg.bucket).upload(params.filename, params.buffer, {
+    contentType: params.contentType ?? 'application/octet-stream',
+    upsert: true,
+  })
+
+  if (error) throw new Error(`Supabase upload failed: ${error.message}`)
 
   return buildUploadUrl(params.filename)
 }
@@ -103,25 +87,29 @@ export async function deleteFile(filename: string): Promise<void> {
     try {
       await fs.unlink(filePath)
     } catch (error) {
-      if ((error as NodeJS.ErrnoException).code !== 'ENOENT') {
-        throw error
-      }
+      if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error
     }
     return
   }
 
-  const s3 = requireS3Config()
-  const client = getS3Client()
-  await client.send(new DeleteObjectCommand({
-    Bucket: s3.bucket,
-    Key: buildStorageKey(filename),
-  }))
+  const cfg = apiEnv.supabaseStorage!
+  const client = getSupabaseClient()
+
+  const { error } = await client.storage.from(cfg.bucket).remove([filename])
+  if (error) throw new Error(`Supabase delete failed: ${error.message}`)
 }
 
 export async function healthcheckUploadStorage(): Promise<boolean> {
   try {
-    await ensureUploadStorageReady()
-    return true
+    if (apiEnv.storageDriver === 'local') {
+      await fs.mkdir(path.resolve(apiEnv.uploadDir), { recursive: true })
+      return true
+    }
+
+    const cfg = apiEnv.supabaseStorage!
+    const client = getSupabaseClient()
+    const { error } = await client.storage.from(cfg.bucket).list('', { limit: 1 })
+    return !error
   } catch {
     return false
   }

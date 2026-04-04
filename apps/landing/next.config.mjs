@@ -1,3 +1,8 @@
+import path from 'node:path'
+import { fileURLToPath } from 'node:url'
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url))
+
 const LOCAL_HOSTS = new Set(['localhost', '127.0.0.1', '0.0.0.0'])
 
 function requireRemoteUrl(name, value) {
@@ -70,6 +75,7 @@ const securityHeaders = [
 const nextConfig = {
   compress: true,
   poweredByHeader: false,
+  output: 'standalone',
   transpilePackages: ['@viviani/ui', '@viviani/utils', '@viviani/types'],
   images: {
     formats: ['image/avif', 'image/webp'],
@@ -90,6 +96,7 @@ const nextConfig = {
     ]
   },
   experimental: {
+    outputFileTracingRoot: path.join(__dirname, '../..'),
     optimizePackageImports: ['lucide-react', 'framer-motion'],
   },
 }

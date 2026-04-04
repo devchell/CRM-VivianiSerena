@@ -4,7 +4,6 @@ import { createServer } from 'http'
 import { Server as SocketServer } from 'socket.io'
 import { logger } from './lib/logger'
 import { apiEnv } from './lib/env'
-import { redis } from './lib/redis'
 import { prisma } from './lib/prisma'
 import { setupSocketHandlers } from './socket/handlers'
 import { startAllJobs } from './infrastructure/jobs'
@@ -16,9 +15,6 @@ async function bootstrap() {
   try {
     await prisma.$connect()
     logger.info('✅ Database connected')
-
-    await redis.ping()
-    logger.info('✅ Redis connected')
 
     const app = createApp()
     const httpServer = createServer(app)
@@ -53,7 +49,6 @@ async function bootstrap() {
       logger.info(`${signal} received. Shutting down gracefully...`)
       httpServer.close(async () => {
         await prisma.$disconnect()
-        await redis.quit()
         logger.info('Server closed.')
         process.exit(0)
       })

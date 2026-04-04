@@ -53,9 +53,9 @@ export class AnomalyDetector {
   static async isTooFast(ip: string): Promise<boolean> {
     const key = `freq:${ip}`
     const now = Date.now()
-    const last = await redis.get(key)
-    await redis.set(key, String(now), 'PX', 10_000)
-    return !!last && now - parseInt(last, 10) < 80
+    const last = await redis.get<string | number>(key)
+    await redis.set(key, String(now), { px: 10_000 })
+    return !!last && now - Number(last) < 80
   }
 
   static async analyze(req: Request): Promise<ThreatResult> {

@@ -28,8 +28,8 @@ async function getDependencyChecks() {
   }
 
   try {
-    await redis.ping()
-    checks.redis = true
+    const pong = await redis.ping()
+    checks.redis = pong === 'PONG'
   } catch {
     checks.redis = false
   }

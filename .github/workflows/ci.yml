@@ -3,12 +3,10 @@ name: CI
 on:
   push:
     branches:
-      - main
-      - staging
+      - master
   pull_request:
     branches:
-      - main
-      - staging
+      - master
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
@@ -17,8 +15,11 @@ jobs:
   build:
     runs-on: ubuntu-latest
     env:
-      DATABASE_URL: postgresql://placeholder:placeholder@postgres.example.com:5432/viviani_db?schema=public
-      REDIS_URL: rediss://default:placeholder@redis.example.com:6379
+      DATABASE_URL: postgresql://placeholder:placeholder@db.example.supabase.co:5432/postgres
+      UPSTASH_REDIS_REST_URL: https://placeholder.upstash.io
+      UPSTASH_REDIS_REST_TOKEN: placeholder-upstash-token
+      SUPABASE_URL: https://placeholder.supabase.co
+      SUPABASE_SERVICE_ROLE_KEY: placeholder-service-role-key
       API_BASE_URL: https://api.example.com
       NEXT_PUBLIC_API_URL: https://api.example.com
       CRM_URL: https://crm.example.com
