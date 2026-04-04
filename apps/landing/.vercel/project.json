@@ -1,0 +1,16 @@
+{
+  "projectId": "prj_EjOnOzTpM2nwEaOdYgHkBItWt9a6",
+  "orgId": "team_LdraqYj51EmG4kJUKfXXLx72",
+  "projectName": "landing-hml",
+  "settings": {
+    "createdAt": 1773844105740,
+    "framework": "nextjs",
+    "devCommand": null,
+    "installCommand": null,
+    "buildCommand": null,
+    "outputDirectory": null,
+    "rootDirectory": "apps/landing",
+    "directoryListing": false,
+    "nodeVersion": "20.x"
+  }
+}

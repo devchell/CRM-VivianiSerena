@@ -38,7 +38,7 @@ export class BruteForceDetector {
     const now = Date.now()
 
     // Sliding window via sorted set (score = timestamp)
-    await redis.zadd(key, now, String(now))
+    await redis.zadd(key, { score: now, member: String(now) })
     await redis.zremrangebyscore(key, 0, now - windowMs)
     await redis.pexpire(key, windowMs)
 
@@ -46,7 +46,8 @@ export class BruteForceDetector {
     if (count < max) return false
 
     // Threshold exceeded — determine lockout duration
-    const cycles = parseInt((await redis.get(cycleKey)) ?? '0', 10)
+    const cyclesRaw = await redis.get<number | string>(cycleKey)
+    const cycles = cyclesRaw === null ? 0 : Number(cyclesRaw)
     const ttl = LOCKOUT_STEPS[Math.min(cycles, LOCKOUT_STEPS.length - 1)]
     const label = ttl === -1 ? 'permanente' : `${ttl / 60} min`
 

@@ -5,28 +5,45 @@ services:
     rootDir: .
     plan: free
     autoDeploy: true
-    buildCommand: corepack enable && pnpm install --frozen-lockfile --prod=false && pnpm --filter @viviani/types build && pnpm --filter @viviani/utils build && pnpm --filter @viviani/api db:generate && pnpm --filter @viviani/api build
-    startCommand: APP_VERSION=${RENDER_GIT_COMMIT:-$APP_VERSION} corepack enable && pnpm --filter @viviani/api start
+    buildCommand: corepack pnpm install --frozen-lockfile --prod=false && corepack pnpm --filter @viviani/types build && corepack pnpm --filter @viviani/utils build && corepack pnpm --filter @viviani/api db:generate && corepack pnpm --filter @viviani/api build
+    startCommand: APP_VERSION=${RENDER_GIT_COMMIT:-$APP_VERSION} corepack pnpm --filter @viviani/api start
     healthCheckPath: /health/ready
     envVars:
       - key: NODE_ENV
         value: production
       - key: API_HOST
         value: 0.0.0.0
-      - key: API_PORT
-        value: 4000
       - key: APP_TIMEZONE
         value: America/Sao_Paulo
       - key: LOG_LEVEL
         value: info
       - key: LOG_TO_FILES
         value: "false"
+      - key: STORAGE_DRIVER
+        value: supabase
+      # Database (Supabase PostgreSQL)
       - key: DATABASE_URL
         sync: false
-      - key: REDIS_URL
+      # Upstash Redis
+      - key: UPSTASH_REDIS_REST_URL
         sync: false
+      - key: UPSTASH_REDIS_REST_TOKEN
+        sync: false
+      # Supabase Storage
+      - key: SUPABASE_URL
+        value: https://ecivvutwromwlloydech.supabase.co
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+      - key: SUPABASE_STORAGE_BUCKET
+        value: uploads
+      # API URLs
       - key: API_BASE_URL
         sync: false
+      - key: CRM_URL
+        sync: false
+      - key: CORS_ORIGIN
+        sync: false
+      # Auth
       - key: JWT_PRIVATE_KEY
         sync: false
       - key: JWT_PUBLIC_KEY
@@ -37,11 +54,10 @@ services:
         sync: false
       - key: ANONYMIZATION_SALT
         sync: false
-      - key: CORS_ORIGIN
-        sync: false
-      - key: CRM_URL
-        sync: false
+      # Optional
       - key: LANDING_REVALIDATE_URL
         sync: false
       - key: REVALIDATE_SECRET
         sync: false
+      - key: ALLOW_BASELINE_RESET
+        value: "false"

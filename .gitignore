@@ -1,70 +1,38 @@
 # Dependencies
-node_modules/
-.pnpm-store/
+node_modules
 
 # Build outputs
-.next/
-dist/
-build/
-out/
-.turbo/
-coverage/
-*.tsbuildinfo
+.next
+dist
+build
 
-# Environment and secrets
+# Environment files
 .env
+.env.local
 .env.*
 !.env.example
-!.env.test.example
-*.pem
-*.key
-*.cert
+!.env*.example
+!.env*.sample
 
-# Local runtime state
-logs/
-*.log
-*.pid
-npm-debug.log*
-pnpm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-iniciar.log
-backups/
-tmp/
-temp/
-.cache/
-.eslintcache
+# Vercel — keep project.json but exclude build output and env files
+.vercel/output/
+.vercel/.env*
+apps/**/.vercel/output/
+apps/**/.vercel/.env*
+apps/**/.vercel/README.txt
 
-# Database
-*.db
-*.sqlite
-*.sqlite3
-prisma/migrations/dev.db
-
-# Uploads and generated assets
-uploads/
+# Uploads and logs (stored in Supabase Storage / cloud)
 apps/api/uploads/
 apps/api/logs/
+logs/
 
-# App-local env files
-apps/*/.env
-apps/*/.env.*
-!apps/*/.env.example
-!apps/*/.env.test.example
-packages/*/.env
-packages/*/.env.*
-!packages/*/.env.example
-
-# Deploy platforms
-.vercel/
-.render/
-
-# OS
+# OS / Editor
 .DS_Store
-Thumbs.db
+.devchell-backup.txt
+*.log
 
-# IDE
-.vscode/settings.json
-.idea/
-*.suo
-*.user
+# Misc
+*.bak
+upload-sistema.md
+AUDITORIA_V2.md
+DEPLOY_CHECKLIST_FINAL.md

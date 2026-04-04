@@ -1,20 +1,7 @@
-import Redis from 'ioredis'
+import { Redis } from '@upstash/redis'
 import { logger } from './logger'
-import { apiEnv } from './env'
 
-export const redis = new Redis(apiEnv.redisUrl, {
-  maxRetriesPerRequest: 3,
-  enableReadyCheck: true,
-  retryStrategy(times) {
-    if (times > 3) return null
-    return Math.min(times * 200, 2000)
-  },
-})
-
-redis.on('connect', () => logger.info('Redis connecting...'))
-redis.on('ready', () => logger.info('Redis ready'))
-redis.on('error', err => logger.error('Redis error:', err))
-redis.on('close', () => logger.warn('Redis connection closed'))
+export const redis = Redis.fromEnv()
 
 export const CACHE_TTL = {
   SHORT: 60,        // 1 minute
@@ -24,20 +11,35 @@ export const CACHE_TTL = {
 } as const
 
 export async function getCache<T>(key: string): Promise<T | null> {
-  const data = await redis.get(key)
-  if (!data) return null
-  return JSON.parse(data) as T
+  try {
+    return await redis.get<T>(key)
+  } catch (err) {
+    logger.error('Redis getCache error:', err)
+    return null
+  }
 }
 
 export async function setCache<T>(key: string, value: T, ttl: number = CACHE_TTL.MEDIUM): Promise<void> {
-  await redis.setex(key, ttl, JSON.stringify(value))
+  try {
+    await redis.set(key, value, { ex: ttl })
+  } catch (err) {
+    logger.error('Redis setCache error:', err)
+  }
 }
 
 export async function deleteCache(key: string): Promise<void> {
-  await redis.del(key)
+  try {
+    await redis.del(key)
+  } catch (err) {
+    logger.error('Redis deleteCache error:', err)
+  }
 }
 
 export async function deletePattern(pattern: string): Promise<void> {
-  const keys = await redis.keys(pattern)
-  if (keys.length > 0) await redis.del(...keys)
+  try {
+    const keys = await redis.keys(pattern)
+    if (keys.length > 0) await redis.del(...(keys as [string, ...string[]]))
+  } catch (err) {
+    logger.error('Redis deletePattern error:', err)
+  }
 }

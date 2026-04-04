@@ -1,6 +1,6 @@
 const LOCAL_HOSTS = new Set(['localhost', '127.0.0.1', '0.0.0.0'])
 
-type StorageDriver = 'local' | 's3'
+type StorageDriver = 'local' | 'supabase'
 
 function readRequiredEnv(name: string): string {
   const value = process.env[name]?.trim()
@@ -86,30 +86,26 @@ function readPort(): number {
 }
 
 function readStorageDriver(): StorageDriver {
-  const raw = process.env.STORAGE_DRIVER?.trim().toLowerCase() || 'local'
+  const raw = process.env.STORAGE_DRIVER?.trim().toLowerCase() || 'supabase'
 
-  if (raw === 'local' || raw === 's3') {
+  if (raw === 'local' || raw === 'supabase') {
     return raw
   }
 
-  throw new Error(`[env] Invalid STORAGE_DRIVER: ${raw}`)
+  throw new Error(`[env] Invalid STORAGE_DRIVER: ${raw}. Valid values: local, supabase`)
 }
 
 const storageDriver = readStorageDriver()
 
-function readS3Config() {
-  if (storageDriver !== 's3') {
+function readSupabaseStorageConfig() {
+  if (storageDriver !== 'supabase') {
     return undefined
   }
 
   return {
-    endpoint: readOptionalUrl('S3_ENDPOINT', true),
-    region: readRequiredEnv('S3_REGION'),
-    bucket: readRequiredEnv('S3_BUCKET'),
-    accessKeyId: readRequiredEnv('S3_ACCESS_KEY_ID'),
-    secretAccessKey: readRequiredEnv('S3_SECRET_ACCESS_KEY'),
-    prefix: readOptionalEnv('S3_PREFIX') || 'uploads',
-    forcePathStyle: readOptionalBoolean('S3_FORCE_PATH_STYLE') ?? false,
+    url: readRequiredUrl('SUPABASE_URL'),
+    serviceRoleKey: readRequiredEnv('SUPABASE_SERVICE_ROLE_KEY'),
+    bucket: readOptionalEnv('SUPABASE_STORAGE_BUCKET') || 'uploads',
   }
 }
 
@@ -123,7 +119,8 @@ export const apiEnv = {
     || process.env.RENDER_GIT_COMMIT?.trim()
     || '1.0.0',
   databaseUrl: readRequiredEnv('DATABASE_URL'),
-  redisUrl: readRequiredEnv('REDIS_URL'),
+  upstashRedisUrl: readRequiredEnv('UPSTASH_REDIS_REST_URL'),
+  upstashRedisToken: readRequiredEnv('UPSTASH_REDIS_REST_TOKEN'),
   apiBaseUrl: readRequiredUrl('API_BASE_URL'),
   crmUrl: readRequiredUrl('CRM_URL'),
   corsOrigins: readRequiredOrigins('CORS_ORIGIN'),
@@ -132,6 +129,8 @@ export const apiEnv = {
   nextAuthSecret: readRequiredEnv('NEXTAUTH_SECRET'),
   encryptionKey: readRequiredEnv('ENCRYPTION_KEY'),
   anonymizationSalt: readRequiredEnv('ANONYMIZATION_SALT'),
+  allowBaselineReset: readOptionalBoolean('ALLOW_BASELINE_RESET') ?? false,
+  baselineResetPassword: readOptionalEnv('BASELINE_RESET_PASSWORD'),
   landingRevalidateUrl: readOptionalUrl('LANDING_REVALIDATE_URL'),
   revalidateSecret: process.env.REVALIDATE_SECRET?.trim() || undefined,
   whatsappAppId: readOptionalEnv('WHATSAPP_APP_ID'),
@@ -141,10 +140,6 @@ export const apiEnv = {
   whatsappGraphApiVersion: readOptionalEnv('WHATSAPP_GRAPH_API_VERSION') || 'v22.0',
   storageDriver,
   uploadDir: process.env.UPLOAD_DIR?.trim() || './uploads',
-  uploadPublicBaseUrl:
-    storageDriver === 's3'
-      ? readRequiredUrl('UPLOAD_PUBLIC_BASE_URL', true)
-      : undefined,
-  s3: readS3Config(),
+  supabaseStorage: readSupabaseStorageConfig(),
   logDir: process.env.LOG_DIR?.trim() || './logs',
 } as const

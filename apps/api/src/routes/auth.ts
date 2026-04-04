@@ -147,7 +147,7 @@ async function completeAuthenticatedLogin(
   const accessToken = signAccessToken(access.accessTokenPayload)
   const refreshToken = signRefreshToken(user.id)
 
-  await redis.setex(`refresh:${user.id}`, 7 * 24 * 60 * 60, refreshToken)
+  await redis.set(`refresh:${user.id}`, refreshToken, { ex: 7 * 24 * 60 * 60 })
   await prisma.user.update({
     where: { id: user.id },
     data: { lastLogin: new Date() },
@@ -183,7 +183,7 @@ async function sendTwoFactorChallenge(
   const code = generateOtp()
 
   if (channel === 'email') {
-    await redis.setex(`2fa_email:${twoFactorToken}`, 300, code)
+    await redis.set(`2fa_email:${twoFactorToken}`, code, { ex: 300 })
     const sent = await emailService.sendOtp({ to: user.email, code, type: 'login' })
 
     if (!sent) {
@@ -200,7 +200,7 @@ async function sendTwoFactorChallenge(
     throw new AppError(400, 'Telefone não cadastrado. Atualize seu perfil antes de usar 2FA por celular.')
   }
 
-  await redis.setex(`2fa_sms:${twoFactorToken}`, 300, code)
+  await redis.set(`2fa_sms:${twoFactorToken}`, code, { ex: 300 })
   const sent = await smsService.sendOtp(user.phone, code)
 
   if (!sent) {
@@ -214,13 +214,13 @@ async function sendTwoFactorChallenge(
 }
 
 async function loadTwoFactorState(twoFactorToken: string) {
-  const raw = await redis.get(`2fa_login:${twoFactorToken}`)
+  const state = await redis.get<TwoFactorState>(`2fa_login:${twoFactorToken}`)
 
-  if (!raw) {
+  if (!state) {
     throw new AppError(401, 'Sessão expirada. Faça login novamente.')
   }
 
-  return JSON.parse(raw) as TwoFactorState
+  return state
 }
 
 async function advanceTwoFactorFlow(twoFactorToken: string, state: TwoFactorState) {
@@ -236,15 +236,11 @@ async function advanceTwoFactorFlow(twoFactorToken: string, state: TwoFactorStat
     await redis.del(`2fa_login:${twoFactorToken}`)
     const sessionToken = crypto.randomUUID()
 
-    await redis.setex(
-      `2fa_session:${sessionToken}`,
-      120,
-      JSON.stringify({
-        userId: state.userId,
-        email: state.email,
-        role: state.role,
-      })
-    )
+    await redis.set(`2fa_session:${sessionToken}`, {
+      userId: state.userId,
+      email: state.email,
+      role: state.role,
+    }, { ex: 120 })
 
     logger.info('2FA fully verified', {
       userId: state.userId,
@@ -256,7 +252,7 @@ async function advanceTwoFactorFlow(twoFactorToken: string, state: TwoFactorStat
     }
   }
 
-  await redis.setex(`2fa_login:${twoFactorToken}`, 600, JSON.stringify(state))
+  await redis.set(`2fa_login:${twoFactorToken}`, state, { ex: 600 })
 
   const user = await prisma.user.findUnique({
     where: { id: state.userId },
@@ -389,14 +385,13 @@ authRouter.post('/login', authRateLimiter, bruteForceCheck, async (req, res, nex
     const ip = req.ip ?? 'unknown'
 
     if (body.twoFactorSessionToken) {
-      const raw = await redis.get(`2fa_session:${body.twoFactorSessionToken}`)
+      const session = await redis.get<{ userId: string }>(`2fa_session:${body.twoFactorSessionToken}`)
 
-      if (!raw) {
+      if (!session) {
         throw new AppError(401, 'Sessão 2FA expirada ou inválida')
       }
 
       await redis.del(`2fa_session:${body.twoFactorSessionToken}`)
-      const session = JSON.parse(raw) as { userId: string }
       const user = await prisma.user.findUnique({
         where: { id: session.userId },
       })
@@ -450,7 +445,7 @@ authRouter.post('/login', authRateLimiter, bruteForceCheck, async (req, res, nex
         verifiedChannels: [],
       }
 
-      await redis.setex(`2fa_login:${twoFactorToken}`, 600, JSON.stringify(state))
+      await redis.set(`2fa_login:${twoFactorToken}`, state, { ex: 600 })
 
       const firstChannel = getCurrentTwoFactorChannel(state)
       const challenge = await sendTwoFactorChallenge(user, twoFactorToken, firstChannel)
@@ -491,8 +486,8 @@ authRouter.post('/2fa/verify-email-otp', authRateLimiter, async (req, res, next)
       throw new AppError(400, 'Etapa 2FA incorreta para este código')
     }
 
-    const storedCode = await redis.get(`2fa_email:${twoFactorToken}`)
-    if (!storedCode || storedCode !== code) {
+    const storedCode = await redis.get<string | number>(`2fa_email:${twoFactorToken}`)
+    if (!storedCode || String(storedCode) !== code) {
       throw new AppError(401, 'Código de e-mail inválido ou expirado.')
     }
 
@@ -518,8 +513,8 @@ authRouter.post('/2fa/verify-sms-otp', authRateLimiter, async (req, res, next) =
       throw new AppError(400, 'Etapa 2FA incorreta para este código')
     }
 
-    const storedCode = await redis.get(`2fa_sms:${twoFactorToken}`)
-    if (!storedCode || storedCode !== code) {
+    const storedCode = await redis.get<string | number>(`2fa_sms:${twoFactorToken}`)
+    if (!storedCode || String(storedCode) !== code) {
       throw new AppError(401, 'Código SMS inválido ou expirado.')
     }
 
@@ -543,7 +538,7 @@ authRouter.post('/refresh', async (req, res, next) => {
     }
 
     const payload = verifyRefreshToken(token)
-    const stored = await redis.get(`refresh:${payload.sub}`)
+    const stored = await redis.get<string>(`refresh:${payload.sub}`)
 
     if (!stored || stored !== token) {
       throw new AppError(401, 'Invalid refresh token')
@@ -558,7 +553,7 @@ authRouter.post('/refresh', async (req, res, next) => {
     const newAccessToken = signAccessToken(access.accessTokenPayload)
     const newRefreshToken = signRefreshToken(user.id)
 
-    await redis.setex(`refresh:${user.id}`, 7 * 24 * 60 * 60, newRefreshToken)
+    await redis.set(`refresh:${user.id}`, newRefreshToken, { ex: 7 * 24 * 60 * 60 })
 
     res
       .cookie('access_token', newAccessToken, { ...COOKIE_OPTS, maxAge: 15 * 60 * 1000 })
@@ -830,15 +825,11 @@ authRouter.get('/google', authenticate, authorize('ADMIN'), async (req, res, nex
       typeof req.query.redirect === 'string' ? req.query.redirect : undefined
     )
 
-    await redis.setex(
-      `google:oauth:state:${state}`,
-      600,
-      JSON.stringify({
-        userId: authUser.sub,
-        role: authUser.role,
-        redirect,
-      })
-    )
+    await redis.set(`google:oauth:state:${state}`, {
+      userId: authUser.sub,
+      role: authUser.role,
+      redirect,
+    }, { ex: 600 })
 
     const url = googleCalendar.getAuthUrl(state)
     res.json({ success: true, data: { authUrl: url } })
@@ -862,13 +853,12 @@ authRouter.get('/google/callback', async (req, res) => {
   try {
     const { code, state } = z.object({ code: z.string(), state: z.string() }).parse(req.query)
     const stateKey = `google:oauth:state:${state}`
-    const authState = await redis.get(stateKey)
+    const parsedState = await redis.get<{ userId: string; role: string; redirect?: string }>(stateKey)
 
-    if (!authState) {
+    if (!parsedState) {
       throw new AppError(401, 'Google OAuth state inválido ou expirado')
     }
 
-    const parsedState = JSON.parse(authState) as { redirect?: string }
     redirectTarget = resolveGoogleRedirectTarget(
       parsedState.redirect?.replace('google=connected', 'google=error')
     )

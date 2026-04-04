@@ -346,7 +346,7 @@ usersRouter.post('/', authenticate, authorizePermission('users.manage'), async (
       data: inviteResult.serialized,
       meta: {
         inviteEmailSent: inviteResult.inviteEmailSent,
-        ...(inviteResult.inviteEmailSent ? {} : { tempPassword }),
+        manualDeliveryRequired: !inviteResult.inviteEmailSent,
       },
     })
   } catch (error) {
@@ -458,7 +458,7 @@ usersRouter.post('/:id/resend-invite', authenticate, authorizePermission('users.
       data: result.serialized,
       meta: {
         inviteEmailSent: result.inviteEmailSent ?? false,
-        ...(result.inviteEmailSent ? {} : { tempPassword: result.tempPassword }),
+        manualDeliveryRequired: !(result.inviteEmailSent ?? false),
       },
     })
   } catch (error) {
@@ -502,8 +502,10 @@ usersRouter.delete('/:id', authenticate, authorizePermission('users.manage'), as
       where: { id: userId },
       select: {
         id: true,
+        auditLogs: { select: { id: true }, take: 1 },
         contents: { select: { id: true }, take: 1 },
         contentVersions: { select: { id: true }, take: 1 },
+        emailSettingsUpdates: { select: { id: true }, take: 1 },
       },
     })
 
@@ -511,15 +513,35 @@ usersRouter.delete('/:id', authenticate, authorizePermission('users.manage'), as
       throw new AppError(404, 'Usuário não encontrado')
     }
 
+    if (existing.auditLogs.length > 0) {
+      throw new AppError(400, 'Nao e possivel excluir este usuario porque ele possui historico de auditoria')
+    }
+
     if (existing.contents.length > 0 || existing.contentVersions.length > 0) {
       throw new AppError(400, 'Não é possível excluir este usuário porque ele possui histórico de edição de conteúdo')
     }
 
+    if (existing.emailSettingsUpdates.length > 0) {
+      throw new AppError(400, 'Nao e possivel excluir este usuario porque ele possui historico operacional vinculado')
+    }
+
     await prisma.$transaction([
       prisma.notificationRead.deleteMany({ where: { userId } }),
-      prisma.auditLog.deleteMany({ where: { userId } }),
       prisma.user.delete({ where: { id: userId } }),
     ])
+
+    if (req.user?.sub) {
+      await prisma.auditLog.create({
+        data: {
+          userId: req.user.sub,
+          action: 'delete',
+          resource: 'user',
+          details: {
+            targetUserId: userId,
+          },
+        },
+      })
+    }
 
     res.json({ success: true })
   } catch (error) {

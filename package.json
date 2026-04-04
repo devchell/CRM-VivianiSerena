@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "build": "turbo run build",
-    "build:release": "pnpm --filter @viviani/types build && pnpm --filter @viviani/api build && pnpm --filter @viviani/crm build && pnpm --filter @viviani/landing build",
+    "build:release": "corepack pnpm --filter @viviani/types build && corepack pnpm --filter @viviani/api build && corepack pnpm --filter @viviani/crm build && corepack pnpm --filter @viviani/landing build",
     "dev": "turbo run dev",
     "test": "turbo run test",
     "lint": "turbo run lint",
@@ -13,10 +13,10 @@
     "db:generate": "turbo run db:generate",
     "db:migrate": "turbo run db:migrate",
     "db:seed": "turbo run db:seed",
-    "start:api": "pnpm --filter @viviani/api start",
-    "start:crm": "pnpm --filter @viviani/crm start",
-    "start:landing": "pnpm --filter @viviani/landing start",
-    "deploy:check": "pnpm build:release",
+    "start:api": "corepack pnpm --filter @viviani/api start",
+    "start:crm": "corepack pnpm --filter @viviani/crm start",
+    "start:landing": "corepack pnpm --filter @viviani/landing start",
+    "deploy:check": "corepack pnpm build:release",
     "prepare": "husky install"
   },
   "devDependencies": {

@@ -214,8 +214,16 @@ adminRouter.post('/reset-baseline', async (req, res, next) => {
       throw new Error('Sessão inválida')
     }
 
+    if (!apiEnv.allowBaselineReset) {
+      throw new AppError(403, 'Reset de baseline desabilitado neste ambiente')
+    }
+
+    if (!apiEnv.baselineResetPassword) {
+      throw new AppError(500, 'BASELINE_RESET_PASSWORD nao configurada para este ambiente')
+    }
+
     const triggeredBy = req.user.sub
-    const passwordHash = await bcrypt.hash('Teste123', 12)
+    const passwordHash = await bcrypt.hash(apiEnv.baselineResetPassword, 12)
     const preservedEmails = ['admin@vivianiserena.com', 'colaborador@vivianiserena.com']
 
     const result = await prisma.$transaction(async (tx) => {
@@ -319,7 +327,7 @@ adminRouter.post('/reset-baseline', async (req, res, next) => {
       return {
         adminEmail: 'admin@vivianiserena.com',
         collaboratorEmail: 'colaborador@vivianiserena.com',
-        password: 'Teste123',
+        password: apiEnv.baselineResetPassword,
       }
     })
 

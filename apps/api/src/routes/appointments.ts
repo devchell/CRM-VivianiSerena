@@ -43,9 +43,7 @@ appointmentsRouter.get('/', authorizePermission('agenda.view'), async (req, res,
       })
     } catch (dbError) {
       console.error('[appointments/list] DB query failed:', dbError)
-      // Return empty list gracefully — likely a pending migration
-      res.json({ success: true, data: [] })
-      return
+      throw new AppError(503, 'Agenda indisponivel temporariamente. Revise as migracoes do banco.')
     }
 
     res.json({
@@ -125,7 +123,6 @@ appointmentsRouter.patch('/:id', authorizePermission('agenda.update'), async (re
       data: updateData,
     })
 
-    // Sync to Google Calendar — create event if missing, update if exists
     const newStart = data.date ? new Date(data.date) : existing.date
     const duration = data.durationMinutes ?? existing.durationMinutes ?? DEFAULT_APPOINTMENT_DURATION_MINUTES
     const newEnd = new Date(newStart.getTime() + duration * 60 * 1000)
