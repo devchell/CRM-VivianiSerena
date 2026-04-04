@@ -33,7 +33,9 @@ export class IpBlocklist {
     const result: Array<{ ip: string; reason: string; ttl: number }> = []
     for (const key of keys) {
       const [reason, ttl] = await Promise.all([redis.get(key), redis.ttl(key)])
-      result.push({ ip: key.replace(PREFIX, ''), reason: reason ?? 'unknown', ttl })
+      const normalizedReason =
+        typeof reason === 'string' ? reason : reason == null ? 'unknown' : JSON.stringify(reason)
+      result.push({ ip: key.replace(PREFIX, ''), reason: normalizedReason, ttl })
     }
     return result.sort((a, b) => b.ttl - a.ttl)
   }
