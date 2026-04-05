@@ -24,7 +24,7 @@ metricsRouter.get('/overview', async (req, res, next) => {
     }
 
     const overview = await getMetricsOverview(effectivePeriod)
-    await setCache(cacheKey, overview, CACHE_TTL.MEDIUM)
+    await setCache(cacheKey, overview, CACHE_TTL.MEDIUM * 2) // 10 min
     res.json({ success: true, data: overview })
   } catch (error) {
     next(error)

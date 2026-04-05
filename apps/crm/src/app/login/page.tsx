@@ -66,6 +66,8 @@ export default function LoginPage() {
     ['/dashboard', '/leads', '/leads/disparos', '/agenda', '/financeiro', '/editar-site', '/seguranca', '/colaboradores'].forEach((route) => {
       router.prefetch(route)
     })
+    // Wake up Render API while user reads/types credentials (prevents cold-start delay on submit)
+    fetch(`${RAW_API_URL}/health/ready`, { method: 'GET', cache: 'no-store' }).catch(() => {})
   }, [router])
 
   const stepSequence = useMemo(() => {

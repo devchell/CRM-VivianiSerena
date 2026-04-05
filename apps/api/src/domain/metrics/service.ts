@@ -178,34 +178,44 @@ export async function getFinancialSummary(periodKey: 'month' | 'last30d' = 'mont
 
 export async function getFinancialCharts(months = 12): Promise<FinancialCharts> {
   const now = nowUtc()
-  const monthly = await Promise.all(
-    Array.from({ length: months }, (_, index) => {
-      const offset = months - index - 1
-      const bucketStart = addMonths(now, -offset)
-      const from = new Date(bucketStart.getFullYear(), bucketStart.getMonth(), 1, 0, 0, 0, 0)
-      const to = endOfDay(new Date(bucketStart.getFullYear(), bucketStart.getMonth() + 1, 0))
+  const since = addMonths(now, -months)
 
-      return Promise.all([
-        prisma.financial.aggregate({ where: { type: 'income', date: { gte: from, lte: to } }, _sum: { amount: true } }),
-        prisma.financial.aggregate({ where: { type: 'expense', date: { gte: from, lte: to } }, _sum: { amount: true } }),
-      ]).then(([incomeAgg, expensesAgg]) => {
-        const income = Number(incomeAgg._sum.amount ?? 0)
-        const expenses = Number(expensesAgg._sum.amount ?? 0)
-        return {
-          label: from.toLocaleDateString('pt-BR', { month: 'short', year: '2-digit' }),
-          bucketStart: from.toISOString(),
-          income,
-          expenses,
-          profit: income - expenses,
-        }
-      })
-    })
-  )
+  // Single query instead of 24 (12 months × 2 types)
+  type MonthlyRow = { month: Date; type: string; total: unknown }
+  const [rows, expensesByCategory] = await Promise.all([
+    prisma.$queryRaw<MonthlyRow[]>`
+      SELECT date_trunc('month', date) AS month, type, SUM(amount) AS total
+      FROM financials
+      WHERE date >= ${since}
+      GROUP BY date_trunc('month', date), type
+      ORDER BY month ASC
+    `,
+    prisma.financial.groupBy({
+      by: ['category'],
+      where: { type: 'expense', date: { gte: addMonths(now, -2) } },
+      _sum: { amount: true },
+    }),
+  ])
 
-  const expensesByCategory = await prisma.financial.groupBy({
-    by: ['category'],
-    where: { type: 'expense', date: { gte: addMonths(now, -2) } },
-    _sum: { amount: true },
+  // Build month buckets for last N months
+  const monthly = Array.from({ length: months }, (_, index) => {
+    const offset = months - index - 1
+    const bucketStart = addMonths(now, -offset)
+    const from = new Date(bucketStart.getFullYear(), bucketStart.getMonth(), 1, 0, 0, 0, 0)
+    const key = from.toISOString().slice(0, 7) // YYYY-MM
+
+    const incomeRow = rows.find((r) => r.month.toISOString().slice(0, 7) === key && r.type === 'income')
+    const expenseRow = rows.find((r) => r.month.toISOString().slice(0, 7) === key && r.type === 'expense')
+    const income = Number(incomeRow?.total ?? 0)
+    const expenses = Number(expenseRow?.total ?? 0)
+
+    return {
+      label: from.toLocaleDateString('pt-BR', { month: 'short', year: '2-digit' }),
+      bucketStart: from.toISOString(),
+      income,
+      expenses,
+      profit: income - expenses,
+    }
   })
 
   return {
@@ -220,41 +230,44 @@ export async function getFinancialCharts(months = 12): Promise<FinancialCharts> 
 
 export async function getAnalyticsMetrics(): Promise<AnalyticsMetrics> {
   const since = addDays(nowUtc(), -30)
-  const [totalSessions, sessions, leadsCreated, leadsConverted] = await Promise.all([
+
+  type ReferrerRow = { referrer: string | null; count: bigint }
+  type HourRow = { hour: number; count: bigint }
+  type BounceRow = { bounced: bigint }
+
+  const [totalSessions, leadsCreated, leadsConverted, referrerRows, heatmapRows, bounceRow] = await Promise.all([
     prisma.session.count({ where: { createdAt: { gte: since } } }),
-    prisma.session.findMany({
-      where: { createdAt: { gte: since } },
-      select: { referrer: true, pagesVisited: true, createdAt: true },
-    }),
     prisma.lead.count({ where: buildCommercialLeadWhere({ createdAt: { gte: since } }) }),
-    prisma.lead.count({
-      where: buildCommercialLeadWhere({
-        status: 'converted',
-        convertedAt: { gte: since },
-      }),
-    }),
+    prisma.lead.count({ where: buildCommercialLeadWhere({ status: 'converted', convertedAt: { gte: since } }) }),
+    prisma.$queryRaw<ReferrerRow[]>`
+      SELECT COALESCE(referrer, 'Direct') AS referrer, COUNT(*) AS count
+      FROM sessions WHERE created_at >= ${since}
+      GROUP BY COALESCE(referrer, 'Direct')
+      ORDER BY count DESC LIMIT 10
+    `,
+    prisma.$queryRaw<HourRow[]>`
+      SELECT EXTRACT(HOUR FROM created_at)::int AS hour, COUNT(*) AS count
+      FROM sessions WHERE created_at >= ${since}
+      GROUP BY EXTRACT(HOUR FROM created_at)
+    `,
+    prisma.$queryRaw<BounceRow[]>`
+      SELECT COUNT(*) AS bounced FROM sessions
+      WHERE created_at >= ${since}
+        AND jsonb_array_length(pages_visited::jsonb) <= 1
+    `,
   ])
 
-  const bounced = sessions.filter((session) => (session.pagesVisited as string[]).length <= 1).length
-  const topReferrersMap = sessions.reduce<Record<string, number>>((acc, session) => {
-    const referrer = session.referrer || 'Direct'
-    acc[referrer] = (acc[referrer] ?? 0) + 1
-    return acc
-  }, {})
-
-  const heatmap = Array.from({ length: 24 }, (_, hour) => ({ hour, count: 0 }))
-  sessions.forEach((session) => {
-    heatmap[session.createdAt.getHours()].count += 1
+  const bounced = Number(bounceRow[0]?.bounced ?? 0)
+  const heatmap = Array.from({ length: 24 }, (_, hour) => {
+    const row = heatmapRows.find((r) => r.hour === hour)
+    return { hour, count: Number(row?.count ?? 0) }
   })
 
   return {
     sessions30d: totalSessions,
-    uniqueReferrers: new Set(sessions.map((session) => session.referrer || 'Direct')).size,
+    uniqueReferrers: referrerRows.length,
     bounceRate: totalSessions > 0 ? Math.round((bounced / totalSessions) * 100) : 0,
-    topReferrers: Object.entries(topReferrersMap)
-      .sort((left, right) => right[1] - left[1])
-      .slice(0, 10)
-      .map(([referrer, count]) => ({ referrer, count })),
+    topReferrers: referrerRows.map((r) => ({ referrer: r.referrer ?? 'Direct', count: Number(r.count) })),
     heatmap,
     funnel: {
       sessions: totalSessions,
