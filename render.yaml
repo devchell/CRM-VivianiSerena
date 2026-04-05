@@ -4,6 +4,7 @@ services:
     runtime: node
     rootDir: .
     plan: free
+    region: ohio
     autoDeploy: true
     buildCommand: corepack pnpm install --frozen-lockfile --prod=false && corepack pnpm --filter @viviani/types build && corepack pnpm --filter @viviani/utils build && corepack pnpm --filter @viviani/api db:generate && corepack pnpm --filter @viviani/api db:migrate:prod && corepack pnpm --filter @viviani/api build
     startCommand: APP_VERSION=${RENDER_GIT_COMMIT:-$APP_VERSION} corepack pnpm --filter @viviani/api start

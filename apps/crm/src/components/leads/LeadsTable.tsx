@@ -10,7 +10,7 @@ import { toast } from 'sonner'
 import { formatDistanceToNow } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import { Search, Download, RefreshCw, ArrowUpDown, ChevronUp, ChevronDown, CircleDot, CheckCircle2, Phone, Star, Users, XCircle, Plus, Pencil, Loader2, FilterX, ChevronRight, CalendarClock, ShieldCheck, Trash2 } from 'lucide-react'
-import { apiFetchJson, buildApiUrl, buildAuthHeaders } from '@/lib/api-client'
+import { apiFetchJson, buildApiUrl, buildAuthHeaders, invalidateApiCache } from '@/lib/api-client'
 import {
   crmFieldSelect,
   crmFieldSelectIcon,
@@ -485,6 +485,7 @@ export function LeadsTable() {
         body: JSON.stringify({ status }),
       })
       toast.success('Status atualizado')
+      invalidateApiCache('/leads')
       await fetchLeads()
     } catch {
       toast.error('Erro ao atualizar status')
@@ -551,6 +552,7 @@ export function LeadsTable() {
       setShowModal(false)
       setEditingLead(null)
       setForm(EMPTY_FORM)
+      invalidateApiCache('/leads')
       await fetchLeads()
       if (editingLead) {
         await fetchLeadDetail(editingLead.id)
@@ -703,6 +705,7 @@ export function LeadsTable() {
       toast.success(`Status atualizado em ${ids.length} lead${ids.length > 1 ? 's' : ''}`)
       setBulkStatusModal(false)
       setRowSelection({})
+      invalidateApiCache('/leads')
       await fetchLeads()
     } catch {
       toast.error('Erro ao atualizar status em massa')
@@ -725,6 +728,7 @@ export function LeadsTable() {
       toast.success(`Origem atualizada em ${ids.length} lead${ids.length > 1 ? 's' : ''}`)
       setBulkOriginModal(false)
       setRowSelection({})
+      invalidateApiCache('/leads')
       await fetchLeads()
     } catch {
       toast.error('Erro ao atualizar origem em massa')
@@ -767,6 +771,7 @@ export function LeadsTable() {
       toast.success(`${ids.length} lead${ids.length > 1 ? 's' : ''} excluído${ids.length > 1 ? 's' : ''}`)
       setBulkDeleteConfirm(false)
       setRowSelection({})
+      invalidateApiCache('/leads')
       await fetchLeads()
     } catch {
       toast.error('Erro ao excluir leads em massa')

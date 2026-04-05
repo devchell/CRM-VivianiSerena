@@ -20,7 +20,7 @@ import { ChevronDown, Download, FileText, Pencil, Plus, Trash2, X } from 'lucide
 import { formatCurrency } from '@viviani/utils'
 import { toast } from 'sonner'
 import { useAuth } from '@/lib/useAuth'
-import { apiFetchJson, buildAuthHeaders } from '@/lib/api-client'
+import { apiFetchJson, buildAuthHeaders, invalidateApiCache } from '@/lib/api-client'
 import { useFinancialColors } from '@/hooks/useFinancialColors'
 import {
   crmListBody,
@@ -433,6 +433,7 @@ export default function FinanceiroPage() {
         body: JSON.stringify(payload),
       })
 
+      invalidateApiCache('/financials')
       await refreshFinancialData()
       setShowModal(false)
       toast.success(editing ? 'Lançamento atualizado.' : 'Lançamento criado.')
@@ -451,6 +452,7 @@ export default function FinanceiroPage() {
         method: 'DELETE',
         headers: buildAuthHeaders(accessToken),
       })
+      invalidateApiCache('/financials')
       await refreshFinancialData()
       toast.success('Lançamento removido.')
     } catch (error) {

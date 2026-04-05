@@ -19,7 +19,7 @@ import {
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { useAuth } from '@/lib/useAuth'
-import { apiFetchJson, buildApiUrl, buildAuthHeaders } from '@/lib/api-client'
+import { apiFetchJson, buildApiUrl, buildAuthHeaders, invalidateApiCache } from '@/lib/api-client'
 import {
   crmFieldSelect,
   crmFieldSelectIcon,
@@ -302,6 +302,7 @@ export default function AgendaPage() {
       }
       if (!res.ok) throw new Error(`HTTP ${res.status}`)
 
+      invalidateApiCache('/appointments')
       await refreshAppointments()
       setForm(buildDefaultForm())
       setDuration(60)
