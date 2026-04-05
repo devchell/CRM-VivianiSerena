@@ -3,9 +3,9 @@ import type { AppPermission, AuthTokenPayload, UserProfile, UserRole } from '@vi
 import { apiEnv } from './env'
 
 function normalizePemKey(raw: string): string {
-  const withNewlines = raw.replace(/\\n/g, '\n').trim()
+  const withNewlines = raw.replace(/\\n/g, '\n').replace(/\r/g, '').trim()
   if (withNewlines.startsWith('-----')) return withNewlines
-  const decoded = Buffer.from(raw.trim(), 'base64').toString('utf8')
+  const decoded = Buffer.from(raw.trim(), 'base64').toString('utf8').replace(/\r/g, '')
   if (decoded.startsWith('-----')) return decoded
   return withNewlines
 }
