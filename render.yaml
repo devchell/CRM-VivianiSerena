@@ -5,7 +5,7 @@ services:
     rootDir: .
     plan: free
     autoDeploy: true
-    buildCommand: corepack pnpm install --frozen-lockfile --prod=false && corepack pnpm --filter @viviani/types build && corepack pnpm --filter @viviani/utils build && corepack pnpm --filter @viviani/api db:generate && corepack pnpm --filter @viviani/api build
+    buildCommand: corepack pnpm install --frozen-lockfile --prod=false && corepack pnpm --filter @viviani/types build && corepack pnpm --filter @viviani/utils build && corepack pnpm --filter @viviani/api db:generate && corepack pnpm --filter @viviani/api db:migrate:prod && corepack pnpm --filter @viviani/api build
     startCommand: APP_VERSION=${RENDER_GIT_COMMIT:-$APP_VERSION} corepack pnpm --filter @viviani/api start
     healthCheckPath: /health/ready
     envVars:
@@ -23,6 +23,8 @@ services:
         value: supabase
       # Database (Supabase PostgreSQL)
       - key: DATABASE_URL
+        sync: false
+      - key: DIRECT_DATABASE_URL
         sync: false
       # Upstash Redis
       - key: UPSTASH_REDIS_REST_URL
