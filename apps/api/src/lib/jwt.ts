@@ -2,8 +2,16 @@ import jwt from 'jsonwebtoken'
 import type { AppPermission, AuthTokenPayload, UserProfile, UserRole } from '@viviani/types'
 import { apiEnv } from './env'
 
-const PRIVATE_KEY = apiEnv.jwtPrivateKey.replace(/\\n/g, '\n')
-const PUBLIC_KEY = apiEnv.jwtPublicKey.replace(/\\n/g, '\n')
+function normalizePemKey(raw: string): string {
+  const withNewlines = raw.replace(/\\n/g, '\n').trim()
+  if (withNewlines.startsWith('-----')) return withNewlines
+  const decoded = Buffer.from(raw.trim(), 'base64').toString('utf8')
+  if (decoded.startsWith('-----')) return decoded
+  return withNewlines
+}
+
+const PRIVATE_KEY = normalizePemKey(apiEnv.jwtPrivateKey)
+const PUBLIC_KEY = normalizePemKey(apiEnv.jwtPublicKey)
 const ACCESS_EXPIRES = process.env.JWT_ACCESS_EXPIRES_IN || '15m'
 const REFRESH_EXPIRES = process.env.JWT_REFRESH_EXPIRES_IN || '7d'
 

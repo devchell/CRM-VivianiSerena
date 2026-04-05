@@ -31,7 +31,7 @@ services:
         sync: false
       # Supabase Storage
       - key: SUPABASE_URL
-        value: https://ecivvutwromwlloydech.supabase.co
+        value: https://szfaeshmiriosnrfzdqb.supabase.co
       - key: SUPABASE_SERVICE_ROLE_KEY
         sync: false
       - key: SUPABASE_STORAGE_BUCKET
