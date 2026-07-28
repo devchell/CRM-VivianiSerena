@@ -37,4 +37,4 @@ npm run build
 
 ## Dev
 
-DevChell(devchell.vercell.app)
+DevChell - [devchell.vercell.app](https://devchell.vercel.app/)
