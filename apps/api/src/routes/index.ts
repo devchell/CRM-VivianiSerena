@@ -15,6 +15,7 @@ import { adminRouter } from './admin'
 import { dispatchesRouter } from './dispatches'
 import { whatsappRouter } from './whatsapp'
 import { templatesRouter } from './templates'
+import { clientFoldersRouter } from './clientFolders'
 
 export const router: Router = Router()
 
@@ -34,3 +35,4 @@ router.use('/security', securityRouter)
 router.use('/privacy', privacyRouter)
 router.use('/admin', adminRouter)
 router.use('/templates', templatesRouter)
+router.use('/client-folders', clientFoldersRouter)

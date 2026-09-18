@@ -1,53 +1,52 @@
 import { MetadataRoute } from 'next'
-
-const BASE_URL = 'https://vivianicoaching.com'
+import { SITE_URL } from '@/lib/site-url'
 
 export default function sitemap(): MetadataRoute.Sitemap {
   return [
     {
-      url: BASE_URL,
+      url: SITE_URL,
       lastModified: new Date(),
       changeFrequency: 'weekly',
       priority: 1,
     },
     {
-      url: `${BASE_URL}/#sobre`,
+      url: `${SITE_URL}/#sobre`,
       lastModified: new Date(),
       changeFrequency: 'monthly',
       priority: 0.8,
     },
     {
-      url: `${BASE_URL}/#servicos`,
+      url: `${SITE_URL}/#servicos`,
       lastModified: new Date(),
       changeFrequency: 'monthly',
       priority: 0.9,
     },
     {
-      url: `${BASE_URL}/#resultados`,
+      url: `${SITE_URL}/#resultados`,
       lastModified: new Date(),
       changeFrequency: 'weekly',
       priority: 0.8,
     },
     {
-      url: `${BASE_URL}/#avaliacoes`,
+      url: `${SITE_URL}/#avaliacoes`,
       lastModified: new Date(),
       changeFrequency: 'weekly',
       priority: 0.7,
     },
     {
-      url: `${BASE_URL}/#faq`,
+      url: `${SITE_URL}/#faq`,
       lastModified: new Date(),
       changeFrequency: 'monthly',
       priority: 0.6,
     },
     {
-      url: `${BASE_URL}/privacidade`,
+      url: `${SITE_URL}/privacidade`,
       lastModified: new Date(),
       changeFrequency: 'yearly',
       priority: 0.3,
     },
     {
-      url: `${BASE_URL}/termos`,
+      url: `${SITE_URL}/termos`,
       lastModified: new Date(),
       changeFrequency: 'yearly',
       priority: 0.3,

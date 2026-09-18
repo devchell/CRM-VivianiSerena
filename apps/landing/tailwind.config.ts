@@ -10,7 +10,7 @@ const config: Config = {
     extend: {
       colors: {
         cream: { DEFAULT: '#FAF7F2', 50: '#FDFCFA', 100: '#FAF7F2', 200: '#F5EFE6', 300: '#EDE3D4' },
-        'rose-gold': { DEFAULT: '#C9967A', 400: '#C9967A', 500: '#B5785A', 600: '#9B5E43', 700: '#7D4833' },
+        'rose-gold': { DEFAULT: '#9B5E43', 400: '#9B5E43', 500: '#7D4833', 600: '#6E3F2C', 700: '#5A3225' },
         charcoal: { DEFAULT: '#2C2C2C', 400: '#787878', 500: '#505050', 600: '#3C3C3C', 700: '#2C2C2C' },
         blush: { DEFAULT: '#F2E8E4', 100: '#F7F1EE', 200: '#F2E8E4', 300: '#E8D5CE' },
         sage: { DEFAULT: '#8B9E8A', 400: '#8B9E8A', 500: '#6E836D' },

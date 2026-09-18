@@ -7,6 +7,8 @@ import { authenticate, authorizePermission } from '../middleware/authenticate'
 import { getCache, setCache, CACHE_TTL } from '../lib/redis'
 import { IpBlocklist } from '../infrastructure/security/IpBlocklist'
 import { logger } from '../lib/logger'
+import { getEmailSettingsOverview } from '../infrastructure/emailSettings'
+import { buildSecurityChecklist } from './securityChecklist'
 
 export const securityRouter: Router = Router()
 securityRouter.use(authenticate)
@@ -235,21 +237,34 @@ securityRouter.post('/test-alert', authorizePermission('seguranca.manage'), asyn
 
 // ─── Checklist Status ────────────────────────────────────────────────────────
 
-securityRouter.get('/checklist', authorizePermission('seguranca.view'), async (_req, res, next) => {
+securityRouter.get('/checklist', authorizePermission('seguranca.view'), async (req, res, next) => {
   try {
-    const redisOk = await redis.ping().then(() => true).catch(() => false)
-    const sslExpiry = process.env.SSL_CERT_EXPIRY_DAYS ? parseInt(process.env.SSL_CERT_EXPIRY_DAYS, 10) : 90
+    const redisResult = await Promise.allSettled([redis.ping()])
+    const emailResult = await Promise.allSettled([getEmailSettingsOverview()])
+    const redisOk = redisResult[0]?.status === 'fulfilled'
+    const emailConfigured = emailResult[0]?.status === 'fulfilled'
+      ? emailResult[0].value.configured
+      : false
+    const smsConfigured = Boolean(
+      process.env.TWILIO_ACCOUNT_SID?.trim()
+      && process.env.TWILIO_AUTH_TOKEN?.trim()
+      && process.env.TWILIO_PHONE_NUMBER?.trim(),
+    )
+    const forwardedProto = req.get('x-forwarded-proto')?.split(',')[0]?.trim().toLowerCase()
+    const httpsActive = forwardedProto === 'https' || req.protocol === 'https'
+    const hstsEnabled = process.env.ENABLE_HSTS?.trim().toLowerCase() === 'true'
+    const rawSslExpiry = Number.parseInt(process.env.SSL_CERT_EXPIRY_DAYS ?? '', 10)
+    const sslExpiry = Number.isFinite(rawSslExpiry) ? rawSslExpiry : null
+    const twoFactorConfigured = emailConfigured || smsConfigured
 
-    const items = [
-      { id: 'https', label: 'HTTPS ativo', ok: true, description: 'A API foi preparada para operar atrás de TLS e proxy reverso.' },
-      { id: 'brute_force', label: 'Proteção contra força bruta', ok: true, description: 'Bloqueio automático após tentativas falhas consecutivas de login.' },
-      { id: 'rate_limit', label: 'Rate limiting ativo', ok: redisOk, description: 'Rate limit e lockout dependem de Redis operacional.' },
-      { id: 'backup', label: 'Backup configurado', ok: process.env.BACKUP_ENABLED === 'true', description: process.env.BACKUP_ENABLED === 'true' ? 'Backup habilitado por ambiente.' : 'Sem confirmação automática de backup neste ambiente.' },
-      { id: '2fa', label: 'Autenticação em 2 fatores', ok: true, description: 'Fluxo atual implementado com OTP por e-mail e SMS.' },
-      { id: 'ssl_expiry', label: 'Certificado SSL', ok: sslExpiry > 14, warning: sslExpiry <= 30, description: `Certificado SSL ${sslExpiry > 14 ? `expira em ${sslExpiry} dias` : 'precisa de renovação urgente'}.`, daysLeft: sslExpiry },
-      { id: 'headers', label: 'Headers de segurança ativos', ok: true, description: 'Helmet, HSTS e CSP estão ativos com ajustes adicionais recomendados.' },
-      { id: 'anomaly', label: 'Detecção básica de anomalias', ok: true, description: 'O backend aplica validações e detecção de padrões suspeitos, sem prometer um WAF completo.' },
-    ]
+    const items = buildSecurityChecklist({
+      httpsActive,
+      redisOk,
+      backupConfigured: process.env.BACKUP_ENABLED === 'true',
+      twoFactorConfigured,
+      hstsEnabled,
+      sslExpiryDays: sslExpiry,
+    })
 
     res.json({ success: true, data: items })
   } catch (err) { next(err) }

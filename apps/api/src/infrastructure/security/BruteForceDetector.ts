@@ -64,7 +64,11 @@ export class BruteForceDetector {
           details: { attempts: count, path, cycle: cycles + 1, lockout: label } as Prisma.JsonObject,
         },
       })
-    } catch { /* never fail a request due to logging */ }
+    } catch (error) {
+      logger.warn('Brute-force lockout event could not be persisted', {
+        error: error instanceof Error ? error.message : String(error),
+      })
+    }
 
     logger.warn('BruteForce lockout', { ip, path, count, cycles: cycles + 1, lockout: label })
     return true

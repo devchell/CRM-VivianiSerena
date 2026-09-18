@@ -12,6 +12,7 @@ declare global {
 const GA_ID = process.env.NEXT_PUBLIC_GA_ID?.trim() || null
 const API_BASE_URL = landingPublicEnv.apiBaseUrl
 const SESSION_STORAGE_KEY = 'vs_analytics_session_id'
+const SESSION_PROOF_STORAGE_KEY = 'vs_analytics_session_proof'
 
 export type WebVitalRating = 'good' | 'needs-improvement' | 'poor'
 
@@ -32,9 +33,23 @@ export function getAnalyticsSessionId(): string | null {
   return getSessionId()
 }
 
+export function getAnalyticsSessionProof(): string | null {
+  return getSessionProof()
+}
+
 function setSessionId(value: string) {
   if (typeof window === 'undefined') return
   window.sessionStorage.setItem(SESSION_STORAGE_KEY, value)
+}
+
+function getSessionProof(): string | null {
+  if (typeof window === 'undefined') return null
+  return window.sessionStorage.getItem(SESSION_PROOF_STORAGE_KEY)
+}
+
+function setSessionProof(value: string) {
+  if (typeof window === 'undefined') return
+  window.sessionStorage.setItem(SESSION_PROOF_STORAGE_KEY, value)
 }
 
 async function postAnalytics(path: string, payload: Record<string, unknown>) {
@@ -54,7 +69,7 @@ async function postAnalytics(path: string, payload: Record<string, unknown>) {
       return null
     }
 
-    return await response.json() as { success: boolean; data?: { sessionId?: string } }
+    return await response.json() as { success: boolean; data?: { sessionId?: string; sessionProof?: string } }
   } catch {
     return null
   }
@@ -95,6 +110,7 @@ export async function trackPageView(url: string) {
     referrer: typeof document !== 'undefined' ? document.referrer || undefined : undefined,
     duration: 0,
     sessionId: getSessionId() ?? undefined,
+    sessionProof: getSessionProof() ?? undefined,
     utmSource: getUtmParams().utm_source,
     utmMedium: getUtmParams().utm_medium,
     utmCampaign: getUtmParams().utm_campaign,
@@ -103,6 +119,9 @@ export async function trackPageView(url: string) {
   const sessionId = payload?.data?.sessionId
   if (sessionId) {
     setSessionId(sessionId)
+  }
+  if (payload?.data?.sessionProof) {
+    setSessionProof(payload.data.sessionProof)
   }
 }
 
@@ -119,6 +138,7 @@ export function trackEvent(eventName: string, params?: Record<string, string | n
     value: typeof params?.value === 'number' ? params.value : undefined,
     page: typeof window !== 'undefined' ? window.location.pathname : undefined,
     sessionId: getSessionId() ?? undefined,
+    sessionProof: getSessionProof() ?? undefined,
     payload: params ?? {},
   })
 }
@@ -220,6 +240,7 @@ export function reportWebVital(metric: WebVitalMetric) {
       ...metric,
       page: typeof window !== 'undefined' ? window.location.pathname : '',
       sessionId: getSessionId() ?? undefined,
+      sessionProof: getSessionProof() ?? undefined,
       url: typeof window !== 'undefined' ? window.location.href : '',
     }),
     keepalive: true,

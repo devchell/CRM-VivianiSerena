@@ -1,7 +1,7 @@
 'use client'
 
 import type { ComponentType, FormEvent, ReactNode } from 'react'
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import type { AppointmentListItem, CreateAppointmentDto, Lead, ServiceType } from '@viviani/types'
 import FullCalendar from '@fullcalendar/react'
 import dayGridPlugin from '@fullcalendar/daygrid'
@@ -13,13 +13,13 @@ import {
   Clock3,
   Dot,
   Plus,
-  Sparkles,
   UserRound,
   X,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { useAuth } from '@/lib/useAuth'
 import { apiFetchJson, buildApiUrl, buildAuthHeaders, invalidateApiCache } from '@/lib/api-client'
+import { useRealtimeRefresh } from '@/lib/realtime'
 import {
   crmFieldSelect,
   crmFieldSelectIcon,
@@ -170,10 +170,12 @@ export default function AgendaPage() {
   const canViewLeads = hasPermission('leads.view')
   const canCreateAppointments = hasPermission('agenda.create') && canViewLeads
 
-  useEffect(() => {
-    if (!accessToken) return
+  const fetchAgenda = useCallback(async () => {
+    if (!accessToken) {
+      setLoading(false)
+      return
+    }
 
-    let active = true
     setLoading(true)
 
     const requests: [Promise<AppointmentsResponse>, Promise<LeadsResponse | { success: true; data: Lead[] }>] = [
@@ -187,24 +189,22 @@ export default function AgendaPage() {
         : Promise.resolve({ success: true as const, data: [] }),
     ]
 
-    Promise.all(requests)
-      .then(([appointmentsResponse, leadsResponse]) => {
-        if (!active) return
-        setAppointments(appointmentsResponse.data)
-        setLeads(leadsResponse.data)
-      })
-      .catch((error) => {
-        if (!active) return
-        toast.error(error instanceof Error ? error.message : 'Não foi possível carregar a agenda.')
-      })
-      .finally(() => {
-        if (active) setLoading(false)
-      })
-
-    return () => {
-      active = false
+    try {
+      const [appointmentsResponse, leadsResponse] = await Promise.all(requests)
+      setAppointments(appointmentsResponse.data)
+      setLeads(leadsResponse.data)
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Não foi possível carregar a agenda.')
+    } finally {
+      setLoading(false)
     }
   }, [accessToken, canViewLeads])
+
+  useEffect(() => {
+    void fetchAgenda()
+  }, [fetchAgenda])
+
+  useRealtimeRefresh(fetchAgenda, ['appointments', 'leads'])
 
   const leadOptions = useMemo(() => {
     return leads.map((lead) => ({
@@ -375,7 +375,7 @@ export default function AgendaPage() {
         <button
           onClick={() => setShowModal(true)}
           disabled={!canCreateAppointments}
-          className="inline-flex items-center justify-center gap-2 rounded bg-blue-600 px-5 py-2 text-sm font-medium text-white shadow-sm transition-all hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="inline-flex items-center justify-center gap-2 rounded bg-blue-600 px-5 py-2 text-sm font-medium text-[var(--primary-foreground)] shadow-sm transition-all hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <Plus size={16} />
           Novo agendamento
@@ -390,19 +390,19 @@ export default function AgendaPage() {
                 label: 'Agendamentos totais',
                 value: summary.total,
                 icon: CalendarDays,
-                tone: 'bg-blue-50 text-blue-700 ring-blue-100',
+                tone: 'bg-[var(--accent-subtle)] text-[var(--primary)] ring-[var(--border-subtle)]',
               },
               {
                 label: 'Próximos atendimentos',
                 value: summary.upcoming,
                 icon: Clock3,
-                tone: 'bg-sky-50 text-sky-700 ring-sky-100',
+                tone: 'bg-[var(--info-bg)] text-[var(--info)] ring-[var(--border-subtle)]',
               },
               {
                 label: 'Leads disponíveis',
                 value: summary.leadsReady,
                 icon: UserRound,
-                tone: 'bg-emerald-50 text-emerald-700 ring-emerald-100',
+                tone: 'bg-[var(--success-bg)] text-[var(--success)] ring-[var(--border-subtle)]',
               },
             ].map((item) => {
               const Icon = item.icon
@@ -464,7 +464,7 @@ export default function AgendaPage() {
         <aside className="space-y-4">
           <div className="card-dark rounded-lg p-5 shadow-sm">
             <div className="mb-4 flex items-center gap-2">
-              <Sparkles size={16} className="text-blue-600" />
+              <CalendarDays size={16} className="text-[var(--primary)]" />
               <h2 className="font-heading text-base font-semibold text-slate-900 dark:text-slate-100">
                 Legenda visual
               </h2>
@@ -697,8 +697,8 @@ export default function AgendaPage() {
                 </button>
                 <button
                   type="submit"
-                  disabled={submitting || !canCreateAppointments}
-                  className="flex-1 rounded bg-blue-600 px-4 py-3 text-sm font-medium text-white transition-colors hover:bg-blue-700 disabled:opacity-60"
+                  disabled={submitting || !canCreateAppointments || !form.leadId}
+                  className="flex-1 rounded bg-blue-600 px-4 py-3 text-sm font-medium text-[var(--primary-foreground)] transition-colors hover:bg-blue-700 disabled:opacity-60"
                 >
                   {submitting ? 'Salvando...' : 'Salvar agendamento'}
                 </button>

@@ -27,7 +27,12 @@ export class AuditLogger {
       })
     } catch (err) {
       // Never fail a request because of audit logging
-      logger.error('AuditLogger failed', { err, entry })
+      logger.error('AuditLogger failed', {
+        error: err instanceof Error ? err.message : 'unknown_error',
+        userId: entry.userId,
+        action: entry.action,
+        resource: entry.resource,
+      })
     }
   }
 

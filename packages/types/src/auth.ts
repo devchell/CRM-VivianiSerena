@@ -1,9 +1,34 @@
 import { CRM_MODULES, type CrmModule } from './crm'
 
+/**
+ * Valores atualmente persistidos no enum UserRole do Prisma.
+ *
+ * O produto chama o segundo perfil de COLLABORATOR. MANAGER permanece aqui
+ * somente para ler tokens/cadastros legados sem quebrar a autorização.
+ */
 export type UserRole = 'ADMIN' | 'MANAGER' | 'VIEWER'
 export type UserProfile = 'ADMIN' | 'COLLABORATOR' | 'VIEWER'
 
 export const USER_PROFILES = ['ADMIN', 'COLLABORATOR', 'VIEWER'] as const
+
+export const USER_ROLE_INPUTS = ['ADMIN', 'COLLABORATOR', 'MANAGER', 'VIEWER'] as const
+
+export type UserRoleInput = (typeof USER_ROLE_INPUTS)[number]
+
+/** Converte o vocabulário público de perfis para o enum persistido atual. */
+export function normalizeUserRole(value: string | undefined): UserRole {
+  switch (value) {
+    case 'ADMIN':
+      return 'ADMIN'
+    case 'COLLABORATOR':
+    case 'MANAGER':
+      return 'MANAGER'
+    case 'VIEWER':
+      return 'VIEWER'
+    default:
+      return 'VIEWER'
+  }
+}
 
 const MODULE_PERMISSION_ACTIONS = {
   dashboard: ['view'],
@@ -20,10 +45,7 @@ type ModulePermission = {
   [Module in keyof ModulePermissionMap]: `${Module}.${ModulePermissionMap[Module][number]}`
 }[keyof ModulePermissionMap]
 
-export type AppPermission =
-  | ModulePermission
-  | 'users.manage'
-  | 'privacy.manage'
+export type AppPermission = ModulePermission | 'users.manage' | 'privacy.manage'
 
 export const APP_PERMISSIONS = [
   'dashboard.view',
@@ -65,9 +87,23 @@ const VIEW_ONLY_PERMISSIONS = new Set<AppPermission>([
 
 const COLLABORATOR_PERMISSION_PRESETS: Record<CrmModule, AppPermission[]> = {
   dashboard: ['dashboard.view'],
-  leads: ['leads.view', 'leads.create', 'leads.update', 'leads.delete', 'leads.export', 'leads.gdpr', 'leads.broadcast'],
+  leads: [
+    'leads.view',
+    'leads.create',
+    'leads.update',
+    'leads.delete',
+    'leads.export',
+    'leads.gdpr',
+    'leads.broadcast',
+  ],
   agenda: ['agenda.view', 'agenda.create', 'agenda.update', 'agenda.delete'],
-  financeiro: ['financeiro.view', 'financeiro.create', 'financeiro.update', 'financeiro.delete', 'financeiro.export'],
+  financeiro: [
+    'financeiro.view',
+    'financeiro.create',
+    'financeiro.update',
+    'financeiro.delete',
+    'financeiro.export',
+  ],
   'editar-site': [],
   seguranca: [],
 }
@@ -108,12 +144,14 @@ export function getPersistedRoleForProfile(profile: UserProfile): UserRole {
   }
 }
 
-export function getPermissionsForProfile(profile: Exclude<UserProfile, 'ADMIN'>, modules: readonly CrmModule[]): AppPermission[] {
-  const source = profile === 'COLLABORATOR'
-    ? COLLABORATOR_PERMISSION_PRESETS
-    : VIEWER_PERMISSION_PRESETS
+export function getPermissionsForProfile(
+  profile: Exclude<UserProfile, 'ADMIN'>,
+  modules: readonly CrmModule[]
+): AppPermission[] {
+  const source =
+    profile === 'COLLABORATOR' ? COLLABORATOR_PERMISSION_PRESETS : VIEWER_PERMISSION_PRESETS
 
-  return dedupe(modules.flatMap((module) => source[module] ?? []))
+  return dedupe(modules.flatMap(module => source[module] ?? []))
 }
 
 function getLegacyPermissions(role: UserRole, module: CrmModule): AppPermission[] {
@@ -136,7 +174,7 @@ export function resolvePermissions(role: UserRole, grants?: readonly string[]): 
   const normalizedGrants = Array.isArray(grants) ? grants : []
   const explicitPermissions = normalizedGrants.filter(isAppPermission)
   const legacyModules = normalizedGrants.filter(isCrmModuleGrant)
-  const derivedPermissions = legacyModules.flatMap((module) => getLegacyPermissions(role, module))
+  const derivedPermissions = legacyModules.flatMap(module => getLegacyPermissions(role, module))
 
   return dedupe([...explicitPermissions, ...derivedPermissions])
 }
@@ -148,13 +186,10 @@ export function resolveAllowedModules(role: UserRole, grants?: readonly string[]
 
   const normalizedGrants = Array.isArray(grants) ? grants : []
   const explicitModules = resolvePermissions(role, normalizedGrants)
-    .map((permission) => permission.split('.')[0])
+    .map(permission => permission.split('.')[0])
     .filter(isCrmModuleGrant)
 
-  return dedupe([
-    ...normalizedGrants.filter(isCrmModuleGrant),
-    ...explicitModules,
-  ])
+  return dedupe([...normalizedGrants.filter(isCrmModuleGrant), ...explicitModules])
 }
 
 export function inferUserProfile(role: UserRole, grants?: readonly string[]): UserProfile {
@@ -171,7 +206,7 @@ export function inferUserProfile(role: UserRole, grants?: readonly string[]): Us
     return 'VIEWER'
   }
 
-  return explicitPermissions.every((permission) => VIEW_ONLY_PERMISSIONS.has(permission))
+  return explicitPermissions.every(permission => VIEW_ONLY_PERMISSIONS.has(permission))
     ? 'VIEWER'
     : 'COLLABORATOR'
 }
@@ -192,7 +227,10 @@ export function hasModuleAccess(
   return resolveAllowedModules(role, grants).includes(module)
 }
 
-export function buildStoredGrantsForProfile(profile: UserProfile, modules: readonly CrmModule[]): string[] {
+export function buildStoredGrantsForProfile(
+  profile: UserProfile,
+  modules: readonly CrmModule[]
+): string[] {
   if (profile === 'ADMIN') {
     return []
   }
@@ -203,6 +241,7 @@ export function buildStoredGrantsForProfile(profile: UserProfile, modules: reado
 export interface User {
   id: string
   email: string
+  username?: string | null
   role: UserRole
   profile?: UserProfile
   permissions?: AppPermission[]
@@ -214,6 +253,7 @@ export interface User {
 export interface AuthTokenPayload {
   sub: string
   email: string
+  username?: string | null
   name?: string | null
   role: UserRole
   profile?: UserProfile

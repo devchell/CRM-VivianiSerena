@@ -16,11 +16,12 @@ import {
   XAxis,
   YAxis,
 } from 'recharts'
-import { ChevronDown, Download, FileText, Pencil, Plus, Trash2, X } from 'lucide-react'
+import { Archive, ChevronDown, Download, FileText, Pencil, Plus, X } from 'lucide-react'
 import { formatCurrency } from '@viviani/utils'
 import { toast } from 'sonner'
 import { useAuth } from '@/lib/useAuth'
 import { apiFetchJson, buildAuthHeaders, invalidateApiCache } from '@/lib/api-client'
+import { useRealtimeRefresh } from '@/lib/realtime'
 import { useFinancialColors } from '@/hooks/useFinancialColors'
 import {
   crmListBody,
@@ -63,8 +64,9 @@ const DESPESA_COLORS = [
 interface DonutItem { description: string; value: number; date: string }
 interface DonutEntry { name: string; value: number; color: string; items: DonutItem[] }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function DonutTooltip({ active, payload }: { active?: boolean; payload?: any[] }) {
+type DonutTooltipPayload = { payload: DonutEntry }
+
+function DonutTooltip({ active, payload }: { active?: boolean; payload?: DonutTooltipPayload[] }) {
   if (!active || !payload?.length) return null
   const data: DonutEntry = payload[0].payload
 
@@ -407,6 +409,8 @@ export default function FinanceiroPage() {
     setCharts(chartsResponse.data)
   }
 
+  useRealtimeRefresh(refreshFinancialData, ['financials'])
+
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
     if (!accessToken || (editing ? !canUpdateFinancial : !canCreateFinancial)) return
@@ -446,6 +450,7 @@ export default function FinanceiroPage() {
 
   async function handleDelete(transactionId: string) {
     if (!accessToken || !canDeleteFinancial) return
+    if (!window.confirm('Arquivar este lançamento? O histórico será preservado e ele deixará de aparecer nos indicadores.')) return
 
     try {
       await apiFetchJson(`/api/v1/financials/${transactionId}`, {
@@ -454,9 +459,9 @@ export default function FinanceiroPage() {
       })
       invalidateApiCache('/financials')
       await refreshFinancialData()
-      toast.success('Lançamento removido.')
+      toast.success('Lançamento arquivado.')
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Erro ao remover lançamento.')
+      toast.error(error instanceof Error ? error.message : 'Erro ao arquivar lançamento.')
     }
   }
 
@@ -479,7 +484,7 @@ export default function FinanceiroPage() {
     anchor.href = url
     anchor.download = `financeiro-${new Date().toISOString().slice(0, 10)}.csv`
     anchor.click()
-    URL.revokeObjectURL(url)
+    window.setTimeout(() => URL.revokeObjectURL(url), 1000)
   }
 
   async function handleExportPdf() {
@@ -523,7 +528,7 @@ export default function FinanceiroPage() {
     { label: 'Receita', value: summary?.income ?? 0, color: colors.income.text, background: colors.income.bg },
     { label: 'Despesas', value: summary?.expenses ?? 0, color: colors.expense.text, background: colors.expense.bg },
     { label: 'Lucro', value: summary?.profit ?? 0, color: (summary?.profit ?? 0) >= 0 ? colors.profit.text : colors.expense.text, background: (summary?.profit ?? 0) >= 0 ? colors.profit.bg : colors.expense.bg },
-    { label: 'Ticket médio', value: summary?.averageTicket ?? 0, color: '#2563EB', background: 'rgba(37,99,235,0.08)' },
+    { label: 'Ticket médio', value: summary?.averageTicket ?? 0, color: 'var(--fin-neutral-text)', background: 'var(--fin-neutral-bg)' },
   ]
 
   return (
@@ -539,7 +544,7 @@ export default function FinanceiroPage() {
             <FileText size={14} />
             PDF
           </button>
-          <button onClick={() => openCreateModal('income')} disabled={!canCreateFinancial} className="flex items-center gap-2 rounded bg-blue-600 px-5 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed">
+          <button onClick={() => openCreateModal('income')} disabled={!canCreateFinancial} className="flex items-center gap-2 rounded bg-blue-600 px-5 py-2 text-sm font-medium text-[var(--primary-foreground)] shadow-sm transition-colors hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed">
             <Plus size={16} />
             Novo lançamento
           </button>
@@ -572,9 +577,9 @@ export default function FinanceiroPage() {
         ) : (
           <ResponsiveContainer width="100%" height={240}>
             <BarChart data={charts?.monthly ?? []}>
-              <CartesianGrid strokeDasharray="3 3" stroke="rgba(120,120,120,0.1)" />
-              <XAxis dataKey="label" tick={{ fontSize: 11, fill: '#787878' }} axisLine={false} tickLine={false} />
-              <YAxis tick={{ fontSize: 11, fill: '#787878' }} axisLine={false} tickLine={false} tickFormatter={(value) => `${(value / 1000).toFixed(0)}k`} />
+              <CartesianGrid strokeDasharray="3 3" stroke="var(--chart-grid)" />
+              <XAxis dataKey="label" tick={{ fontSize: 11, fill: 'var(--chart-axis)' }} axisLine={false} tickLine={false} />
+              <YAxis tick={{ fontSize: 11, fill: 'var(--chart-axis)' }} axisLine={false} tickLine={false} tickFormatter={(value) => `${(value / 1000).toFixed(0)}k`} />
               <Tooltip formatter={(value: number, name: string) => [formatCurrency(value), name === 'income' ? 'Receita' : 'Despesas']} />
               <Legend formatter={(value) => (value === 'income' ? 'Receita' : 'Despesas')} />
               <Bar dataKey="income" fill={colors.area.income} radius={[4, 4, 0, 0]} />
@@ -685,8 +690,8 @@ export default function FinanceiroPage() {
                         <button onClick={() => openEditModal(transaction)} disabled={!canUpdateFinancial} className="rounded-lg p-1.5 text-slate-400 transition-colors hover:bg-blue-50 hover:text-blue-600 disabled:opacity-40 disabled:cursor-not-allowed">
                           <Pencil size={13} />
                         </button>
-                        <button onClick={() => void handleDelete(transaction.id)} disabled={!canDeleteFinancial} className="rounded-lg p-1.5 text-slate-400 transition-colors hover:bg-red-500/10 hover:text-red-500 disabled:opacity-40 disabled:cursor-not-allowed">
-                          <Trash2 size={13} />
+                        <button onClick={() => void handleDelete(transaction.id)} disabled={!canDeleteFinancial} title="Arquivar lançamento" aria-label="Arquivar lançamento" className="rounded-lg p-1.5 text-slate-400 transition-colors hover:bg-red-500/10 hover:text-red-500 disabled:opacity-40 disabled:cursor-not-allowed">
+                          <Archive size={13} />
                         </button>
                       </div>
                     </td>
@@ -837,7 +842,11 @@ export default function FinanceiroPage() {
                 <button type="button" onClick={() => setShowModal(false)} className="flex-1 rounded-lg border border-slate-200 px-4 py-2 text-sm text-slate-400 transition-colors hover:bg-slate-100 dark:border-slate-700 dark:hover:bg-slate-800">
                   Cancelar
                 </button>
-                <button type="submit" disabled={submitting} className="flex-1 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700 disabled:opacity-60">
+                <button
+                  type="submit"
+                  disabled={submitting || !form.amount.trim() || !form.description.trim() || !form.date}
+                  className="flex-1 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-[var(--primary-foreground)] transition-colors hover:bg-blue-700 disabled:opacity-60"
+                >
                   {submitting ? 'Salvando...' : editing ? 'Atualizar' : 'Salvar'}
                 </button>
               </div>

@@ -1,0 +1,16 @@
+.git
+.github
+.vercel
+.next
+dist
+node_modules
+coverage
+logs
+uploads
+*.log
+*.tar.gz
+.next-*
+.env
+.env.*
+!.env.example
+deploy/vps/.env

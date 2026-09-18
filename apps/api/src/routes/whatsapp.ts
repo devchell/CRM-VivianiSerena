@@ -1,5 +1,5 @@
 import { Router } from 'express'
-import { ingestWhatsAppWebhook, verifyWhatsAppWebhookChallenge, verifyWhatsAppWebhookSignature } from '../infrastructure/whatsapp'
+import { ingestWhatsAppWebhook, isWhatsAppWebhookConfigured, verifyWhatsAppWebhookChallenge, verifyWhatsAppWebhookSignature } from '../infrastructure/whatsapp'
 
 export const whatsappRouter: Router = Router()
 
@@ -23,7 +23,12 @@ whatsappRouter.post('/webhook', async (req, res, next) => {
       : undefined
     const rawBody = (req as { rawBody?: Buffer }).rawBody
 
-    if (signature && rawBody && !verifyWhatsAppWebhookSignature(signature, rawBody)) {
+    if (!isWhatsAppWebhookConfigured()) {
+      res.status(503).json({ success: false, error: 'WhatsApp webhook is not configured' })
+      return
+    }
+
+    if (!signature || !rawBody || !verifyWhatsAppWebhookSignature(signature, rawBody)) {
       res.status(403).json({ success: false, error: 'Invalid WhatsApp webhook signature' })
       return
     }

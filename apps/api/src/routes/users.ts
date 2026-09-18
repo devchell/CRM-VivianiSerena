@@ -11,22 +11,26 @@ import {
   inferUserProfile,
   resolveAllowedModules,
   resolvePermissions,
+  normalizeUserRole,
+  USER_ROLE_INPUTS,
   type AppPermission,
   type CrmModule,
   type UserProfile,
   type UserRole,
+  type UserRoleInput,
 } from '@viviani/types'
 import { prisma } from '../lib/prisma'
 import { apiEnv } from '../lib/env'
 import { authenticate, authorizePermission } from '../middleware/authenticate'
 import { AppError } from '../middleware/errorHandler'
 import { emailService } from '../infrastructure/email'
+import { emailRateLimiter } from '../middleware/rateLimiter'
 
 export const usersRouter: Router = Router()
 
 const MODULES = [...CRM_MODULES] as [CrmModule, ...CrmModule[]]
 const PERMISSIONS = [...APP_PERMISSIONS] as [AppPermission, ...AppPermission[]]
-const LEGACY_ROLES = ['ADMIN', 'MANAGER', 'VIEWER'] as const
+const ROLE_INPUTS = [...USER_ROLE_INPUTS] as [UserRoleInput, ...UserRoleInput[]]
 const PROFILES = [...USER_PROFILES] as [UserProfile, ...UserProfile[]]
 
 function generateTempPassword(): string {
@@ -41,7 +45,7 @@ const createUserSchema = z.object({
   name: z.string().min(2),
   email: z.string().email(),
   phone: z.string().optional(),
-  role: z.enum(LEGACY_ROLES).optional(),
+  role: z.enum(ROLE_INPUTS).optional(),
   profile: z.enum(PROFILES).optional(),
   allowedModules: z.array(z.enum(MODULES)).optional(),
   permissions: z.array(z.enum(PERMISSIONS)).optional(),
@@ -59,14 +63,16 @@ const updateUserSchema = z.object({
   name: z.string().min(2).optional(),
   email: z.string().email().optional(),
   phone: z.string().optional(),
-  role: z.enum(LEGACY_ROLES).optional(),
+  role: z.enum(ROLE_INPUTS).optional(),
   profile: z.enum(PROFILES).optional(),
   allowedModules: z.array(z.enum(MODULES)).optional(),
   permissions: z.array(z.enum(PERMISSIONS)).optional(),
 })
 
 const resetTempPasswordSchema = z.object({
-  sendEmail: z.boolean().optional().default(false),
+  // A temporary password is delivered only through the configured email channel;
+  // it must never be returned in an API response or left without a delivery path.
+  sendEmail: z.literal(true).default(true),
 })
 
 function unique<T extends string>(values: readonly T[]): T[] {
@@ -110,7 +116,7 @@ function serializeUser(user: {
 
 function resolveAccessAssignment(
   input: {
-    role?: UserRole
+    role?: UserRoleInput
     profile?: UserProfile
     allowedModules?: CrmModule[]
     permissions?: AppPermission[]
@@ -130,15 +136,17 @@ function resolveAccessAssignment(
   }
 
   if (input.role) {
-    if (input.role === 'ADMIN') {
+    const role = normalizeUserRole(input.role)
+
+    if (role === 'ADMIN') {
       return { role: 'ADMIN' as const, storedGrants: [], profile: 'ADMIN' as const }
     }
 
     const storedGrants = explicitPermissions ?? selectedModules
     return {
-      role: input.role,
+      role,
       storedGrants,
-      profile: inferUserProfile(input.role, storedGrants),
+      profile: inferUserProfile(role, storedGrants),
     }
   }
 
@@ -256,14 +264,12 @@ async function rotateTemporaryPassword(
 
     return {
       serialized: inviteResult.serialized,
-      tempPassword,
       inviteEmailSent,
     }
   }
 
   return {
     serialized: serializeUser(updated),
-    tempPassword,
     inviteEmailSent,
   }
 }
@@ -292,7 +298,7 @@ usersRouter.get('/', authenticate, authorizePermission('users.manage'), async (_
   }
 })
 
-usersRouter.post('/', authenticate, authorizePermission('users.manage'), async (req, res, next) => {
+usersRouter.post('/', emailRateLimiter, authenticate, authorizePermission('users.manage'), async (req, res, next) => {
   try {
     const body = createUserSchema.parse(req.body)
     const exists = await prisma.user.findUnique({ where: { email: body.email } })
@@ -432,7 +438,7 @@ usersRouter.patch('/:id', authenticate, authorizePermission('users.manage'), asy
   }
 })
 
-usersRouter.post('/:id/resend-invite', authenticate, authorizePermission('users.manage'), async (req, res, next) => {
+usersRouter.post('/:id/resend-invite', emailRateLimiter, authenticate, authorizePermission('users.manage'), async (req, res, next) => {
   try {
     const userId = String(req.params.id)
     const existing = await prisma.user.findUnique({
@@ -466,7 +472,7 @@ usersRouter.post('/:id/resend-invite', authenticate, authorizePermission('users.
   }
 })
 
-usersRouter.post('/:id/reset-temp-password', authenticate, authorizePermission('users.manage'), async (req, res, next) => {
+usersRouter.post('/:id/reset-temp-password', emailRateLimiter, authenticate, authorizePermission('users.manage'), async (req, res, next) => {
   try {
     const userId = String(req.params.id)
     const body = resetTempPasswordSchema.parse(req.body ?? {})
@@ -481,7 +487,6 @@ usersRouter.post('/:id/reset-temp-password', authenticate, authorizePermission('
         : 'Senha temporaria redefinida com sucesso',
       data: result.serialized,
       meta: {
-        tempPassword: result.tempPassword,
         ...(result.inviteEmailSent !== undefined ? { inviteEmailSent: result.inviteEmailSent } : {}),
       },
     })

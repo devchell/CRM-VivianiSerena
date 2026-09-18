@@ -1,4 +1,5 @@
 import jwt from 'jsonwebtoken'
+import { normalizeUserRole } from '@viviani/types'
 import type { AppPermission, AuthTokenPayload, UserProfile, UserRole } from '@viviani/types'
 import { apiEnv } from './env'
 
@@ -43,11 +44,16 @@ export function signRefreshToken(sub: string): string {
 }
 
 export function verifyAccessToken(token: string): AuthTokenPayload {
-  return jwt.verify(token, PUBLIC_KEY, {
+  const payload = jwt.verify(token, PUBLIC_KEY, {
     algorithms: ['RS256'],
     issuer: 'viviani-api',
     audience: 'viviani-client',
-  }) as AuthTokenPayload
+  }) as AuthTokenPayload & { role?: unknown }
+
+  return {
+    ...payload,
+    role: normalizeUserRole(typeof payload.role === 'string' ? payload.role : undefined),
+  }
 }
 
 export function verifyRefreshToken(token: string): { sub: string } {

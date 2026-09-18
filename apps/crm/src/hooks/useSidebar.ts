@@ -17,8 +17,9 @@ function writeStorage(key: string, value: string): void {
   if (typeof window === 'undefined') return
   try {
     localStorage.setItem(key, value)
-  } catch {
-    // localStorage cheio, bloqueado ou indisponível — ignora silenciosamente
+  } catch (error) {
+    // A preferência é opcional, mas a falha fica observável para diagnóstico.
+    console.warn('[sidebar] Não foi possível persistir a preferência local.', error)
   }
 }
 

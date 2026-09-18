@@ -1,0 +1,16 @@
+[Unit]
+Description=VivianiCRM PostgreSQL and uploads backup
+Requires=docker.service
+After=docker.service
+ConditionPathExists=/opt/viviani-crm/deploy/vps/.env
+ConditionPathExists=/mnt/viviani-backups
+
+[Service]
+Type=oneshot
+User=root
+ExecStart=/bin/sh /opt/viviani-crm/deploy/vps/backup.sh
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+ProtectHome=true
+ReadWritePaths=/opt/viviani-crm/backups /mnt/viviani-backups

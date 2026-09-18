@@ -10,7 +10,7 @@ let authorizePermission: AuthModule['authorizePermission']
 
 beforeAll(async () => {
   process.env.DATABASE_URL = process.env.DATABASE_URL ?? 'postgresql://user:pass@db.example.com:5432/app?schema=public'
-  process.env.REDIS_URL = process.env.REDIS_URL ?? 'redis://redis.example.com:6379'
+  process.env.REDIS_URL = process.env.REDIS_URL ?? 'redis://:test-password@localhost:6379'
   process.env.API_BASE_URL = process.env.API_BASE_URL ?? 'https://api.example.com'
   process.env.CRM_URL = process.env.CRM_URL ?? 'https://crm.example.com'
   process.env.CORS_ORIGIN = process.env.CORS_ORIGIN ?? 'https://crm.example.com'

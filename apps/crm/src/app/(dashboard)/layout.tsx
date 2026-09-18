@@ -9,6 +9,7 @@ import {
   hasModuleAccess,
   hasPermission,
   inferUserProfile,
+  normalizeUserRole,
   resolveAllowedModules,
   type AppPermission,
   type CrmModule,
@@ -17,10 +18,14 @@ import {
 import Sidebar from '@/components/layout/Sidebar'
 import { Header } from '@/components/layout/Header'
 import { DashboardProvider } from '@/context/DashboardContext'
+import { useSidebar } from '@/hooks/useSidebar'
+import { API_BASE_URL, invalidateApiCache } from '@/lib/api-client'
+import { REALTIME_EVENT, parseRealtimePayload, type RealtimeDataEvent } from '@/lib/realtime'
 
 const MODULE_ROUTE_MATCHERS = [
   { prefix: '/dashboard', module: 'dashboard' },
   { prefix: '/leads', module: 'leads' },
+  { prefix: '/clientes', module: 'leads' },
   { prefix: '/agenda', module: 'agenda' },
   { prefix: '/financeiro', module: 'financeiro' },
   { prefix: '/editar-site', module: 'editar-site' },
@@ -31,9 +36,7 @@ const MODULE_ROUTE_MATCHERS = [
 ] as const
 
 function toKnownRole(value: string | undefined): UserRole {
-  return value === 'ADMIN' || value === 'MANAGER' || value === 'VIEWER'
-    ? value
-    : 'VIEWER'
+  return normalizeUserRole(value)
 }
 
 function resolveAuthorizedFallback(role: UserRole, grants: string[]): string {
@@ -87,6 +90,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const isAdmin = role === 'ADMIN'
   const hasRouteAccess = canAccessPath(pathname ?? '/', role, grants)
   const fallbackRoute = resolveAuthorizedFallback(role, grants)
+  const sidebar = useSidebar()
 
   useEffect(() => {
     if (status === 'unauthenticated') router.push('/login')
@@ -99,6 +103,92 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       router.replace(fallbackRoute)
     }
   }, [fallbackRoute, hasRouteAccess, router, status])
+
+  useEffect(() => {
+    if (!accessToken) return
+
+    let cancelled = false
+    let socket: import('socket.io-client').Socket | null = null
+
+    const broadcast = (event: RealtimeDataEvent) => {
+      invalidateApiCache()
+      window.dispatchEvent(new CustomEvent<RealtimeDataEvent>(REALTIME_EVENT, { detail: event }))
+    }
+
+    const connect = async () => {
+      const { io } = await import('socket.io-client')
+      if (cancelled) return
+
+      socket = io(API_BASE_URL, {
+        auth: { token: accessToken },
+        transports: ['websocket', 'polling'],
+        withCredentials: true,
+        reconnection: true,
+        reconnectionAttempts: Infinity,
+        reconnectionDelay: 1000,
+        reconnectionDelayMax: 10_000,
+      })
+
+      socket.on('connect', () => socket?.emit('join:dashboard'))
+      socket.on('data_changed', (payload: unknown) => {
+        const event = parseRealtimePayload(payload)
+        if (event) broadcast(event)
+      })
+    }
+
+    void connect().catch((error: unknown) => {
+      console.warn('[realtime] Não foi possível conectar ao canal em tempo real.', error)
+    })
+
+    const fallbackTimer = window.setInterval(() => {
+      if (!socket?.connected) {
+        broadcast({ resource: '*', method: 'POLL', at: new Date().toISOString() })
+      }
+    }, 30_000)
+
+    const reconnectWhenOnline = () => socket?.connect()
+    window.addEventListener('online', reconnectWhenOnline)
+
+    return () => {
+      cancelled = true
+      window.clearInterval(fallbackTimer)
+      window.removeEventListener('online', reconnectWhenOnline)
+      socket?.disconnect()
+    }
+  }, [accessToken])
+
+  useEffect(() => {
+    const timers = new WeakMap<HTMLElement, number>()
+
+    const revealScrollbar = (element: HTMLElement) => {
+      element.classList.add('is-scrolling')
+      const previousTimer = timers.get(element)
+      if (previousTimer !== undefined) window.clearTimeout(previousTimer)
+
+      const timer = window.setTimeout(() => {
+        element.classList.remove('is-scrolling')
+        timers.delete(element)
+      }, 700)
+
+      timers.set(element, timer)
+    }
+
+    const handleElementScroll = (event: Event) => {
+      const target = event.target
+      revealScrollbar(target instanceof HTMLElement ? target : document.documentElement)
+    }
+
+    const handleWindowScroll = () => revealScrollbar(document.documentElement)
+
+    document.addEventListener('scroll', handleElementScroll, { capture: true, passive: true })
+    window.addEventListener('scroll', handleWindowScroll, { passive: true })
+
+    return () => {
+      document.removeEventListener('scroll', handleElementScroll, true)
+      window.removeEventListener('scroll', handleWindowScroll)
+      document.documentElement.classList.remove('is-scrolling')
+    }
+  }, [])
 
   if (status === 'loading') {
     return (
@@ -138,11 +228,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   return (
     <DashboardProvider value={contextValue}>
-      <div className="flex h-screen overflow-hidden bg-slate-100 dark:bg-slate-950">
-        <Sidebar />
+      <div className="crm-panel flex h-screen min-h-0 overflow-hidden bg-slate-100 dark:bg-slate-950">
+        <Sidebar {...sidebar} />
         <div className="flex flex-col flex-1 overflow-hidden min-w-0">
-          <Header />
-          <main className="flex-1 overflow-y-auto p-6 relative">
+          <Header onMobileMenuClick={sidebar.toggleMobile} />
+          <main className="relative min-h-0 flex-1 overflow-y-auto p-4 sm:p-6">
             {hasRouteAccess ? (
               <motion.div
                 key={pathname}

@@ -6,6 +6,8 @@
 > **ARCHITECTURE:** /docs/ARCHITECTURE.md  
 > **Status:** aprovado
 
+> **Nota de auditoria vigente — 2026-08-31:** este documento possui checklists históricos de HTTPS, RLS, WAF e backups gerenciados. Eles não são evidência atual. O ambiente ativo usa HTTP por IP, rede Docker privada para banco/Redis, sem RLS validada e sem backup externo automatizado; consultar `.Codex/GAP-CHECK.md` antes de qualquer conclusão de produção.
+
 ---
 
 ## 1. THREAT MODEL (STRIDE)
@@ -105,6 +107,7 @@
 | Endpoint | Entrada | Validação | Risco |
 |---|---|---|---|
 | **POST /api/v1/financials** | amount, category, date | schema, auth, RLS | manipulação de dados |
+| **PATCH /api/v1/financials/:id** | lançamento | auth, RLS, substituição versionada | sobrescrita do histórico |
 | **DELETE /api/v1/leads/:id** | lead_id | auth, RLS, soft-delete | deleção não-autorizada |
 | **PATCH /api/v1/appointments/:id** | data do evento | auth, RLS, Google sync | alteração não-autorizada |
 | **POST /api/v1/privacy/export** | email | auth, RLS | vazamento de dados |
@@ -299,7 +302,7 @@
 |---|---|---|
 | **Acesso** | `GET /api/v1/privacy/export?email=` | ZIP com dados pessoais |
 | **Correção** | `PATCH /api/v1/leads/:id` | Usuário altera via CRM |
-| **Deleção** | `DELETE /api/v1/leads/:id` | Soft-delete, sem recuperação |
+| **Deleção** | `DELETE /api/v1/leads/:id` | Arquivamento por `deleted_at`; linha preservada para auditoria |
 | **Portabilidade** | `GET /api/v1/privacy/export?email=` | JSON estruturado em ZIP |
 | **Oposição** | `DELETE /api/v1/leads/:id` ou unsubscribe | Soft-delete, log de deleção |
 

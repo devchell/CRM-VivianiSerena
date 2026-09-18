@@ -6,36 +6,40 @@ import { getCache, setCache, CACHE_TTL } from '../lib/redis'
 import { anonymizeIp } from '../middleware/security'
 import { getAnalyticsMetrics } from '../domain/metrics/service'
 import { invalidateOperationalMetricCaches } from '../domain/metrics/cache'
+import { createAnalyticsSessionProof, isValidAnalyticsSession } from '../lib/analyticsSession'
 
 export const analyticsRouter: Router = Router()
 
 const pageviewSchema = z.object({
-  page: z.string(),
-  referrer: z.string().optional(),
-  utmSource: z.string().optional(),
-  utmMedium: z.string().optional(),
-  utmCampaign: z.string().optional(),
-  sessionId: z.string().optional(),
-  duration: z.number().optional(),
+  page: z.string().trim().min(1).max(500),
+  referrer: z.string().max(2048).optional(),
+  utmSource: z.string().max(100).optional(),
+  utmMedium: z.string().max(100).optional(),
+  utmCampaign: z.string().max(200).optional(),
+  sessionId: z.string().max(64).optional(),
+  sessionProof: z.string().length(64).optional(),
+  duration: z.number().finite().min(0).max(86_400).optional(),
 })
 
 const eventSchema = z.object({
-  name: z.string(),
-  category: z.string(),
-  label: z.string().optional(),
-  value: z.number().optional(),
-  page: z.string().optional(),
-  sessionId: z.string().optional(),
+  name: z.string().trim().min(1).max(100),
+  category: z.string().trim().min(1).max(100),
+  label: z.string().max(200).optional(),
+  value: z.number().finite().min(-1_000_000).max(1_000_000).optional(),
+  page: z.string().max(500).optional(),
+  sessionId: z.string().max(64).optional(),
+  sessionProof: z.string().length(64).optional(),
 })
 
 const vitalsSchema = z.object({
-  name: z.string(),
-  value: z.number(),
+  name: z.string().trim().min(1).max(50),
+  value: z.number().finite().min(0).max(1_000_000),
   rating: z.enum(['good', 'needs-improvement', 'poor']).optional(),
-  page: z.string().optional(),
-  sessionId: z.string().optional(),
-  id: z.string().optional(),
-  navigationType: z.string().optional(),
+  page: z.string().max(500).optional(),
+  sessionId: z.string().max(64).optional(),
+  sessionProof: z.string().length(64).optional(),
+  id: z.string().max(100).optional(),
+  navigationType: z.string().max(50).optional(),
 })
 
 analyticsRouter.post('/pageview', async (req, res, next) => {
@@ -43,7 +47,7 @@ analyticsRouter.post('/pageview', async (req, res, next) => {
     const data = pageviewSchema.parse(req.body)
     const ip = anonymizeIp(req.ip ?? '0.0.0.0')
 
-    if (data.sessionId) {
+    if (isValidAnalyticsSession(data.sessionId, data.sessionProof)) {
       const existing = await prisma.session.findUnique({
         where: { id: data.sessionId },
       })
@@ -64,7 +68,7 @@ analyticsRouter.post('/pageview', async (req, res, next) => {
         })
 
         await invalidateOperationalMetricCaches()
-        res.json({ success: true, data: { sessionId: data.sessionId } })
+        res.json({ success: true, data: { sessionId: data.sessionId, sessionProof: createAnalyticsSessionProof(data.sessionId) } })
         return
       }
     }
@@ -80,7 +84,7 @@ analyticsRouter.post('/pageview', async (req, res, next) => {
     })
 
     await invalidateOperationalMetricCaches()
-    res.json({ success: true, data: { sessionId: session.id } })
+    res.json({ success: true, data: { sessionId: session.id, sessionProof: createAnalyticsSessionProof(session.id) } })
   } catch (error) {
     next(error)
   }
@@ -89,7 +93,7 @@ analyticsRouter.post('/pageview', async (req, res, next) => {
 analyticsRouter.post('/event', async (req, res, next) => {
   try {
     const data = eventSchema.parse(req.body)
-    const session = data.sessionId
+    const session = isValidAnalyticsSession(data.sessionId, data.sessionProof)
       ? await prisma.session.findUnique({ where: { id: data.sessionId }, select: { id: true } })
       : null
 
@@ -121,7 +125,7 @@ analyticsRouter.post('/event', async (req, res, next) => {
 analyticsRouter.post('/vitals', async (req, res, next) => {
   try {
     const data = vitalsSchema.parse(req.body)
-    const session = data.sessionId
+    const session = isValidAnalyticsSession(data.sessionId, data.sessionProof)
       ? await prisma.session.findUnique({ where: { id: data.sessionId }, select: { id: true } })
       : null
 

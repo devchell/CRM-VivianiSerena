@@ -26,7 +26,6 @@ export const CACHE_KEYS = {
 export const UPLOAD = {
   MAX_SIZE: parseInt(process.env.MAX_FILE_SIZE || '10485760', 10),
   ALLOWED_TYPES: (process.env.ALLOWED_MIME_TYPES || 'image/jpeg,image/png,image/webp').split(','),
-  DIR: process.env.UPLOAD_DIR || './uploads',
   THUMB_WIDTH: 400,
   FULL_WIDTH: 1200,
   BLUR_SIZE: 8,

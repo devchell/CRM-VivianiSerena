@@ -34,20 +34,10 @@ export function RevenueChart({ data, loading = false }: RevenueChartProps) {
       ) : (
         <ResponsiveContainer width="100%" height={220}>
           <AreaChart data={data} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
-            <defs>
-              <linearGradient id="dashboard-income" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="var(--fin-area-income)" stopOpacity={0.28} />
-                <stop offset="95%" stopColor="var(--fin-area-income)" stopOpacity={0} />
-              </linearGradient>
-              <linearGradient id="dashboard-expenses" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="var(--fin-area-expense)" stopOpacity={0.22} />
-                <stop offset="95%" stopColor="var(--fin-area-expense)" stopOpacity={0} />
-              </linearGradient>
-            </defs>
-            <CartesianGrid strokeDasharray="3 3" stroke="rgba(120,120,120,0.15)" />
-            <XAxis dataKey="label" tick={{ fontSize: 12, fill: '#787878' }} axisLine={false} tickLine={false} />
+            <CartesianGrid strokeDasharray="3 3" stroke="var(--chart-grid)" />
+            <XAxis dataKey="label" tick={{ fontSize: 12, fill: 'var(--chart-axis)' }} axisLine={false} tickLine={false} />
             <YAxis
-              tick={{ fontSize: 12, fill: '#787878' }}
+              tick={{ fontSize: 12, fill: 'var(--chart-axis)' }}
               axisLine={false}
               tickLine={false}
               tickFormatter={(value) => `R$${(value / 1000).toFixed(0)}k`}
@@ -58,15 +48,15 @@ export function RevenueChart({ data, loading = false }: RevenueChartProps) {
                 name === 'income' ? 'Receita' : 'Despesas',
               ]}
               contentStyle={{
-                background: 'var(--tooltip-bg, #fff)',
-                border: '1px solid rgba(201,150,122,0.3)',
+                background: 'var(--tooltip-bg)',
+                border: '1px solid var(--chart-tooltip-border)',
                 borderRadius: 8,
                 fontSize: 12,
               }}
             />
             <Legend formatter={(value) => (value === 'income' ? 'Receita' : 'Despesas')} wrapperStyle={{ fontSize: 12 }} />
-            <Area type="monotone" dataKey="income" stroke="var(--fin-area-income)" strokeWidth={2} fill="url(#dashboard-income)" dot={false} />
-            <Area type="monotone" dataKey="expenses" stroke="var(--fin-area-expense)" strokeWidth={2} fill="url(#dashboard-expenses)" dot={false} />
+            <Area type="monotone" dataKey="income" stroke="var(--success)" strokeWidth={2} fill="var(--success-bg)" dot={false} />
+            <Area type="monotone" dataKey="expenses" stroke="var(--destructive)" strokeWidth={2} fill="var(--warning-bg)" dot={false} />
           </AreaChart>
         </ResponsiveContainer>
       )}

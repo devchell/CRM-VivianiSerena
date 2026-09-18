@@ -1,192 +1,151 @@
-# AGENT_LOG — VivianiCRM
+# AGENT_LOG - VivianiCRM
 
-> **Cronograma**: 2026-03-19 → 2026-04-04  
-> **Agentes**: Claude (arquiteto)  
-> **Objetivo**: rastrear evolução e estado do projeto
+> **Cronograma:** 2026-03-19 -> 2026-04-04
+> **Objetivo:** rastrear alteracoes que impactam continuidade tecnica
 
 ---
 
-## Sessão: 2026-04-04 — Consolidação de Documentação Obrigatória
+## Sessao: 2026-04-04 - Saneamento de Infra Recriada
 
-**Claude (Arquiteto)**
-
-### Objetivo
-Consolidar estado do projeto VivianiCRM em documentação executável conforme CLAUDE.md (PRD, ARCHITECTURE, SECURITY, DECISIONS, SYSTEM_STATE, AGENT_LOG, CONTEXT).
-
-### Achados
-- Projeto está em homolog validado desde 2026-03-20
-- 21 docs de auditoria já existem (detalhados, específicos)
-- Documentação faltava consolidação em blueprint obrigatório
-- Stack: Next.js + Express + Prisma + Supabase + Upstash (cloud-native)
-
-### Ações Tomadas
-1. **PRD.md** — 202 linhas
-   - TL;DR: CRM B2B para agência (Viviani Serena)
-   - Módulos: leads, agenda, financeiro, CMS, colaboradores, dashboard, segurança
-   - Requisitos funcionais detalhados com [DEFINIDO/ASSUMIDO]
-   - Integrações: Google Calendar, Google Business, WhatsApp, S3, SMTP
-   - LGPD: consentimento obrigatório, export, soft-delete
-   - Timeline: MVP implementado, produção ⏳
-
-2. **ARCHITECTURE.md** — 287 linhas
-   - Tipo: Frontend (Vercel) + Backend (Render) separado
-   - Monorepo: apps/api, apps/crm, apps/landing + packages/types, utils, ui
-   - Stack: Next.js 14, Express, Prisma, Supabase, Upstash, Shadcn/ui
-   - Estrutura: domain-driven (domain/, routes/, infrastructure/, middleware/)
-   - RLS em Postgres, JWT em cookie HTTP-only
-   - Ambientes: dev, staging, prod (segregados)
-   - Observabilidade: logs JSON estruturados, alertas críticos
-
-3. **SECURITY.md** — 318 linhas
-   - Threat model STRIDE: spoofing, tampering, repudiation, information disclosure, DoS, elevation
-   - Superfícies de ataque: leads públicas, auth, integrações Google/WhatsApp
-   - OWASP checklist: A01-A10 (access control, cryptography, injection, design, auth, data exposure, identification, integrity, logging, SSRF)
-   - Checklist implementado: auth, authz, dados, API, headers, cookies, logs, secrets, infraestrutura
-   - LGPD: consentimento, export, deleção, retenção 3 anos
-   - Risco residual: Google OAuth downtime (fallback local), breach de banco (mitigado bcrypt/TTL)
-
-4. **DECISIONS.md** — 264 linhas
-   - D1-D13: Decisões arquiteturais (monorepo, Supabase, Upstash, Vercel, Render, NextAuth, Prisma, Shadcn, Google OAuth, WhatsApp API, single-tenant, RLS)
-   - D14-D17: Operacionais (GitHub Actions, staging/prod branches, GitHub Secrets, logs JSON)
-   - D18-D21: Dados (soft-delete leads, financeiros imutáveis, versionamento CMS, consent_logs separada)
-   - D22-D24: Segurança (JWT em cookie HTTP-only, 2FA admin obrigatório, rate limit por IP)
-   - Trade-offs aceitos: Google opcional, single-tenant, WebSocket em Render only, RLS complexa
-
-5. **SYSTEM_STATE.md** — 228 linhas
-   - Estado atual (2026-04-04): build verde, CI/CD funcionando, staging validado
-   - Módulos: Leads ✅, Agenda ✅, Financeiro ✅, CMS ✅, Colaboradores ✅, Dashboard ✅, Segurança ✅
-   - Integrações: Google Calendar ✅, Google Business ✅, WhatsApp ✅, SMTP ✅, S3 ✅
-   - Infraestrutura: Vercel (CRM+Landing), Render (API), Supabase (Postgres), Upstash (Redis)
-   - Validação remota: health checks ✅, fluxos E2E ✅, homolog pronto
-   - Pendências: produção (secrets, DNS, Google OAuth prod)
-   - Risco residual: Google indisponível (fallback), banco offline (backup)
-   - Métricas: latência P95 <1.2s, volume testado 10+ leads
+### Acao objetiva
+- verificar o estado real apos reset de Vercel e Render
+- remover ruido legado de bootstrap
+- sincronizar `pnpm-lock.yaml` com o estado atual do codigo
 
 ### Impacto
-- ✅ **Documentação executável**: 7 docs obrigatórios concluídos
-- ✅ **Blueprint completo**: PRD→ARCHITECTURE→SECURITY→DECISIONS
-- ✅ **Estado rastreável**: SYSTEM_STATE consolidado
-- ✅ **Pronto para produção**: pendências mapeadas, não-bloqueantes
-- ✅ **Conformidade CLAUDE.md**: estrutura base obrigatória implementada
+- projetos Vercel atuais confirmados: `crm` e `landing`
+- identificado vinculo local legado com `crm-hml`
+- corrigidos aliases `landing-viviani.vercel.app` e `crm-viviani.vercel.app`
+- landing publicada e validada por URL compartilhavel temporaria
+- confirmado que a API nao responde nas URLs Render conhecidas
+- Supabase validado com projeto ativo e consulta remota simples
+- Upstash validado com resposta `PONG`
+- chave Render disponivel no ambiente retornou `Unauthorized` na API publica
+- atualizado `PRODUCTION_SETUP.md` para rebootstrap cloud do zero
+- atualizado `SYSTEM_STATE.md` para refletir a recriacao da infraestrutura
+- corrigido `pnpm-lock.yaml` para depender de `@supabase/supabase-js` e `@upstash/redis`, removendo ruido antigo
 
-### Próximas Ações (para usuário)
-- **Produção**: aplicar migrations (2FA), configurar secrets GitHub, fazer primeiro deploy
-- **Curto prazo**: testes E2E, observabilidade (Datadog/Sentry)
-- **Médio prazo**: integrações completas (Google Business, WhatsApp, SMS 2FA)
-
----
-
-## Sessão Anterior: 2026-03-20 — Auditoria e Validação Remota
-
-**Claude + Tim (Auditoria)**
-
-### Objetivo
-Validar estado de homolog após migração cloud-native.
-
-### Achados
-- API, CRM, landing: build verde
-- Fluxos críticos validados: leads, agenda, financeiro, Google Calendar, Google Business, WhatsApp
-- Consentimento LGPD registrado corretamente
-- 2FA implementado, obrigatório para admin
-- RLS em Postgres funcionando
-- Rate limiting ativo
-
-### Validação Remota Comprovada
-```
-✅ GET /health/live → 200
-✅ GET /health/ready → 200
-✅ GET /health/deps → banco true, redis true, email true
-✅ Login admin → 200, JWT válido
-✅ Lead criado → tabela leads + consent_logs
-✅ Lead exportado LGPD → ZIP com dados pessoais
-✅ Lead deletado → soft-delete, permanece na auditoria
-✅ Agendamento criado → tabela appointments
-✅ Google Calendar OAuth → token em Redis, refresh automático
-✅ Financeiro consolidado → gráficos em tempo real
-```
-
-### Ajustes Aplicados
-- `getAvailableSlots()`: não retorna agenda artificial se Google não conectado
-- Rotas LGPD: usavam `req.user.id`, corrigido para `req.user.sub` (Supabase Auth)
-- 2FA: colunas migradas (2FA por canal: email, SMS, ambos)
-
-### Documentação Gerada
-- 21 docs de auditoria (01_EXECUTIVE_AUDIT até 21_WHATSAPP_CHANNEL_RUNBOOK)
-- Runbooks operacionais: Google Integrations, API Traceability, WhatsApp, etc
-- Status: homolog pronto para operação; pendências não-bloqueantes para produção
+### Pendencia
+- recriar servico da API no Render
+- manter URLs compartilhaveis para a apresentacao enquanto a protecao Vercel estiver ativa
+- revalidar healthchecks e fluxos apos novo deploy
 
 ---
 
-## Sessão Anterior: 2026-02-XX — Implementação Cloud-Native
+## Sessao: 2026-04-04 - Consolidacao de Documentacao
 
-**Codex + GeekChat (Dev)**
+### Acao objetiva
+- consolidar PRD, arquitetura, seguranca, decisoes e estado do projeto
 
-### Objetivo
-Migrar de infraestrutura local para cloud-native (Vercel + Render + Supabase + Upstash).
+### Impacto
+- documentacao obrigatoria estruturada
+- stack cloud-first registrada
+- modulos e regras de seguranca documentados
 
-### Stack Implementado
-- Frontend: Next.js 14 em Vercel (CRM + Landing)
-- Backend: Express em Render (API)
-- Banco: Supabase PostgreSQL (RLS integrada)
-- Cache: Upstash Redis (serverless)
-- Auth: NextAuth + Supabase Auth
-- Integrações: Google Calendar, Google Business Profile, WhatsApp Business
-
-### Funcionalidades Entregues
-- Leads: captura pública, CRM, LGPD (export, delete)
-- Agenda: agendamentos, sincronização Google Calendar
-- Financeiro: lançamentos, consolidação mensal, gráficos
-- CMS: conteúdo público, versionamento
-- Colaboradores: perfis (admin, collaborator, viewer), 2FA, permissões por módulo
-- Dashboard: métricas consolidadas
-- Segurança: event log, checklist, IP block
-- CI/CD: GitHub Actions (lint, testes, deploy)
-
-### Build Status
-✅ API: build verde
-✅ CRM: build verde
-✅ Landing: build verde
-✅ Shared packages: tipos, utils, componentes
-
-### Código Pronto
-- Monorepo estruturado
-- Middleware de auth, rate limit, logging
-- Domain-driven API (services, routes, infrastructure)
-- Next.js App Router
-- Shadcn/ui + Tailwind
-- Prisma migrations versionadas
+### Pendencia
+- produzir deploy validado em infraestrutura ativa
 
 ---
 
-## Resumo Executivo (Alto nível)
+## Sessao: 2026-03-20 - Validacao de Homolog
 
-| Data | Fase | Status | Observação |
-|---|---|---|---|
-| 2026-02-XX | **Implementação** | ✅ completa | Stack cloud-native entregue |
-| 2026-03-20 | **Auditoria** | ✅ completa | Homolog validada, 21 docs |
-| 2026-04-04 | **Consolidação** | ✅ completa | Documentação obrigatória concluída |
-| 2026-04-XX | **Produção** | ⏳ pronto | Aguardando primeiro deploy |
+### Acao objetiva
+- validar homolog apos a migracao cloud-native
 
-### Velocidade de Delivery
-- MVP: ~3 semanas (stack + todos os módulos)
-- Auditoria: 1 semana (21 docs, validação remota)
-- Consolidação: 1 dia (7 docs obrigatórios)
+### Impacto
+- fluxos de leads, agenda e financeiro validados na epoca
+- healthchecks e integracoes confirmados naquele ambiente
 
-### Equipe
-- **Claude**: Arquiteto (decisões, documentação, blueprint)
-- **Codex/GeekChat**: Desenvolvedores (implementação, testes)
-- **Tim**: Auditoria (validação, conformidade)
-- **DevChell**: Produto/Cliente (requisitos, aprovação)
-
-### Dívida Técnica
-- Testes E2E (Playwright)
-- Observabilidade avançada (RUM, error tracking)
-- Google Business/WhatsApp integração completa
-- SMS 2FA (Twilio)
-- Relatórios avançados
+### Pendencia
+- esse estado ficou obsoleto apos o reset da infraestrutura
 
 ---
 
-## Conclusão
+## Sessao: 2026-08-31 - Deploy Docker self-hosted
 
-VivianiCRM está **pronto para produção**. Arquitetura é robusta, segura (LGPD), escalável. Documentação é completa e executável. Próximo passo: **deploy controlado em produção com monitoramento**.
+### Acoes
+- encerradas as instancias locais de apresentacao;
+- adicionados Dockerfiles para API, CRM e Landing, Compose com Nginx/PostgreSQL/Redis e env de VPS;
+- corrigidos pontos de consentimento, XSS de bio, traversal de upload, cookies HTTP de demonstracao, HSTS condicional, catches silenciosos e seed com senhas externas;
+- instalados Docker/Compose na VPS e implantado banco novo sem migracao de dados;
+- criada baseline do schema Prisma atual devido ao repositorio nao conter migration inicial.
+
+### Evidencias
+- `pnpm test`: 23/23; `pnpm lint`: 7/7; `pnpm audit`: sem vulnerabilidades conhecidas; `pnpm build`: concluido para API/CRM/Landing;
+- Compose: seis servicos healthy; health API com database/redis/uploads true;
+- HTTP externo: landing, CRM, API, privacidade, termos e manifest retornaram 200;
+- navegador: login, troca obrigatoria de senha, novo login e listagem do lead persistido confirmados.
+
+### Pendencias honestas
+- implantacao atual e de apresentacao por HTTP/IP; TLS/HSTS/cookies Secure ficam para dominio/certificado;
+- sem backup externo, alertas, RLS validada e credenciais das integracoes externas;
+- divergencias de regra de exclusao e nomenclatura de papeis ainda requerem decisao de produto.
+
+## Sessao: 2026-08-31 — Auditoria visual e fechamento de apresentação
+
+### Acoes
+- aplicado DNA visual editorial clínico na landing inteira, incluindo seções públicas que ainda carregavam estilos legados;
+- removidos efeitos e símbolos associados à linguagem genérica de IA: gradientes decorativos, blur ornamental, partículas, parallax, 3D, estrelas/Sparkles e emojis de interface;
+- aplicado bridge de tokens no CRM para telas legadas e refatorados leads, agenda, dashboard, autenticação e shell;
+- validado navegador real no CRM em 1440px e 390px, com menu mobile e modais de criação cancelados sem mutação;
+- redeploy realizado com recriação explícita de API, CRM, landing e Nginx.
+
+### Evidencias
+- `pnpm lint`: 7/7; `pnpm test`: 24/24; `pnpm build`: concluído; `pnpm audit`: sem vulnerabilidades conhecidas;
+- landing, páginas legais, manifest, CRM e healthchecks externos retornaram 200;
+- API confirmou proteção de consentimento, autenticação administrativa e validação do webhook WhatsApp;
+- landing HTML público sem `localhost`, gradiente ornamental, estrela decorativa ou depoimento artificial;
+- browser CRM sem erros nos módulos percorridos; landing por browser desta máquina bloqueada pelo cliente com `ERR_BLOCKED_BY_CLIENT`, apesar do `curl` retornar 200.
+
+### Pendencias honestas
+- credenciais e autorização de Google Calendar, SMTP e WhatsApp ainda não existem na VPS;
+- domínio/TLS, backup externo, firewall e RLS continuam fora da evidência desta apresentação;
+- senha root da VPS foi compartilhada no chat e deve ser rotacionada pelo responsável antes de qualquer uso real.
+
+## Sessão: 2026-08-31 — hardening final e redeploy validado
+
+### Ações
+- corrigido o guard de tipagem do status do Google Calendar;
+- tokens OAuth do Google passaram a ser persistidos criptografados no Redis, com leitura temporária compatível com o formato legado;
+- webhook WhatsApp passou a exigir configuração, assinatura válida e corpo bruto verificável; challenge sem token configurado não é aceito;
+- removida a simulação de SMS quando Twilio não está configurado;
+- removido o segredo de senha baseline da resposta administrativa e escapados valores de templates HTML/e-mail;
+- Nginx passou a publicar `/health/ready` e `/health/deps` encaminhando para a API, além do `/health` estático;
+- imagem Docker reconstruída e API, CRM, Landing e Nginx recriados sem tocar nos volumes de PostgreSQL/Redis.
+
+### Evidências
+- `pnpm --filter @viviani/api test`: 24/24; `pnpm test`: 24/24; `pnpm lint`: 7/7; `pnpm build`: concluído; `git diff --check`: sem erro de whitespace;
+- VPS: 6/6 containers `healthy`, incluindo PostgreSQL 16 e Redis 7; `nginx -t` aprovado;
+- HTTP externo: `/health`, `/health/ready`, `/health/deps`, páginas legais, manifests, login, API live/ready e `site-summary` retornaram 200;
+- contratos negativos externos: admin sem autenticação 401, lead sem consentimento 400, webhook sem configuração 503;
+- browser real: 10 rotas CRM em 390px sem overflow, dashboard em 1440px sem overflow, painel de integrações sem erro e console de página vazio;
+- detector de depoimento artificial revisado: “Maria Silva” está somente no placeholder do campo de nome, não em avaliação publicada.
+
+### Pendências honestas
+- apresentação ainda é HTTP por IP; domínio, TLS, firewall, backup externo e rotação da senha root continuam necessários antes de produção;
+- Google Calendar, SMTP e WhatsApp têm implementação e estados `pendente`, mas não foram ativados sem credenciais/autorização externas;
+- RLS e política formal de retenção/rollback de schema continuam não comprovadas.
+
+## Sessão final — self-hosted sem legado cloud (2026-08-31 / 2026-09-01 UTC)
+
+- Removidos do runtime os adapters Supabase/Upstash, o keep-alive Render e os artefatos de deploy Vercel/Render; storage e Redis ficaram locais ao Docker Compose.
+- Removidos `render.yaml`, workflow de deploy cloud e `.vercel`; `pnpm-lock.yaml` não contém os pacotes Supabase/Upstash.
+- Imagem final reconstruída e implantada em `/opt/viviani-crm`; seis serviços ficaram `healthy`, com Nginx validado por `nginx -t`.
+- HTTP público e contratos negativos repetidos após o redeploy: 200 nos health/rotas públicas, 401 sem autenticação, 400 sem consentimento e 503 no WhatsApp sem configuração.
+- Pacotes temporários de deploy removidos localmente e da VPS; listeners locais 3000/3001/4000 permanecem encerrados.
+
+## Sessão: 2026-09-01 — restauração da landing e upgrade sem linguagem de IA
+
+### Ações
+- Restaurada a estrutura visual original da landing após rejeição do redesign genérico: HERO em imagem inteira, headline, sublinhado, CTAs, credenciais e carrossel.
+- Mantido o parallax solicitado somente no background (`useScroll/useTransform`, deslocamento de 12%); texto e CTAs continuam normais.
+- Removidos canvas de partículas, `Sparkles`, estrelas Unicode, emojis/símbolos decorativos, FOMO padrão, depoimentos artificiais, RandomUser e hover roxo/rosa.
+- Serviços passaram a usar ícones Lucide contextuais; fallback do HERO, selo de certificação e imagem do JSON-LD passaram para assets locais.
+
+### Evidências
+- `pnpm --filter @viviani/landing lint`: passou; `pnpm --filter @viviani/landing build`: passou.
+- VPS após redeploy: API, CRM, Landing, Nginx, PostgreSQL e Redis `healthy`; landing HTTP 200; HERO local pré-carregado; API readiness confirmou PostgreSQL e Redis.
+- Auditoria do HTML público sem `Sparkles`, estrelas Unicode, emojis, RandomUser, “Últimas vagas” ou Wix; carrossel continua presente no código e só exibe fontes reais.
+
+### Limite honesto
+- Browser desta máquina continua bloqueando a porta 80 com `ERR_BLOCKED_BY_CLIENT`; a landing foi validada por build, healthcheck e HTTP/HTML, sem declarar interação visual browser.

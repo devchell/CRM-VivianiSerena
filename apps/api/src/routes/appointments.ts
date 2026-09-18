@@ -6,6 +6,8 @@ import { AppError } from '../middleware/errorHandler'
 import { googleCalendar } from '../infrastructure/googleCalendar'
 import { emailService } from '../infrastructure/email'
 import { invalidateOperationalMetricCaches } from '../domain/metrics/cache'
+import { logger } from '../lib/logger'
+import { AuditLogger } from '../infrastructure/security/AuditLogger'
 
 export const appointmentsRouter: Router = Router()
 appointmentsRouter.use(authenticate)
@@ -23,7 +25,7 @@ const schema = z.object({
 appointmentsRouter.get('/', authorizePermission('agenda.view'), async (req, res, next) => {
   try {
     const { from, to, status } = req.query
-    const where: Record<string, unknown> = {}
+    const where: Record<string, unknown> = { lead: { deletedAt: null } }
     if (status) where.status = status
     if (from || to) {
       where.date = {}
@@ -42,7 +44,9 @@ appointmentsRouter.get('/', authorizePermission('agenda.view'), async (req, res,
         orderBy: { date: 'asc' },
       })
     } catch (dbError) {
-      console.error('[appointments/list] DB query failed:', dbError)
+      logger.error('Appointment listing database query failed', {
+        error: dbError instanceof Error ? dbError.message : 'unknown_error',
+      })
       throw new AppError(503, 'Agenda indisponivel temporariamente. Revise as migracoes do banco.')
     }
 
@@ -78,7 +82,7 @@ appointmentsRouter.get('/availability', authorizePermission('agenda.view'), asyn
 appointmentsRouter.post('/', authorizePermission('agenda.create'), async (req, res, next) => {
   try {
     const data = schema.parse(req.body)
-    const lead = await prisma.lead.findUnique({ where: { id: data.leadId }, select: { name: true, email: true } })
+    const lead = await prisma.lead.findFirst({ where: { id: data.leadId, deletedAt: null }, select: { name: true, email: true } })
     if (!lead) throw new AppError(404, 'Lead not found')
 
     const duration = data.durationMinutes ?? DEFAULT_APPOINTMENT_DURATION_MINUTES
@@ -97,7 +101,11 @@ appointmentsRouter.post('/', authorizePermission('agenda.create'), async (req, r
       data: { leadId: data.leadId, date: startDate, durationMinutes: duration, serviceType: data.serviceType, notes: data.notes, googleEventId: calEvent?.id ?? null },
     })
 
-    emailService.appointmentConfirmation({ clientEmail: lead.email, clientName: lead.name, date: startDate, serviceType: data.serviceType }).catch(() => {})
+    emailService.appointmentConfirmation({ clientEmail: lead.email, clientName: lead.name, date: startDate, serviceType: data.serviceType }).catch((error: unknown) => {
+      logger.warn('Appointment confirmation could not be sent', {
+        error: error instanceof Error ? error.message : 'unknown error',
+      })
+    })
     await invalidateOperationalMetricCaches()
 
     res.status(201).json({ success: true, data: appointment })
@@ -108,8 +116,8 @@ appointmentsRouter.patch('/:id', authorizePermission('agenda.update'), async (re
   try {
     const appointmentId = String(req.params.id)
     const data = schema.partial().parse(req.body)
-    const existing = await prisma.appointment.findUnique({
-      where: { id: appointmentId },
+    const existing = await prisma.appointment.findFirst({
+      where: { id: appointmentId, lead: { deletedAt: null } },
       include: { lead: { select: { name: true, email: true } } },
     })
     if (!existing) throw new AppError(404, 'Appointment not found')
@@ -156,15 +164,29 @@ appointmentsRouter.patch('/:id', authorizePermission('agenda.update'), async (re
 appointmentsRouter.delete('/:id', authorizePermission('agenda.delete'), async (req, res, next) => {
   try {
     const appointmentId = String(req.params.id)
-    const existing = await prisma.appointment.findUnique({ where: { id: appointmentId } })
+    const existing = await prisma.appointment.findFirst({
+      where: { id: appointmentId, lead: { deletedAt: null } },
+    })
     if (!existing) throw new AppError(404, 'Appointment not found')
 
     if (existing.googleEventId) {
       await googleCalendar.deleteEvent(existing.googleEventId)
     }
 
-    await prisma.appointment.delete({ where: { id: appointmentId } })
+    await prisma.appointment.update({
+      where: { id: appointmentId },
+      data: { status: 'cancelled', googleEventId: null },
+    })
+    if (req.user?.sub) {
+      await AuditLogger.log({
+        userId: req.user.sub,
+        action: 'CANCEL',
+        resource: 'Appointment',
+        details: { appointmentId, mode: 'cancelled' },
+        ip: req.ip,
+      })
+    }
     await invalidateOperationalMetricCaches()
-    res.json({ success: true, message: 'Appointment deleted' })
+    res.json({ success: true, message: 'Appointment cancelled' })
   } catch (error) { next(error) }
 })

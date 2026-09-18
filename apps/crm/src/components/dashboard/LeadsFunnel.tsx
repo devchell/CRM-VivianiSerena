@@ -1,6 +1,7 @@
 'use client'
 
 import type { LeadFunnelMetrics } from '@viviani/types'
+import { Inbox } from 'lucide-react'
 import { Bar, BarChart, Cell, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 
 const STAGES = [
@@ -21,13 +22,14 @@ export function LeadsFunnel({ data, loading = false }: LeadsFunnelProps) {
     stage: stage.label,
     count: data?.[stage.key] ?? 0,
   }))
+  const totalLeads = chartData.reduce((total, stage) => total + stage.count, 0)
 
   const colors = [
-    'var(--funnel-new)',
-    'var(--funnel-contacted)',
-    'var(--funnel-qualified)',
-    'var(--funnel-converted)',
-    'var(--funnel-lost)',
+    'var(--border-medium)',
+    'var(--text-tertiary)',
+    'var(--primary)',
+    'var(--success)',
+    'var(--destructive)',
   ]
 
   return (
@@ -38,16 +40,24 @@ export function LeadsFunnel({ data, loading = false }: LeadsFunnelProps) {
 
       {loading ? (
         <div className="h-[220px] animate-pulse rounded-lg bg-slate-100 dark:bg-slate-800/40" />
+      ) : totalLeads === 0 ? (
+        <div className="flex h-[220px] flex-col items-center justify-center rounded-lg border border-dashed border-slate-200 text-center dark:border-slate-700">
+          <Inbox size={26} className="mb-3 text-slate-400" aria-hidden="true" />
+          <p className="text-sm font-medium text-slate-700 dark:text-slate-200">Ainda não há leads no funil</p>
+          <a href="/leads" className="mt-2 text-xs font-medium text-[var(--primary)] underline-offset-2 hover:underline">
+            Cadastrar primeiro lead
+          </a>
+        </div>
       ) : (
         <ResponsiveContainer width="100%" height={220}>
           <BarChart data={chartData} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
-            <XAxis dataKey="stage" tick={{ fontSize: 11, fill: '#787878' }} axisLine={false} tickLine={false} />
+            <XAxis dataKey="stage" tick={{ fontSize: 11, fill: 'var(--chart-axis)' }} axisLine={false} tickLine={false} />
             <YAxis hide />
             <Tooltip
               formatter={(value: number) => [value, 'Leads']}
               contentStyle={{
-                background: 'var(--tooltip-bg, #fff)',
-                border: '1px solid rgba(201,150,122,0.3)',
+                background: 'var(--tooltip-bg)',
+                border: '1px solid var(--chart-tooltip-border)',
                 borderRadius: 8,
                 fontSize: 12,
               }}

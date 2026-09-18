@@ -1,8 +1,8 @@
 # 02 System Map
 
 ## Data de referencia
-- Atualizado em `2026-03-20`.
-- Reflete o codigo do monorepo em `staging`.
+- Atualizado em `2026-08-31`.
+- O estado operacional vigente é Docker Compose na VPS; descrições cloud históricas não são fonte de deploy.
 
 ## Monorepo
 
@@ -16,7 +16,7 @@ packages/
   utils/     -> formatacao e utilitarios compartilhados
   ui/        -> componentes compartilhados
 docs/        -> auditoria, operacao e arquitetura
-infra/       -> Docker legados e Nginx de referencia
+deploy/      -> Dockerfiles, Compose e Nginx do ambiente vigente
 ```
 
 ## Modulos reais
@@ -76,8 +76,7 @@ infra/       -> Docker legados e Nginx de referencia
 - Status atual de homologacao em `2026-03-20`: estrutura pronta, mas sem localizacoes vinculadas e sem reviews carregados.
 
 ### Uploads
-- Driver `local` por padrao.
-- Suporte a `s3` implementado via `STORAGE_DRIVER=s3`.
+- Filesystem local persistente no volume da API; não há driver cloud no runtime vigente.
 - Health de uploads exposto em `admin/overview` e `health/deps`.
 
 ### WhatsApp Business

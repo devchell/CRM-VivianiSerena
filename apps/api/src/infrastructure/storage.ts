@@ -1,59 +1,30 @@
 import fs from 'fs/promises'
 import path from 'path'
-import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 import { apiEnv } from '../lib/env'
 
-type StorageMode = 'local' | 'supabase'
+type StorageMode = 'local'
 
-let supabaseClient: SupabaseClient | null = null
-
-function getSupabaseClient(): SupabaseClient {
-  if (supabaseClient) return supabaseClient
-
-  const cfg = apiEnv.supabaseStorage
-  if (!cfg) throw new Error('Supabase storage is not configured')
-
-  supabaseClient = createClient(cfg.url, cfg.serviceRoleKey, {
-    auth: { persistSession: false },
-  })
-  return supabaseClient
+function safeFilename(filename: string): string {
+  if (!/^[a-zA-Z0-9][a-zA-Z0-9._-]*$/.test(filename) || filename.includes('..')) {
+    throw new Error('Invalid upload filename')
+  }
+  return filename
 }
 
 export function getUploadStorageMode(): StorageMode {
-  return apiEnv.storageDriver
+  return 'local'
 }
 
 export function buildUploadUrl(filename: string): string {
-  if (apiEnv.storageDriver === 'local') {
-    return `${apiEnv.apiBaseUrl}/uploads/${filename}`
-  }
-
-  const cfg = apiEnv.supabaseStorage!
-  const client = getSupabaseClient()
-  const { data } = client.storage.from(cfg.bucket).getPublicUrl(filename)
-  return data.publicUrl
+  return `${apiEnv.apiBaseUrl}/uploads/${safeFilename(filename)}`
 }
 
 export async function ensureUploadStorageReady(): Promise<void> {
-  if (apiEnv.storageDriver === 'local') {
-    await fs.mkdir(path.resolve(apiEnv.uploadDir), { recursive: true })
-    return
-  }
+  await fs.mkdir(path.resolve(apiEnv.uploadDir), { recursive: true })
+}
 
-  const cfg = apiEnv.supabaseStorage!
-  const client = getSupabaseClient()
-
-  // Create bucket if it doesn't exist (idempotent)
-  const { error: createError } = await client.storage.createBucket(cfg.bucket, {
-    public: true,
-    allowedMimeTypes: ['image/*', 'application/pdf', 'video/*'],
-    fileSizeLimit: 52428800, // 50 MB
-  })
-
-  // Ignore "already exists" error
-  if (createError && !createError.message.includes('already exists') && !createError.message.includes('Duplicate')) {
-    throw new Error(`Failed to ensure Supabase bucket: ${createError.message}`)
-  }
+async function ensurePrivateUploadStorageReady(): Promise<void> {
+  await fs.mkdir(path.resolve(apiEnv.privateUploadDir), { recursive: true })
 }
 
 export async function uploadFile(params: {
@@ -61,55 +32,58 @@ export async function uploadFile(params: {
   buffer: Buffer
   contentType?: string
 }): Promise<string> {
-  if (apiEnv.storageDriver === 'local') {
-    await ensureUploadStorageReady()
-    const filePath = path.join(path.resolve(apiEnv.uploadDir), params.filename)
-    await fs.writeFile(filePath, params.buffer)
-    return buildUploadUrl(params.filename)
-  }
-
-  const cfg = apiEnv.supabaseStorage!
-  const client = getSupabaseClient()
-
-  const { error } = await client.storage.from(cfg.bucket).upload(params.filename, params.buffer, {
-    contentType: params.contentType ?? 'application/octet-stream',
-    upsert: true,
-  })
-
-  if (error) throw new Error(`Supabase upload failed: ${error.message}`)
-
-  return buildUploadUrl(params.filename)
+  const filename = safeFilename(params.filename)
+  await ensureUploadStorageReady()
+  const filePath = path.join(path.resolve(apiEnv.uploadDir), filename)
+  await fs.writeFile(filePath, params.buffer, { flag: 'wx' })
+  return buildUploadUrl(filename)
 }
 
 export async function deleteFile(filename: string): Promise<void> {
-  if (apiEnv.storageDriver === 'local') {
-    const filePath = path.join(path.resolve(apiEnv.uploadDir), filename)
-    try {
-      await fs.unlink(filePath)
-    } catch (error) {
-      if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error
+  const safe = safeFilename(filename)
+  const filePath = path.join(path.resolve(apiEnv.uploadDir), safe)
+  try {
+    await fs.unlink(filePath)
+  } catch (error) {
+    if (!(error instanceof Error) || !('code' in error) || error.code !== 'ENOENT') {
+      throw error
     }
-    return
   }
+}
 
-  const cfg = apiEnv.supabaseStorage!
-  const client = getSupabaseClient()
+export async function readUploadFile(filename: string): Promise<Buffer> {
+  const safe = safeFilename(filename)
+  await ensureUploadStorageReady()
+  return fs.readFile(path.join(path.resolve(apiEnv.uploadDir), safe))
+}
 
-  const { error } = await client.storage.from(cfg.bucket).remove([filename])
-  if (error) throw new Error(`Supabase delete failed: ${error.message}`)
+export async function uploadPrivateFile(params: { filename: string; buffer: Buffer }): Promise<void> {
+  const filename = safeFilename(params.filename)
+  await ensurePrivateUploadStorageReady()
+  await fs.writeFile(path.join(path.resolve(apiEnv.privateUploadDir), filename), params.buffer, { flag: 'wx' })
+}
+
+export async function readPrivateUploadFile(filename: string): Promise<Buffer> {
+  const safe = safeFilename(filename)
+  await ensurePrivateUploadStorageReady()
+  return fs.readFile(path.join(path.resolve(apiEnv.privateUploadDir), safe))
+}
+
+export async function deletePrivateFile(filename: string): Promise<void> {
+  const safe = safeFilename(filename)
+  const filePath = path.join(path.resolve(apiEnv.privateUploadDir), safe)
+  try {
+    await fs.unlink(filePath)
+  } catch (error) {
+    if (!(error instanceof Error) || !('code' in error) || error.code !== 'ENOENT') throw error
+  }
 }
 
 export async function healthcheckUploadStorage(): Promise<boolean> {
   try {
-    if (apiEnv.storageDriver === 'local') {
-      await fs.mkdir(path.resolve(apiEnv.uploadDir), { recursive: true })
-      return true
-    }
-
-    const cfg = apiEnv.supabaseStorage!
-    const client = getSupabaseClient()
-    const { error } = await client.storage.from(cfg.bucket).list('', { limit: 1 })
-    return !error
+    await ensureUploadStorageReady()
+    await ensurePrivateUploadStorageReady()
+    return true
   } catch {
     return false
   }

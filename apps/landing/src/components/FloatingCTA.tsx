@@ -3,7 +3,7 @@
 import type { MouseEvent as ReactMouseEvent } from 'react'
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
-import { X } from 'lucide-react'
+import { MessageCircle, X } from 'lucide-react'
 import { trackCTAClick, trackWhatsAppClick } from '@/lib/analytics'
 
 const DEFAULT_WA_LINK = 'https://wa.link/e2g7ii'
@@ -76,7 +76,7 @@ function ExitIntentModal({ onClose, waLink }: { onClose: () => void; waLink: str
 
           {/* Icon */}
           <div className="w-14 h-14 bg-blush rounded flex items-center justify-center mb-4" aria-hidden="true">
-            <span className="text-2xl" role="img" aria-hidden="true">✨</span>
+            <MessageCircle className="h-7 w-7 text-rose-gold" strokeWidth={1.6} aria-hidden="true" />
           </div>
 
           <h2 id="exit-modal-title" className="font-heading text-2xl font-bold text-charcoal mb-2">

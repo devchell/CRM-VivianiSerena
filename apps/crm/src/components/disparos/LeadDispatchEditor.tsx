@@ -6,13 +6,11 @@ import { toast } from 'sonner'
 import { apiFetchJson, buildAuthHeaders } from '@/lib/api-client'
 import { useAuth } from '@/lib/useAuth'
 
-type Channel = 'email' | 'whatsapp'
-
 interface LeadDispatchEditorProps {
   status: string
   label: string
   leadsCount: number
-  onDispatch: (channel: Channel, subject: string, body: string) => Promise<void>
+  onDispatch: (subject: string, body: string) => Promise<void>
 }
 
 interface TemplateData {
@@ -26,10 +24,8 @@ interface TemplateData {
 
 export function LeadDispatchEditor({ status, label, leadsCount, onDispatch }: LeadDispatchEditorProps) {
   const { accessToken } = useAuth()
-  const [channel, setChannel] = useState<Channel>('email')
   const [subject, setSubject] = useState('')
   const [emailBody, setEmailBody] = useState('')
-  const [whatsappBody, setWhatsappBody] = useState('')
   const [loading, setLoading] = useState(false)
   const [saving, setSaving] = useState(false)
   const [dispatching, setDispatching] = useState(false)
@@ -39,30 +35,23 @@ export function LeadDispatchEditor({ status, label, leadsCount, onDispatch }: Le
     setLoading(true)
     try {
       const data = await apiFetchJson<{ success: true; data: TemplateData | null }>(
-        `/api/v1/templates/lead/${status}/${channel}`,
+        `/api/v1/templates/lead/${status}/email`,
         { headers: buildAuthHeaders(accessToken) }
       )
       if (data.success && data.data) {
-        if (channel === 'email') {
-          setSubject(data.data.subject ?? '')
-          setEmailBody(data.data.body ?? '')
-        } else {
-          setWhatsappBody(data.data.body ?? '')
-        }
+        setSubject(data.data.subject ?? '')
+        setEmailBody(data.data.body ?? '')
       } else {
-        if (channel === 'email') {
-          setSubject('')
-          setEmailBody('')
-        } else {
-          setWhatsappBody('')
-        }
+        setSubject('')
+        setEmailBody('')
       }
-    } catch {
-      // silently fail
+    } catch (error) {
+      console.warn('[dispatches] Não foi possível carregar o modelo da mensagem.', error)
+      toast.error('Erro ao carregar a mensagem salva.')
     } finally {
       setLoading(false)
     }
-  }, [status, channel, accessToken])
+  }, [status, accessToken])
 
   useEffect(() => {
     void loadTemplate()
@@ -72,11 +61,10 @@ export function LeadDispatchEditor({ status, label, leadsCount, onDispatch }: Le
     if (!accessToken) return
     setSaving(true)
     try {
-      const body = channel === 'email' ? emailBody : whatsappBody
-      await apiFetchJson(`/api/v1/templates/lead/${status}/${channel}`, {
+      await apiFetchJson(`/api/v1/templates/lead/${status}/email`, {
         method: 'PUT',
         headers: buildAuthHeaders(accessToken, 'application/json'),
-        body: JSON.stringify({ subject: channel === 'email' ? subject : undefined, body }),
+        body: JSON.stringify({ subject, body: emailBody }),
       })
       toast.success('Mensagem salva!')
     } catch {
@@ -90,8 +78,7 @@ export function LeadDispatchEditor({ status, label, leadsCount, onDispatch }: Le
     if (leadsCount === 0) return
     setDispatching(true)
     try {
-      const body = channel === 'email' ? emailBody : whatsappBody
-      await onDispatch(channel, subject, body)
+      await onDispatch(subject, emailBody)
     } finally {
       setDispatching(false)
     }
@@ -120,25 +107,6 @@ export function LeadDispatchEditor({ status, label, leadsCount, onDispatch }: Le
         </div>
       </div>
 
-      {/* Channel tabs */}
-      <div style={{ display: 'flex', gap: 8 }}>
-        {(['email', 'whatsapp'] as Channel[]).map((ch) => (
-          <button
-            key={ch}
-            type="button"
-            onClick={() => setChannel(ch)}
-            style={{
-              padding: '6px 16px', borderRadius: 6, fontSize: 13,
-              background: channel === ch ? 'var(--primary)' : 'var(--panel)',
-              color: channel === ch ? '#fff' : 'var(--foreground)',
-              border: 'none', cursor: 'pointer',
-            }}
-          >
-            {ch === 'email' ? '✉ E-mail' : '💬 WhatsApp'}
-          </button>
-        ))}
-      </div>
-
       {loading ? (
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '20px 0', color: 'var(--muted-foreground)' }}>
           <Loader2 size={16} style={{ animation: 'spin 1s linear infinite' }} />
@@ -147,36 +115,28 @@ export function LeadDispatchEditor({ status, label, leadsCount, onDispatch }: Le
       ) : (
         <>
           {/* Subject — email only */}
-          {channel === 'email' && (
-            <input
-              type="text"
-              value={subject}
-              onChange={(e) => setSubject(e.target.value)}
-              placeholder="Assunto do e-mail"
-              style={{
-                width: '100%', padding: '10px 12px', borderRadius: 8,
-                border: '1px solid var(--border)', background: 'var(--bg-input)',
-                fontSize: 13, color: 'var(--foreground)', outline: 'none',
-                boxSizing: 'border-box',
-              }}
-            />
-          )}
+          <input
+            type="text"
+            value={subject}
+            onChange={(e) => setSubject(e.target.value)}
+            placeholder="Assunto do e-mail"
+            style={{
+              width: '100%', padding: '10px 12px', borderRadius: 8,
+              border: '1px solid var(--border)', background: 'var(--bg-input)',
+              fontSize: 13, color: 'var(--foreground)', outline: 'none',
+              boxSizing: 'border-box',
+            }}
+          />
 
           {/* Body textarea */}
           <textarea
-            value={channel === 'email' ? emailBody : whatsappBody}
-            onChange={(e) =>
-              channel === 'email' ? setEmailBody(e.target.value) : setWhatsappBody(e.target.value)
-            }
-            placeholder={
-              channel === 'email'
-                ? '<p>Olá {nome},</p>\n<p>Sua mensagem aqui...</p>'
-                : 'Olá {nome}! Sua mensagem aqui...'
-            }
+            value={emailBody}
+            onChange={(e) => setEmailBody(e.target.value)}
+            placeholder="<p>Olá {nome},</p>\n<p>Sua mensagem aqui...</p>"
             style={{
               width: '100%',
               minHeight: 340,
-              fontFamily: channel === 'email' ? '"Fira Code", "Consolas", monospace' : 'inherit',
+              fontFamily: '"Fira Code", "Consolas", monospace',
               fontSize: 13,
               lineHeight: 1.6,
               padding: '12px 14px',

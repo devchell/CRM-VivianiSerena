@@ -8,6 +8,7 @@ import { ThemeToggle } from '@/components/layout/ThemeToggle'
 const breadcrumbs: Record<string, string> = {
   '/dashboard': 'Dashboard',
   '/leads': 'Leads',
+  '/clientes': 'Clientes',
   '/leads/disparos': 'Disparos',
   '/agenda': 'Agenda',
   '/financeiro': 'Financeiro',
@@ -15,6 +16,7 @@ const breadcrumbs: Record<string, string> = {
   '/seguranca': 'Segurança',
   '/configuracoes': 'Configurações',
   '/colaboradores': 'Colaboradores',
+  '/administracao': 'Administração',
 }
 
 interface HeaderProps {
@@ -50,7 +52,7 @@ export function Header({ onMobileMenuClick }: HeaderProps) {
         {/* Status Online */}
         <div className="flex items-center gap-2">
           <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-          <span className="text-sm text-[#666] hidden sm:block">Online</span>
+          <span className="hidden text-sm text-[var(--text-secondary)] sm:block">Online</span>
         </div>
 
         {/* Notificações */}

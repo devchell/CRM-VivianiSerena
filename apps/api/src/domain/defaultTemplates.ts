@@ -74,7 +74,7 @@ export const DEFAULT_TEMPLATES: Record<string, Record<string, { subject: string;
   // ── NOVOS ─────────────────────────────────────────────────────────────
   new: {
     email: {
-      subject: 'Ol\u00e1, {nome}! Recebemos seu contato \u{1F31F}',
+      subject: 'Ol\u00e1, {nome}! Recebemos seu contato',
       body: baseEmailHtml({
         tag: 'Novo contato',
         title: 'Que bom te conhecer, {nome}!',
@@ -89,7 +89,7 @@ export const DEFAULT_TEMPLATES: Record<string, Record<string, { subject: string;
     },
     whatsapp: {
       subject: '',
-      body: `Ol\u00e1 {nome}! \u{1F60A}\n\nRecebemos seu contato e estamos muito felizes com seu interesse!\n\nEm breve nossa equipe entrar\u00e1 em contato para apresentar as melhores op\u00e7\u00f5es para voc\u00ea.\n\nQualquer d\u00favida, estamos aqui! \u{1F31F}`,
+      body: `Ol\u00e1 {nome}!\n\nRecebemos seu contato e estamos muito felizes com seu interesse!\n\nEm breve nossa equipe entrar\u00e1 em contato para apresentar as melhores op\u00e7\u00f5es para voc\u00ea.\n\nQualquer d\u00favida, estamos aqui!`,
     },
   },
 
@@ -111,7 +111,7 @@ export const DEFAULT_TEMPLATES: Record<string, Record<string, { subject: string;
     },
     whatsapp: {
       subject: '',
-      body: `Oi {nome}! \u{1F44B}\n\nNossa equipe j\u00e1 est\u00e1 analisando seu caso.\n\nEm breve retornaremos com mais informa\u00e7\u00f5es. Se precisar de algo antes, \u00e9 s\u00f3 chamar! \u{1F499}`,
+      body: `Oi {nome}!\n\nNossa equipe j\u00e1 est\u00e1 analisando seu caso.\n\nEm breve retornaremos com mais informa\u00e7\u00f5es. Se precisar de algo antes, \u00e9 s\u00f3 chamar!`,
     },
   },
 
@@ -133,14 +133,14 @@ export const DEFAULT_TEMPLATES: Record<string, Record<string, { subject: string;
     },
     whatsapp: {
       subject: '',
-      body: `{nome}, temos boas not\u00edcias! \u{1F31F}\n\nAnalisamos seu perfil e preparamos um protocolo especial para voc\u00ea.\n\nQue tal agendar uma avalia\u00e7\u00e3o gratuita para conhecer todos os detalhes?\n\nAcesse: https://vivianiserena.com.br`,
+      body: `{nome}, temos boas not\u00edcias!\n\nAnalisamos seu perfil e preparamos um protocolo especial para voc\u00ea.\n\nQue tal agendar uma avalia\u00e7\u00e3o gratuita para conhecer todos os detalhes?\n\nAcesse: https://vivianiserena.com.br`,
     },
   },
 
   // ── CONVERTIDOS ───────────────────────────────────────────────────────
   converted: {
     email: {
-      subject: 'Bem-vinda \u00e0 fam\u00edlia Viviani Serena, {nome}! \u{1F389}',
+      subject: 'Bem-vinda \u00e0 fam\u00edlia Viviani Serena, {nome}!',
       body: baseEmailHtml({
         tag: 'Seja bem-vinda!',
         title: 'Sua jornada come\u00e7a agora, {nome}!',
@@ -156,14 +156,14 @@ export const DEFAULT_TEMPLATES: Record<string, Record<string, { subject: string;
     },
     whatsapp: {
       subject: '',
-      body: `{nome}, seja muito bem-vinda! \u{1F389}\n\nEstamos super felizes em ter voc\u00ea como nossa cliente!\n\nEm breve voc\u00ea receber\u00e1 todas as orienta\u00e7\u00f5es para sua primeira sess\u00e3o.\n\nQualquer d\u00favida, pode chamar. Vamos juntas nessa jornada! \u{1F499}`,
+      body: `{nome}, seja muito bem-vinda!\n\nEstamos super felizes em ter voc\u00ea como nossa cliente!\n\nEm breve voc\u00ea receber\u00e1 todas as orienta\u00e7\u00f5es para sua primeira sess\u00e3o.\n\nQualquer d\u00favida, pode chamar. Vamos juntas nessa jornada!`,
     },
   },
 
   // ── PERDIDOS ──────────────────────────────────────────────────────────
   lost: {
     email: {
-      subject: '{nome}, ainda pensando? Estamos aqui \u{1F499}',
+      subject: '{nome}, ainda pensando? Estamos aqui',
       body: baseEmailHtml({
         tag: 'Ainda podemos ajudar',
         title: 'Quando estiver pronta, {nome}!',
@@ -178,7 +178,7 @@ export const DEFAULT_TEMPLATES: Record<string, Record<string, { subject: string;
     },
     whatsapp: {
       subject: '',
-      body: `Oi {nome}! \u{1F499}\n\nPassamos aqui s\u00f3 para dizer que, quando estiver pronta, estaremos aqui.\n\nN\u00e3o h\u00e1 pressa \u2014 cada jornada tem seu tempo.\n\nSe quiser conversar, \u00e9 s\u00f3 chamar! \u{1F31F}`,
+      body: `Oi {nome}!\n\nPassamos aqui s\u00f3 para dizer que, quando estiver pronta, estaremos aqui.\n\nN\u00e3o h\u00e1 pressa \u2014 cada jornada tem seu tempo.\n\nSe quiser conversar, \u00e9 s\u00f3 chamar!`,
     },
   },
 }
@@ -189,37 +189,37 @@ export const ORIGIN_TEMPLATES: Record<string, { label: string; emailSnippet: str
   instagram: {
     label: 'Instagram',
     emailSnippet: `<p style="margin:0 0 16px;font-size:15px;color:#334E68;line-height:1.7;">Que bom que nos encontrou pelo Instagram, {nome}! Por l\u00e1 compartilhamos resultados reais e dicas de cuidados com a pele todos os dias.</p>`,
-    whatsapp: `Oi {nome}! Que bom te conhecer pelo Instagram \u{1F4F8}\n\nPor l\u00e1 compartilhamos resultados reais todo dia. Ficamos felizes com seu interesse e em breve entraremos em contato!`,
+    whatsapp: `Oi {nome}! Que bom te conhecer pelo Instagram.\n\nPor l\u00e1 compartilhamos resultados reais todo dia. Ficamos felizes com seu interesse e em breve entraremos em contato!`,
   },
   facebook: {
     label: 'Facebook',
     emailSnippet: `<p style="margin:0 0 16px;font-size:15px;color:#334E68;line-height:1.7;">Obrigada por nos encontrar pelo Facebook, {nome}! Nossa comunidade cresce a cada dia e estamos felizes que voc\u00ea faz parte dela.</p>`,
-    whatsapp: `Oi {nome}! Que alegria te encontrar pelo Facebook \u{1F499}\n\nObrigada pelo interesse. Em breve nossa equipe entrar\u00e1 em contato!`,
+    whatsapp: `Oi {nome}! Que alegria te encontrar pelo Facebook.\n\nObrigada pelo interesse. Em breve nossa equipe entrar\u00e1 em contato!`,
   },
   google_ads: {
     label: 'Google Ads',
     emailSnippet: `<p style="margin:0 0 16px;font-size:15px;color:#334E68;line-height:1.7;">Voc\u00ea nos encontrou exatamente quando precisava, {nome}! O Google nos aproximou e estamos ansiosas para mostrar o que podemos fazer por voc\u00ea.</p>`,
-    whatsapp: `Oi {nome}! Voc\u00ea nos encontrou no Google \u2014 \u00f3tima escolha! \u{1F50D}\n\nEstamos ansiosas para conversar com voc\u00ea. Em breve entramos em contato!`,
+    whatsapp: `Oi {nome}! Voc\u00ea nos encontrou no Google \u2014 \u00f3tima escolha.\n\nEstamos ansiosas para conversar com voc\u00ea. Em breve entramos em contato!`,
   },
   organic: {
     label: 'Busca org\u00e2nica',
     emailSnippet: `<p style="margin:0 0 16px;font-size:15px;color:#334E68;line-height:1.7;">Voc\u00ea nos encontrou organicamente, {nome} \u2014 isso significa que chegou at\u00e9 n\u00f3s no momento certo! Estamos prontas para ajud\u00e1-la nessa jornada.</p>`,
-    whatsapp: `Oi {nome}! Que bom que nos encontrou \u{1F33F}\n\nEstamos prontas para te ajudar nessa jornada. Em breve nossa equipe entrar\u00e1 em contato com todas as informa\u00e7\u00f5es!`,
+    whatsapp: `Oi {nome}! Que bom que nos encontrou.\n\nEstamos prontas para te ajudar nessa jornada. Em breve nossa equipe entrar\u00e1 em contato com todas as informa\u00e7\u00f5es!`,
   },
   referral: {
     label: 'Indica\u00e7\u00e3o',
     emailSnippet: `<p style="margin:0 0 16px;font-size:15px;color:#334E68;line-height:1.7;">Recebemos sua indica\u00e7\u00e3o com muito carinho, {nome}! Quando algu\u00e9m nos indica, \u00e9 a maior prova de confian\u00e7a que podemos receber. Prometemos fazer jus a ela.</p>`,
-    whatsapp: `Oi {nome}! Recebemos sua indica\u00e7\u00e3o com muito carinho \u{1F917}\n\nQuando algu\u00e9m nos indica \u00e9 a maior prova de confian\u00e7a. Prometemos fazer jus a ela! Em breve entramos em contato.`,
+    whatsapp: `Oi {nome}! Recebemos sua indica\u00e7\u00e3o com muito carinho.\n\nQuando algu\u00e9m nos indica \u00e9 a maior prova de confian\u00e7a. Prometemos fazer jus a ela! Em breve entramos em contato.`,
   },
   whatsapp: {
     label: 'WhatsApp',
     emailSnippet: `<p style="margin:0 0 16px;font-size:15px;color:#334E68;line-height:1.7;">Voc\u00ea nos chamou pelo WhatsApp, {nome}, e adoramos a iniciativa! Preferimos a comunica\u00e7\u00e3o pr\u00f3xima e direta \u2014 exatamente como voc\u00ea.</p>`,
-    whatsapp: `Oi {nome}! Voc\u00ea nos chamou pelo WhatsApp \u2014 adoramos! \u{1F4AC}\n\nEstamos aqui e em breve nossa equipe responder\u00e1 com todas as informa\u00e7\u00f5es. Pode contar com a gente!`,
+    whatsapp: `Oi {nome}! Voc\u00ea nos chamou pelo WhatsApp \u2014 adoramos.\n\nEstamos aqui e em breve nossa equipe responder\u00e1 com todas as informa\u00e7\u00f5es. Pode contar com a gente!`,
   },
   other: {
     label: 'Outro canal',
     emailSnippet: `<p style="margin:0 0 16px;font-size:15px;color:#334E68;line-height:1.7;">Ficamos felizes que voc\u00ea nos encontrou, {nome}! Estamos prontas para te ajudar.</p>`,
-    whatsapp: `Oi {nome}! Ficamos felizes com seu contato \u{1F60A}\n\nEm breve nossa equipe entrar\u00e1 em contato com as melhores op\u00e7\u00f5es para voc\u00ea!`,
+    whatsapp: `Oi {nome}! Ficamos felizes com seu contato.\n\nEm breve nossa equipe entrar\u00e1 em contato com as melhores op\u00e7\u00f5es para voc\u00ea!`,
   },
 }
 
@@ -227,7 +227,7 @@ export const ORIGIN_TEMPLATES: Record<string, { label: string; emailSnippet: str
 
 export const DEFAULT_AUTO_TEMPLATES: Record<string, { subject?: string; emailHtml: string; whatsappText: string }> = {
   appointment_confirmation: {
-    subject: 'Agendamento confirmado, {nome}! \u{1F5D3}\uFE0F',
+    subject: 'Agendamento confirmado, {nome}!',
     emailHtml: baseEmailHtml({
       tag: 'Confirma\u00e7\u00e3o de agendamento',
       title: 'Seu agendamento est\u00e1 confirmado!',
@@ -239,7 +239,7 @@ export const DEFAULT_AUTO_TEMPLATES: Record<string, { subject?: string; emailHtm
       ctaText: 'Falar no WhatsApp',
       ctaUrl: 'https://wa.me/5511915751770',
     }),
-    whatsappText: `\u2705 Agendamento confirmado!\n\nOl\u00e1 {nome}! Seu agendamento est\u00e1 confirmado:\n\n\u{1F4C5} Data: {data_agendamento}\n\u23F0 Hor\u00e1rio: {hora_agendamento}\n\u{1F486} Servi\u00e7o: {servico}\n\nQualquer d\u00favida, \u00e9 s\u00f3 chamar! At\u00e9 breve \u{1F60A}`,
+    whatsappText: `Agendamento confirmado.\n\nOl\u00e1 {nome}! Seu agendamento est\u00e1 confirmado:\n\nData: {data_agendamento}\nHor\u00e1rio: {hora_agendamento}\nServi\u00e7o: {servico}\n\nQualquer d\u00favida, \u00e9 s\u00f3 chamar! At\u00e9 breve.`,
   },
 
   appointment_reminder_24h: {
@@ -255,13 +255,13 @@ export const DEFAULT_AUTO_TEMPLATES: Record<string, { subject?: string; emailHtm
       ctaText: 'Preciso remarcar',
       ctaUrl: 'https://wa.me/5511915751770',
     }),
-    whatsappText: `\u23F0 Lembrete de atendimento!\n\nOi {nome}! Seu atendimento \u00e9 amanh\u00e3 \u00e0s {hora_agendamento}.\n\n\u{1F486} Servi\u00e7o: {servico}\n\nLembre-se de chegar 10 minutinhos antes. At\u00e9 amanh\u00e3! \u{1F60A}`,
+    whatsappText: `Lembrete de atendimento.\n\nOi {nome}! Seu atendimento \u00e9 amanh\u00e3 \u00e0s {hora_agendamento}.\n\nServi\u00e7o: {servico}\n\nLembre-se de chegar 10 minutinhos antes. At\u00e9 amanh\u00e3.`,
   },
 
   appointment_reminder_1h: {
     subject: '',
     emailHtml: '',
-    whatsappText: `\u{1F514} Seu atendimento \u00e9 em 1 hora!\n\nOi {nome}! S\u00f3 um lembrete r\u00e1pido: seu atendimento come\u00e7a em 1 hora.\n\n\u23F0 Hor\u00e1rio: {hora_agendamento}\n\nAt\u00e9 j\u00e1! \u{1F60A}`,
+    whatsappText: `Seu atendimento \u00e9 em 1 hora.\n\nOi {nome}! S\u00f3 um lembrete r\u00e1pido: seu atendimento come\u00e7a em 1 hora.\n\nHor\u00e1rio: {hora_agendamento}\n\nAt\u00e9 j\u00e1.`,
   },
 
   appointment_cancellation: {
@@ -276,17 +276,17 @@ export const DEFAULT_AUTO_TEMPLATES: Record<string, { subject?: string; emailHtm
       ctaText: 'Reagendar agora',
       ctaUrl: 'https://vivianiserena.com.br#contato',
     }),
-    whatsappText: `Oi {nome}! Confirmamos o cancelamento do seu agendamento.\n\nQuando quiser reagendar, \u00e9 s\u00f3 chamar. Estamos aqui! \u{1F499}`,
+    whatsappText: `Oi {nome}! Confirmamos o cancelamento do seu agendamento.\n\nQuando quiser reagendar, \u00e9 s\u00f3 chamar. Estamos aqui.`,
   },
 
   lead_welcome: {
-    subject: 'Ol\u00e1, {nome}! Recebemos seu contato \u{1F31F}',
+    subject: 'Ol\u00e1, {nome}! Recebemos seu contato',
     emailHtml: DEFAULT_TEMPLATES.new.email.body,
     whatsappText: DEFAULT_TEMPLATES.new.whatsapp.body,
   },
 
   lead_converted: {
-    subject: 'Bem-vinda \u00e0 fam\u00edlia Viviani Serena, {nome}! \u{1F389}',
+    subject: 'Bem-vinda \u00e0 fam\u00edlia Viviani Serena, {nome}!',
     emailHtml: DEFAULT_TEMPLATES.converted.email.body,
     whatsappText: DEFAULT_TEMPLATES.converted.whatsapp.body,
   },
@@ -302,7 +302,7 @@ export const DEFAULT_AUTO_TEMPLATES: Record<string, { subject?: string; emailHtm
         'Este c\u00f3digo expira em 10 minutos. Se voc\u00ea n\u00e3o solicitou este acesso, ignore este e-mail.',
       ]),
     }),
-    whatsappText: `\u{1F510} Seu c\u00f3digo de verifica\u00e7\u00e3o: *{codigo}*\n\nExpira em 10 minutos. Se n\u00e3o foi voc\u00ea, ignore.`,
+    whatsappText: `Seu c\u00f3digo de verifica\u00e7\u00e3o: *{codigo}*\n\nExpira em 10 minutos. Se n\u00e3o foi voc\u00ea, ignore.`,
   },
 }
 

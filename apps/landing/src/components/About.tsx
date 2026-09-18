@@ -6,6 +6,7 @@ import { motion, useInView } from 'framer-motion'
 import { CheckCircle2, Award, Microscope, Heart } from 'lucide-react'
 import { trackCTAClick, trackWhatsAppClick } from '@/lib/analytics'
 import { landingPublicEnv } from '@/lib/public-env'
+import { RichText } from './RichText'
 
 const WA_LINK = 'https://wa.link/e2g7ii'
 const API_URL = landingPublicEnv.apiBaseUrl
@@ -72,9 +73,10 @@ interface AboutProps {
   bio?: string
   photoUrl?: string
   whatsappNumber?: string
+  highlights?: Array<string | undefined>
 }
 
-export function About({ bio, photoUrl, whatsappNumber }: AboutProps = {}) {
+export function About({ bio, photoUrl, whatsappNumber, highlights }: AboutProps = {}) {
   const sectionRef = useRef<HTMLElement>(null)
   const isInView = useInView(sectionRef, { once: true, margin: '-80px' })
   const aboutPhotoSrc = normalizeImageUrl(photoUrl)
@@ -181,10 +183,9 @@ export function About({ bio, photoUrl, whatsappNumber }: AboutProps = {}) {
 
             <motion.div variants={itemVariants} className="space-y-4 text-charcoal/70 leading-relaxed mb-8">
               {bio ? (
-                <div
-                  className="prose prose-rose max-w-none text-charcoal/80 dark:prose-invert prose-p:mb-3"
-                  dangerouslySetInnerHTML={{ __html: bio }}
-                />
+                <div className="prose prose-rose max-w-none text-charcoal/80 dark:prose-invert prose-p:mb-3">
+                  <RichText html={bio} />
+                </div>
               ) : (
                 <>
                   <p>
@@ -229,13 +230,13 @@ export function About({ bio, photoUrl, whatsappNumber }: AboutProps = {}) {
 
             {/* Highlight cards */}
             <motion.div variants={itemVariants} className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-10">
-              {HIGHLIGHTS.map(({ icon: Icon, title, desc }) => (
+              {HIGHLIGHTS.map(({ icon: Icon, title, desc }, index) => (
                 <div
                   key={title}
                   className="card p-4 hover:shadow-md transition-shadow duration-200"
                 >
                   <Icon className="text-rose-gold mb-3" size={22} aria-hidden="true" />
-                  <h3 className="font-semibold text-charcoal text-sm mb-1">{title}</h3>
+                  <h3 className="font-semibold text-charcoal text-sm mb-1">{highlights?.[index]?.trim() || title}</h3>
                   <p className="text-charcoal/60 text-xs leading-relaxed">{desc}</p>
                 </div>
               ))}

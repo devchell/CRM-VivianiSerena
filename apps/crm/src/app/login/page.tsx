@@ -13,7 +13,7 @@ import {
   Lock,
   Mail,
   Smartphone,
-  Sparkles,
+  Circle,
 } from 'lucide-react'
 import { crmPublicEnv } from '@/lib/public-env'
 
@@ -42,8 +42,10 @@ interface TwoFactorResponseData {
   sessionToken?: string
 }
 
-const inputClass = 'w-full px-4 py-3 text-sm rounded-md border border-slate-200 bg-white text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400 transition-colors'
-const otpInputClass = 'w-full px-4 py-3 text-center text-2xl font-mono tracking-[0.5em] rounded-md border border-slate-200 bg-white text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400 transition-colors'
+const inputClass =
+  'input-base w-full px-4 py-3 text-sm placeholder:text-slate-400 focus:outline-none focus:ring-2 transition-colors'
+const otpInputClass =
+  'input-base w-full px-4 py-3 text-center text-2xl font-mono tracking-[0.5em] placeholder:text-slate-400 focus:outline-none focus:ring-2 transition-colors'
 
 function getStepForChannel(channel: TwoFactorChannel): Step {
   return channel === 'email' ? 'email-otp' : 'sms-otp'
@@ -56,18 +58,30 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
 
-  const [email, setEmail] = useState('')
+  const [identifier, setIdentifier] = useState('')
   const [password, setPassword] = useState('')
   const [twoFa, setTwoFa] = useState<TwoFactorState | null>(null)
   const [emailCode, setEmailCode] = useState('')
   const [smsCode, setSmsCode] = useState('')
 
   useEffect(() => {
-    ['/dashboard', '/leads', '/leads/disparos', '/agenda', '/financeiro', '/editar-site', '/seguranca', '/colaboradores'].forEach((route) => {
+    ;[
+      '/dashboard',
+      '/leads',
+      '/leads/disparos',
+      '/agenda',
+      '/financeiro',
+      '/editar-site',
+      '/seguranca',
+      '/colaboradores',
+    ].forEach(route => {
       router.prefetch(route)
     })
-    // Wake up Render API while user reads/types credentials (prevents cold-start delay on submit)
-    fetch(`${RAW_API_URL}/health/ready`, { method: 'GET', cache: 'no-store' }).catch(() => {})
+    fetch(`${RAW_API_URL}/health/ready`, { method: 'GET', cache: 'no-store' }).catch(
+      (error: unknown) => {
+        console.warn('API readiness check failed', error)
+      }
+    )
   }, [router])
 
   const stepSequence = useMemo(() => {
@@ -75,15 +89,12 @@ export default function LoginPage() {
       return ['credentials'] as Step[]
     }
 
-    return [
-      'credentials',
-      ...twoFa.requiredChannels.map((channel) => getStepForChannel(channel)),
-    ]
+    return ['credentials', ...twoFa.requiredChannels.map(channel => getStepForChannel(channel))]
   }, [twoFa])
 
   const completeSignIn = async (sessionToken?: string) => {
     const result = await signIn('credentials', {
-      email,
+      identifier,
       password,
       ...(sessionToken ? { twoFactorSessionToken: sessionToken } : {}),
       redirect: false,
@@ -109,19 +120,23 @@ export default function LoginPage() {
       throw new Error('Resposta inválida do 2FA.')
     }
 
-    setTwoFa((current) => current ? {
-      ...current,
-      ...(data.maskedEmail ? { maskedEmail: data.maskedEmail } : {}),
-      ...(data.maskedPhone ? { maskedPhone: data.maskedPhone } : {}),
-    } : current)
+    setTwoFa(current =>
+      current
+        ? {
+            ...current,
+            ...(data.maskedEmail ? { maskedEmail: data.maskedEmail } : {}),
+            ...(data.maskedPhone ? { maskedPhone: data.maskedPhone } : {}),
+          }
+        : current
+    )
     setStep(getStepForChannel(data.nextStep))
   }
 
   const handleCredentials = async (event: React.FormEvent) => {
     event.preventDefault()
 
-    if (!email || password.length < 8) {
-      setError('Preencha o e-mail e a senha (min. 8 caracteres)')
+    if (!identifier.trim() || password.length < 8) {
+      setError('Preencha o usuário ou e-mail e a senha (min. 8 caracteres)')
       return
     }
 
@@ -132,20 +147,26 @@ export default function LoginPage() {
       const res = await fetch(`${API_URL}/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ identifier, password }),
       })
-      const data = await res.json() as {
+      const data = (await res.json()) as {
         success: boolean
         data?: TwoFactorResponseData
         message?: string
+        error?: string
       }
 
       if (!res.ok || !data.success) {
-        setError(data.message ?? 'Credenciais inválidas.')
+        setError(data.message ?? data.error ?? (res.status === 429 ? 'Muitas tentativas. Aguarde alguns minutos e tente novamente.' : 'Credenciais inválidas.'))
         return
       }
 
-      if (data.data?.requiresTwoFactor && data.data.twoFactorToken && data.data.nextStep && data.data.requiredChannels) {
+      if (
+        data.data?.requiresTwoFactor &&
+        data.data.twoFactorToken &&
+        data.data.nextStep &&
+        data.data.requiredChannels
+      ) {
         setTwoFa({
           twoFactorToken: data.data.twoFactorToken,
           requiredChannels: data.data.requiredChannels,
@@ -160,7 +181,11 @@ export default function LoginPage() {
 
       await completeSignIn()
     } catch (responseError) {
-      setError(responseError instanceof Error ? responseError.message : 'Erro de conexão. Verifique se a API está rodando.')
+      setError(
+        responseError instanceof Error
+          ? responseError.message
+          : 'Erro de conexão. Verifique se a API está rodando.'
+      )
     } finally {
       setIsLoading(false)
     }
@@ -182,14 +207,15 @@ export default function LoginPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ twoFactorToken: twoFa.twoFactorToken, code: emailCode }),
       })
-      const data = await res.json() as {
+      const data = (await res.json()) as {
         success: boolean
         data?: TwoFactorResponseData
         message?: string
+        error?: string
       }
 
       if (!res.ok || !data.success || !data.data) {
-        setError(data.message ?? 'Código inválido ou expirado.')
+        setError(data.message ?? data.error ?? 'Código inválido ou expirado.')
         return
       }
 
@@ -217,14 +243,15 @@ export default function LoginPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ twoFactorToken: twoFa.twoFactorToken, code: smsCode }),
       })
-      const data = await res.json() as {
+      const data = (await res.json()) as {
         success: boolean
         data?: TwoFactorResponseData
         message?: string
+        error?: string
       }
 
       if (!res.ok || !data.success || !data.data) {
-        setError(data.message ?? 'Código inválido ou expirado.')
+        setError(data.message ?? data.error ?? 'Código inválido ou expirado.')
         return
       }
 
@@ -266,28 +293,27 @@ export default function LoginPage() {
   const CurrentIcon = current.icon
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden" style={{ background: 'linear-gradient(135deg, #EFF6FF 0%, #F1F5F9 50%, #EFF6FF 100%)' }}>
-      <div className="absolute top-16 -left-24 w-64 h-64 rounded-full blur-3xl" style={{ background: 'rgba(59,130,246,0.12)' }} />
-      <div className="absolute bottom-10 -right-20 w-72 h-72 rounded-full blur-3xl" style={{ background: 'rgba(99,102,241,0.08)' }} />
-
+    <main className="crm-auth-shell flex min-h-screen items-center justify-center p-4">
       <motion.div
         initial={{ opacity: 0, y: 24 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="w-full max-w-sm relative"
+        className="relative w-full max-w-sm"
       >
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-14 h-14 rounded-xl mb-4" style={{ background: '#0F172A', boxShadow: '0 4px 12px rgba(0,0,0,0.15)' }}>
-            <Sparkles size={24} strokeWidth={2.5} style={{ color: '#EFF6FF' }} />
+        <div className="mb-8 text-center">
+          <div className="crm-auth-mark mb-4 inline-flex h-14 w-14 items-center justify-center rounded-xl">
+            <Circle size={24} strokeWidth={2.5} />
           </div>
-          <h1 className="font-heading text-2xl font-bold" style={{ color: '#0F172A' }}>
-            Viviani <span style={{ color: '#3B82F6' }}>Serena</span>
+          <h1 className="font-heading text-2xl font-bold text-[var(--text-primary)]">
+            Viviani <span className="text-[var(--accent-rose)]">Serena</span>
           </h1>
-          <p className="text-sm mt-1" style={{ color: '#64748B' }}>Sistema de Gestão</p>
+          <p className="mt-1 text-sm text-[var(--text-secondary)]">
+            Sistema de Gestão
+          </p>
         </div>
 
         {step !== 'credentials' && (
-          <div className="flex items-center justify-center gap-2 mb-6">
+          <div className="mb-6 flex items-center justify-center gap-2">
             {stepSequence.map((sequenceStep, index) => {
               const currentIndex = stepSequence.indexOf(step)
               const isCurrent = sequenceStep === step
@@ -298,10 +324,10 @@ export default function LoginPage() {
                   key={`${sequenceStep}-${index}`}
                   className={`h-1.5 rounded-full transition-all ${
                     isCurrent
-                      ? 'w-8 bg-blue-600'
+                        ? 'w-8 bg-[var(--primary)]'
                       : isDone
-                        ? 'w-4 bg-blue-600/60'
-                        : 'w-4 bg-slate-600'
+                        ? 'w-4 bg-[var(--primary)]'
+                        : 'w-4 bg-[var(--border-medium)]'
                   }`}
                 />
               )
@@ -316,44 +342,60 @@ export default function LoginPage() {
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -20 }}
             transition={{ duration: 0.25 }}
-            className="bg-white rounded-xl p-8" style={{ boxShadow: '0 20px 40px rgba(0,0,0,0.10)', border: '1px solid #E2E8F0' }}
+            className="crm-auth-card rounded-xl p-8"
           >
             <div className="mb-6">
-              <div className="w-10 h-10 rounded-md flex items-center justify-center mb-4" style={{ background: '#EFF6FF' }}>
-                <CurrentIcon size={18} style={{ color: '#1D4ED8' }} />
+              <div
+                className="mb-4 flex h-10 w-10 items-center justify-center rounded-md bg-[var(--accent-subtle)]"
+              >
+                <CurrentIcon size={18} className="text-[var(--accent-rose)]" />
               </div>
-              <h2 className="font-heading text-lg font-semibold" style={{ color: '#0F172A' }}>{current.title}</h2>
-              <p className="text-sm mt-1" style={{ color: '#64748B' }}>{current.subtitle}</p>
+              <h2 className="font-heading text-lg font-semibold text-[var(--text-primary)]">
+                {current.title}
+              </h2>
+              <p className="mt-1 text-sm text-[var(--text-secondary)]">
+                {current.subtitle}
+              </p>
             </div>
 
             {step === 'credentials' && (
               <form onSubmit={handleCredentials} className="space-y-4">
                 <div>
-                  <label className="block text-xs font-medium mb-1.5" style={{ color: '#475569' }}>E-mail</label>
+                  <label htmlFor="login-identifier" className="mb-1.5 block text-xs font-medium text-[var(--text-secondary)]">
+                    Usuário ou e-mail
+                  </label>
                   <input
-                    type="email"
-                    value={email}
-                    onChange={(event) => setEmail(event.target.value)}
-                    placeholder="admin@vivianiserena.com"
+                    id="login-identifier"
+                    name="identifier"
+                    type="text"
+                    value={identifier}
+                    onChange={event => setIdentifier(event.target.value)}
+                    placeholder="Usuário"
+                    autoComplete="username"
                     className={inputClass}
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium mb-1.5" style={{ color: '#475569' }}>Senha</label>
+                  <label htmlFor="login-password" className="mb-1.5 block text-xs font-medium text-[var(--text-secondary)]">
+                    Senha
+                  </label>
                   <div className="relative">
                     <input
+                      id="login-password"
+                      name="password"
                       type={showPassword ? 'text' : 'password'}
                       value={password}
-                      onChange={(event) => setPassword(event.target.value)}
-                      placeholder="........"
+                      onChange={event => setPassword(event.target.value)}
+                      placeholder="Senha"
                       className={`${inputClass} pr-10`}
                     />
                     <button
                       type="button"
-                      onClick={() => setShowPassword((currentState) => !currentState)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-500 transition-colors"
+                      onClick={() => setShowPassword(currentState => !currentState)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 transition-colors hover:text-slate-500"
+                      aria-label={showPassword ? 'Ocultar senha' : 'Mostrar senha'}
                     >
-                      {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                      {showPassword ? <EyeOff size={16} aria-hidden="true" /> : <Eye size={16} aria-hidden="true" />}
                     </button>
                   </div>
                 </div>
@@ -361,7 +403,7 @@ export default function LoginPage() {
                 <button
                   type="submit"
                   disabled={isLoading}
-                  className="w-full flex items-center justify-center gap-2 py-3 rounded-md bg-blue-600 text-white font-medium text-sm hover:bg-blue-700 disabled:opacity-60 transition-colors mt-2"
+                  className="mt-2 flex w-full items-center justify-center gap-2 rounded-md bg-[var(--primary)] py-3 text-sm font-medium text-[var(--primary-foreground)] transition-colors hover:bg-[var(--primary-hover)] disabled:opacity-60"
                 >
                   {isLoading ? <Loader2 size={16} className="animate-spin" /> : <Lock size={16} />}
                   {isLoading ? 'Verificando...' : 'Entrar'}
@@ -371,13 +413,19 @@ export default function LoginPage() {
 
             {step === 'email-otp' && (
               <form onSubmit={handleEmailOtp} className="space-y-4">
-                <p className="text-xs text-slate-400">Digite o código de 6 dígitos enviado para o e-mail acima.</p>
+                <p className="text-xs text-slate-400">
+                  Digite o código de 6 dígitos enviado para o e-mail acima.
+                </p>
                 <input
+                  id="email-code"
+                  aria-label="Código de verificação por e-mail"
                   type="text"
                   inputMode="numeric"
                   maxLength={6}
                   value={emailCode}
-                  onChange={(event) => setEmailCode(event.target.value.replace(/\D/g, '').slice(0, 6))}
+                  onChange={event =>
+                    setEmailCode(event.target.value.replace(/\D/g, '').slice(0, 6))
+                  }
                   placeholder="000000"
                   className={otpInputClass}
                   autoFocus
@@ -386,7 +434,7 @@ export default function LoginPage() {
                 <button
                   type="submit"
                   disabled={emailCode.length !== 6 || isLoading}
-                  className="w-full flex items-center justify-center gap-2 py-3 rounded-md bg-blue-600 text-white font-medium text-sm hover:bg-blue-700 disabled:opacity-60 transition-colors"
+                  className="flex w-full items-center justify-center gap-2 rounded-md bg-[var(--primary)] py-3 text-sm font-medium text-[var(--primary-foreground)] transition-colors hover:bg-[var(--primary-hover)] disabled:opacity-60"
                 >
                   {isLoading ? <Loader2 size={16} className="animate-spin" /> : <Mail size={16} />}
                   {isLoading ? 'Verificando...' : 'Confirmar Código'}
@@ -394,7 +442,7 @@ export default function LoginPage() {
                 <button
                   type="button"
                   onClick={resetTwoFactorFlow}
-                  className="w-full flex items-center justify-center gap-2 py-2 text-slate-400 text-sm hover:text-slate-600 transition-colors"
+                  className="flex w-full items-center justify-center gap-2 py-2 text-sm text-slate-400 transition-colors hover:text-slate-600"
                 >
                   <ArrowLeft size={14} /> Voltar
                 </button>
@@ -403,13 +451,17 @@ export default function LoginPage() {
 
             {step === 'sms-otp' && (
               <form onSubmit={handleSmsOtp} className="space-y-4">
-                <p className="text-xs text-slate-400">Digite o código de 6 dígitos enviado para o celular acima.</p>
+                <p className="text-xs text-slate-400">
+                  Digite o código de 6 dígitos enviado para o celular acima.
+                </p>
                 <input
+                  id="sms-code"
+                  aria-label="Código de verificação por celular"
                   type="text"
                   inputMode="numeric"
                   maxLength={6}
                   value={smsCode}
-                  onChange={(event) => setSmsCode(event.target.value.replace(/\D/g, '').slice(0, 6))}
+                  onChange={event => setSmsCode(event.target.value.replace(/\D/g, '').slice(0, 6))}
                   placeholder="000000"
                   className={otpInputClass}
                   autoFocus
@@ -418,15 +470,19 @@ export default function LoginPage() {
                 <button
                   type="submit"
                   disabled={smsCode.length !== 6 || isLoading}
-                  className="w-full flex items-center justify-center gap-2 py-3 rounded-md bg-blue-600 text-white font-medium text-sm hover:bg-blue-700 disabled:opacity-60 transition-colors"
+                  className="flex w-full items-center justify-center gap-2 rounded-md bg-[var(--primary)] py-3 text-sm font-medium text-[var(--primary-foreground)] transition-colors hover:bg-[var(--primary-hover)] disabled:opacity-60"
                 >
-                  {isLoading ? <Loader2 size={16} className="animate-spin" /> : <Smartphone size={16} />}
+                  {isLoading ? (
+                    <Loader2 size={16} className="animate-spin" />
+                  ) : (
+                    <Smartphone size={16} />
+                  )}
                   {isLoading ? 'Verificando...' : 'Confirmar Código'}
                 </button>
                 <button
                   type="button"
                   onClick={resetTwoFactorFlow}
-                  className="w-full flex items-center justify-center gap-2 py-2 text-slate-400 text-sm hover:text-slate-600 transition-colors"
+                  className="flex w-full items-center justify-center gap-2 py-2 text-sm text-slate-400 transition-colors hover:text-slate-600"
                 >
                   <ArrowLeft size={14} /> Voltar
                 </button>
@@ -435,18 +491,18 @@ export default function LoginPage() {
           </motion.div>
         </AnimatePresence>
 
-        <p className="text-center text-xs mt-6" style={{ color: '#94A3B8' }}>
+        <p className="mt-6 text-center text-xs text-[var(--text-tertiary)]">
           Viviani Serena CRM (c) {new Date().getFullYear()}
         </p>
       </motion.div>
-    </div>
+    </main>
   )
 }
 
 function ErrorBox({ message }: { message: string }) {
   return (
-    <div className="flex items-center gap-2 rounded-md bg-red-50 border border-red-200 px-4 py-3">
-      <AlertCircle size={16} className="text-red-500 flex-shrink-0" />
+    <div role="alert" className="flex items-center gap-2 rounded-md border border-red-200 bg-red-50 px-4 py-3">
+      <AlertCircle size={16} className="flex-shrink-0 text-red-500" />
       <p className="text-sm text-red-500">{message}</p>
     </div>
   )

@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { signOut, useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
-import { Lock, Eye, EyeOff, Sparkles, Loader2, CheckCircle } from 'lucide-react'
+import { Lock, Eye, EyeOff, Circle, Loader2, CheckCircle } from 'lucide-react'
 import { crmPublicEnv } from '@/lib/public-env'
 
 const API_URL = crmPublicEnv.apiBaseUrl
@@ -74,7 +74,7 @@ export function DefinirSenhaClient() {
         body: JSON.stringify({ newPassword: form.new }),
       })
 
-      const payload = await response.json() as { success: boolean; message?: string }
+      const payload = (await response.json()) as { success: boolean; message?: string }
 
       if (!response.ok || !payload.success) {
         throw new Error(payload.message ?? 'Erro ao definir senha')
@@ -92,66 +92,71 @@ export function DefinirSenhaClient() {
 
   if (status === 'loading') {
     return (
-      <div className="min-h-screen bg-slate-100 dark:bg-slate-950 flex items-center justify-center p-4">
-        <div className="w-8 h-8 border-2 border-blue-400 border-t-transparent rounded-full animate-spin" />
+      <div className="flex min-h-screen items-center justify-center bg-[var(--bg-page)] p-4">
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-[var(--primary)] border-t-transparent" />
       </div>
     )
   }
 
   if (!done && (status !== 'authenticated' || !mustChangePassword)) {
     return (
-      <div className="min-h-screen bg-slate-100 dark:bg-slate-950 flex items-center justify-center p-4">
-        <div className="w-8 h-8 border-2 border-blue-400 border-t-transparent rounded-full animate-spin" />
+      <div className="flex min-h-screen items-center justify-center bg-[var(--bg-page)] p-4">
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-[var(--primary)] border-t-transparent" />
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-slate-100 dark:bg-slate-950 flex items-center justify-center p-4">
+    <div className="flex min-h-screen items-center justify-center bg-[var(--bg-page)] p-4">
       <div className="w-full max-w-md">
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-14 h-14 rounded-lg bg-blue-500/10 border border-blue-200 mb-4">
-            <Sparkles size={24} className="text-blue-600" />
+        <div className="mb-8 text-center">
+          <div className="mb-4 inline-flex h-14 w-14 items-center justify-center rounded-lg border border-[var(--border)] bg-[var(--accent-subtle)]">
+            <Circle size={24} className="text-[var(--accent-rose)]" />
           </div>
-          <h1 className="font-heading text-2xl font-bold text-slate-900 dark:text-slate-100">
+          <h1 className="font-heading text-2xl font-bold text-[var(--text-primary)]">
             Criar sua senha
           </h1>
-          <p className="text-slate-400 dark:text-slate-400 text-sm mt-2">
-            Você recebeu uma senha temporária por e-mail.
+          <p className="mt-2 text-sm text-[var(--text-secondary)]">
+            Você recebeu uma senha temporária do administrador.
             <br />
             Crie uma nova senha para continuar.
           </p>
         </div>
 
-        <div className="card-dark shadow-xl p-8">
+        <div className="card-dark p-8 shadow-xl">
           {done ? (
-            <div className="text-center py-4">
-              <CheckCircle size={48} className="text-green-400 mx-auto mb-4" />
-              <p className="font-heading text-lg font-semibold text-slate-900 dark:text-slate-100">
+            <div className="py-4 text-center">
+              <CheckCircle size={48} className="mx-auto mb-4 text-[var(--success)]" />
+              <p className="font-heading text-lg font-semibold text-[var(--text-primary)]">
                 Senha criada
               </p>
-              <p className="text-sm text-slate-400 mt-1">Redirecionando para o login...</p>
+              <p className="mt-1 text-sm text-[var(--text-secondary)]">Redirecionando para o login...</p>
             </div>
           ) : (
             <form onSubmit={handleSubmit} className="space-y-5">
               <div>
-                <label className="block text-xs font-medium text-slate-400 dark:text-slate-400 mb-1.5">
+                <label className="mb-1.5 block text-xs font-medium text-[var(--text-secondary)]">
                   Nova senha
                 </label>
                 <div className="relative">
-                  <Lock size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                  <Lock
+                    size={15}
+                    className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-tertiary)]"
+                  />
                   <input
                     type={show.new ? 'text' : 'password'}
                     value={form.new}
-                    onChange={(event) => setForm((current) => ({ ...current, new: event.target.value }))}
+                    onChange={event =>
+                      setForm(current => ({ ...current, new: event.target.value }))
+                    }
                     placeholder="Mínimo 8 caracteres"
                     required
-                    className="w-full pl-9 pr-10 py-2.5 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                    className="input-base w-full py-2.5 pl-9 pr-10"
                   />
                   <button
                     type="button"
-                    onClick={() => setShow((current) => ({ ...current, new: !current.new }))}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400"
+                    onClick={() => setShow(current => ({ ...current, new: !current.new }))}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-tertiary)]"
                   >
                     {show.new ? <EyeOff size={14} /> : <Eye size={14} />}
                   </button>
@@ -159,24 +164,24 @@ export function DefinirSenhaClient() {
                 {form.new && (
                   <div className="mt-2 space-y-1">
                     <div className="flex gap-1">
-                      {[1, 2, 3, 4].map((index) => (
+                      {[1, 2, 3, 4].map(index => (
                         <div
                           key={index}
                           className={`h-1 flex-1 rounded-full transition-colors ${
                             index <= strength
                               ? strength <= 1
-                                ? 'bg-red-400'
+                                ? 'bg-[var(--danger)]'
                                 : strength === 2
-                                  ? 'bg-yellow-400'
+                                  ? 'bg-[var(--warning)]'
                                   : strength === 3
-                                    ? 'bg-blue-400'
-                                    : 'bg-green-400'
-                              : 'bg-slate-200 dark:bg-slate-800'
+                                    ? 'bg-[var(--info)]'
+                                    : 'bg-[var(--success)]'
+                              : 'bg-[var(--border)]'
                           }`}
                         />
                       ))}
                     </div>
-                    <p className="text-xs text-slate-400">
+                    <p className="text-xs text-[var(--text-tertiary)]">
                       {['', 'Fraca', 'Razoável', 'Boa', 'Forte'][strength]}
                     </p>
                   </div>
@@ -184,42 +189,53 @@ export function DefinirSenhaClient() {
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-slate-400 dark:text-slate-400 mb-1.5">
+                <label className="mb-1.5 block text-xs font-medium text-[var(--text-secondary)]">
                   Confirmar nova senha
                 </label>
                 <div className="relative">
-                  <Lock size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                  <Lock
+                    size={15}
+                    className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-tertiary)]"
+                  />
                   <input
                     type={show.confirm ? 'text' : 'password'}
                     value={form.confirm}
-                    onChange={(event) => setForm((current) => ({ ...current, confirm: event.target.value }))}
+                    onChange={event =>
+                      setForm(current => ({ ...current, confirm: event.target.value }))
+                    }
                     placeholder="Repita a senha"
                     required
-                    className={`w-full pl-9 pr-10 py-2.5 text-sm rounded-lg border bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500/20 ${
+                    className={`input-base w-full py-2.5 pl-9 pr-10 ${
                       form.confirm && form.new !== form.confirm
-                        ? 'border-red-400'
-                        : 'border-slate-200 dark:border-slate-700'
+                        ? 'border-[var(--danger)]'
+                        : ''
                     }`}
                   />
                   <button
                     type="button"
-                    onClick={() => setShow((current) => ({ ...current, confirm: !current.confirm }))}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400"
+                    onClick={() => setShow(current => ({ ...current, confirm: !current.confirm }))}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-tertiary)]"
                   >
                     {show.confirm ? <EyeOff size={14} /> : <Eye size={14} />}
                   </button>
                 </div>
                 {form.confirm && form.new !== form.confirm && (
-                  <p className="text-xs text-red-400 mt-1">As senhas não coincidem</p>
+                  <p className="mt-1 text-xs text-[var(--danger)]">As senhas não coincidem</p>
                 )}
               </div>
 
               <button
                 type="submit"
-                disabled={saving || !accessToken || form.new !== form.confirm || form.new.length < 8}
-                className="w-full flex items-center justify-center gap-2 py-2.5 bg-blue-600 text-white rounded-md text-sm font-semibold hover:bg-blue-700 transition-colors disabled:opacity-60"
+                disabled={
+                  saving || !accessToken || form.new !== form.confirm || form.new.length < 8
+                }
+                className="flex w-full items-center justify-center gap-2 rounded-md bg-[var(--primary)] py-2.5 text-sm font-semibold text-[var(--primary-foreground)] transition-colors hover:bg-[var(--primary-hover)] disabled:opacity-60"
               >
-                {saving ? <Loader2 size={16} className="animate-spin" /> : <CheckCircle size={16} />}
+                {saving ? (
+                  <Loader2 size={16} className="animate-spin" />
+                ) : (
+                  <CheckCircle size={16} />
+                )}
                 Criar senha e entrar
               </button>
             </form>

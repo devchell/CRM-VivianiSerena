@@ -8,7 +8,7 @@ import type { AppPermission, CrmModule } from '@viviani/types'
 import {
   LayoutDashboard, Users, Calendar, DollarSign,
   Paintbrush, Shield, Settings, UserCheck, LogOut,
-  PanelLeftClose, Menu, Sparkles,
+  PanelLeftClose, Menu, Circle, FolderOpen,
   Send, Building2,
 } from 'lucide-react'
 import { useSidebar } from '@/hooks/useSidebar'
@@ -26,13 +26,14 @@ type NavItem = {
 const NAV_ITEMS: NavItem[] = [
   { href: '/dashboard',    label: 'Dashboard',    icon: LayoutDashboard, module: 'dashboard',   exact: true },
   { href: '/leads',        label: 'Leads',        icon: Users,           module: 'leads',        exact: true },
+  { href: '/clientes',     label: 'Clientes',     icon: FolderOpen,      module: 'leads',        exact: true },
   { href: '/leads/disparos', label: 'Disparos',   icon: Send,            permission: 'leads.broadcast', exact: true },
   { href: '/agenda',       label: 'Agenda',       icon: Calendar,        module: 'agenda',       exact: true },
   { href: '/financeiro',   label: 'Financeiro',   icon: DollarSign,      module: 'financeiro',   exact: true },
   { href: '/editar-site',  label: 'Editar Site',  icon: Paintbrush,      module: 'editar-site',  exact: true },
-  { href: '/seguranca',    label: 'Segurança',    icon: Shield,          module: 'seguranca',    exact: true },
   { href: '/colaboradores',label: 'Colaboradores',icon: UserCheck,       permission: 'users.manage', exact: true },
   { href: '/administracao',label: 'Administração',icon: Building2,       permission: 'users.manage', exact: true },
+  { href: '/seguranca',    label: 'Segurança',    icon: Shield,          module: 'seguranca',    exact: true },
 ]
 
 function getRoleLabel(profile: string | null, isAdmin: boolean) {
@@ -79,7 +80,7 @@ function NavItemRow({
             : hovered
               ? 'rgba(255,255,255,0.06)'
               : 'transparent',
-          boxShadow: active ? 'inset 3px 0 0 var(--accent-cta, #F5C518)' : 'none',
+          boxShadow: active ? 'inset 3px 0 0 var(--accent-cta)' : 'none',
           fontWeight: active ? 500 : 400,
           fontSize: 14,
           whiteSpace: 'nowrap',
@@ -94,8 +95,14 @@ function NavItemRow({
   )
 }
 
-function Sidebar() {
-  const { collapsed, toggle, mobileOpen, closeMobile } = useSidebar()
+type SidebarProps = Partial<ReturnType<typeof useSidebar>>
+
+function Sidebar(props: SidebarProps = {}) {
+  const internalSidebar = useSidebar()
+  const collapsed = props.collapsed ?? internalSidebar.collapsed
+  const toggle = props.toggle ?? internalSidebar.toggle
+  const mobileOpen = props.mobileOpen ?? internalSidebar.mobileOpen
+  const closeMobile = props.closeMobile ?? internalSidebar.closeMobile
   const pathname = usePathname()
   const router = useRouter()
   const { isAdmin, userName, profile, canAccessModule, hasPermission } = useAuth()
@@ -118,7 +125,6 @@ function Sidebar() {
     background: 'var(--sidebar-bg)',
     borderRight: '1px solid var(--sidebar-border)',
     color: 'var(--sidebar-text)',
-    display: 'flex',
     flexDirection: 'column',
     height: '100vh',
   }
@@ -147,19 +153,19 @@ function Sidebar() {
               height: 36,
               borderRadius: 8,
               background: 'rgba(255,255,255,0.06)',
-              color: '#EFF6FF',
+              color: 'var(--sidebar-logo)',
               border: 'none',
               cursor: 'pointer',
               transition: 'background 150ms ease',
             }}
             aria-label="Expandir menu"
           >
-            <Sparkles size={18} strokeWidth={2.5} />
+            <Circle size={18} strokeWidth={2.5} />
           </button>
         ) : (
           <>
             <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
-              <Sparkles size={18} strokeWidth={2.5} style={{ color: '#EFF6FF', flexShrink: 0 }} />
+              <Circle size={18} strokeWidth={2.5} style={{ color: 'var(--sidebar-logo)', flexShrink: 0 }} />
               <span style={{
                 color: 'var(--sidebar-logo)',
                 fontWeight: 600,
@@ -253,6 +259,7 @@ function Sidebar() {
             <button
               onClick={() => signOut({ callbackUrl: '/login' })}
               title="Sair"
+              aria-label="Sair"
               style={{
                 width: 34, height: 34,
                 borderRadius: 8,
@@ -290,6 +297,7 @@ function Sidebar() {
             <button
               onClick={() => signOut({ callbackUrl: '/login' })}
               title="Sair"
+              aria-label="Sair"
               style={{
                 flexShrink: 0,
                 width: 34, height: 34,
@@ -302,7 +310,7 @@ function Sidebar() {
               onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(239,68,68,0.12)' }}
               onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent' }}
             >
-              <LogOut size={15} style={{ color: '#94A3B8' }} />
+              <LogOut size={15} style={{ color: 'var(--sidebar-text)' }} />
             </button>
           </div>
         )}
@@ -316,7 +324,7 @@ function Sidebar() {
     <>
       <aside
         style={{ ...sidebarStyle, width, minWidth: width }}
-        className="h-screen hidden lg:flex flex-col transition-[width] duration-300 ease-in-out"
+        className="crm-sidebar-desktop h-screen hidden lg:flex flex-col transition-[width] duration-300 ease-in-out"
       >
         {navContent}
       </aside>

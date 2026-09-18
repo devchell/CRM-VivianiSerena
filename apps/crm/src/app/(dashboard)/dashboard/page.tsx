@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import type { MetricsOverview } from '@viviani/types'
 import { StatsCards } from '@/components/dashboard/StatsCards'
 import { RevenueChart } from '@/components/dashboard/RevenueChart'
@@ -8,6 +8,7 @@ import { LeadsFunnel } from '@/components/dashboard/LeadsFunnel'
 import { RecentActivity } from '@/components/dashboard/RecentActivity'
 import { apiFetchJson } from '@/lib/api-client'
 import { useAuth } from '@/lib/useAuth'
+import { useRealtimeRefresh } from '@/lib/realtime'
 
 export default function DashboardPage() {
   const { accessToken } = useAuth()
@@ -15,39 +16,39 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  useEffect(() => {
-    if (!accessToken) return
+  const refreshDashboard = useCallback(async () => {
+    if (!accessToken) {
+      setLoading(false)
+      return
+    }
 
-    let active = true
     setLoading(true)
     setError(null)
 
-    apiFetchJson<{ success: true; data: MetricsOverview }>('/api/v1/metrics/overview?period=month', {
-      headers: { Authorization: `Bearer ${accessToken}` },
-    })
-      .then((response) => {
-        if (!active) return
-        setOverview(response.data)
+    try {
+      const response = await apiFetchJson<{ success: true; data: MetricsOverview }>('/api/v1/metrics/overview?period=month', {
+        headers: { Authorization: `Bearer ${accessToken}` },
       })
-      .catch((fetchError) => {
-        if (!active) return
-        setError(fetchError instanceof Error ? fetchError.message : 'Não foi possível carregar o dashboard.')
-      })
-      .finally(() => {
-        if (active) setLoading(false)
-      })
-
-    return () => {
-      active = false
+      setOverview(response.data)
+    } catch (fetchError) {
+      setError(fetchError instanceof Error ? fetchError.message : 'Não foi possível carregar o dashboard.')
+    } finally {
+      setLoading(false)
     }
   }, [accessToken])
+
+  useEffect(() => {
+    void refreshDashboard()
+  }, [refreshDashboard])
+
+  useRealtimeRefresh(refreshDashboard, ['leads', 'appointments', 'financials', 'analytics', 'dispatches'])
 
   return (
     <div className="space-y-6">
       <div>
         <h1 className="font-heading text-2xl font-bold text-slate-900 dark:text-slate-100">Dashboard</h1>
-        <p className="mt-1 text-sm text-slate-400 dark:text-slate-400">
-          Visão operacional consolidada a partir da API canônica de métricas.
+        <p className="mt-1 text-sm text-[var(--text-tertiary)]">
+          Acompanhe leads, agenda, conversão e financeiro em um único lugar.
         </p>
       </div>
 

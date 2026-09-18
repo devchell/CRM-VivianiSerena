@@ -43,6 +43,9 @@ export interface Lead {
   utmCampaign?: string
   status: LeadStatus
   notes?: string
+  consentedAt?: Date | null
+  anonymized?: boolean
+  deletedAt?: Date | null
   createdAt: Date
   convertedAt?: Date
 }

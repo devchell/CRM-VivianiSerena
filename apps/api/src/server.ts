@@ -14,7 +14,7 @@ const HOST = apiEnv.apiHost
 async function bootstrap() {
   try {
     await prisma.$connect()
-    logger.info('✅ Database connected')
+    logger.info('Database connected')
 
     const app = createApp()
     const httpServer = createServer(app)
@@ -36,26 +36,12 @@ async function bootstrap() {
     // Start background jobs
     startAllJobs()
 
-    // Keep-alive: ping health endpoint every 10 min to prevent Render free tier spin-down
-    if (apiEnv.nodeEnv === 'production') {
-      const KEEP_ALIVE_INTERVAL = 10 * 60 * 1000
-      setInterval(async () => {
-        try {
-          const res = await fetch(`${apiEnv.apiBaseUrl}/health/ready`)
-          if (!res.ok) logger.warn('Keep-alive ping returned non-ok', { status: res.status })
-        } catch {
-          // ignore — server may be mid-restart
-        }
-      }, KEEP_ALIVE_INTERVAL)
-      logger.info('Keep-alive ping scheduled every 10 minutes')
-    }
-
     httpServer.listen(PORT, HOST, () => {
-      logger.info(`🚀 API server running at http://${HOST}:${PORT}`)
-      logger.info(`📡 Socket.io ready`)
-      logger.info(`🌍 Environment: ${apiEnv.nodeEnv}`)
+      logger.info(`API server running at http://${HOST}:${PORT}`)
+      logger.info('Socket.io ready')
+      logger.info(`Environment: ${apiEnv.nodeEnv}`)
       if (apiEnv.nodeEnv !== 'production') {
-        logger.info(`📚 Swagger docs: ${apiEnv.apiBaseUrl}/docs`)
+        logger.info(`Swagger docs: ${apiEnv.apiBaseUrl}/docs`)
       }
     })
 

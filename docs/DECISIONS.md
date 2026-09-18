@@ -4,6 +4,8 @@
 > **Data:** 2026-04-04  
 > **Status:** aprovado
 
+> **Decisão vigente — 2026-08-31:** substituir a implantação Vercel/Render/Supabase/Upstash por Docker Compose self-hosted na VPS. As decisões D1, D3, D4 e D5 abaixo permanecem como histórico de produto e não autorizam deploy cloud.
+
 ---
 
 ## 1. DECISÕES ARQUITETURAIS PRINCIPAIS
@@ -323,11 +325,11 @@
 
 ### D19: Financeiros imutáveis (sem update após criação)
 
-**Decisão**: Lançamentos financeiros nunca são atualizados, apenas deletados (soft-delete) e recriados.
+**Decisão**: Lançamentos financeiros nunca sobrescrevem a versão original. Uma correção cria um novo lançamento com os dados consolidados e arquiva o registro anterior com `deleted_at`.
 
 **Trade-offs**:
 - ✅ **Vantagem**: auditoria perfeita, impossível esconder manipulação
-- ⚠️ **Custo**: UX: user não pode editar; deve deletar + recriar
+- ⚠️ **Custo**: a edição gera um novo identificador e exige que as consultas ignorem versões arquivadas
 - ❌ **Risco mitigado**: manipulação de dados históricos
 
 **Alternativa rejeitada**: Permitir update com versioning

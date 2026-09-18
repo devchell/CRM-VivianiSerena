@@ -1,6 +1,7 @@
 import { Router } from 'express'
 import { z } from 'zod'
 import path from 'path'
+import { randomUUID } from 'crypto'
 import multer from 'multer'
 import sharp from 'sharp'
 import { Prisma, type ContentSection } from '@prisma/client'
@@ -16,11 +17,14 @@ import {
   uploadFile,
 } from '../infrastructure/storage'
 import { fetchGoogleBusinessReviews, type GoogleBusinessLocation } from '../infrastructure/googleBusiness'
+import { buildCommercialLeadWhere } from '../domain/metrics/service'
 import { UPLOAD } from '../shared/constants'
+import { normalizeContentSection } from './contentSection'
+import { contentUpdateSchema } from './contentUpdate'
+import { sanitizeRichContentValue, sanitizeRichHtml } from '../lib/sanitize'
 
 export const contentRouter: Router = Router()
 
-const updateSchema = z.object({ value: z.unknown() })
 const historyQuerySchema = z.object({
   limit: z.coerce.number().int().min(1).max(100).optional(),
 })
@@ -51,14 +55,14 @@ type ContentVersionRecord = {
   user: { id: string; name: string | null; email: string }
 }
 
-function normalizeSectionAlias(section: string): ContentSection {
-  return (section === 'sobre' ? 'about' : section) as ContentSection
-}
-
 function normalizeContentValue(value: unknown): Prisma.InputJsonValue {
   return typeof value === 'object' && value !== null
     ? (value as Prisma.InputJsonValue)
     : ({ value } as Prisma.InputJsonValue)
+}
+
+function sanitizePublicContentValue(section: ContentSection, key: string, value: Prisma.JsonValue) {
+  return section === 'about' && key === 'bio' ? sanitizeRichContentValue(value) : value
 }
 
 async function getNextContentVersion(
@@ -165,7 +169,7 @@ contentRouter.get('/', async (_req, res, next) => {
         result[content.section] = {}
       }
 
-      result[content.section][content.key] = content.value
+      result[content.section][content.key] = sanitizePublicContentValue(content.section, content.key, content.value)
     })
 
     res.json({ success: true, data: result })
@@ -177,9 +181,9 @@ contentRouter.get('/', async (_req, res, next) => {
 contentRouter.get('/site-summary', async (_req, res, next) => {
   try {
     const [leadCount, completedAppointments, convertedCases, configuredContent] = await Promise.all([
-      prisma.lead.count(),
-      prisma.appointment.count({ where: { status: 'completed' } }),
-      prisma.lead.count({ where: { status: 'converted' } }),
+      prisma.lead.count({ where: buildCommercialLeadWhere() }),
+      prisma.appointment.count({ where: { status: 'completed', lead: { deletedAt: null } } }),
+      prisma.lead.count({ where: buildCommercialLeadWhere({ status: 'converted' }) }),
       prisma.content.findMany({
         where: {
           OR: [
@@ -374,16 +378,21 @@ contentRouter.post('/upload', authenticate, authorizePermission('editar-site.upl
 
     await ensureUploadStorageReady()
 
-    const id = Date.now().toString(36) + Math.random().toString(36).slice(2)
-    const fullBuffer = await sharp(req.file.buffer)
+    const metadata = await sharp(req.file.buffer, { limitInputPixels: 25_000_000 }).metadata()
+    if (!metadata.format || !['jpeg', 'png', 'webp'].includes(metadata.format)) {
+      throw new AppError(400, 'Arquivo de imagem inválido')
+    }
+
+    const id = randomUUID()
+    const fullBuffer = await sharp(req.file.buffer, { limitInputPixels: 25_000_000 })
       .resize(UPLOAD.FULL_WIDTH, undefined, { withoutEnlargement: true })
       .webp({ quality: 85 })
       .toBuffer()
-    const thumbBuffer = await sharp(req.file.buffer)
+    const thumbBuffer = await sharp(req.file.buffer, { limitInputPixels: 25_000_000 })
       .resize(UPLOAD.THUMB_WIDTH, undefined, { withoutEnlargement: true })
       .webp({ quality: 80 })
       .toBuffer()
-    const blurBuffer = await sharp(req.file.buffer)
+    const blurBuffer = await sharp(req.file.buffer, { limitInputPixels: 25_000_000 })
       .resize(UPLOAD.BLUR_SIZE, undefined, { withoutEnlargement: true })
       .webp({ quality: 10 })
       .toBuffer()
@@ -392,11 +401,16 @@ contentRouter.post('/upload', authenticate, authorizePermission('editar-site.upl
     const thumbnail = `${id}-thumb.webp`
     const blur = `${id}-blur.webp`
 
-    await Promise.all([
-      uploadFile({ filename, buffer: fullBuffer, contentType: 'image/webp' }),
-      uploadFile({ filename: thumbnail, buffer: thumbBuffer, contentType: 'image/webp' }),
-      uploadFile({ filename: blur, buffer: blurBuffer, contentType: 'image/webp' }),
-    ])
+    try {
+      await Promise.all([
+        uploadFile({ filename, buffer: fullBuffer, contentType: 'image/webp' }),
+        uploadFile({ filename: thumbnail, buffer: thumbBuffer, contentType: 'image/webp' }),
+        uploadFile({ filename: blur, buffer: blurBuffer, contentType: 'image/webp' }),
+      ])
+    } catch (error) {
+      await Promise.allSettled([deleteFile(filename), deleteFile(thumbnail), deleteFile(blur)])
+      throw error
+    }
 
     res.json({
       success: true,
@@ -425,10 +439,10 @@ contentRouter.post('/publish', authenticate, authorizePermission('editar-site.pu
       throw new AppError(400, 'REVALIDATE_SECRET nao configurado')
     }
 
-    const url = new URL(landingRevalidateUrl)
-    url.searchParams.set('secret', secret)
-
-    const response = await fetch(url.toString(), { method: 'POST' })
+    const response = await fetch(landingRevalidateUrl, {
+      method: 'POST',
+      headers: { 'x-revalidate-secret': secret },
+    })
     if (!response.ok) {
       throw new AppError(502, 'Falha ao revalidar a landing')
     }
@@ -454,7 +468,7 @@ contentRouter.delete('/upload/:filename', authenticate, authorizePermission('edi
 
 contentRouter.get('/:section/:key/history', authenticate, authorizePermission('editar-site.history'), async (req, res, next) => {
   try {
-    const section = normalizeSectionAlias(String(req.params.section))
+    const section = normalizeContentSection(String(req.params.section))
     const key = String(req.params.key)
     const query = historyQuerySchema.parse(req.query)
     const limit = query.limit ?? 20
@@ -500,31 +514,37 @@ const VALID_TEMPLATE_IDS = [
   'auth_2fa',
 ]
 
-contentRouter.get('/auto-templates', authenticate, async (_req, res) => {
+contentRouter.get('/auto-templates', authenticate, authorizePermission('leads.broadcast'), async (_req, res, next) => {
   try {
     const templates = await prisma.autoTemplate.findMany()
     return res.json({ success: true, data: templates })
   } catch (error) {
-    console.error('[auto-templates GET]', error)
-    return res.json({ success: true, data: [] })
+    logger.error('Auto-template listing failed', {
+      error: error instanceof Error ? error.message : 'unknown_error',
+    })
+    return next(error)
   }
 })
 
-contentRouter.put('/auto-templates/:templateId', authenticate, authorizePermission('editar-site.update'), async (req, res, next) => {
+contentRouter.put('/auto-templates/:templateId', authenticate, authorizePermission('leads.broadcast'), async (req, res, next) => {
   try {
     const templateId = String(req.params.templateId)
     if (!VALID_TEMPLATE_IDS.includes(templateId)) {
       throw new AppError(400, `templateId inválido: ${templateId}`)
     }
     const body = autoTemplateBodySchema.parse(req.body)
+    const emailHtml = body.emailHtml === undefined ? undefined : sanitizeRichHtml(body.emailHtml)
     const template = await prisma.autoTemplate.upsert({
       where: { templateId },
-      update: { emailHtml: body.emailHtml ?? null, whatsappText: body.whatsappText ?? null },
-      create: { templateId, emailHtml: body.emailHtml ?? null, whatsappText: body.whatsappText ?? null },
+      update: { emailHtml: emailHtml ?? null, whatsappText: body.whatsappText ?? null },
+      create: { templateId, emailHtml: emailHtml ?? null, whatsappText: body.whatsappText ?? null },
     })
     return res.json({ success: true, data: template })
   } catch (error) {
-    console.error('[auto-templates PUT]', error)
+    logger.error('Auto-template update failed', {
+      templateId: req.params.templateId,
+      error: error instanceof Error ? error.message : 'unknown_error',
+    })
     next(error)
   }
 })
@@ -533,9 +553,9 @@ contentRouter.put('/auto-templates/:templateId', authenticate, authorizePermissi
 
 contentRouter.get('/:section', async (req, res, next) => {
   try {
-    const contents = await prisma.content.findMany({ where: { section: normalizeSectionAlias(String(req.params.section)) } })
+    const contents = await prisma.content.findMany({ where: { section: normalizeContentSection(String(req.params.section)) } })
     const result = contents.reduce<Record<string, unknown>>((acc, content) => {
-      acc[content.key] = content.value
+      acc[content.key] = sanitizePublicContentValue(content.section, content.key, content.value)
       return acc
     }, {})
 
@@ -547,10 +567,10 @@ contentRouter.get('/:section', async (req, res, next) => {
 
 contentRouter.get('/:section/:key', async (req, res, next) => {
   try {
-    const section = normalizeSectionAlias(String(req.params.section))
+    const section = normalizeContentSection(String(req.params.section))
     const key = String(req.params.key)
     const content = await prisma.content.findUnique({ where: { section_key: { section, key } } })
-    res.json({ success: true, data: content ? content.value : null })
+    res.json({ success: true, data: content ? sanitizePublicContentValue(content.section, content.key, content.value) : null })
   } catch (error) {
     next(error)
   }
@@ -558,15 +578,17 @@ contentRouter.get('/:section/:key', async (req, res, next) => {
 
 contentRouter.put('/:section/:key', authenticate, authorizePermission('editar-site.update'), async (req, res, next) => {
   try {
-    const { value } = updateSchema.parse(req.body)
-    const section = normalizeSectionAlias(String(req.params.section))
+    const { value } = contentUpdateSchema.parse(req.body)
+    const section = normalizeContentSection(String(req.params.section))
     const key = String(req.params.key)
     if (!req.user) {
       throw new AppError(401, 'Sessão inválida')
     }
 
     const updatedBy = req.user.sub
-    const jsonValue = normalizeContentValue(value)
+    const jsonValue = section === 'about' && key === 'bio'
+      ? sanitizeRichContentValue(normalizeContentValue(value)) as Prisma.InputJsonValue
+      : normalizeContentValue(value)
 
     const content = await prisma.$transaction(async (tx) => {
       const saved = await tx.content.upsert({
@@ -604,7 +626,7 @@ contentRouter.put('/:section/:key', authenticate, authorizePermission('editar-si
 
 contentRouter.delete('/:section/:key', authenticate, authorizePermission('editar-site.delete'), async (req, res, next) => {
   try {
-    const section = normalizeSectionAlias(String(req.params.section))
+    const section = normalizeContentSection(String(req.params.section))
     const key = String(req.params.key)
     if (!req.user) {
       throw new AppError(401, 'Sessão inválida')

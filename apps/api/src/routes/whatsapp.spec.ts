@@ -4,11 +4,13 @@ import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
 import { errorHandler } from '../middleware/errorHandler'
 
 const ingestWhatsAppWebhook = vi.fn()
+const isWhatsAppWebhookConfigured = vi.fn()
 const verifyWhatsAppWebhookChallenge = vi.fn()
 const verifyWhatsAppWebhookSignature = vi.fn()
 
 vi.mock('../infrastructure/whatsapp', () => ({
   ingestWhatsAppWebhook,
+  isWhatsAppWebhookConfigured,
   verifyWhatsAppWebhookChallenge,
   verifyWhatsAppWebhookSignature,
 }))
@@ -16,17 +18,23 @@ vi.mock('../infrastructure/whatsapp', () => ({
 let whatsappRouter: typeof import('./whatsapp').whatsappRouter
 
 beforeAll(async () => {
+  process.env.WHATSAPP_APP_SECRET = 'test-app-secret'
   const module = await import('./whatsapp')
   whatsappRouter = module.whatsappRouter
 })
 
 beforeEach(() => {
   vi.clearAllMocks()
+  isWhatsAppWebhookConfigured.mockReturnValue(true)
 })
 
 function createApp() {
   const app = express()
-  app.use(express.json())
+  app.use(express.json({
+    verify: (req, _res, buffer) => {
+      (req as express.Request & { rawBody?: Buffer }).rawBody = Buffer.from(buffer)
+    },
+  }))
   app.use('/', whatsappRouter)
   app.use(errorHandler)
   return app
@@ -65,5 +73,14 @@ describe('POST /whatsapp/webhook', () => {
       success: true,
       data: { processed: 2 },
     })
+  })
+
+  it('rejects requests without a provider signature', async () => {
+    const response = await request(createApp())
+      .post('/webhook')
+      .send({ entry: [] })
+
+    expect(response.status).toBe(403)
+    expect(ingestWhatsAppWebhook).not.toHaveBeenCalled()
   })
 })

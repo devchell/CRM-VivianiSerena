@@ -11,19 +11,22 @@ const ALL_NAV_LINKS = [
   { href: '#como-funciona', label: 'Como Funciona' },
   { href: '#servicos', label: 'Serviços' },
   { href: '#avaliacoes', label: 'Avaliações' },
+  { href: '#resultados-clientes', label: 'Resultados' },
   { href: '#contato', label: 'Contato' },
 ]
 
 const WA_LINK = 'https://wa.link/e2g7ii'
 
-export function Navbar({ hasTestimonials = true }: { hasTestimonials?: boolean }) {
-  const NAV_LINKS = hasTestimonials
-    ? ALL_NAV_LINKS
-    : ALL_NAV_LINKS.filter(l => l.href !== '#avaliacoes')
+export function Navbar({ hasTestimonials = true, hasClientResults = false }: { hasTestimonials?: boolean; hasClientResults?: boolean }) {
+  const NAV_LINKS = ALL_NAV_LINKS.filter((link) => {
+    if (link.href === '#avaliacoes') return hasTestimonials
+    if (link.href === '#resultados-clientes') return hasClientResults
+    return true
+  })
   const [isScrolled, setIsScrolled] = useState(false)
   const [isMenuOpen, setIsMenuOpen] = useState(false)
 
-  const activeSection = useActiveSection(['sobre', 'como-funciona', 'servicos', 'avaliacoes', 'contato'])
+  const activeSection = useActiveSection(['sobre', 'como-funciona', 'servicos', 'avaliacoes', 'resultados-clientes', 'contato'])
 
   // Detecta scroll para aplicar glassmorphism
   useEffect(() => {
@@ -135,27 +138,24 @@ export function Navbar({ hasTestimonials = true }: { hasTestimonials?: boolean }
             </div>
 
             {/* Mobile hamburguer */}
-            <button
-              className={`lg:hidden p-2 rounded-lg transition-colors ${
-                isScrolled ? 'text-charcoal hover:bg-blush' : 'text-white hover:bg-white/10'
-              }`}
-              onClick={() => setIsMenuOpen(!isMenuOpen)}
-              aria-label={isMenuOpen ? 'Fechar menu' : 'Abrir menu'}
-              aria-expanded={isMenuOpen}
-              aria-controls="mobile-menu"
-            >
-              <AnimatePresence mode="wait" initial={false}>
-                {isMenuOpen ? (
-                  <motion.span key="close" initial={{ rotate: -90, opacity: 0 }} animate={{ rotate: 0, opacity: 1 }} exit={{ rotate: 90, opacity: 0 }} transition={{ duration: 0.15 }}>
-                    <X size={24} />
-                  </motion.span>
-                ) : (
-                  <motion.span key="menu" initial={{ rotate: 90, opacity: 0 }} animate={{ rotate: 0, opacity: 1 }} exit={{ rotate: -90, opacity: 0 }} transition={{ duration: 0.15 }}>
-                    <Menu size={24} />
-                  </motion.span>
-                )}
-              </AnimatePresence>
-            </button>
+            <AnimatePresence initial={false}>
+              {!isMenuOpen && (
+                <motion.button
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.9 }}
+                  className={`lg:hidden p-2 rounded-lg transition-colors ${
+                    isScrolled ? 'text-charcoal hover:bg-blush' : 'text-white hover:bg-white/10'
+                  }`}
+                  onClick={() => setIsMenuOpen(true)}
+                  aria-label="Abrir menu"
+                  aria-expanded={false}
+                  aria-controls="mobile-menu"
+                >
+                  <Menu size={24} aria-hidden="true" />
+                </motion.button>
+              )}
+            </AnimatePresence>
           </div>
         </div>
       </header>

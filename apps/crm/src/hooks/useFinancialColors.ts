@@ -38,8 +38,8 @@ export function useFinancialColors(): FinancialColors {
       expense: 'var(--fin-area-expense)',
     },
     pie: [
-      '#7acb8f', '#8ecae6', '#f6ad55', '#f28b82',
-      '#a5d8ff', '#c2cedd', '#dfe7f1', '#f9d3b4',
+      'var(--chart-pie-1)', 'var(--chart-pie-2)', 'var(--chart-pie-3)', 'var(--chart-pie-4)',
+      'var(--chart-pie-5)', 'var(--chart-pie-6)', 'var(--chart-pie-7)', 'var(--chart-pie-8)',
     ],
   }
 }

@@ -6,10 +6,10 @@ O repositorio ja passou por limpeza relevante, mas ainda existe codigo que merec
 ## Itens para manter sob observacao
 - warnings de `no-img-element` em `apps/crm/src/app/(dashboard)/editar-site/page.tsx`;
 - endpoints legados mantidos por compatibilidade, como `POST /auth/2fa/toggle`;
-- suporte a `role` legado (`ADMIN`, `MANAGER`, `VIEWER`) preservado por compatibilidade com o banco.
+- suporte a `role` persistido (`ADMIN`, `MANAGER`, `VIEWER`) preservado por compatibilidade com o enum atual do banco.
 
 ## Itens intencionalmente mantidos
-- `MANAGER` como role persistida do perfil `COLLABORATOR`;
+- `MANAGER` como role persistida do perfil de produto `COLLABORATOR`; a API também aceita o nome público e normaliza na entrada.
 - `VIEWER` como role persistida do perfil `VIEWER`;
 - compatibilidade com grants antigos por modulo e por permissao.
 

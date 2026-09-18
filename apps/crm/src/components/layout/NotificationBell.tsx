@@ -3,19 +3,23 @@
 import { useEffect, useRef, useState } from 'react'
 import { Bell } from 'lucide-react'
 import { crmListShell, crmSoftListItem } from '@/components/ui/listStyles'
+import { useRealtimeRefresh } from '@/lib/realtime'
 
 interface Notification {
   id: string
   type: 'lead' | 'appointment' | 'security' | 'financial'
   title: string
-  desc: string
-  time: string
+  description: string
+  timestamp: string
   read: boolean
   readAt?: string | null
 }
 
 function timeAgo(date: string): string {
-  const diff = Math.floor((Date.now() - new Date(date).getTime()) / 60000)
+  const timestamp = new Date(date).getTime()
+  if (!Number.isFinite(timestamp)) return 'data indisponível'
+
+  const diff = Math.floor((Date.now() - timestamp) / 60000)
   if (diff < 1) return 'agora'
   if (diff < 60) return `há ${diff} min`
   const hours = Math.floor(diff / 60)
@@ -35,14 +39,16 @@ export function NotificationBell() {
       if (Array.isArray(data)) {
         setNotifications(data as Notification[])
       }
-    } catch {
-      return null
+    } catch (error) {
+      console.warn('[notifications] Não foi possível carregar as notificações.', error)
     }
   }
 
   useEffect(() => {
     void loadNotifications()
   }, [])
+
+  useRealtimeRefresh(loadNotifications)
 
   useEffect(() => {
     if (!open) return
@@ -112,8 +118,8 @@ export function NotificationBell() {
               notifications.map((notification) => (
                 <div key={notification.id} className={`${crmSoftListItem} ${notification.read ? 'opacity-85' : 'border-blue-200 bg-blue-50/50 dark:border-blue-900 dark:bg-blue-950/30'}`}>
                   <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">{notification.title}</p>
-                  <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">{notification.desc}</p>
-                  <p className="mt-1 text-[10px] text-slate-400 dark:text-slate-500">{timeAgo(notification.time)}</p>
+                  <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">{notification.description}</p>
+                  <p className="mt-1 text-[10px] text-slate-400 dark:text-slate-500">{timeAgo(notification.timestamp)}</p>
                 </div>
               ))
             )}

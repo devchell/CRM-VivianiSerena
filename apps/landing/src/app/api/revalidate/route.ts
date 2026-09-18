@@ -8,8 +8,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'REVALIDATE_SECRET not configured' }, { status: 500 })
   }
 
-  const { searchParams } = req.nextUrl
-  const secret = searchParams.get('secret')
+  const secret = req.headers.get('x-revalidate-secret')
 
   if (secret !== SECRET) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })

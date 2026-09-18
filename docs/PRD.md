@@ -7,6 +7,8 @@
 > **Status:** aprovado  
 > **Cliente:** Viviani Serena
 
+> **Nota de vigência — 2026-08-31:** este PRD contém decisões e integrações descritas para a arquitetura cloud original. O produto vigente roda integralmente na VPS via Docker Compose, com PostgreSQL/Redis/uploads locais; Google, SMTP e WhatsApp continuam integrações externas opcionais que exigem credenciais reais.
+
 ---
 
 ## 1. TL;DR

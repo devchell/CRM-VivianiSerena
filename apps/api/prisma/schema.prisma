@@ -3,9 +3,9 @@ generator client {
 }
 
 datasource db {
-  provider   = "postgresql"
-  url        = env("DATABASE_URL")
-  directUrl  = env("DIRECT_DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_DATABASE_URL")
 }
 
 enum UserRole {
@@ -83,30 +83,38 @@ enum SecurityEventSeverity {
   critical
 }
 
-model User {
-  id                 String    @id @default(cuid())
-  email              String    @unique
-  name               String?
-  phone              String?
-  passwordHash       String    @map("password_hash")
-  totpSecret         String?   @map("totp_secret")
-  twoFactorEnabled   Boolean   @default(false) @map("two_factor_enabled")
-  twoFactorEmailEnabled Boolean @default(false) @map("two_factor_email_enabled")
-  twoFactorSmsEnabled Boolean   @default(false) @map("two_factor_sms_enabled")
-  role               UserRole  @default(VIEWER)
-  photoUrl           String?   @map("photo_url")
-  mustChangePassword Boolean   @default(false) @map("must_change_password")
-  allowedModules     String[]  @default([]) @map("allowed_modules")
-  createdAt          DateTime  @default(now()) @map("created_at")
-  lastLogin          DateTime? @map("last_login")
-  failedAttempts     Int       @default(0) @map("failed_attempts")
-  lockedUntil        DateTime? @map("locked_until")
+enum ClientFolderStage {
+  before
+  progress
+  after
+}
 
-  auditLogs AuditLog[]
-  contents  Content[]
-  contentVersions   ContentVersion[]
-  emailSettingsUpdates EmailSettings[] @relation("EmailSettingsUpdatedBy")
-  notificationReads NotificationRead[]
+model User {
+  id                    String    @id @default(cuid())
+  email                 String    @unique
+  username              String?   @unique
+  name                  String?
+  phone                 String?
+  passwordHash          String    @map("password_hash")
+  totpSecret            String?   @map("totp_secret")
+  twoFactorEnabled      Boolean   @default(false) @map("two_factor_enabled")
+  twoFactorEmailEnabled Boolean   @default(false) @map("two_factor_email_enabled")
+  twoFactorSmsEnabled   Boolean   @default(false) @map("two_factor_sms_enabled")
+  role                  UserRole  @default(VIEWER)
+  photoUrl              String?   @map("photo_url")
+  mustChangePassword    Boolean   @default(false) @map("must_change_password")
+  allowedModules        String[]  @default([]) @map("allowed_modules")
+  createdAt             DateTime  @default(now()) @map("created_at")
+  lastLogin             DateTime? @map("last_login")
+  failedAttempts        Int       @default(0) @map("failed_attempts")
+  lockedUntil           DateTime? @map("locked_until")
+
+  auditLogs            AuditLog[]
+  contents             Content[]
+  contentVersions      ContentVersion[]
+  emailSettingsUpdates EmailSettings[]    @relation("EmailSettingsUpdatedBy")
+  notificationReads    NotificationRead[]
+  clientFolders        ClientFolder[]     @relation("ClientFolderCreatedBy")
 
   @@map("users")
 }
@@ -140,16 +148,19 @@ model Lead {
   utmCampaign String?    @map("utm_campaign")
   status      LeadStatus @default(new)
   notes       String?    @db.Text
-  consentedAt DateTime?  @map("consented_at")  // LGPD consent timestamp
-  anonymized  Boolean    @default(false)         // True after GDPR erasure request
+  consentedAt DateTime?  @map("consented_at") // LGPD consent timestamp
+  anonymized  Boolean    @default(false) // True after GDPR erasure request
+  deletedAt   DateTime?  @map("deleted_at")
   createdAt   DateTime   @default(now()) @map("created_at")
   convertedAt DateTime?  @map("converted_at")
 
-  sessions     Session[]
-  appointments Appointment[]
+  sessions      Session[]
+  appointments  Appointment[]
+  clientFolders ClientFolder[]
 
   @@index([email])
   @@index([status])
+  @@index([deletedAt], map: "leads_deleted_at_idx")
   @@index([createdAt])
   @@map("leads")
 }
@@ -164,9 +175,9 @@ model Session {
   duration     Int      @default(0)
   createdAt    DateTime @default(now()) @map("created_at")
 
-  lead Lead? @relation(fields: [leadId], references: [id], onDelete: SetNull)
+  lead            Lead?            @relation(fields: [leadId], references: [id], onDelete: SetNull)
   analyticsEvents AnalyticsEvent[]
-  webVitals      WebVital[]
+  webVitals       WebVital[]
 
   @@index([leadId])
   @@map("sessions")
@@ -203,11 +214,58 @@ model Financial {
   tags        String[]          @default([])
   createdAt   DateTime          @default(now()) @map("created_at")
   updatedAt   DateTime          @updatedAt @map("updated_at")
+  deletedAt   DateTime?         @map("deleted_at")
 
   @@index([type])
   @@index([category])
   @@index([date])
+  @@index([deletedAt], map: "financials_deleted_at_idx")
   @@map("financials")
+}
+
+model ClientFolder {
+  id                String    @id @default(cuid())
+  leadId            String?   @map("lead_id")
+  clientName        String    @map("client_name")
+  clientEmail       String?   @map("client_email")
+  clientPhone       String?   @map("client_phone")
+  serviceLabel      String?   @map("service_label")
+  notes             String?   @db.Text
+  publicTitle       String?   @map("public_title")
+  publicDescription String?   @map("public_description") @db.Text
+  isPublished       Boolean   @default(false) @map("is_published")
+  publicConsentAt   DateTime? @map("public_consent_at")
+  createdBy         String    @map("created_by")
+  createdAt         DateTime  @default(now()) @map("created_at")
+  updatedAt         DateTime  @updatedAt @map("updated_at")
+
+  lead    Lead?               @relation(fields: [leadId], references: [id], onDelete: SetNull)
+  creator User                @relation("ClientFolderCreatedBy", fields: [createdBy], references: [id])
+  media   ClientFolderMedia[]
+
+  @@index([leadId])
+  @@index([isPublished, updatedAt])
+  @@index([clientName])
+  @@map("client_folders")
+}
+
+model ClientFolderMedia {
+  id                  String            @id @default(cuid())
+  folderId            String            @map("folder_id")
+  stage               ClientFolderStage
+  capturedAt          DateTime          @map("captured_at")
+  note                String?           @db.Text
+  originalFilename    String            @map("original_filename")
+  originalStorageKey  String            @map("original_storage_key")
+  optimizedStorageKey String            @map("optimized_storage_key")
+  width               Int
+  height              Int
+  createdAt           DateTime          @default(now()) @map("created_at")
+
+  folder ClientFolder @relation(fields: [folderId], references: [id], onDelete: Cascade)
+
+  @@index([folderId, capturedAt])
+  @@map("client_folder_media")
 }
 
 model Content {
@@ -218,7 +276,7 @@ model Content {
   updatedAt DateTime       @updatedAt @map("updated_at")
   updatedBy String         @map("updated_by")
 
-  user User @relation(fields: [updatedBy], references: [id])
+  user     User             @relation(fields: [updatedBy], references: [id])
   versions ContentVersion[]
 
   @@unique([section, key])
@@ -240,8 +298,8 @@ model ContentVersion {
   content Content? @relation(fields: [contentId], references: [id], onDelete: SetNull)
   user    User     @relation(fields: [createdBy], references: [id])
 
-  @@index([section, key, createdAt])
   @@unique([section, key, version])
+  @@index([section, key, createdAt])
   @@map("content_versions")
 }
 
@@ -352,13 +410,13 @@ model LeadStatusTemplate {
 
 // LGPD — Registro de consentimento de uso de dados
 model ConsentLog {
-  id             String   @id @default(cuid())
-  email          String
-  ipAddress      String?  @map("ip_address")  // Apenas 3 octetos (LGPD)
-  policyVersion  String   @map("policy_version")
-  consentText    String   @db.Text @map("consent_text")
-  consentedAt    DateTime @default(now()) @map("consented_at")
-  channel        String   @default("landing_form") // landing_form | crm | api
+  id            String   @id @default(cuid())
+  email         String
+  ipAddress     String?  @map("ip_address") // Apenas 3 octetos (LGPD)
+  policyVersion String   @map("policy_version")
+  consentText   String   @map("consent_text") @db.Text
+  consentedAt   DateTime @default(now()) @map("consented_at")
+  channel       String   @default("landing_form") // landing_form | crm | api
 
   @@index([email])
   @@index([consentedAt])

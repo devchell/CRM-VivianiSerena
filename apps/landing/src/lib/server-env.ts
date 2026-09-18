@@ -16,7 +16,7 @@ function readRequiredServerUrl(names: Array<'API_BASE_URL' | 'NEXT_PUBLIC_API_UR
     throw new Error(`[env] Invalid server API URL: ${value}`)
   }
 
-  if (LOCAL_HOSTS.has(parsed.hostname)) {
+  if (process.env.NODE_ENV === 'production' && LOCAL_HOSTS.has(parsed.hostname)) {
     throw new Error('[env] API_BASE_URL must not point to localhost in this deployment model')
   }
 

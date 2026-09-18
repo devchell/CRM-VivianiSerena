@@ -2,7 +2,7 @@
 
 import { useRef } from 'react'
 import { motion, useInView } from 'framer-motion'
-import { CalendarCheck, Microscope, Zap, Sparkles } from 'lucide-react'
+import { CalendarCheck, Microscope, RotateCcw, Zap } from 'lucide-react'
 
 const STEPS = [
   {
@@ -37,7 +37,7 @@ const STEPS = [
   },
   {
     number: '04',
-    icon: Sparkles,
+    icon: RotateCcw,
     title: 'Renovação',
     subtitle: 'Sua pele, original',
     description:

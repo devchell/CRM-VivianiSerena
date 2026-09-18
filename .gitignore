@@ -5,26 +5,30 @@ node_modules
 .next
 dist
 build
+.turbo/
 
 # Environment files
 .env
 .env.local
 .env.*
+render.env
 !.env.example
 !.env*.example
 !.env*.sample
 
-# Vercel — keep project.json but exclude build output and env files
-.vercel/output/
-.vercel/.env*
-apps/**/.vercel/output/
-apps/**/.vercel/.env*
-apps/**/.vercel/README.txt
+# Generated deployment artifacts
+.vercel/
+apps/**/.vercel/
 
-# Uploads and logs (stored in Supabase Storage / cloud)
+# Uploads and logs (stored in the API Docker volume on the VPS)
 apps/api/uploads/
+apps/api/private-uploads/
 apps/api/logs/
 logs/
+
+# Test artifacts
+coverage/
+test-results/
 
 # OS / Editor
 .DS_Store
@@ -33,6 +37,9 @@ logs/
 
 # Misc
 *.bak
+*.tar.gz
+deploy/vps/tls/*.pem
+deploy/vps/tls/*.key
 upload-sistema.md
 AUDITORIA_V2.md
 DEPLOY_CHECKLIST_FINAL.md

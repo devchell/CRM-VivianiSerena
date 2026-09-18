@@ -9,6 +9,7 @@ interface WebVitalPayload {
   navigationType: string
   page?: string
   sessionId?: string
+  sessionProof?: string
   url?: string
 }
 
@@ -31,6 +32,7 @@ export async function POST(request: NextRequest) {
         navigationType: body.navigationType,
         page: body.page,
         sessionId: body.sessionId,
+        sessionProof: body.sessionProof,
       }),
       cache: 'no-store',
     })

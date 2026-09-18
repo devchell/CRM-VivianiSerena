@@ -19,10 +19,26 @@ privacyRouter.get('/export', async (req, res, next) => {
 
     const [lead, consentLogs] = await Promise.all([
       prisma.lead.findFirst({
-        where: { email },
+        where: { email, deletedAt: null },
         include: {
           sessions: { select: { ip: true, userAgent: true, referrer: true, createdAt: true } },
           appointments: { select: { date: true, serviceType: true, status: true, notes: true } },
+          clientFolders: {
+            select: {
+              id: true,
+              clientName: true,
+              clientEmail: true,
+              clientPhone: true,
+              serviceLabel: true,
+              notes: true,
+              isPublished: true,
+              createdAt: true,
+              media: {
+                select: { id: true, stage: true, capturedAt: true, note: true, width: true, height: true },
+                orderBy: { capturedAt: 'asc' },
+              },
+            },
+          },
         },
       }),
       prisma.consentLog.findMany({
@@ -64,6 +80,7 @@ privacyRouter.get('/export', async (req, res, next) => {
         createdAt: s.createdAt,
       })),
       appointments: lead.appointments,
+      clientFolders: lead.clientFolders,
     }
 
     // Log this access

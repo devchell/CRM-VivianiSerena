@@ -1,16 +1,20 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 const redisGet = vi.fn()
-const redisSetex = vi.fn()
+const redisSet = vi.fn()
 
 const refreshAccessToken = vi.fn()
 const getAccessToken = vi.fn()
 const setCredentials = vi.fn()
+const encryption = vi.hoisted(() => ({
+  encrypt: vi.fn((value: string) => `encrypted:${value}`),
+  decrypt: vi.fn((value: string) => value.replace(/^encrypted:/, '')),
+}))
 
 vi.mock('../lib/redis', () => ({
   redis: {
     get: redisGet,
-    setex: redisSetex,
+    set: redisSet,
     del: vi.fn(),
   },
 }))
@@ -21,6 +25,10 @@ vi.mock('../lib/logger', () => ({
     warn: vi.fn(),
     error: vi.fn(),
   },
+}))
+
+vi.mock('./security/EncryptionService', () => ({
+  EncryptionService: encryption,
 }))
 
 vi.mock('googleapis', () => ({
@@ -45,7 +53,7 @@ describe('googleCalendar integration helpers', () => {
     vi.resetModules()
     vi.clearAllMocks()
     redisGet.mockResolvedValue(null)
-    redisSetex.mockResolvedValue(undefined)
+    redisSet.mockResolvedValue(undefined)
     refreshAccessToken.mockReset()
     getAccessToken.mockReset()
     setCredentials.mockReset()
@@ -56,11 +64,11 @@ describe('googleCalendar integration helpers', () => {
   })
 
   it('preserves refresh_token when Google refresh returns only a new access token', async () => {
-    redisGet.mockResolvedValue(JSON.stringify({
+    redisGet.mockResolvedValue({
       access_token: 'old-access',
       refresh_token: 'persist-me',
       expiry_date: Date.now() + 60 * 1000,
-    }))
+    })
     refreshAccessToken.mockResolvedValue({
       credentials: {
         access_token: 'new-access',
@@ -71,10 +79,12 @@ describe('googleCalendar integration helpers', () => {
     const { getAuthenticatedGoogleClient } = await import('./googleCalendar')
     await getAuthenticatedGoogleClient()
 
-    expect(redisSetex).toHaveBeenCalledTimes(1)
-    const persisted = JSON.parse(redisSetex.mock.calls[0][2])
-    expect(persisted.access_token).toBe('new-access')
-    expect(persisted.refresh_token).toBe('persist-me')
+    expect(redisSet).toHaveBeenCalledTimes(1)
+    const persisted = redisSet.mock.calls[0][1]
+    expect(typeof persisted).toBe('string')
+    const decrypted = JSON.parse(encryption.decrypt(persisted)) as { access_token: string; refresh_token: string }
+    expect(decrypted.access_token).toBe('new-access')
+    expect(decrypted.refresh_token).toBe('persist-me')
   })
 
   it('reports missing OAuth configuration and required scopes', async () => {

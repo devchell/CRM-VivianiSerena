@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import { useAuth } from '@/lib/useAuth'
+import { useRealtimeRefresh } from '@/lib/realtime'
 import { toast } from 'sonner'
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
@@ -102,10 +103,10 @@ function computeStatus(events: SecurityEvent[]): 'green' | 'yellow' | 'red' {
 
 // ── Sub-components ────────────────────────────────────────────────────────────
 
-function StatusBanner({ status, lastCheck }: { status: 'green' | 'yellow' | 'red'; lastCheck: Date | null }) {
+function StatusBanner({ status, lastCheck, checklistPending }: { status: 'green' | 'yellow' | 'red'; lastCheck: Date | null; checklistPending: boolean }) {
   const cfg = {
     green:  { icon: ShieldCheck, bg: 'bg-green-500/10 border-green-500/30', text: 'text-green-400', msg: 'Seu site está seguro e funcionando normalmente', sub: 'Nenhuma ameaça ativa nas últimas 24 horas.' },
-    yellow: { icon: ShieldAlert,  bg: 'bg-yellow-500/10 border-yellow-500/30', text: 'text-yellow-400', msg: 'Atenção: atividade suspeita detectada', sub: 'Eventos de média ou alta prioridade requerem sua revisão.' },
+    yellow: { icon: ShieldAlert,  bg: 'bg-yellow-500/10 border-yellow-500/30', text: 'text-yellow-400', msg: checklistPending ? 'Operação normal, com pendências de segurança' : 'Atenção: atividade suspeita detectada', sub: checklistPending ? 'Nenhuma ameaça ativa, mas há itens de configuração que requerem revisão.' : 'Eventos de média ou alta prioridade requerem sua revisão.' },
     red:    { icon: ShieldX,      bg: 'bg-red-500/10 border-red-500/30',    text: 'text-red-400',    msg: 'Alerta: ameaça crítica ativa', sub: 'Eventos críticos não resolvidos nas últimas 24 horas. Ação necessária.' },
   }[status]
   const Icon = cfg.icon
@@ -182,7 +183,7 @@ function ChecklistPanel({ items, loading }: { items: ChecklistItem[]; loading: b
               <div className="px-4 pb-3 pt-0">
                 <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">{item.description}</p>
                 {item.id === 'ssl_expiry' && item.daysLeft !== undefined && item.daysLeft <= 30 && (
-                  <p className="text-xs text-yellow-400 mt-1 font-medium">⚠️ Renovar em até {item.daysLeft} dias para evitar interrupção.</p>
+                  <p className="text-xs text-yellow-400 mt-1 font-medium">Renovar em até {item.daysLeft} dias para evitar interrupção.</p>
                 )}
               </div>
             )}
@@ -350,7 +351,9 @@ export default function SegurancaPage() {
         setEvents(d.data ?? [])
         setLastCheck(new Date())
       }
-    } catch { /* silent */ }
+    } catch (error) {
+      console.warn('[security] Não foi possível carregar os eventos.', error)
+    }
   }, [accessToken, headers, severityFilter])
 
   const fetchStats = useCallback(async () => {
@@ -359,7 +362,9 @@ export default function SegurancaPage() {
     try {
       const res = await fetch(`${API_URL}/api/v1/security/stats`, { headers })
       if (res.ok) { const d = await res.json() as { data: SecurityStats }; setStats(d.data) }
-    } catch { /* silent */ } finally { setLoading(false) }
+    } catch (error) {
+      console.warn('[security] Não foi possível carregar as estatísticas.', error)
+    } finally { setLoading(false) }
   }, [accessToken, headers])
 
   const fetchActivity = useCallback(async () => {
@@ -368,7 +373,9 @@ export default function SegurancaPage() {
     try {
       const res = await fetch(`${API_URL}/api/v1/security/activity`, { headers })
       if (res.ok) { const d = await res.json() as { data: ActivityPoint[] }; setActivity(d.data ?? []) }
-    } catch { /* silent */ } finally { setActivityLoading(false) }
+    } catch (error) {
+      console.warn('[security] Não foi possível carregar a atividade.', error)
+    } finally { setActivityLoading(false) }
   }, [accessToken, headers])
 
   const fetchChecklist = useCallback(async () => {
@@ -377,12 +384,16 @@ export default function SegurancaPage() {
     try {
       const res = await fetch(`${API_URL}/api/v1/security/checklist`, { headers })
       if (res.ok) { const d = await res.json() as { data: ChecklistItem[] }; setChecklist(d.data ?? []) }
-    } catch { /* silent */ } finally { setChecklistLoading(false) }
+    } catch (error) {
+      console.warn('[security] Não foi possível carregar o checklist.', error)
+    } finally { setChecklistLoading(false) }
   }, [accessToken, headers])
 
   const fetchAll = useCallback(async () => {
     await Promise.all([fetchEvents(), fetchStats(), fetchActivity(), fetchChecklist()])
   }, [fetchEvents, fetchStats, fetchActivity, fetchChecklist])
+
+  useRealtimeRefresh(fetchAll)
 
   // Auto-refresh every 30s
   useEffect(() => {
@@ -419,19 +430,21 @@ export default function SegurancaPage() {
             gain.gain.setValueAtTime(0.1, ctx.currentTime)
             gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.8)
             osc.start(); osc.stop(ctx.currentTime + 0.8)
-          } catch { /* ignore audio errors */ }
+          } catch (error) {
+            console.debug('[security] Som de alerta indisponível.', error)
+          }
         }
 
         // Toast (persistent for high/critical)
         const toastFn = isHigh ? toast.error : toast.warning
-        toastFn(`🛡️ ${humanizeType(data.type)} — Severidade: ${sevLabel}`, {
+        toastFn(`${humanizeType(data.type)} — Severidade: ${sevLabel}`, {
           duration: isHigh ? Infinity : 8000,
           action: { label: 'Ver', onClick: fetchAll },
         })
 
         // Browser notification for HIGH/CRITICAL
         if (isHigh && notifPermission === 'granted') {
-          new Notification('⚠️ Alerta de Segurança — Viviani CRM', {
+          new Notification('Alerta de Segurança — Viviani CRM', {
             body: humanizeType(data.type),
             icon: '/favicon.ico',
           })
@@ -460,11 +473,15 @@ export default function SegurancaPage() {
     if (!canManageSecurity) return
     try {
       const res = await fetch(`${API_URL}/api/v1/security/events/${id}/resolve`, { method: 'PATCH', headers })
-      if (res.ok) {
-        toast.success('Evento marcado como resolvido')
-        setEvents(prev => prev.map(e => e.id === id ? { ...e, resolved: true } : e))
+      const payload = await res.json().catch(() => null) as { error?: string; message?: string } | null
+      if (!res.ok) {
+        throw new Error(payload?.error ?? payload?.message ?? `HTTP ${res.status}`)
       }
-    } catch { toast.error('Erro ao resolver evento') }
+      toast.success('Evento marcado como resolvido')
+      setEvents(prev => prev.map(e => e.id === id ? { ...e, resolved: true } : e))
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Erro ao resolver evento')
+    }
   }
 
   const handleBlockIp = async (ip: string, minutes: number) => {
@@ -487,9 +504,15 @@ export default function SegurancaPage() {
   const handleTestAlert = async () => {
     if (!canManageSecurity) return
     try {
-      await fetch(`${API_URL}/api/v1/security/test-alert`, { method: 'POST', headers })
+      const res = await fetch(`${API_URL}/api/v1/security/test-alert`, { method: 'POST', headers })
+      const payload = await res.json().catch(() => null) as { error?: string; message?: string } | null
+      if (!res.ok) {
+        throw new Error(payload?.error ?? payload?.message ?? `HTTP ${res.status}`)
+      }
       toast.info('Alerta de teste disparado — aguarde alguns segundos')
-    } catch { toast.error('Erro ao disparar alerta de teste') }
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Erro ao disparar alerta de teste')
+    }
   }
 
   const handleExportPDF = async () => {
@@ -538,11 +561,13 @@ export default function SegurancaPage() {
   }
 
   // Computed values
-  const status = computeStatus(events)
+  const eventStatus = computeStatus(events)
   const unresolvedCount = events.filter(e => !e.resolved).length
   const blocked24h = events.filter(e => new Date(e.timestamp) > new Date(Date.now() - 86400_000) && ['high', 'critical'].includes(e.severity)).length
   const checklistOk = checklist.filter(i => i.ok && !i.warning).length
   const checklistTotal = checklist.length
+  const checklistPending = checklistTotal > 0 && checklistOk < checklistTotal
+  const status = eventStatus === 'red' ? 'red' : eventStatus === 'yellow' || checklistPending ? 'yellow' : 'green'
 
   return (
     <div className="space-y-6">
@@ -571,7 +596,7 @@ export default function SegurancaPage() {
       </div>
 
       {/* Status Geral */}
-      <StatusBanner status={status} lastCheck={lastCheck} />
+      <StatusBanner status={status} lastCheck={lastCheck} checklistPending={checklistPending} />
 
       {/* KPI Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
@@ -772,24 +797,24 @@ export default function SegurancaPage() {
         ) : (
           <ResponsiveContainer width="100%" height={200}>
             <BarChart data={activity} margin={{ top: 0, right: 0, left: -20, bottom: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="rgba(120,120,120,0.08)" vertical={false} />
+              <CartesianGrid strokeDasharray="3 3" stroke="var(--chart-grid)" vertical={false} />
               <XAxis
                 dataKey="hour"
-                tick={{ fontSize: 9, fill: '#787878' }}
+                tick={{ fontSize: 9, fill: 'var(--chart-axis)' }}
                 axisLine={false} tickLine={false}
                 interval={3}
               />
-              <YAxis tick={{ fontSize: 9, fill: '#787878' }} axisLine={false} tickLine={false} />
+              <YAxis tick={{ fontSize: 9, fill: 'var(--chart-axis)' }} axisLine={false} tickLine={false} />
               <Tooltip
-                contentStyle={{ fontSize: 11, borderRadius: 8, border: '1px solid rgba(201,150,122,0.3)', background: 'rgba(255,255,255,0.95)' }}
+                contentStyle={{ fontSize: 11, borderRadius: 8, border: '1px solid var(--chart-tooltip-border)', background: 'var(--tooltip-bg)' }}
                 formatter={(v: number, name: string) => [v, name === 'total' ? 'Total de acessos' : 'Bloqueados']}
               />
               <Legend
                 wrapperStyle={{ fontSize: 11 }}
                 formatter={v => v === 'total' ? 'Acessos normais' : 'Bloqueados'}
               />
-              <ReferenceLine y={0} stroke="rgba(120,120,120,0.2)" />
-              <Bar dataKey="total" name="total" fill="rgba(201,150,122,0.3)" radius={[3, 3, 0, 0]} />
+              <ReferenceLine y={0} stroke="var(--chart-grid)" />
+              <Bar dataKey="total" name="total" fill="var(--accent-rose)" radius={[3, 3, 0, 0]} />
               <Bar dataKey="blocked" name="blocked" fill="rgba(239,68,68,0.6)" radius={[3, 3, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>

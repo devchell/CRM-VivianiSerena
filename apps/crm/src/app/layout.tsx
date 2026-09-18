@@ -10,7 +10,6 @@ export const viewport: Viewport = {
   themeColor: '#C9967A',
   width: 'device-width',
   initialScale: 1,
-  maximumScale: 1,
 }
 
 export const metadata: Metadata = {
@@ -35,7 +34,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="pt-BR" className={inter.variable} suppressHydrationWarning>
-      <body className="min-h-screen bg-slate-100 dark:bg-slate-950 font-body text-slate-900 dark:text-slate-100 antialiased">
+      <body className="min-h-screen font-body antialiased">
         <Providers>
           {children}
           <Toaster position="top-right" richColors />

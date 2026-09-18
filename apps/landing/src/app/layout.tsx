@@ -5,8 +5,8 @@ import { Suspense } from 'react'
 import './globals.css'
 import { PageTracker } from '@/components/PageTracker'
 import WhatsAppButton from '@/components/WhatsAppButton'
+import { SITE_URL } from '@/lib/site-url'
 
-const SITE_URL = 'https://vivianicoaching.com'
 const WHATSAPP_NUMBER = '5511915751770'
 const INSTAGRAM_URL = 'https://www.instagram.com/vivini.serena/'
 const googleSiteVerification = process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION?.trim()
@@ -111,7 +111,7 @@ const jsonLd = {
   ],
   priceRange: '$$',
   openingHours: ['Mo-Fr 09:00-18:00', 'Sa 09:00-14:00'],
-  image: 'https://static.wixstatic.com/media/be8b61_9dfb57055aea4d4f9f4c8b5bfdbbea28~mv2.jpg',
+  image: `${SITE_URL}/images/viviani/retrato.webp`,
   sameAs: [INSTAGRAM_URL, 'https://wa.link/e2g7ii'],
   hasOfferCatalog: {
     '@type': 'OfferCatalog',
@@ -153,6 +153,8 @@ const jsonLd = {
   },
 }
 
+const jsonLdScript = JSON.stringify(jsonLd).replace(/</g, '\\u003c')
+
 const gaId = process.env.NEXT_PUBLIC_GA_ID?.trim() || null
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -161,7 +163,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <head>
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+          dangerouslySetInnerHTML={{ __html: jsonLdScript }}
         />
         {gaId ? <Script src={`https://www.googletagmanager.com/gtag/js?id=${gaId}`} strategy="afterInteractive" /> : null}
         {gaId ? (

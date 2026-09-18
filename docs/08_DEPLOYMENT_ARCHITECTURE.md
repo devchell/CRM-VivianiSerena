@@ -1,5 +1,7 @@
 # 08 Deployment Architecture
 
+> **Estado vigente — 2026-08-31:** este documento substitui a descrição cloud histórica abaixo. A entrega atual é manual/self-hosted via Docker Compose na VPS, conforme `PRODUCTION_SETUP.md` e `docs/22_VPS_DOCKER_ARCHITECTURE.md`. Não usar Vercel, Render, Supabase ou Upstash.
+
 ## Arquitetura de entrega
 
 ### CI
@@ -11,28 +13,12 @@
   - build de pacotes compartilhados
   - build de API, CRM e landing
 
-### Homologacao
-- workflow: `.github/workflows/deploy-homolog.yml`
-- dispara em `staging` ou manualmente
-- publica:
-  - `landing` via Vercel
-  - `crm` via Vercel
-  - `api` via Render Deploy Hook
-- valida:
-  - `/health/live`
-  - `/health/ready`
-  - `/health/deps`
-  - `version` publicada no health endpoint
-  - guards de Google Calendar e Google Business quando houver credenciais de smoke
-- depende de:
-  - `VERCEL_TOKEN`
-  - `VERCEL_ORG_ID`
-  - `VERCEL_PROJECT_ID_LANDING_HML`
-  - `VERCEL_PROJECT_ID_CRM_HML`
-  - `RENDER_DEPLOY_HOOK_API_HML`
-  - `API_HML_BASE_URL`
-  - opcional: `API_HML_SMOKE_ADMIN_EMAIL`
-  - opcional: `API_HML_SMOKE_ADMIN_PASSWORD`
+### Apresentação/homologação vigente
+- diretório operacional: `/opt/viviani-crm`
+- serviços: Nginx, landing, CRM, API, PostgreSQL 16 e Redis 7
+- atualização: `docker compose --env-file deploy/vps/.env up -d --build --force-recreate api crm landing nginx`
+- banco e Redis não devem ser recriados durante atualização; volumes são preservados
+- validação: `/health`, `/health/live`, `/health/ready`, `/health/deps`, login, leitura de dados e fluxos principais do CRM
 
 ## Dependencias de runtime
 - PostgreSQL
@@ -41,4 +27,4 @@
 - opcionalmente Twilio
 
 ## Observacao importante
-Mudancas de schema precisam ser aplicadas no banco do ambiente antes de considerar o deploy fechado. O caso atual e a migracao das colunas de 2FA por canal.
+Mudanças de schema precisam de migration reversível e validação no banco da VPS antes de considerar o deploy fechado. O ambiente atual foi criado do zero, sem migração de dados; backup externo ainda é pendência.

@@ -6,10 +6,11 @@ import {
 } from 'react'
 import type { HTMLAttributes } from 'react'
 import { useAuth } from '@/lib/useAuth'
+import { useRealtimeRefresh } from '@/lib/realtime'
 import { toast } from 'sonner'
 import {
   ChevronDown, Upload, X, Check,
-  RefreshCw, Send, History, Plus, ExternalLink, Loader2, Link2, Star, Trash2,
+  RefreshCw, Send, History, Plus, ExternalLink, Loader2, Link2, BadgeCheck, Trash2,
 } from 'lucide-react'
 import { RichTextEditor } from '@/components/editor/RichTextEditor'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -21,6 +22,7 @@ import {
   crmFieldSelectWrapper,
 } from '@/components/ui/listStyles'
 import { EmptyState } from '@/components/ui/EmptyState'
+import { ClientFolderPublicationPanel } from '@/components/editor/ClientFolderPublicationPanel'
 const API_URL = crmPublicEnv.apiBaseUrl
 const LANDING_URL = crmPublicEnv.landingUrl
 
@@ -28,10 +30,10 @@ type SectionKey = 'hero' | 'sobre' | 'resultados' | 'depoimentos'
 
 interface SectionMeta { label: string; icon: string }
 const SECTIONS: [SectionKey, SectionMeta][] = [
-  ['hero',        { label: 'Início',       icon: '✨' }],
-  ['sobre',       { label: 'Sobre',        icon: '👤' }],
-  ['resultados',  { label: 'Resultados',   icon: '📸' }],
-  ['depoimentos', { label: 'Depoimentos',  icon: '💬' }],
+  ['hero',        { label: 'Início',       icon: '01' }],
+  ['sobre',       { label: 'Sobre',        icon: '02' }],
+  ['resultados',  { label: 'Resultados',   icon: '03' }],
+  ['depoimentos', { label: 'Depoimentos',  icon: '04' }],
 ]
 
 interface ContentStore { [section: string]: { [key: string]: unknown } }
@@ -296,10 +298,13 @@ export default function EditarSitePage() {
       if (!res.ok) return
       const data = await res.json() as { data: ContentStore }
       setContent(data.data ?? {})
-    } catch { /* silent */ } finally { setLoading(false) }
+    } catch (error) {
+      console.warn('[site] Não foi possível carregar o conteúdo.', error)
+    } finally { setLoading(false) }
   }, [])
 
   useEffect(() => { fetchContent() }, [fetchContent])
+  useRealtimeRefresh(fetchContent, ['content'])
 
   // ── Get / set helpers ──────────────────────────────────────────────────────
   const get = (section: string, key: string): unknown =>
@@ -312,6 +317,7 @@ export default function EditarSitePage() {
     if (typeof v === 'string') return v
     if (typeof v === 'object' && 'pt' in (v as object)) return (v as { pt: string }).pt ?? ''
     if (typeof v === 'object' && 'text' in (v as object)) return (v as { text: string }).text ?? ''
+    if (typeof v === 'object' && 'value' in (v as object)) return String((v as { value: unknown }).value ?? '')
     return JSON.stringify(v)
   }, [content])
 
@@ -599,10 +605,16 @@ export default function EditarSitePage() {
   // ── Publish ────────────────────────────────────────────────────────────────
   const handlePublish = async () => {
     try {
-      await fetch(`${API_URL}/api/v1/content/publish`, { method: 'POST', headers: hdrs })
-      toast.success('Site atualizado com sucesso! ✨')
+      const response = await fetch(`${API_URL}/api/v1/content/publish`, { method: 'POST', headers: hdrs })
+      const payload = await response.json().catch(() => null) as { success?: boolean; error?: string; message?: string } | null
+      if (!response.ok || !payload?.success) {
+        throw new Error(payload?.error ?? payload?.message ?? `HTTP ${response.status}`)
+      }
+      toast.success('Site atualizado com sucesso!')
       setShowPublishModal(false)
-    } catch { toast.error('Erro ao publicar') }
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Erro ao publicar')
+    }
   }
 
   // ── History ────────────────────────────────────────────────────────────────
@@ -762,7 +774,7 @@ export default function EditarSitePage() {
                   enabled={socialProofEnabled}
                   onToggle={() => setSubVal('contact', 'social_proof', 'enabled', !socialProofEnabled)}
                   label="Box lateral de prova social"
-                  description="Exibe card de prova social"
+                  description="Exibe o card quando houver clientes ou avaliações"
                 />
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4px 12px', marginTop: 12 }}>
                   <label className={labelCls}>Clientes iniciais</label>
@@ -1180,7 +1192,7 @@ export default function EditarSitePage() {
                           type="button"
                           onClick={() => void handleSaveResult(item.id)}
                           disabled={savingResultId === item.id}
-                          className="inline-flex h-10 items-center justify-center gap-2 rounded-md bg-blue-600 px-4 text-sm font-medium text-white transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
+                          className="inline-flex h-10 items-center justify-center gap-2 rounded-md bg-blue-600 px-4 text-sm font-medium text-[var(--primary-foreground)] transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
                         >
                           {savingResultId === item.id ? (
                             <>
@@ -1218,7 +1230,7 @@ export default function EditarSitePage() {
                 <button
                   type="button"
                   onClick={handleAddCategory}
-                  className="inline-flex h-10 items-center justify-center gap-2 rounded-md bg-blue-600 px-4 text-sm font-medium text-white transition-colors hover:bg-blue-700"
+                  className="inline-flex h-10 items-center justify-center gap-2 rounded-md bg-blue-600 px-4 text-sm font-medium text-[var(--primary-foreground)] transition-colors hover:bg-blue-700"
                 >
                   <Plus size={14} /> Salvar categoria
                 </button>
@@ -1258,9 +1270,6 @@ export default function EditarSitePage() {
         const testimonials = getArr<TestimonialEditorItem>('testimonials', 'manual_items')
         const linkedLocations = getArr<GoogleBusinessLocation>('testimonials', 'google_business_locations')
         const googleEnabled = getBool('testimonials', 'display_options', 'googleEnabled')
-        const artificialEnabled = getBool('testimonials', 'display_options', 'artificialEnabled')
-        const artificialCountRaw = getNum('testimonials', 'display_options', 'artificialCount')
-        const artificialCount = artificialCountRaw > 0 ? Math.min(20, artificialCountRaw) : 3
         const availableLocations = googleLocations.filter((location) => (
           !linkedLocations.some((linked) => (
             linked.accountName === location.accountName
@@ -1270,28 +1279,8 @@ export default function EditarSitePage() {
         const itemInputCls = 'w-full px-2.5 py-1.5 text-xs rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-blue-500/20'
         return (
           <div className="space-y-4">
-            <ToggleField
-              enabled={artificialEnabled}
-              onToggle={() => setSubVal('testimonials', 'display_options', 'artificialEnabled', !artificialEnabled)}
-              label="Gerar depoimentos artificiais"
-              description="Exemplos até ter depoimentos reais"
-            />
-
-            <div className="flex items-center gap-3 rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 dark:border-slate-700 dark:bg-slate-800">
-              <label className="text-xs font-medium text-slate-500 dark:text-slate-400 flex-1">
-                Quantidade de depoimentos (1–20)
-              </label>
-              <input
-                type="number"
-                min={1}
-                max={20}
-                value={artificialCount}
-                onChange={e => {
-                  const v = Math.min(20, Math.max(1, Number(e.target.value) || 1))
-                  setSubVal('testimonials', 'display_options', 'artificialCount', v)
-                }}
-                className="w-16 rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-center text-sm font-semibold text-slate-900 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
-              />
+            <div className="rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-xs leading-5 text-amber-800 dark:border-amber-900/50 dark:bg-amber-950/20 dark:text-amber-100">
+              O site público exibe somente depoimentos reais cadastrados ou avaliações sincronizadas do Google. Não há geração automática de conteúdo.
             </div>
 
             <ToggleField
@@ -1308,7 +1297,7 @@ export default function EditarSitePage() {
                     type="button"
                     onClick={handleConnectGoogleAccount}
                     disabled={googleConnecting}
-                    className="inline-flex items-center gap-2 rounded-md bg-blue-600 px-3 py-2 text-xs font-semibold text-white transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-70"
+                    className="inline-flex items-center gap-2 rounded-md bg-blue-600 px-3 py-2 text-xs font-semibold text-[var(--primary-foreground)] transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-70"
                   >
                     {googleConnecting ? <Loader2 size={14} className="animate-spin" /> : <Link2 size={14} />}
                     Vincular sua conta do Google
@@ -1457,7 +1446,7 @@ export default function EditarSitePage() {
                         : 'border border-slate-200 text-slate-400 hover:border-amber-300 hover:text-amber-600 dark:border-slate-700 dark:text-slate-400',
                     ].join(' ')}
                   >
-                    <Star size={11} className={t.isHighlight ? 'fill-amber-500 text-amber-500' : ''} />
+                    <BadgeCheck size={12} className={t.isHighlight ? 'text-[var(--primary)]' : ''} />
                     {t.isHighlight ? 'Destaque ativo' : 'Definir como destaque'}
                   </button>
                 </div>
@@ -1493,8 +1482,8 @@ export default function EditarSitePage() {
   // ── Skeleton ───────────────────────────────────────────────────────────────
   if (loading) {
     return (
-      <div className="flex h-[calc(100vh-64px-48px)] gap-0 -m-6 overflow-hidden">
-        <div className="w-96 flex-shrink-0 border-r border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 flex flex-col">
+      <div className="flex h-[calc(100vh-64px-48px)] gap-0 -m-4 sm:-m-6 overflow-hidden">
+        <div className="w-full lg:w-96 flex-shrink-0 border-r border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 flex flex-col">
           <div className="px-5 py-4 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between">
             <div className="space-y-1.5">
               <div className="h-4 w-24 bg-slate-100 dark:bg-slate-800 rounded animate-pulse" />
@@ -1508,7 +1497,7 @@ export default function EditarSitePage() {
             ))}
           </div>
         </div>
-        <div className="flex-1 bg-slate-50 dark:bg-slate-950 flex items-center justify-center">
+        <div className="hidden lg:flex flex-1 bg-slate-50 dark:bg-slate-950 items-center justify-center">
           <div className="w-8 h-8 border-2 border-blue-400 border-t-transparent rounded-full animate-spin" />
         </div>
       </div>
@@ -1517,9 +1506,9 @@ export default function EditarSitePage() {
 
   // ── Render ─────────────────────────────────────────────────────────────────
   return (
-    <div className="flex h-[calc(100vh-64px-48px)] gap-0 -m-6 overflow-hidden">
+    <div className="flex h-[calc(100vh-64px-48px)] gap-0 -m-4 sm:-m-6 overflow-hidden">
       {/* ── Left Panel ───────────────────────────────────────────────────── */}
-      <div className={`w-96 flex-shrink-0 flex flex-col border-r border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900${resolvedTheme === 'dark' ? ' dark' : ''}`}>
+      <div className={`w-full lg:w-96 flex-shrink-0 flex flex-col border-r border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900${resolvedTheme === 'dark' ? ' dark' : ''}`}>
 
         {/* Panel header */}
         <div className="px-5 py-4 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 flex items-center justify-between">
@@ -1547,7 +1536,7 @@ export default function EditarSitePage() {
             </button>
             <button
               onClick={() => setShowPublishModal(true)}
-              className="flex items-center gap-1.5 px-3 py-2 bg-blue-600 text-white text-xs font-semibold rounded-lg hover:bg-blue-700 transition-colors"
+              className="flex items-center gap-1.5 px-3 py-2 bg-blue-600 text-[var(--primary-foreground)] text-xs font-semibold rounded-lg hover:bg-blue-700 transition-colors"
             >
               <Send size={13} /> Publicar
             </button>
@@ -1556,6 +1545,7 @@ export default function EditarSitePage() {
 
         {/* Section accordion */}
         <div className="flex-1 overflow-y-auto">
+          <ClientFolderPublicationPanel />
           {SECTIONS.map(([key, meta]) => (
             <div key={key} className="border-b border-slate-100 dark:border-slate-700">
               <button
@@ -1600,7 +1590,7 @@ export default function EditarSitePage() {
       </div>
 
       {/* ── Right: iframe preview ─────────────────────────────────────── */}
-      <div className="flex-1 flex flex-col bg-slate-50 dark:bg-slate-950">
+      <div className="hidden lg:flex flex-1 flex-col bg-slate-50 dark:bg-slate-950">
         <div className="h-10 flex items-center justify-between px-4 bg-slate-50 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-700">
           <div className="flex items-center gap-2">
             <div className="w-3 h-3 rounded-full bg-red-400" />
@@ -1650,7 +1640,7 @@ export default function EditarSitePage() {
               >Cancelar</button>
               <button
                 onClick={handlePublish}
-                className="flex-1 px-4 py-2.5 rounded-md bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700 transition-colors"
+                className="flex-1 px-4 py-2.5 rounded-md bg-blue-600 text-[var(--primary-foreground)] text-sm font-semibold hover:bg-blue-700 transition-colors"
               >Publicar</button>
             </div>
           </div>

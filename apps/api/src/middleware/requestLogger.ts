@@ -1,5 +1,6 @@
 import type { Request, Response, NextFunction } from 'express'
 import { logger } from '../lib/logger'
+import { anonymizeIp } from './security'
 
 export function requestLogger(req: Request, res: Response, next: NextFunction) {
   const start = Date.now()
@@ -7,11 +8,12 @@ export function requestLogger(req: Request, res: Response, next: NextFunction) {
     const duration = Date.now() - start
     logger.info('HTTP Request', {
       method: req.method,
-      url: req.originalUrl,
+      path: req.path,
       status: res.statusCode,
       duration: `${duration}ms`,
-      ip: req.ip,
-      userAgent: req.get('user-agent'),
+      ip: anonymizeIp(req.ip ?? 'unknown'),
+      requestId: req.requestId,
+      userId: req.user?.sub,
     })
   })
   next()

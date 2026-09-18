@@ -1,5 +1,6 @@
 import { redis } from '../../lib/redis'
 import { prisma } from '../../lib/prisma'
+import { logger } from '../../lib/logger'
 import type { Request } from 'express'
 import type { Prisma } from '@prisma/client'
 
@@ -94,6 +95,10 @@ export class AnomalyDetector {
           } as Prisma.JsonObject,
         },
       })
-    } catch { /* non-blocking */ }
+    } catch (error) {
+      logger.warn('Anomaly event could not be persisted', {
+        error: error instanceof Error ? error.message : String(error),
+      })
+    }
   }
 }

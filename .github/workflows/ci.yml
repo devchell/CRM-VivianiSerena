@@ -15,11 +15,8 @@ jobs:
   build:
     runs-on: ubuntu-latest
     env:
-      DATABASE_URL: postgresql://placeholder:placeholder@db.example.supabase.co:5432/postgres
-      UPSTASH_REDIS_REST_URL: https://placeholder.upstash.io
-      UPSTASH_REDIS_REST_TOKEN: placeholder-upstash-token
-      SUPABASE_URL: https://placeholder.supabase.co
-      SUPABASE_SERVICE_ROLE_KEY: placeholder-service-role-key
+      DATABASE_URL: postgresql://placeholder:placeholder@localhost:5432/viviani
+      REDIS_URL: redis://:placeholder@localhost:6379
       API_BASE_URL: https://api.example.com
       NEXT_PUBLIC_API_URL: https://api.example.com
       CRM_URL: https://crm.example.com
@@ -66,6 +63,9 @@ jobs:
 
       - name: Test API
         run: pnpm --filter @viviani/api test
+
+      - name: API coverage
+        run: pnpm --filter @viviani/api test:coverage
 
       - name: Build API
         run: pnpm --filter @viviani/api db:generate && pnpm --filter @viviani/api build

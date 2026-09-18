@@ -1,0 +1,199 @@
+name: viviani
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes", "--requirepass", "${REDIS_PASSWORD}"]
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli -a \"${REDIS_PASSWORD}\" ping | grep PONG"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      DEPLOYMENT_STAGE: ${DEPLOYMENT_STAGE:?DEPLOYMENT_STAGE is required}
+      API_HOST: 0.0.0.0
+      PORT: 4000
+      DATABASE_URL: postgresql://${POSTGRES_APP_USER:?POSTGRES_APP_USER is required}:${POSTGRES_APP_PASSWORD:?POSTGRES_APP_PASSWORD is required}@postgres:5432/${POSTGRES_DB}?schema=public
+      DIRECT_DATABASE_URL: postgresql://${POSTGRES_APP_USER:?POSTGRES_APP_USER is required}:${POSTGRES_APP_PASSWORD:?POSTGRES_APP_PASSWORD is required}@postgres:5432/${POSTGRES_DB}?schema=public
+      MIGRATION_DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}?schema=public
+      REDIS_URL: redis://:${REDIS_PASSWORD}@redis:6379
+      COOKIE_SECURE: ${COOKIE_SECURE:?COOKIE_SECURE is required}
+      ENABLE_HSTS: ${ENABLE_HSTS:?ENABLE_HSTS is required}
+      TRUST_PROXY: ${TRUST_PROXY:?TRUST_PROXY is required}
+      API_BASE_URL: ${PUBLIC_API_URL}
+      INTERNAL_API_SECRET: ${INTERNAL_API_SECRET}
+      CRM_URL: ${PUBLIC_CRM_URL}
+      CORS_ORIGIN: ${PUBLIC_LANDING_URL},${PUBLIC_CRM_URL}
+      JWT_PRIVATE_KEY: ${JWT_PRIVATE_KEY_B64}
+      JWT_PUBLIC_KEY: ${JWT_PUBLIC_KEY_B64}
+      NEXTAUTH_SECRET: ${NEXTAUTH_SECRET}
+      ENCRYPTION_KEY: ${ENCRYPTION_KEY}
+      ANONYMIZATION_SALT: ${ANONYMIZATION_SALT}
+      UPLOAD_DIR: /app/data/uploads
+      PRIVATE_UPLOAD_DIR: /app/data/private-uploads
+      LOG_DIR: /app/data/logs
+      LOG_TO_FILES: "true"
+      SEED_ON_START: ${SEED_ON_START:-true}
+      SEED_ADMIN_PASSWORD: ${SEED_ADMIN_PASSWORD}
+      SEED_COLLABORATOR_PASSWORD: ${SEED_COLLABORATOR_PASSWORD}
+      BACKUP_ENABLED: ${BACKUP_ENABLED:-false}
+      FRESH_DATABASE: ${FRESH_DATABASE:-false}
+      ALLOW_FRESH_BOOTSTRAP: ${ALLOW_FRESH_BOOTSTRAP:-false}
+      LANDING_REVALIDATE_URL: ${LANDING_REVALIDATE_URL:-http://landing:3000/api/revalidate}
+      REVALIDATE_SECRET: ${REVALIDATE_SECRET:-}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
+      GOOGLE_REDIRECT_URI: ${GOOGLE_REDIRECT_URI:-}
+      GOOGLE_CALENDAR_ID: ${GOOGLE_CALENDAR_ID:-primary}
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_SECURE: ${SMTP_SECURE:-false}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASS: ${SMTP_PASS:-}
+      EMAIL_FROM: ${EMAIL_FROM:-}
+      EMAIL_FROM_NAME: ${EMAIL_FROM_NAME:-Viviani Serena}
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-}
+      WHATSAPP_APP_ID: ${WHATSAPP_APP_ID:-}
+      WHATSAPP_APP_SECRET: ${WHATSAPP_APP_SECRET:-}
+      WHATSAPP_EMBEDDED_SIGNUP_CONFIG_ID: ${WHATSAPP_EMBEDDED_SIGNUP_CONFIG_ID:-}
+      WHATSAPP_WEBHOOK_VERIFY_TOKEN: ${WHATSAPP_WEBHOOK_VERIFY_TOKEN:-}
+      WHATSAPP_GRAPH_API_VERSION: ${WHATSAPP_GRAPH_API_VERSION:-v22.0}
+      WHATSAPP_DISPATCH_ENABLED: ${WHATSAPP_DISPATCH_ENABLED:-false}
+    volumes:
+      - api_data:/app/data
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "node -e \"fetch('http://127.0.0.1:4000/health/ready').then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))\""]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+
+  crm:
+    build:
+      context: .
+      dockerfile: apps/crm/Dockerfile
+      args:
+        API_BASE_URL: ${PUBLIC_API_URL}
+        NEXT_PUBLIC_API_URL: ${PUBLIC_API_URL}
+        NEXT_PUBLIC_LANDING_URL: ${PUBLIC_LANDING_URL}
+        NEXTAUTH_URL: ${PUBLIC_CRM_URL}
+        ENABLE_HSTS: ${ENABLE_HSTS:-false}
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      API_BASE_URL: http://api:4000
+      NEXT_PUBLIC_API_URL: ${PUBLIC_API_URL}
+      NEXT_PUBLIC_LANDING_URL: ${PUBLIC_LANDING_URL}
+      NEXTAUTH_URL: ${PUBLIC_CRM_URL}
+      NEXTAUTH_SECRET: ${NEXTAUTH_SECRET}
+      REVALIDATE_SECRET: ${REVALIDATE_SECRET:-}
+    depends_on:
+      api:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "node -e \"fetch('http://127.0.0.1:3001/login').then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))\""]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+
+  landing:
+    build:
+      context: .
+      dockerfile: apps/landing/Dockerfile
+      args:
+        API_BASE_URL: ${PUBLIC_API_URL}
+        CRM_URL: ${PUBLIC_CRM_URL}
+        NEXT_PUBLIC_API_URL: ${PUBLIC_API_URL}
+        SITE_URL: ${PUBLIC_LANDING_URL}
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      API_BASE_URL: http://api:4000
+      INTERNAL_API_SECRET: ${INTERNAL_API_SECRET}
+      CRM_URL: ${PUBLIC_CRM_URL}
+      NEXT_PUBLIC_API_URL: ${PUBLIC_API_URL}
+      SITE_URL: ${PUBLIC_LANDING_URL}
+      ENABLE_HSTS: ${ENABLE_HSTS:-false}
+      REVALIDATE_SECRET: ${REVALIDATE_SECRET:-}
+    depends_on:
+      api:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "node -e \"fetch('http://127.0.0.1:3000/').then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))\""]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+
+  nginx:
+    image: nginx:1.27-alpine
+    restart: unless-stopped
+    environment:
+      DEPLOYMENT_STAGE: ${DEPLOYMENT_STAGE:?DEPLOYMENT_STAGE is required}
+      NGINX_LANDING_HOST: ${NGINX_LANDING_HOST:-landing.example.invalid}
+      NGINX_CRM_HOST: ${NGINX_CRM_HOST:-crm.example.invalid}
+      NGINX_API_HOST: ${NGINX_API_HOST:-api.example.invalid}
+    volumes:
+      - ./deploy/docker/nginx.conf:/etc/nginx/nginx.homologacao.conf:ro
+      - ./deploy/docker/nginx.production.conf:/etc/nginx/nginx.production.conf:ro
+      - ${TLS_CERT_DIR:-./deploy/vps/tls}:/etc/nginx/tls:ro
+    command:
+      - /bin/sh
+      - -c
+      - |
+        set -eu
+        if [ "$$DEPLOYMENT_STAGE" = "production" ]; then
+          : "$$NGINX_LANDING_HOST" "$$NGINX_CRM_HOST" "$$NGINX_API_HOST"
+          sed -e "s/__LANDING_HOST__/$${NGINX_LANDING_HOST}/g" \
+              -e "s/__CRM_HOST__/$${NGINX_CRM_HOST}/g" \
+              -e "s/__API_HOST__/$${NGINX_API_HOST}/g" \
+              /etc/nginx/nginx.production.conf > /etc/nginx/nginx.conf
+        else
+          cp /etc/nginx/nginx.homologacao.conf /etc/nginx/nginx.conf
+        fi
+        exec nginx -g "daemon off;"
+    ports:
+      - "80:80"
+      - "127.0.0.1:3001:3001"
+      - "127.0.0.1:4000:4000"
+    depends_on:
+      landing:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "if [ \"$$DEPLOYMENT_STAGE\" = \"production\" ]; then wget --no-check-certificate -q -O - https://127.0.0.1/health | grep -q ok; else wget -q -O - http://127.0.0.1/health | grep -q ok; fi"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  postgres_data:
+  redis_data:
+  api_data:

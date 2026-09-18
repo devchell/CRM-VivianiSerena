@@ -1,4 +1,4 @@
-import express, { type Express } from 'express'
+import express, { type Express, type Request } from 'express'
 import helmet from 'helmet'
 import cors from 'cors'
 import compression from 'compression'
@@ -16,6 +16,8 @@ import { logger } from './lib/logger'
 import { prisma } from './lib/prisma'
 import { redis } from './lib/redis'
 import { getUploadStorageMode, healthcheckUploadStorage } from './infrastructure/storage'
+import { realtimeMutation } from './middleware/realtime'
+import { authenticate, authorizePermission } from './middleware/authenticate'
 
 async function getDependencyChecks() {
   const checks: Record<string, boolean> = {}
@@ -44,8 +46,13 @@ export function createApp(): Express {
   const appVersion = apiEnv.appVersion
   const environment = apiEnv.nodeEnv
   const allowedOrigins = apiEnv.corsOrigins
+  const hstsEnabled = process.env.ENABLE_HSTS?.trim().toLowerCase() === 'true'
 
-  app.set('trust proxy', 1)
+  const trustProxySetting = process.env.TRUST_PROXY?.trim().toLowerCase()
+  app.set('trust proxy', trustProxySetting === 'true' ? 1 : false)
+  // Authenticated API responses must not be revalidated into empty 304 bodies.
+  // The CRM has its own short-lived read cache and needs the JSON payload on each miss.
+  app.disable('etag')
 
   app.use(helmet({
     contentSecurityPolicy: {
@@ -63,7 +70,9 @@ export function createApp(): Express {
     },
     crossOriginEmbedderPolicy: false,
     crossOriginResourcePolicy: false,
-    hsts: { maxAge: 31536000, includeSubDomains: true, preload: true },
+    hsts: hstsEnabled
+      ? { maxAge: 31536000, includeSubDomains: true, preload: true }
+      : false,
   }))
 
   app.use(cors({
@@ -80,6 +89,10 @@ export function createApp(): Express {
     allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'X-Request-Id'],
   }))
 
+  app.use('/api/', (req, res, next) => {
+    res.setHeader('Cache-Control', 'no-store')
+    next()
+  })
   app.use('/api/', rateLimiter)
   app.use(compression())
   app.use(express.json({
@@ -91,12 +104,15 @@ export function createApp(): Express {
   app.use(express.urlencoded({ extended: true, limit: '10mb' }))
   app.use(cookieParser())
 
-  app.use(morgan('combined', {
+  app.use(requestId)
+
+  morgan.token('request-path', (req) => (req as Request).path)
+  morgan.token('request-id', (req) => (req as Request).requestId ?? '-')
+  app.use(morgan(':remote-addr :method :request-path :status :response-time ms :request-id', {
     stream: { write: (message: string) => logger.http(message.trim()) },
     skip: (req) => req.path.startsWith('/health'),
   }))
 
-  app.use(requestId)
   app.use(sqlInjectionDetection)
   app.use(requestLogger)
 
@@ -112,9 +128,6 @@ export function createApp(): Express {
     res.status(200).json({
       status: 'ok',
       service: 'api',
-      version: appVersion,
-      environment,
-      timestamp: new Date().toISOString(),
     })
   })
 
@@ -129,38 +142,25 @@ export function createApp(): Express {
     res.status(ready ? 200 : 503).json({
       status: ready ? 'ready' : 'degraded',
       service: 'api',
-      version: appVersion,
-      environment,
-      timestamp: new Date().toISOString(),
       checks: readinessChecks,
     })
   })
 
-  app.get('/health/deps', async (_req, res) => {
+  app.get('/health/deps', authenticate, authorizePermission('seguranca.view'), async (_req, res) => {
     const checks = await getDependencyChecks()
     const ready = Object.values(checks).every(Boolean)
 
     res.status(ready ? 200 : 503).json({
       status: ready ? 'ready' : 'degraded',
       service: 'api',
-      version: appVersion,
-      environment,
-      timestamp: new Date().toISOString(),
       checks,
     })
   })
 
   app.get('/health', async (_req, res) => {
-    const checks = await getDependencyChecks()
-    const healthy = Object.values(checks).every(Boolean)
-
-    res.status(healthy ? 200 : 503).json({
-      status: healthy ? 'ok' : 'degraded',
+    res.status(200).json({
+      status: 'ok',
       service: 'api',
-      version: appVersion,
-      environment,
-      timestamp: new Date().toISOString(),
-      checks,
     })
   })
 
@@ -189,12 +189,16 @@ export function createApp(): Express {
 
         app.use('/docs', swaggerUi.serve, swaggerUi.setup(spec))
         logger.info('Swagger docs available at /docs')
-      } catch {
-        // Swagger is optional outside the dev flow.
+      } catch (error) {
+        // Swagger is optional outside the dev flow, but startup issues remain observable.
+        logger.warn('Swagger could not be initialized', {
+          error: error instanceof Error ? error.message : String(error),
+        })
       }
     })()
   }
 
+  app.use('/api/v1', realtimeMutation)
   app.use('/api/v1', router)
   app.use(notFound)
   app.use(errorHandler)

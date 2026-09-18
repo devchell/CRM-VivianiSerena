@@ -12,9 +12,15 @@ import LocationSection from '@/components/LocationSection'
 import FinalCTA from '@/components/FinalCTA'
 import Footer from '@/components/Footer'
 import FloatingCTA from '@/components/FloatingCTA'
+import ClientResults from '@/components/ClientResults'
 import { landingServerEnv } from '@/lib/server-env'
 
 const API_URL = landingServerEnv.apiBaseUrl
+
+function getInternalApiHeaders() {
+  const secret = process.env.INTERNAL_API_SECRET?.trim()
+  return secret ? { 'x-internal-api-secret': secret } : undefined
+}
 
 type ContentStore = Record<string, Record<string, unknown>>
 type SiteSummary = {
@@ -60,11 +66,29 @@ type SiteSummary = {
   }
 }
 
+type PublicClientFolder = {
+  id: string
+  title: string
+  description: string | null
+  serviceLabel: string | null
+  media: Array<{
+    id: string
+    stage: 'before' | 'progress' | 'after'
+    capturedAt: string
+    width: number
+    height: number
+    url: string
+  }>
+}
+
 async function getAllContent(): Promise<ContentStore> {
   try {
     // cache: 'no-store' → desativa o Data Cache e o Full Route Cache do Next.js,
     // garantindo que cada requisição busque dados frescos da API do CRM.
-    const res = await fetch(`${API_URL}/api/v1/content`, { cache: 'no-store' })
+    const res = await fetch(`${API_URL}/api/v1/content`, {
+      cache: 'no-store',
+      headers: getInternalApiHeaders(),
+    })
     if (!res.ok) return {}
     const data = await res.json() as { success: boolean; data: ContentStore }
     return data.data ?? {}
@@ -75,7 +99,10 @@ async function getAllContent(): Promise<ContentStore> {
 
 async function getSiteSummary(): Promise<SiteSummary | null> {
   try {
-    const res = await fetch(`${API_URL}/api/v1/content/site-summary`, { cache: 'no-store' })
+    const res = await fetch(`${API_URL}/api/v1/content/site-summary`, {
+      cache: 'no-store',
+      headers: getInternalApiHeaders(),
+    })
     if (!res.ok) return null
     const data = await res.json() as { success: boolean; data: SiteSummary }
     return data.data
@@ -84,7 +111,22 @@ async function getSiteSummary(): Promise<SiteSummary | null> {
   }
 }
 
+async function getPublicClientFolders(): Promise<PublicClientFolder[]> {
+  try {
+    const res = await fetch(`${API_URL}/api/v1/client-folders/public`, {
+      cache: 'no-store',
+      headers: getInternalApiHeaders(),
+    })
+    if (!res.ok) return []
+    const data = await res.json() as { success: boolean; data: PublicClientFolder[] }
+    return Array.isArray(data.data) ? data.data : []
+  } catch {
+    return []
+  }
+}
+
 function str(v: unknown, subkey?: string): string | undefined {
+  if (typeof v === 'string') return v
   if (!v || typeof v !== 'object') return undefined
   const obj = v as Record<string, unknown>
   if (subkey) return obj[subkey] ? String(obj[subkey]) : undefined
@@ -121,7 +163,7 @@ function asNumber(value: unknown, fallback = 0) {
 }
 
 export default async function HomePage() {
-  const [content, siteSummary] = await Promise.all([getAllContent(), getSiteSummary()])
+  const [content, siteSummary, clientFolders] = await Promise.all([getAllContent(), getSiteSummary(), getPublicClientFolders()])
 
   // Urgency badge
   const badgeRaw = content.hero?.urgency_badge as { enabled?: boolean; text?: string } | undefined
@@ -133,7 +175,10 @@ export default async function HomePage() {
   const heroTitle = str(content.hero?.title)
   const heroSubtitle = str(content.hero?.subtitle)
   const ctaRaw = content.hero?.cta_primary as { text?: string; url?: string } | undefined
-  const heroCta = ctaRaw ? { text: ctaRaw.text, url: ctaRaw.url } : undefined
+  const heroCta = ctaRaw ? {
+    text: ctaRaw.text?.trim() || undefined,
+    url: ctaRaw.url?.trim() || undefined,
+  } : undefined
   const heroBackgroundImage = asAssetUrl(content.hero?.background_image)
 
   // WhatsApp (número puro: 5511915751770)
@@ -144,6 +189,7 @@ export default async function HomePage() {
   // About bio + photo
   const aboutBio = str(content.about?.bio)
   const aboutPhotoUrl = asAssetUrl(content.about?.photo_viviani)
+  const aboutHighlights = [1, 2, 3].map((index) => str(content.about?.[`highlight_${index}`]))
   const resultsVivianiPhoto = asAssetUrl(content.services?.viviani_photo)
   const resultsItems = asArray<Record<string, unknown>>(content.services?.results_items).map((item, index) => ({
     id: asString(item.id, `result-${index}`),
@@ -176,20 +222,17 @@ export default async function HomePage() {
     source: 'google' as const,
   }))
 
-  const showArtificialTestimonials = Boolean(testimonialDisplay.artificialEnabled)
   const showGoogleTestimonials = Boolean(testimonialDisplay.googleEnabled)
-  const artificialTestimonialsCount = Math.min(20, Math.max(1, asNumber(testimonialDisplay.artificialCount, 3)))
 
   const hasActiveTestimonials =
     manualTestimonials.length > 0 ||
-    (showGoogleTestimonials && googleTestimonials.length > 0) ||
-    showArtificialTestimonials
+    (showGoogleTestimonials && googleTestimonials.length > 0)
   const testimonialPublicReviews = siteSummary?.socialProof.publicReviews ?? 0
   const testimonialAverageRating = siteSummary?.socialProof.averageRating ?? null
 
   return (
     <>
-      <Navbar hasTestimonials={hasActiveTestimonials} />
+      <Navbar hasTestimonials={hasActiveTestimonials} hasClientResults={clientFolders.length > 0} />
       <main id="main-content">
         <Hero
           urgencyBadge={urgencyBadge}
@@ -201,17 +244,16 @@ export default async function HomePage() {
           whatsappMessage={whatsappMessage}
           socialProof={siteSummary?.socialProof}
         />
-        <About bio={aboutBio} photoUrl={aboutPhotoUrl} whatsappNumber={whatsappNumber} />
+          <About bio={aboutBio} photoUrl={aboutPhotoUrl} whatsappNumber={whatsappNumber} highlights={aboutHighlights} />
         <HowItWorks />
         <Services />
         <Results items={resultsItems} vivianiPhotoUrl={resultsVivianiPhoto} />
+        <ClientResults groups={clientFolders} />
         <Testimonials
           manualItems={manualTestimonials}
           googleItems={showGoogleTestimonials ? googleTestimonials : []}
           publicReviewCount={testimonialPublicReviews}
           averageRating={testimonialAverageRating}
-          artificialEnabled={showArtificialTestimonials}
-          artificialCount={artificialTestimonialsCount}
         />
         <TrustSection stats={siteSummary?.trust} />
         <LeadFormSection socialProof={siteSummary?.socialProof} />

@@ -1,6 +1,8 @@
 const LOCAL_HOSTS = new Set(['localhost', '127.0.0.1', '0.0.0.0'])
 
-type StorageDriver = 'local' | 'supabase'
+function localUrlsAllowed(): boolean {
+  return (process.env.NODE_ENV?.trim() || 'production') !== 'production'
+}
 
 function readRequiredEnv(name: string): string {
   const value = process.env[name]?.trim()
@@ -30,13 +32,13 @@ function parseUrl(name: string, value: string, allowLocalHost = false): URL {
   return parsed
 }
 
-function readRequiredUrl(name: string, allowLocalHost = false): string {
+function readRequiredUrl(name: string, allowLocalHost = localUrlsAllowed()): string {
   const value = readRequiredEnv(name)
   parseUrl(name, value, allowLocalHost)
   return value.replace(/\/+$/, '')
 }
 
-function readOptionalUrl(name: string, allowLocalHost = false): string | undefined {
+function readOptionalUrl(name: string, allowLocalHost = localUrlsAllowed()): string | undefined {
   const value = process.env[name]?.trim()
   if (!value) {
     return undefined
@@ -70,7 +72,7 @@ function readRequiredOrigins(name: string): string[] {
   }
 
   origins.forEach((origin) => {
-    parseUrl(name, origin)
+    parseUrl(name, origin, localUrlsAllowed())
   })
 
   return origins
@@ -85,42 +87,39 @@ function readPort(): number {
   return value
 }
 
-function readStorageDriver(): StorageDriver {
-  const raw = process.env.STORAGE_DRIVER?.trim().toLowerCase() || 'supabase'
-
-  if (raw === 'local' || raw === 'supabase') {
-    return raw
-  }
-
-  throw new Error(`[env] Invalid STORAGE_DRIVER: ${raw}. Valid values: local, supabase`)
-}
-
-const storageDriver = readStorageDriver()
-
-function readSupabaseStorageConfig() {
-  if (storageDriver !== 'supabase') {
-    return undefined
-  }
-
+function readRedisConfig() {
   return {
-    url: readRequiredUrl('SUPABASE_URL'),
-    serviceRoleKey: readRequiredEnv('SUPABASE_SERVICE_ROLE_KEY'),
-    bucket: readOptionalEnv('SUPABASE_STORAGE_BUCKET') || 'uploads',
+    url: readRequiredEnv('REDIS_URL'),
   }
 }
+
+type DeploymentStage = 'development' | 'homologacao' | 'production'
+
+function readDeploymentStage(): DeploymentStage {
+  const value = process.env.DEPLOYMENT_STAGE?.trim().toLowerCase()
+    || (process.env.NODE_ENV?.trim() === 'production' ? 'production' : 'development')
+
+  if (value === 'development' || value === 'homologacao' || value === 'production') {
+    return value
+  }
+
+  throw new Error(`[env] Invalid DEPLOYMENT_STAGE: ${value}`)
+}
+
+const redisConfig = readRedisConfig()
+const deploymentStage = readDeploymentStage()
 
 export const apiEnv = {
   nodeEnv: process.env.NODE_ENV?.trim() || 'production',
+  deploymentStage,
   apiHost: process.env.API_HOST?.trim() || '0.0.0.0',
   apiPort: readPort(),
   appVersion:
     process.env.NEXT_PUBLIC_APP_VERSION?.trim()
     || process.env.APP_VERSION?.trim()
-    || process.env.RENDER_GIT_COMMIT?.trim()
     || '1.0.0',
   databaseUrl: readRequiredEnv('DATABASE_URL'),
-  upstashRedisUrl: readRequiredEnv('UPSTASH_REDIS_REST_URL'),
-  upstashRedisToken: readRequiredEnv('UPSTASH_REDIS_REST_TOKEN'),
+  redisUrl: redisConfig.url,
   apiBaseUrl: readRequiredUrl('API_BASE_URL'),
   crmUrl: readRequiredUrl('CRM_URL'),
   corsOrigins: readRequiredOrigins('CORS_ORIGIN'),
@@ -138,8 +137,7 @@ export const apiEnv = {
   whatsappEmbeddedSignupConfigId: readOptionalEnv('WHATSAPP_EMBEDDED_SIGNUP_CONFIG_ID'),
   whatsappWebhookVerifyToken: readOptionalEnv('WHATSAPP_WEBHOOK_VERIFY_TOKEN'),
   whatsappGraphApiVersion: readOptionalEnv('WHATSAPP_GRAPH_API_VERSION') || 'v22.0',
-  storageDriver,
   uploadDir: process.env.UPLOAD_DIR?.trim() || './uploads',
-  supabaseStorage: readSupabaseStorageConfig(),
+  privateUploadDir: process.env.PRIVATE_UPLOAD_DIR?.trim() || './private-uploads',
   logDir: process.env.LOG_DIR?.trim() || './logs',
 } as const

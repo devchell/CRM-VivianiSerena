@@ -1,7 +1,7 @@
 import { Router } from 'express'
 import { z } from 'zod'
 import { prisma } from '../lib/prisma'
-import { authenticate } from '../middleware/authenticate'
+import { authenticate, authorizePermission } from '../middleware/authenticate'
 import { getRecentActivity } from '../domain/metrics/service'
 
 export const notificationsRouter: Router = Router()
@@ -11,11 +11,11 @@ const querySchema = z.object({
 })
 
 const markReadSchema = z.object({
-  notificationIds: z.array(z.string().min(1)).optional(),
+  notificationIds: z.array(z.string().min(1)).max(100).optional(),
   all: z.boolean().optional(),
 })
 
-notificationsRouter.get('/', authenticate, async (req, res, next) => {
+notificationsRouter.get('/', authenticate, authorizePermission('dashboard.view'), async (req, res, next) => {
   try {
     const query = querySchema.parse(req.query)
     const limit = query.limit ?? 10
@@ -51,7 +51,7 @@ notificationsRouter.get('/', authenticate, async (req, res, next) => {
   }
 })
 
-notificationsRouter.post('/read', authenticate, async (req, res, next) => {
+notificationsRouter.post('/read', authenticate, authorizePermission('dashboard.view'), async (req, res, next) => {
   try {
     const body = markReadSchema.parse(req.body)
     if (!req.user) {
@@ -60,7 +60,7 @@ notificationsRouter.post('/read', authenticate, async (req, res, next) => {
 
     const userId = req.user.sub
 
-    let notificationIds = body.notificationIds ?? []
+    let notificationIds = [...new Set(body.notificationIds ?? [])]
 
     if (body.all) {
       const activity = await getRecentActivity(50)

@@ -3,6 +3,7 @@ import { prisma } from '../lib/prisma'
 import { logger } from '../lib/logger'
 import { redis } from '../lib/redis'
 import { emailService } from './email'
+import { buildCommercialLeadWhere } from '../domain/metrics/service'
 
 function formatPeriod(from: Date, to: Date): string {
   return `${from.toLocaleDateString('pt-BR')} – ${to.toLocaleDateString('pt-BR')}`
@@ -19,7 +20,7 @@ export function scheduleSessionCleanup() {
       logger.error('Session cleanup job failed:', err)
     }
   })
-  logger.info('📅 Session cleanup scheduled (daily at 02:00)')
+  logger.info('Session cleanup scheduled (daily at 02:00)')
 }
 
 // Weekly financial report email (Monday at 08:00)
@@ -31,15 +32,15 @@ export function scheduleWeeklyReport() {
 
       const [incomeAgg, expensesAgg, leadsCount, appointmentsCount] = await Promise.all([
         prisma.financial.aggregate({
-          where: { type: 'income', date: { gte: weekAgo } },
+          where: { deletedAt: null, type: 'income', date: { gte: weekAgo } },
           _sum: { amount: true },
         }),
         prisma.financial.aggregate({
-          where: { type: 'expense', date: { gte: weekAgo } },
+          where: { deletedAt: null, type: 'expense', date: { gte: weekAgo } },
           _sum: { amount: true },
         }),
-        prisma.lead.count({ where: { createdAt: { gte: weekAgo } } }),
-        prisma.appointment.count({ where: { createdAt: { gte: weekAgo } } }),
+        prisma.lead.count({ where: buildCommercialLeadWhere({ createdAt: { gte: weekAgo } }) }),
+        prisma.appointment.count({ where: { createdAt: { gte: weekAgo }, lead: { deletedAt: null } } }),
       ])
 
       const income = Number(incomeAgg._sum.amount ?? 0)
@@ -59,7 +60,7 @@ export function scheduleWeeklyReport() {
       logger.error('Weekly report job failed:', err)
     }
   })
-  logger.info('📅 Weekly report scheduled (Monday at 08:00)')
+  logger.info('Weekly report scheduled (Monday at 08:00)')
 }
 
 // Health check for services (every 5 minutes)
@@ -90,17 +91,21 @@ export function scheduleHealthCheck() {
             details: checks,
           },
         })
-      } catch { /* silent */ }
+      } catch (error) {
+        logger.warn('Scheduled health check could not persist its event', {
+          error: error instanceof Error ? error.message : String(error),
+        })
+      }
     } else {
       logger.debug('Health check OK', checks)
     }
   })
-  logger.info('📅 Health check scheduled (every 5 min)')
+  logger.info('Health check scheduled (every 5 min)')
 }
 
 export function startAllJobs() {
   scheduleSessionCleanup()
   scheduleWeeklyReport()
   scheduleHealthCheck()
-  logger.info('🔄 Background jobs started')
+  logger.info('Background jobs started')
 }

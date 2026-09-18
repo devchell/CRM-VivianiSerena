@@ -25,10 +25,6 @@ function startOfMonth(date: Date): Date {
   return new Date(date.getFullYear(), date.getMonth(), 1, 0, 0, 0, 0)
 }
 
-function endOfDay(date: Date): Date {
-  return new Date(date.getFullYear(), date.getMonth(), date.getDate(), 23, 59, 59, 999)
-}
-
 function addDays(date: Date, days: number): Date {
   return new Date(date.getTime() + days * 24 * 60 * 60 * 1000)
 }
@@ -54,6 +50,7 @@ export function buildCommercialLeadWhere(extra?: Prisma.LeadWhereInput): Prisma.
   return {
     AND: [
       { NOT: { email: { contains: TRACKING_EMAIL_MARKER } } },
+      { deletedAt: null },
       extra ?? {},
     ],
   }
@@ -131,10 +128,10 @@ export async function getFinancialSummary(periodKey: 'month' | 'last30d' = 'mont
   const previousTo = new Date(from.getTime() - 1)
 
   const [incomeAgg, expensesAgg, previousIncomeAgg, previousExpensesAgg, convertedLeadsInPeriod] = await Promise.all([
-    prisma.financial.aggregate({ where: { type: 'income', date: { gte: from, lte: to } }, _sum: { amount: true } }),
-    prisma.financial.aggregate({ where: { type: 'expense', date: { gte: from, lte: to } }, _sum: { amount: true } }),
-    prisma.financial.aggregate({ where: { type: 'income', date: { gte: previousFrom, lte: previousTo } }, _sum: { amount: true } }),
-    prisma.financial.aggregate({ where: { type: 'expense', date: { gte: previousFrom, lte: previousTo } }, _sum: { amount: true } }),
+    prisma.financial.aggregate({ where: { deletedAt: null, type: 'income', date: { gte: from, lte: to } }, _sum: { amount: true } }),
+    prisma.financial.aggregate({ where: { deletedAt: null, type: 'expense', date: { gte: from, lte: to } }, _sum: { amount: true } }),
+    prisma.financial.aggregate({ where: { deletedAt: null, type: 'income', date: { gte: previousFrom, lte: previousTo } }, _sum: { amount: true } }),
+    prisma.financial.aggregate({ where: { deletedAt: null, type: 'expense', date: { gte: previousFrom, lte: previousTo } }, _sum: { amount: true } }),
     prisma.lead.count({
       where: buildCommercialLeadWhere({
         status: 'converted',
@@ -186,13 +183,13 @@ export async function getFinancialCharts(months = 12): Promise<FinancialCharts> 
     prisma.$queryRaw<MonthlyRow[]>`
       SELECT date_trunc('month', date) AS month, type, SUM(amount) AS total
       FROM financials
-      WHERE date >= ${since}
+      WHERE date >= ${since} AND deleted_at IS NULL
       GROUP BY date_trunc('month', date), type
       ORDER BY month ASC
     `,
     prisma.financial.groupBy({
       by: ['category'],
-      where: { type: 'expense', date: { gte: addMonths(now, -2) } },
+      where: { deletedAt: null, type: 'expense', date: { gte: addMonths(now, -2) } },
       _sum: { amount: true },
     }),
   ])
@@ -289,16 +286,18 @@ async function getAppointmentMetrics(periodKey: 'month' | 'last30d' = 'month') {
       where: {
         date: { gte: now },
         status: { in: ['scheduled', 'confirmed'] },
+        lead: { deletedAt: null },
       },
     }),
     prisma.appointment.count({
       where: {
         date: { gte: from, lte: to },
+        lead: { deletedAt: null },
       },
     }),
     prisma.appointment.groupBy({
       by: ['status'],
-      where: { date: { gte: from, lte: to } },
+      where: { date: { gte: from, lte: to }, lead: { deletedAt: null } },
       _count: { _all: true },
     }),
   ])
@@ -319,11 +318,13 @@ export async function getRecentActivity(limit = 10): Promise<ActivityItem[]> {
       select: { id: true, name: true, source: true, createdAt: true, status: true },
     }),
     prisma.appointment.findMany({
+      where: { lead: { deletedAt: null } },
       orderBy: { createdAt: 'desc' },
       take: limit,
       include: { lead: { select: { name: true } } },
     }),
     prisma.financial.findMany({
+      where: { deletedAt: null },
       orderBy: { createdAt: 'desc' },
       take: limit,
       select: { id: true, type: true, amount: true, category: true, createdAt: true, description: true },
@@ -369,121 +370,15 @@ export async function getRecentActivity(limit = 10): Promise<ActivityItem[]> {
     .slice(0, limit)
 }
 
-function fallbackLeadMetrics(): LeadMetrics {
-  return {
-    total: 0,
-    createdInPeriod: 0,
-    converted: 0,
-    convertedInPeriod: 0,
-    conversionRate: 0,
-    byStatus: normalizeLeadStatusCounts([]),
-    bySource: normalizeLeadSourceCounts([]),
-  }
-}
-
-function fallbackAppointmentMetrics() {
-  return {
-    upcoming: 0,
-    scheduledInPeriod: 0,
-    byStatus: normalizeAppointmentStatusCounts([]),
-  }
-}
-
-function fallbackFinancialSummary(): FinancialSummary {
-  return {
-    income: 0,
-    expenses: 0,
-    profit: 0,
-    previousIncome: 0,
-    previousExpenses: 0,
-    previousProfit: 0,
-    averageTicket: 0,
-    convertedLeadsInPeriod: 0,
-    categories: {
-      income: [
-        { value: 'coaching_revenue', label: FINANCIAL_CATEGORY_LABELS.coaching_revenue },
-        { value: 'workshop_revenue', label: FINANCIAL_CATEGORY_LABELS.workshop_revenue },
-        { value: 'mentoring_revenue', label: FINANCIAL_CATEGORY_LABELS.mentoring_revenue },
-        { value: 'other', label: FINANCIAL_CATEGORY_LABELS.other },
-      ],
-      expense: [
-        { value: 'office', label: FINANCIAL_CATEGORY_LABELS.office },
-        { value: 'tools_software', label: FINANCIAL_CATEGORY_LABELS.tools_software },
-        { value: 'marketing', label: FINANCIAL_CATEGORY_LABELS.marketing },
-        { value: 'education', label: FINANCIAL_CATEGORY_LABELS.education },
-        { value: 'taxes', label: FINANCIAL_CATEGORY_LABELS.taxes },
-        { value: 'other', label: FINANCIAL_CATEGORY_LABELS.other },
-      ],
-    },
-  }
-}
-
-function fallbackFinancialCharts(): FinancialCharts {
-  return { monthly: [], expensesByCategory: [] }
-}
-
-function fallbackAnalyticsMetrics(): AnalyticsMetrics {
-  return {
-    sessions30d: 0,
-    uniqueReferrers: 0,
-    bounceRate: 0,
-    topReferrers: [],
-    heatmap: Array.from({ length: 24 }, (_, hour) => ({ hour, count: 0 })),
-    funnel: { sessions: 0, leads: 0, converted: 0, conversionRate: 0 },
-  }
-}
-
-async function safeGetLeadMetrics(periodKey: 'month' | 'last30d'): Promise<LeadMetrics> {
-  try { return await getLeadMetrics(periodKey) } catch (e) {
-    console.error('[metrics] getLeadMetrics failed:', e)
-    return fallbackLeadMetrics()
-  }
-}
-
-async function safeGetAppointmentMetrics(periodKey: 'month' | 'last30d') {
-  try { return await getAppointmentMetrics(periodKey) } catch (e) {
-    console.error('[metrics] getAppointmentMetrics failed:', e)
-    return fallbackAppointmentMetrics()
-  }
-}
-
-async function safeGetFinancialSummary(periodKey: 'month' | 'last30d'): Promise<FinancialSummary> {
-  try { return await getFinancialSummary(periodKey) } catch (e) {
-    console.error('[metrics] getFinancialSummary failed:', e)
-    return fallbackFinancialSummary()
-  }
-}
-
-async function safeGetFinancialCharts(): Promise<FinancialCharts> {
-  try { return await getFinancialCharts(12) } catch (e) {
-    console.error('[metrics] getFinancialCharts failed:', e)
-    return fallbackFinancialCharts()
-  }
-}
-
-async function safeGetAnalyticsMetrics(): Promise<AnalyticsMetrics> {
-  try { return await getAnalyticsMetrics() } catch (e) {
-    console.error('[metrics] getAnalyticsMetrics failed:', e)
-    return fallbackAnalyticsMetrics()
-  }
-}
-
-async function safeGetRecentActivity(limit: number): Promise<ActivityItem[]> {
-  try { return await getRecentActivity(limit) } catch (e) {
-    console.error('[metrics] getRecentActivity failed:', e)
-    return []
-  }
-}
-
 export async function getMetricsOverview(periodKey: 'month' | 'last30d' = 'month'): Promise<MetricsOverview> {
   const period = createPeriod(periodKey)
   const [leads, appointments, financial, charts, analytics, recentActivity] = await Promise.all([
-    safeGetLeadMetrics(periodKey),
-    safeGetAppointmentMetrics(periodKey),
-    safeGetFinancialSummary(periodKey),
-    safeGetFinancialCharts(),
-    safeGetAnalyticsMetrics(),
-    safeGetRecentActivity(8),
+    getLeadMetrics(periodKey),
+    getAppointmentMetrics(periodKey),
+    getFinancialSummary(periodKey),
+    getFinancialCharts(12),
+    getAnalyticsMetrics(),
+    getRecentActivity(8),
   ])
 
   const funnel: LeadFunnelMetrics = {

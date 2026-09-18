@@ -1,7 +1,8 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useAuth } from '@/lib/useAuth'
+import { useRealtimeRefresh } from '@/lib/realtime'
 import { toast } from 'sonner'
 import {
   Eye,
@@ -78,35 +79,42 @@ export default function ConfiguracoesPage() {
     'Content-Type': 'application/json',
   }), [accessToken])
 
-  useEffect(() => {
+  const loadProfile = useCallback(async () => {
     if (status === 'loading') return
     if (!accessToken) {
       setLoadingProfile(false)
       return
     }
 
-    fetch(`${API_URL}/auth/me`, {
-      headers: { Authorization: `Bearer ${accessToken}` },
-    })
-      .then(async (response) => {
-        const data = await response.json() as { success: boolean; data: SettingsUserProfile; message?: string }
-        if (!response.ok || !data.success) {
-          throw new Error(data.message ?? 'Erro ao carregar perfil')
-        }
+    setLoadingProfile(true)
+    try {
+      const response = await fetch(`${API_URL}/auth/me`, {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      })
+      const data = await response.json() as { success: boolean; data: SettingsUserProfile; message?: string }
+      if (!response.ok || !data.success) {
+        throw new Error(data.message ?? 'Erro ao carregar perfil')
+      }
 
-        setProfile(data.data)
-        setProfileForm({
-          name: data.data.name ?? '',
-          email: data.data.email,
-          phone: data.data.phone ?? '',
-        })
-        setTwoFaDraft(toTwoFactorDraft(data.data))
+      setProfile(data.data)
+      setProfileForm({
+        name: data.data.name ?? '',
+        email: data.data.email,
+        phone: data.data.phone ?? '',
       })
-      .catch((error) => {
-        toast.error(error instanceof Error ? error.message : 'Erro ao carregar perfil')
-      })
-      .finally(() => setLoadingProfile(false))
+      setTwoFaDraft(toTwoFactorDraft(data.data))
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Erro ao carregar perfil')
+    } finally {
+      setLoadingProfile(false)
+    }
   }, [accessToken, status])
+
+  useEffect(() => {
+    void loadProfile()
+  }, [loadProfile])
+
+  useRealtimeRefresh(loadProfile, ['users'])
 
   const hasTwoFaChanges = profile
     ? (
@@ -337,8 +345,9 @@ export default function ConfiguracoesPage() {
               </h2>
 
               <div>
-                <label className={labelClass}>Nome</label>
+                <label htmlFor="profile-name" className={labelClass}>Nome</label>
                 <input
+                  id="profile-name"
                   value={profileForm.name}
                   onChange={(event) => setProfileForm((current) => ({ ...current, name: event.target.value }))}
                   placeholder="Seu nome completo"
@@ -347,8 +356,9 @@ export default function ConfiguracoesPage() {
               </div>
 
               <div>
-                <label className={labelClass}>E-mail</label>
+                <label htmlFor="profile-email" className={labelClass}>E-mail</label>
                 <input
+                  id="profile-email"
                   type="email"
                   value={profileForm.email}
                   readOnly
@@ -360,8 +370,9 @@ export default function ConfiguracoesPage() {
               </div>
 
               <div>
-                <label className={labelClass}>Telefone / WhatsApp</label>
+                <label htmlFor="profile-phone" className={labelClass}>Telefone / WhatsApp</label>
                 <input
+                  id="profile-phone"
                   type="tel"
                   value={profileForm.phone}
                   onChange={(event) => setProfileForm((current) => ({ ...current, phone: event.target.value }))}
@@ -376,7 +387,7 @@ export default function ConfiguracoesPage() {
               <button
                 onClick={handleSaveProfile}
                 disabled={savingProfile}
-                className="flex items-center gap-2 px-5 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors disabled:opacity-60"
+                className="flex items-center gap-2 px-5 py-2 bg-blue-600 text-[var(--primary-foreground)] rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors disabled:opacity-60"
               >
                 {savingProfile ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />}
                 Salvar Perfil
@@ -397,17 +408,19 @@ export default function ConfiguracoesPage() {
                   { label: 'Confirmar nova senha', key: 'confirm' },
                 ] as const).map((field) => (
                   <div key={field.key}>
-                    <label className={labelClass}>{field.label}</label>
+                    <label htmlFor={`password-${field.key}`} className={labelClass}>{field.label}</label>
                     <div className="relative">
                       <input
+                        id={`password-${field.key}`}
                         type={showPasswords[field.key] ? 'text' : 'password'}
                         value={passwordForm[field.key]}
                         onChange={(event) => setPasswordForm((current) => ({ ...current, [field.key]: event.target.value }))}
-                        placeholder="........"
+                        placeholder={field.key === 'current' ? 'Digite sua senha atual' : field.key === 'new' ? 'Digite a nova senha' : 'Repita a nova senha'}
                         className={`${inputClass} pr-10`}
                       />
                       <button
                         type="button"
+                        aria-label={showPasswords[field.key] ? `Ocultar ${field.label.toLowerCase()}` : `Mostrar ${field.label.toLowerCase()}`}
                         onClick={() => setShowPasswords((current) => ({ ...current, [field.key]: !current[field.key] }))}
                         className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
                       >
@@ -420,7 +433,7 @@ export default function ConfiguracoesPage() {
                 <button
                   onClick={handleChangePassword}
                   disabled={savingPassword || !passwordForm.current || !passwordForm.new || !passwordForm.confirm}
-                  className="flex items-center gap-2 px-5 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors disabled:opacity-60"
+                  className="flex items-center gap-2 px-5 py-2 bg-blue-600 text-[var(--primary-foreground)] rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors disabled:opacity-60"
                 >
                   {savingPassword ? <Loader2 size={14} className="animate-spin" /> : <Lock size={14} />}
                   Alterar Senha
@@ -515,7 +528,7 @@ export default function ConfiguracoesPage() {
                     setTwoFaPasswordModal(true)
                   }}
                   disabled={!hasTwoFaChanges}
-                  className="flex items-center gap-2 px-5 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors disabled:opacity-50"
+                  className="flex items-center gap-2 px-5 py-2 bg-blue-600 text-[var(--primary-foreground)] rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors disabled:opacity-50"
                 >
                   <Save size={14} />
                   Salvar configuração do 2FA
@@ -533,7 +546,7 @@ export default function ConfiguracoesPage() {
               <div className="grid grid-cols-2 gap-4 max-w-sm">
                 {[
                   { value: 'light', label: 'Claro', desc: 'Interface clara com tons creme' },
-                  { value: 'dark', label: 'Escuro', desc: 'Interface escura com acentos azul' },
+                  { value: 'dark', label: 'Escuro', desc: 'Interface escura com acentos terracota' },
                 ].map((item) => (
                   <button
                     key={item.value}
@@ -595,7 +608,7 @@ export default function ConfiguracoesPage() {
               <button
                 onClick={() => void handleSaveTwoFa()}
                 disabled={savingTwoFa || !twoFaPassword}
-                className="flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-60 bg-blue-600 text-white hover:bg-blue-700"
+                className="flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-60 bg-blue-600 text-[var(--primary-foreground)] hover:bg-blue-700"
               >
                 {savingTwoFa ? <Loader2 size={14} className="animate-spin" /> : null}
                 Confirmar

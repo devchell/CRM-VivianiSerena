@@ -24,6 +24,7 @@ export function errorHandler(
       success: false,
       error: err.message,
       details: err.details,
+      requestId: req.requestId,
     })
   }
 
@@ -38,13 +39,20 @@ export function errorHandler(
       success: false,
       error: 'Validation error',
       details,
+      requestId: req.requestId,
     })
   }
 
-  logger.error('Unhandled error:', { error: err.message, stack: err.stack, url: req.originalUrl })
+  logger.error('Unhandled error:', {
+    error: err.message,
+    stack: err.stack,
+    path: req.path,
+    requestId: req.requestId,
+  })
 
   return res.status(500).json({
     success: false,
     error: process.env.NODE_ENV === 'production' ? 'Internal server error' : err.message,
+    requestId: req.requestId,
   })
 }

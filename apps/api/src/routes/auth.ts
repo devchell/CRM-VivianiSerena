@@ -11,9 +11,14 @@ import { AppError } from '../middleware/errorHandler'
 import { logger } from '../lib/logger'
 import { apiEnv } from '../lib/env'
 import { recordLoginFailure, resetLoginFailures, bruteForceCheck } from '../middleware/security'
+import { normalizeLoginIdentifier } from '../lib/login-identifier'
 import { emailService } from '../infrastructure/email'
 import { smsService } from '../infrastructure/sms'
-import { disconnectGoogleCalendar, getGoogleCalendarConnectionStatus, isGoogleCalendarConfigured } from '../infrastructure/googleCalendar'
+import {
+  disconnectGoogleCalendar,
+  getGoogleCalendarConnectionStatus,
+  isGoogleCalendarConfigured,
+} from '../infrastructure/googleCalendar'
 import {
   inferUserProfile,
   resolveAllowedModules,
@@ -29,6 +34,7 @@ type TwoFactorChannel = 'email' | 'sms'
 type AccessUser = {
   id: string
   email: string
+  username?: string | null
   name?: string | null
   role: UserRole
   allowedModules?: string[]
@@ -55,9 +61,14 @@ function generateOtp(): string {
   return String(crypto.randomInt(100000, 999999))
 }
 
+const cookieSecureSetting = process.env.COOKIE_SECURE?.trim().toLowerCase()
+
 const COOKIE_OPTS = {
   httpOnly: true,
-  secure: process.env.NODE_ENV === 'production',
+  secure:
+    cookieSecureSetting === undefined
+      ? process.env.NODE_ENV === 'production'
+      : cookieSecureSetting === 'true',
   sameSite: 'lax' as const,
   path: '/',
 }
@@ -71,6 +82,7 @@ function buildAccessContext(user: AccessUser) {
     accessTokenPayload: {
       sub: user.id,
       email: user.email,
+      username: user.username,
       name: user.name,
       role: user.role,
       profile,
@@ -83,6 +95,7 @@ function buildAccessContext(user: AccessUser) {
       id: user.id,
       name: user.name,
       email: user.email,
+      username: user.username ?? null,
       role: user.role,
       profile,
       permissions,
@@ -197,7 +210,10 @@ async function sendTwoFactorChallenge(
   }
 
   if (!user.phone) {
-    throw new AppError(400, 'Telefone não cadastrado. Atualize seu perfil antes de usar 2FA por celular.')
+    throw new AppError(
+      400,
+      'Telefone não cadastrado. Atualize seu perfil antes de usar 2FA por celular.'
+    )
   }
 
   await redis.set(`2fa_sms:${twoFactorToken}`, code, { ex: 300 })
@@ -236,11 +252,15 @@ async function advanceTwoFactorFlow(twoFactorToken: string, state: TwoFactorStat
     await redis.del(`2fa_login:${twoFactorToken}`)
     const sessionToken = crypto.randomUUID()
 
-    await redis.set(`2fa_session:${sessionToken}`, {
-      userId: state.userId,
-      email: state.email,
-      role: state.role,
-    }, { ex: 120 })
+    await redis.set(
+      `2fa_session:${sessionToken}`,
+      {
+        userId: state.userId,
+        email: state.email,
+        role: state.role,
+      },
+      { ex: 120 }
+    )
 
     logger.info('2FA fully verified', {
       userId: state.userId,
@@ -277,11 +297,22 @@ async function advanceTwoFactorFlow(twoFactorToken: string, state: TwoFactorStat
   return nextChallenge
 }
 
-const loginSchema = z.object({
-  email: z.string().email(),
-  password: z.string().min(8),
-  twoFactorSessionToken: z.string().optional(),
-})
+const loginSchema = z
+  .object({
+    identifier: z.string().trim().min(1).max(254).optional(),
+    email: z.string().trim().min(1).max(254).optional(),
+    password: z.string().min(8),
+    twoFactorSessionToken: z.string().optional(),
+  })
+  .superRefine((data, ctx) => {
+    if (!data.twoFactorSessionToken && !data.identifier && !data.email) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['identifier'],
+        message: 'Usuário ou e-mail é obrigatório',
+      })
+    }
+  })
 
 const profileUpdateSchema = z.object({
   name: z.string().min(2).optional(),
@@ -292,7 +323,7 @@ const profileUpdateSchema = z.object({
 
 const passwordUpdateSchema = z.object({
   currentPassword: z.string().min(8),
-      newPassword: z.string().min(8, 'Nova senha deve ter no mínimo 8 caracteres'),
+  newPassword: z.string().min(8, 'Nova senha deve ter no mínimo 8 caracteres'),
 })
 
 const twoFactorPreferencesSchema = z.object({
@@ -385,7 +416,9 @@ authRouter.post('/login', authRateLimiter, bruteForceCheck, async (req, res, nex
     const ip = req.ip ?? 'unknown'
 
     if (body.twoFactorSessionToken) {
-      const session = await redis.get<{ userId: string }>(`2fa_session:${body.twoFactorSessionToken}`)
+      const session = await redis.get<{ userId: string }>(
+        `2fa_session:${body.twoFactorSessionToken}`
+      )
 
       if (!session) {
         throw new AppError(401, 'Sessão 2FA expirada ou inválida')
@@ -403,10 +436,13 @@ authRouter.post('/login', authRateLimiter, bruteForceCheck, async (req, res, nex
       return completeAuthenticatedLogin(res, user, ip, 'LOGIN_2FA')
     }
 
-    const user = await prisma.user.findUnique({ where: { email: body.email } })
+    const identifier = normalizeLoginIdentifier(body.identifier ?? body.email ?? '')
+    const user =
+      (await prisma.user.findUnique({ where: { username: identifier } })) ??
+      (await prisma.user.findUnique({ where: { email: identifier } }))
 
     if (!user) {
-      recordLoginFailure(ip)
+      await recordLoginFailure(ip)
       throw new AppError(401, 'Credenciais inválidas')
     }
 
@@ -416,7 +452,7 @@ authRouter.post('/login', authRateLimiter, bruteForceCheck, async (req, res, nex
 
     const isValidPassword = await bcrypt.compare(body.password, user.passwordHash)
     if (!isValidPassword) {
-      recordLoginFailure(ip)
+      await recordLoginFailure(ip)
       await prisma.user.update({
         where: { id: user.id },
         data: {
@@ -427,7 +463,7 @@ authRouter.post('/login', authRateLimiter, bruteForceCheck, async (req, res, nex
       throw new AppError(401, 'Credenciais inválidas')
     }
 
-    resetLoginFailures(ip)
+    await resetLoginFailures(ip)
     await prisma.user.update({
       where: { id: user.id },
       data: { failedAttempts: 0, lockedUntil: null },
@@ -475,10 +511,12 @@ authRouter.post('/login', authRateLimiter, bruteForceCheck, async (req, res, nex
 
 authRouter.post('/2fa/verify-email-otp', authRateLimiter, async (req, res, next) => {
   try {
-    const { twoFactorToken, code } = z.object({
-      twoFactorToken: z.string(),
-      code: z.string().length(6),
-    }).parse(req.body)
+    const { twoFactorToken, code } = z
+      .object({
+        twoFactorToken: z.string(),
+        code: z.string().length(6),
+      })
+      .parse(req.body)
 
     const state = await loadTwoFactorState(twoFactorToken)
 
@@ -502,10 +540,12 @@ authRouter.post('/2fa/verify-email-otp', authRateLimiter, async (req, res, next)
 
 authRouter.post('/2fa/verify-sms-otp', authRateLimiter, async (req, res, next) => {
   try {
-    const { twoFactorToken, code } = z.object({
-      twoFactorToken: z.string(),
-      code: z.string().length(6),
-    }).parse(req.body)
+    const { twoFactorToken, code } = z
+      .object({
+        twoFactorToken: z.string(),
+        code: z.string().length(6),
+      })
+      .parse(req.body)
 
     const state = await loadTwoFactorState(twoFactorToken)
 
@@ -602,6 +642,7 @@ authRouter.get('/me', authenticate, async (req, res, next) => {
       select: {
         id: true,
         email: true,
+        username: true,
         name: true,
         phone: true,
         role: true,
@@ -746,10 +787,12 @@ authRouter.put('/2fa/preferences', authenticate, async (req, res, next) => {
 authRouter.post('/2fa/toggle', authenticate, async (req, res, next) => {
   try {
     const authUser = requireAuthenticatedUser(req.user)
-    const { enable, password } = z.object({
-      enable: z.boolean(),
-      password: z.string().min(1),
-    }).parse(req.body)
+    const { enable, password } = z
+      .object({
+        enable: z.boolean(),
+        password: z.string().min(1),
+      })
+      .parse(req.body)
 
     const result = await updateTwoFactorPreferences({
       userId: authUser.sub,
@@ -777,9 +820,11 @@ authRouter.post('/2fa/toggle', authenticate, async (req, res, next) => {
 authRouter.post('/set-password', authenticate, async (req, res, next) => {
   try {
     const authUser = requireAuthenticatedUser(req.user)
-    const { newPassword } = z.object({
-      newPassword: z.string().min(8, 'A senha deve ter no mínimo 8 caracteres'),
-    }).parse(req.body)
+    const { newPassword } = z
+      .object({
+        newPassword: z.string().min(8, 'A senha deve ter no mínimo 8 caracteres'),
+      })
+      .parse(req.body)
 
     const user = await prisma.user.findUnique({ where: { id: authUser.sub } })
     if (!user) {
@@ -825,11 +870,15 @@ authRouter.get('/google', authenticate, authorize('ADMIN'), async (req, res, nex
       typeof req.query.redirect === 'string' ? req.query.redirect : undefined
     )
 
-    await redis.set(`google:oauth:state:${state}`, {
-      userId: authUser.sub,
-      role: authUser.role,
-      redirect,
-    }, { ex: 600 })
+    await redis.set(
+      `google:oauth:state:${state}`,
+      {
+        userId: authUser.sub,
+        role: authUser.role,
+        redirect,
+      },
+      { ex: 600 }
+    )
 
     const url = googleCalendar.getAuthUrl(state)
     res.json({ success: true, data: { authUrl: url } })
@@ -853,7 +902,9 @@ authRouter.get('/google/callback', async (req, res) => {
   try {
     const { code, state } = z.object({ code: z.string(), state: z.string() }).parse(req.query)
     const stateKey = `google:oauth:state:${state}`
-    const parsedState = await redis.get<{ userId: string; role: string; redirect?: string }>(stateKey)
+    const parsedState = await redis.get<{ userId: string; role: string; redirect?: string }>(
+      stateKey
+    )
 
     if (!parsedState) {
       throw new AppError(401, 'Google OAuth state inválido ou expirado')

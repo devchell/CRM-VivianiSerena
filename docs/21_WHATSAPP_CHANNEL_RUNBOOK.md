@@ -2,6 +2,8 @@
 
 Canal oficial implementado via Meta WhatsApp Business Platform no backend/API.
 
+Para a preparação da futura TyviaTalk, consulte `docs/26_TYVIATALK_INTEGRATION.md`. Este runbook continua descrevendo somente o provider Meta; não use seus headers, payloads ou tokens como contrato TyviaTalk.
+
 ## O que existe
 
 - conexao oficial no CRM em `Administracao`

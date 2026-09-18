@@ -10,6 +10,9 @@ import { emailService } from '../infrastructure/email'
 import { getActiveEmailSettings } from '../infrastructure/emailSettings'
 import { getWhatsAppChannelStatus, sendWhatsAppBusinessMessage } from '../infrastructure/whatsapp'
 import { getDefaultTemplate } from '../domain/defaultTemplates'
+import { emailRateLimiter } from '../middleware/rateLimiter'
+import { redis } from '../lib/redis'
+import { maskEmail, maskPhone } from '../lib/redact'
 
 export const dispatchesRouter: Router = Router()
 dispatchesRouter.use(authenticate)
@@ -26,6 +29,12 @@ const DEFAULT_SETTINGS = {
   pacingMs: 150,
   inactiveAfterDays: 90,
 } as const
+
+const DISPATCH_LOCK_TTL_SECONDS = 60 * 60
+
+function isWhatsAppDispatchEnabled() {
+  return process.env.WHATSAPP_DISPATCH_ENABLED?.trim().toLowerCase() === 'true'
+}
 
 const audienceQuerySchema = z.object({
   status: leadStatusSchema.optional(),
@@ -121,11 +130,6 @@ function escapeCsv(value: unknown) {
   return `"${String(value ?? '').replace(/"/g, '""')}"`
 }
 
-function normalizeOptionalText(value?: string | null) {
-  const normalized = value?.trim()
-  return normalized ? normalized : null
-}
-
 function normalizeEmail(value: string) {
   return value.trim().toLowerCase()
 }
@@ -166,17 +170,28 @@ function extractNoteValue(notes: string | null, key: 'service' | 'period'): stri
   return PERIOD_NAMES[raw] ?? raw
 }
 
-function interpolateVariables(template: string, lead: LeadRow): string {
+function escapeHtml(value: string) {
+  return value
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;')
+}
+
+function interpolateVariables(template: string, lead: LeadRow, format: 'text' | 'html' = 'text'): string {
+  const value = (input: string) => format === 'html' ? escapeHtml(input) : input
+
   return template
-    .replace(/\{nome\}/gi,     lead.name ?? '')
-    .replace(/\{email\}/gi,    lead.email ?? '')
-    .replace(/\{telefone\}/gi, lead.phone ?? '')
-    .replace(/\{servico\}/gi,  extractNoteValue(lead.notes, 'service'))
-    .replace(/\{periodo\}/gi,  extractNoteValue(lead.notes, 'period'))
-    .replace(/\{origem\}/gi,   SOURCE_NAMES[lead.source] ?? lead.source)
-    .replace(/\{canal\}/gi,    SOURCE_NAMES[lead.utmSource ?? ''] ?? lead.utmSource ?? '')
-    .replace(/\{data\}/gi,     new Date().toLocaleDateString('pt-BR'))
-    .replace(/\{hora\}/gi,     new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }))
+    .replace(/\{nome\}/gi,     value(lead.name ?? ''))
+    .replace(/\{email\}/gi,    value(lead.email ?? ''))
+    .replace(/\{telefone\}/gi, value(lead.phone ?? ''))
+    .replace(/\{servico\}/gi,  value(extractNoteValue(lead.notes, 'service')))
+    .replace(/\{periodo\}/gi,  value(extractNoteValue(lead.notes, 'period')))
+    .replace(/\{origem\}/gi,   value(SOURCE_NAMES[lead.source] ?? lead.source))
+    .replace(/\{canal\}/gi,    value(SOURCE_NAMES[lead.utmSource ?? ''] ?? lead.utmSource ?? ''))
+    .replace(/\{data\}/gi,     value(new Date().toLocaleDateString('pt-BR')))
+    .replace(/\{hora\}/gi,     value(new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })))
 }
 
 function normalizePhoneToE164(value: string | null) {
@@ -574,13 +589,30 @@ dispatchesRouter.get('/export', authorizePermission('leads.export'), async (req,
   }
 })
 
-dispatchesRouter.post('/send', authorizePermission('leads.broadcast'), async (req, res, next) => {
+dispatchesRouter.post('/send', emailRateLimiter, authorizePermission('leads.broadcast'), async (req, res, next) => {
+  let ownsDispatchLock = false
+  let dispatchLockKey = ''
   try {
     if (!req.user?.sub) throw new AppError(401, 'Authentication required')
     const input = sendSchema.parse(req.body)
+    if (input.draft.whatsappEnabled && !isWhatsAppDispatchEnabled()) {
+      throw new AppError(403, 'Disparos por WhatsApp estão temporariamente desativados')
+    }
     if (!input.draft.emailEnabled && !input.draft.whatsappEnabled) {
       throw new AppError(400, 'Nenhum canal habilitado para o disparo')
     }
+    dispatchLockKey = `dispatch:idempotency:${input.idempotencyKey}`
+    const lock = await redis.set(dispatchLockKey, req.user.sub, { ex: DISPATCH_LOCK_TTL_SECONDS, nx: true })
+    ownsDispatchLock = lock === 'OK'
+    if (!ownsDispatchLock) {
+      const existing = await getCampaignByIdempotencyKey(input.idempotencyKey)
+      if (existing) {
+        res.json({ success: true, data: asJsonObject(existing.details) })
+        return
+      }
+      throw new AppError(409, 'Este disparo ja esta em processamento')
+    }
+
     const existing = await getCampaignByIdempotencyKey(input.idempotencyKey)
     if (existing) {
       res.json({ success: true, data: asJsonObject(existing.details) })
@@ -621,12 +653,13 @@ dispatchesRouter.post('/send', authorizePermission('leads.broadcast'), async (re
     ])
 
     for (const lead of emailAllowed) {
+      const emailBodyIsHtml = /<[a-z][\s\S]*>/i.test(effectiveEmailBody)
       const success = emailProvider.configured
         ? await emailService.sendCampaignMessage({
           to: lead.email,
           subject: interpolateVariables(effectiveEmailSubject, lead),
           title: 'Viviani Serena',
-          body: interpolateVariables(effectiveEmailBody, lead),
+          body: interpolateVariables(effectiveEmailBody, lead, emailBodyIsHtml ? 'html' : 'text'),
         })
         : false
 
@@ -635,7 +668,7 @@ dispatchesRouter.post('/send', authorizePermission('leads.broadcast'), async (re
         campaignId,
         channel: 'email',
         leadId: lead.id,
-        email: normalizeEmail(lead.email),
+        email: maskEmail(normalizeEmail(lead.email)),
         source: lead.source,
         leadStatus: lead.status,
         activityState: lead.activityState,
@@ -666,7 +699,7 @@ dispatchesRouter.post('/send', authorizePermission('leads.broadcast'), async (re
         campaignId,
         channel: 'email',
         leadId: lead.id,
-        email: normalizeEmail(lead.email),
+        email: maskEmail(normalizeEmail(lead.email)),
         source: lead.source,
         leadStatus: lead.status,
         activityState: lead.activityState,
@@ -711,8 +744,8 @@ dispatchesRouter.post('/send', authorizePermission('leads.broadcast'), async (re
         campaignId,
         channel: 'whatsapp',
         leadId: lead.id,
-        phone: normalizeOptionalText(lead.phone),
-        whatsappE164: lead.whatsappE164,
+        phone: lead.phone ? maskPhone(lead.phone) : null,
+        whatsappE164: lead.whatsappE164 ? maskPhone(lead.whatsappE164) : null,
         providerMessageId,
         source: lead.source,
         leadStatus: lead.status,
@@ -744,8 +777,8 @@ dispatchesRouter.post('/send', authorizePermission('leads.broadcast'), async (re
         campaignId,
         channel: 'whatsapp',
         leadId: lead.id,
-        phone: normalizeOptionalText(lead.phone),
-        whatsappE164: lead.whatsappE164,
+        phone: lead.phone ? maskPhone(lead.phone) : null,
+        whatsappE164: lead.whatsappE164 ? maskPhone(lead.whatsappE164) : null,
         source: lead.source,
         leadStatus: lead.status,
         activityState: lead.activityState,
@@ -800,5 +833,7 @@ dispatchesRouter.post('/send', authorizePermission('leads.broadcast'), async (re
     res.status(201).json({ success: true, data: payload })
   } catch (error) {
     next(error)
+  } finally {
+    if (ownsDispatchLock) await redis.del(dispatchLockKey)
   }
 })

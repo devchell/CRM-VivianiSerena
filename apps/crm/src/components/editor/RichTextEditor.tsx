@@ -2,7 +2,6 @@
 
 import { useEditor, EditorContent } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
-import Link from '@tiptap/extension-link'
 import { Bold, Italic, List, ListOrdered, Link2 } from 'lucide-react'
 
 interface RichTextEditorProps {
@@ -14,8 +13,9 @@ interface RichTextEditorProps {
 export function RichTextEditor({ value, onChange, placeholder }: RichTextEditorProps) {
   const editor = useEditor({
     extensions: [
-      StarterKit,
-      Link.configure({ openOnClick: false, HTMLAttributes: { class: 'text-blue-600 underline' } }),
+      StarterKit.configure({
+        link: { openOnClick: false, HTMLAttributes: { class: 'text-blue-600 underline' } },
+      }),
     ],
     content: value,
     onUpdate: ({ editor }) => onChange(editor.getHTML()),

@@ -1,14 +1,15 @@
 import { logger } from '../lib/logger'
+import { maskPhone } from '../lib/redact'
 
 async function send(to: string, body: string): Promise<boolean> {
   const sid = process.env.TWILIO_ACCOUNT_SID
   const authToken = process.env.TWILIO_AUTH_TOKEN
   const from = process.env.TWILIO_PHONE_NUMBER
 
-  // Se Twilio não configurado, exibe no log (modo desenvolvimento)
+  // Sem provedor configurado, o código não pode afirmar que o OTP foi enviado.
   if (!sid || !authToken || !from) {
-    logger.warn(`[SMS SIMULADO] Para: ${to} | ${body}`)
-    return true
+    logger.warn('SMS not sent - provider not configured', { to: maskPhone(to) })
+    return false
   }
 
   try {
@@ -17,7 +18,7 @@ async function send(to: string, body: string): Promise<boolean> {
       messages: { create: (opts: { body: string; from: string; to: string }) => Promise<void> }
     }
     await client.messages.create({ body, from, to })
-    logger.info('SMS sent', { to })
+    logger.info('SMS sent', { to: maskPhone(to) })
     return true
   } catch (err) {
     logger.error('SMS send failed:', err)

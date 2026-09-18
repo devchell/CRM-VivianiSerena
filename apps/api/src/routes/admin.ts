@@ -7,8 +7,9 @@ import { redis } from '../lib/redis'
 import { authenticate, authorize } from '../middleware/authenticate'
 import { AppError } from '../middleware/errorHandler'
 import { apiEnv } from '../lib/env'
-import { healthcheckUploadStorage } from '../infrastructure/storage'
-import { getEmailSettingsOverview, saveEmailSettings } from '../infrastructure/emailSettings'
+import { deletePrivateFile, healthcheckUploadStorage } from '../infrastructure/storage'
+import { getActiveEmailSettings, getEmailSettingsOverview, saveEmailSettings } from '../infrastructure/emailSettings'
+import { emailService } from '../infrastructure/email'
 import { getGoogleCalendarConnectionStatus } from '../infrastructure/googleCalendar'
 import { fetchGoogleBusinessReviews, listGoogleBusinessLocations } from '../infrastructure/googleBusiness'
 import {
@@ -16,6 +17,9 @@ import {
   disconnectWhatsAppBusinessChannel,
   getWhatsAppChannelStatus,
 } from '../infrastructure/whatsapp'
+import { emailRateLimiter } from '../middleware/rateLimiter'
+import { maskEmail } from '../lib/redact'
+import { logger } from '../lib/logger'
 
 export const adminRouter: Router = Router()
 
@@ -101,7 +105,7 @@ adminRouter.get('/overview', async (_req, res, next) => {
           database,
           redis: redisReady,
           uploads,
-          storageDriver: apiEnv.storageDriver,
+          storageDriver: 'local',
         },
         environment: {
           apiBaseUrl: apiEnv.apiBaseUrl,
@@ -191,8 +195,8 @@ adminRouter.put('/email-settings', async (req, res, next) => {
           host: email.host,
           port: email.port,
           secure: email.secure,
-          from: email.from,
-          adminEmail: email.adminEmail,
+          from: email.from ? maskEmail(email.from) : null,
+          adminEmail: email.adminEmail ? maskEmail(email.adminEmail) : null,
           source: email.source,
         },
       },
@@ -203,6 +207,40 @@ adminRouter.put('/email-settings', async (req, res, next) => {
       message: 'Dados de e-mail atualizados com sucesso',
       data: email,
     })
+  } catch (error) {
+    next(error)
+  }
+})
+
+adminRouter.post('/email-settings/test', emailRateLimiter, async (req, res, next) => {
+  try {
+    const settings = await getActiveEmailSettings()
+    if (!settings.configured || !settings.adminEmail) {
+      throw new AppError(409, 'Configure o SMTP e o e-mail administrativo antes de enviar um teste')
+    }
+
+    const body = z.object({
+      to: z.string().trim().email('E-mail de teste inválido').optional(),
+    }).parse(req.body)
+    const to = body.to ?? settings.adminEmail
+    const sent = await emailService.sendTestEmail(to)
+
+    if (!sent) {
+      throw new AppError(502, 'O SMTP recusou o envio. Revise host, porta, segurança e credenciais.')
+    }
+
+    if (req.user?.sub) {
+      await prisma.auditLog.create({
+        data: {
+          userId: req.user.sub,
+          action: 'send_test',
+          resource: 'email_settings',
+          details: { to: maskEmail(to) },
+        },
+      })
+    }
+
+    res.json({ success: true, message: `E-mail de teste enviado para ${to}` })
   } catch (error) {
     next(error)
   }
@@ -225,6 +263,9 @@ adminRouter.post('/reset-baseline', async (req, res, next) => {
     const triggeredBy = req.user.sub
     const passwordHash = await bcrypt.hash(apiEnv.baselineResetPassword, 12)
     const preservedEmails = ['admin@vivianiserena.com', 'colaborador@vivianiserena.com']
+    const mediaFiles = await prisma.clientFolderMedia.findMany({
+      select: { originalStorageKey: true, optimizedStorageKey: true },
+    })
 
     const result = await prisma.$transaction(async (tx) => {
       await tx.notificationRead.deleteMany()
@@ -232,6 +273,8 @@ adminRouter.post('/reset-baseline', async (req, res, next) => {
       await tx.analyticsEvent.deleteMany()
       await tx.session.deleteMany()
       await tx.appointment.deleteMany()
+      await tx.clientFolderMedia.deleteMany()
+      await tx.clientFolder.deleteMany()
       await tx.financial.deleteMany()
       await tx.consentLog.deleteMany()
       await tx.lead.deleteMany()
@@ -327,7 +370,19 @@ adminRouter.post('/reset-baseline', async (req, res, next) => {
       return {
         adminEmail: 'admin@vivianiserena.com',
         collaboratorEmail: 'colaborador@vivianiserena.com',
-        password: apiEnv.baselineResetPassword,
+      }
+    })
+
+    const cleanup = await Promise.allSettled(mediaFiles.flatMap((media) => [
+      deletePrivateFile(media.originalStorageKey),
+      deletePrivateFile(media.optimizedStorageKey),
+    ]))
+    cleanup.forEach((result, index) => {
+      if (result.status === 'rejected') {
+        logger.warn('Baseline reset left private media cleanup pending', {
+          index,
+          error: result.reason,
+        })
       }
     })
 

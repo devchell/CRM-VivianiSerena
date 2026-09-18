@@ -1,4 +1,5 @@
 @RTK.md
+@.Codex/memory/MEMORY.md
 
 # Codex - Testes e SEO
 

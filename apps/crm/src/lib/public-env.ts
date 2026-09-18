@@ -13,7 +13,7 @@ function readRequiredPublicUrl(name: 'NEXT_PUBLIC_API_URL' | 'NEXT_PUBLIC_LANDIN
     throw new Error(`[env] Invalid URL for ${name}: ${normalized}`)
   }
 
-  if (LOCAL_HOSTS.has(parsed.hostname)) {
+  if (process.env.NODE_ENV === 'production' && LOCAL_HOSTS.has(parsed.hostname)) {
     throw new Error(`[env] ${name} must not point to localhost in this deployment model`)
   }
 

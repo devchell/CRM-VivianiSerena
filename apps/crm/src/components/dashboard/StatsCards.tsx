@@ -17,7 +17,7 @@ export function StatsCards({ overview, loading = false }: StatsCardsProps) {
       value: overview?.leads.createdInPeriod ?? 0,
       helper: `${overview?.leads.total ?? 0} leads totais`,
       icon: Users,
-      tone: 'text-blue-400 bg-blue-500/10 dark:bg-blue-500/20',
+      tone: 'text-[var(--primary)] bg-[var(--accent)]',
       format: 'number' as const,
     },
     {
@@ -25,7 +25,7 @@ export function StatsCards({ overview, loading = false }: StatsCardsProps) {
       value: overview?.appointments.upcoming ?? 0,
       helper: `${overview?.appointments.scheduledInPeriod ?? 0} no período`,
       icon: Calendar,
-      tone: 'text-blue-600 bg-blue-500/10 dark:bg-blue-500/20',
+      tone: 'text-[var(--primary)] bg-[var(--accent)]',
       format: 'number' as const,
     },
     {
@@ -33,7 +33,7 @@ export function StatsCards({ overview, loading = false }: StatsCardsProps) {
       value: overview?.leads.conversionRate ?? 0,
       helper: `${overview?.leads.convertedInPeriod ?? 0} convertidos no período`,
       icon: TrendingUp,
-      tone: 'text-sage bg-sage/10 dark:bg-sage/20',
+      tone: 'text-[var(--success)] bg-[var(--success-bg)]',
       format: 'percent' as const,
     },
     {
@@ -41,7 +41,7 @@ export function StatsCards({ overview, loading = false }: StatsCardsProps) {
       value: overview?.financial.income ?? 0,
       helper: `Lucro: ${formatCurrency(overview?.financial.profit ?? 0)}`,
       icon: DollarSign,
-      tone: 'text-green-500 bg-green-500/10 dark:bg-green-500/20',
+      tone: 'text-[var(--success)] bg-[var(--success-bg)]',
       format: 'currency' as const,
     },
   ]
@@ -51,7 +51,7 @@ export function StatsCards({ overview, loading = false }: StatsCardsProps) {
       {cards.map((card) => {
         const Icon = card.icon
         return (
-          <div key={card.title} className="card-dark p-6 shadow-sm">
+          <div key={card.title} className="card-dark p-5 shadow-sm">
             <div className="mb-4 flex items-start justify-between">
               <div className={`flex h-10 w-10 items-center justify-center rounded-md ${card.tone}`}>
                 <Icon size={20} />

@@ -1,5 +1,15 @@
 import type { Request, Response } from 'express'
 import { describe, expect, it, vi } from 'vitest'
+const redisMocks = vi.hoisted(() => ({
+  exists: vi.fn().mockResolvedValue(0),
+  incr: vi.fn().mockResolvedValue(1),
+  expire: vi.fn().mockResolvedValue(true),
+  set: vi.fn().mockResolvedValue('OK'),
+  del: vi.fn().mockResolvedValue(1),
+}))
+
+vi.mock('../lib/redis', () => ({ redis: redisMocks }))
+
 vi.mock('../lib/prisma', () => ({
   prisma: {
     securityEvent: {
@@ -15,7 +25,7 @@ vi.mock('../lib/logger', () => ({
   },
 }))
 
-import { sqlInjectionDetection } from './security'
+import { bruteForceCheck, sqlInjectionDetection } from './security'
 
 function createRequest(overrides: Partial<Request> = {}): Request {
   return {
@@ -85,5 +95,29 @@ describe('sqlInjectionDetection', () => {
 
     expect(next).not.toHaveBeenCalled()
     expect(res.status).toHaveBeenCalledWith(400)
+  })
+})
+
+describe('bruteForceCheck', () => {
+  it('allows a request when the IP is not locked', async () => {
+    redisMocks.exists.mockResolvedValueOnce(0)
+    const res = createResponse()
+    const next = vi.fn()
+
+    await bruteForceCheck(createRequest(), res, next)
+
+    expect(next).toHaveBeenCalledOnce()
+    expect(res.status).not.toHaveBeenCalled()
+  })
+
+  it('blocks a request while the Redis lock is active', async () => {
+    redisMocks.exists.mockResolvedValueOnce(1)
+    const res = createResponse()
+    const next = vi.fn()
+
+    await bruteForceCheck(createRequest(), res, next)
+
+    expect(next).not.toHaveBeenCalled()
+    expect(res.status).toHaveBeenCalledWith(429)
   })
 })

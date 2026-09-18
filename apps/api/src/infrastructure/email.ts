@@ -2,6 +2,8 @@ import nodemailer from 'nodemailer'
 import { logger } from '../lib/logger'
 import { getActiveEmailSettings } from './emailSettings'
 import { prisma } from '../lib/prisma'
+import { sanitizeRichHtml } from '../lib/sanitize'
+import { maskEmail } from '../lib/redact'
 
 const WHATSAPP_NUMBER = '5511915751770'
 
@@ -28,7 +30,7 @@ function baseTemplate(title: string, content: string): string {
 <style>
   body{font-family:Inter,sans-serif;background:#FAF7F2;margin:0;padding:0}
   .wrapper{max-width:600px;margin:0 auto;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,.08)}
-  .header{background:linear-gradient(135deg,#C9967A,#b8806a);padding:32px;text-align:center}
+  .header{background:#2C2C2C;padding:32px;text-align:center;border-bottom:4px solid #C9967A}
   .header h1{color:#fff;margin:0;font-size:24px;font-family:'Playfair Display',serif}
   .body{padding:32px}
   .body p{color:#2C2C2C;line-height:1.6;margin:0 0 16px}
@@ -39,7 +41,7 @@ function baseTemplate(title: string, content: string): string {
   .info-box{background:#FAF7F2;border-left:4px solid #C9967A;padding:16px;border-radius:0 8px 8px 0;margin:16px 0}
 </style></head>
 <body><div class="wrapper">
-  <div class="header"><h1>${title}</h1></div>
+  <div class="header"><h1>${escapeHtml(title)}</h1></div>
   <div class="body">${content}</div>
   <div class="footer"><p>Viviani Serena Coaching © ${new Date().getFullYear()} · Mooca & Santo André, São Paulo</p></div>
 </div></body></html>`
@@ -49,7 +51,7 @@ async function send(to: string, subject: string, html: string): Promise<boolean>
   const settings = await getActiveEmailSettings()
 
   if (!settings.configured || !settings.host || !settings.user || !settings.password || !settings.from) {
-    logger.warn('Email not sent - SMTP not configured', { to, subject, source: settings.source })
+    logger.warn('Email not sent - SMTP not configured', { to: maskEmail(to), subjectLength: subject.length, source: settings.source })
     return false
   }
 
@@ -67,14 +69,18 @@ async function send(to: string, subject: string, html: string): Promise<boolean>
     await transporter.sendMail({
       from: `"${settings.fromName || 'Viviani Serena'}" <${settings.from}>`,
       to,
-      subject,
+      subject: subject.replace(/[\r\n]+/g, ' ').trim().slice(0, 160),
       html,
     })
 
-    logger.info('Email sent', { to, subject, source: settings.source })
+    logger.info('Email sent', { to: maskEmail(to), subjectLength: subject.length, source: settings.source })
     return true
   } catch (err) {
-    logger.error('Email send failed:', err)
+    logger.error('Email send failed', {
+      error: err instanceof Error ? err.message : String(err),
+      to: maskEmail(to),
+      source: settings.source,
+    })
     return false
   }
 }
@@ -91,6 +97,15 @@ async function sendAdminEmail(subject: string, html: string) {
 }
 
 export const emailService = {
+  async sendTestEmail(to: string) {
+    const content = `
+      <span class="badge">Teste de configuração</span>
+      <p>Este é um e-mail de teste do CRM Viviani Serena.</p>
+      <p>Se você recebeu esta mensagem, o servidor SMTP está configurado e o envio está funcionando.</p>
+    `
+    return send(to, 'Teste de e-mail — Viviani Serena CRM', baseTemplate('Teste de e-mail', content))
+  },
+
   async sendOtp(params: { to: string; code: string; type: 'email' | 'login' }) {
     const customTemplate = await prisma.autoTemplate.findUnique({
       where: { templateId: 'auth_2fa' },
@@ -98,7 +113,7 @@ export const emailService = {
     const isLogin = params.type === 'login'
     let html: string
     if (customTemplate?.emailHtml) {
-      html = customTemplate.emailHtml
+      html = sanitizeRichHtml(customTemplate.emailHtml)
         .replace(/\{codigo\}/g, params.code)
         .replace(/\{code\}/g, params.code)
     } else {
@@ -117,13 +132,17 @@ export const emailService = {
   },
 
   async newLead(lead: { name: string; email: string; phone?: string; source: string }) {
+    const name = escapeHtml(lead.name)
+    const email = escapeHtml(lead.email)
+    const phone = lead.phone ? escapeHtml(lead.phone) : ''
+    const source = escapeHtml(lead.source)
     const content = `
-      <span class="badge">🎯 Novo Lead</span>
-      <p>Um novo lead chegou pelo <strong>${lead.source}</strong>.</p>
+      <span class="badge">Novo lead</span>
+      <p>Um novo lead chegou pelo <strong>${source}</strong>.</p>
       <div class="info-box">
-        <p><strong>Nome:</strong> ${lead.name}</p>
-        <p><strong>E-mail:</strong> ${lead.email}</p>
-        ${lead.phone ? `<p><strong>Telefone:</strong> ${lead.phone}</p>` : ''}
+        <p><strong>Nome:</strong> ${name}</p>
+        <p><strong>E-mail:</strong> ${email}</p>
+        ${phone ? `<p><strong>Telefone:</strong> ${phone}</p>` : ''}
       </div>
       <p>Acesse o CRM para acompanhar e entrar em contato.</p>
     `
@@ -144,10 +163,10 @@ export const emailService = {
     })
     let html: string
     if (customTemplate?.emailHtml) {
-      html = customTemplate.emailHtml
-        .replace(/\{nome\}/g, params.clientName)
-        .replace(/\{servico\}/g, params.serviceType)
-        .replace(/\{data\}/g, dateStr)
+      html = sanitizeRichHtml(customTemplate.emailHtml)
+        .replace(/\{nome\}/g, escapeHtml(params.clientName))
+        .replace(/\{servico\}/g, escapeHtml(params.serviceType))
+        .replace(/\{data\}/g, escapeHtml(dateStr))
     } else {
       const content = `
         <p>Olá, <strong>${params.clientName}</strong>!</p>
@@ -178,7 +197,7 @@ export const emailService = {
       financeiro: 'Financeiro', 'editar-site': 'Editar Site', seguranca: 'Segurança',
     }
     const moduleList = params.modules.length
-      ? params.modules.map(m => moduleLabels[m] ?? m).join(', ')
+      ? params.modules.map(m => escapeHtml(moduleLabels[m] ?? m)).join(', ')
       : 'Acesso completo (Admin)'
     const profileLabel = (params.profile ?? params.role) === 'ADMIN'
       ? 'Administrador'
@@ -186,18 +205,18 @@ export const emailService = {
         ? 'Colaborador'
         : 'Viewer'
     const content = `
-      <span class="badge">👋 Convite para o CRM</span>
-      <p>Olá, <strong>${params.name}</strong>!</p>
+      <span class="badge">Convite para o CRM</span>
+      <p>Olá, <strong>${escapeHtml(params.name)}</strong>!</p>
       <p>Você foi adicionado ao <strong>CRM Viviani Serena</strong> como colaborador.</p>
       <div class="info-box">
-        <p><strong>E-mail de acesso:</strong> ${params.to}</p>
-        <p><strong>Senha temporária:</strong> <span style="font-family:monospace;font-size:16px;letter-spacing:2px;color:#C9967A">${params.tempPassword}</span></p>
-        <p><strong>Perfil:</strong> ${profileLabel}</p>
+        <p><strong>E-mail de acesso:</strong> ${escapeHtml(params.to)}</p>
+        <p><strong>Senha temporária:</strong> <span style="font-family:monospace;font-size:16px;letter-spacing:2px;color:#C9967A">${escapeHtml(params.tempPassword)}</span></p>
+        <p><strong>Perfil:</strong> ${escapeHtml(profileLabel)}</p>
         <p><strong>Módulos liberados:</strong> ${moduleList}</p>
       </div>
       <p><strong>Na primeira entrada, você deverá criar uma nova senha.</strong></p>
       <p>Acesse o CRM pelo link abaixo:</p>
-      <a href="${params.crmUrl}/login" class="btn">Acessar o CRM</a>
+      <a href="${escapeHtml(params.crmUrl)}/login" class="btn">Acessar o CRM</a>
       <p style="font-size:12px;color:#999;margin-top:24px">Por segurança, esta senha temporária deve ser trocada imediatamente após o primeiro login.</p>
     `
     return send(params.to, 'Você foi convidado para o CRM Viviani Serena', baseTemplate('Convite CRM', content))
@@ -213,7 +232,7 @@ export const emailService = {
   }) {
     const fmt = (v: number) => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
     const content = `
-      <span class="badge">📊 Relatorio Semanal</span>
+      <span class="badge">Relatório semanal</span>
       <p>Período: <strong>${params.period}</strong></p>
       <div class="info-box">
         <p><strong>Receitas:</strong> ${fmt(params.income)}</p>
@@ -232,9 +251,10 @@ export const emailService = {
     title: string
     body: string
   }) {
-    const isHtml = /<[a-z][\s\S]*>/i.test(params.body)
+    const sanitizedBody = sanitizeRichHtml(params.body)
+    const isHtml = /<[a-z][\s\S]*>/i.test(sanitizedBody)
     if (isHtml) {
-      return send(params.to, params.subject, params.body)
+      return send(params.to, params.subject, sanitizedBody)
     }
     const content = `
       <span class="badge">Comunicado</span>

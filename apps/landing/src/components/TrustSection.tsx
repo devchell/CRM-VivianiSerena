@@ -134,12 +134,11 @@ export default function TrustSection({
           <div className="flex items-center gap-2 rounded-md border border-white/10 bg-white/5 px-5 py-3">
             <div className="flex h-8 w-8 items-center justify-center overflow-hidden rounded bg-rose-gold/30" aria-hidden="true">
               <Image
-                src="https://static.wixstatic.com/media/be8b61_e40ffe7813494f6c9a3246a4852c92a8~mv2.png"
+                src="/images/brand/selo-certificacao.png"
                 alt=""
                 width={32}
                 height={32}
                 className="object-contain"
-                unoptimized
               />
             </div>
             <div>

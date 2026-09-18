@@ -8,6 +8,7 @@ import { z } from 'zod'
 import { ArrowLeft, CheckCircle, ChevronRight, Clock, Mail, Phone, User } from 'lucide-react'
 import {
   getAnalyticsSessionId,
+  getAnalyticsSessionProof,
   getUtmParams,
   trackConversion,
   trackLead,
@@ -24,6 +25,7 @@ const step1Schema = z.object({
   name: z.string().min(2, 'Nome deve ter pelo menos 2 caracteres').max(80),
   email: z.string().email('Informe um e-mail válido').max(120),
   phone: z.string().min(10, 'Telefone inválido').max(20).regex(/^[\d\s()+-]+$/, 'Formato inválido'),
+  consent: z.literal(true, { errorMap: () => ({ message: 'Você precisa aceitar a política de privacidade' }) }),
 })
 
 const step2Schema = z.object({
@@ -49,11 +51,11 @@ type SocialProofSummary = {
 }
 
 const SERVICE_OPTIONS = [
-  { value: 'sobrancelhas', label: 'Sobrancelhas micropigmentadas', emoji: 'S' },
-  { value: 'labios_eyeliner', label: 'Lábios / Eyeliner', emoji: 'L' },
-  { value: 'capilar', label: 'Micropigmentação capilar', emoji: 'C' },
-  { value: 'tatuagens', label: 'Tatuagens', emoji: 'T' },
-  { value: 'nao_sei', label: 'Não sei ao certo', emoji: '?' },
+  { value: 'sobrancelhas', label: 'Sobrancelhas micropigmentadas' },
+  { value: 'labios_eyeliner', label: 'Lábios / Eyeliner' },
+  { value: 'capilar', label: 'Micropigmentação capilar' },
+  { value: 'tatuagens', label: 'Tatuagens' },
+  { value: 'nao_sei', label: 'Não sei ao certo' },
 ] as const
 
 const PERIOD_OPTIONS = [
@@ -85,14 +87,21 @@ function ProgressBar({ step }: { step: number }) {
   const percent = (step / 3) * 100
 
   return (
-    <div className="mb-8" role="progressbar" aria-valuenow={step} aria-valuemin={1} aria-valuemax={3}>
+    <div
+      className="mb-8"
+      role="progressbar"
+      aria-label="Progresso do formulário de avaliação"
+      aria-valuenow={step}
+      aria-valuemin={1}
+      aria-valuemax={3}
+    >
       <div className="mb-2 flex justify-between text-xs text-charcoal/50">
         <span>Passo {step} de 3</span>
         <span>{Math.round(percent)}% concluído</span>
       </div>
       <div className="h-1.5 overflow-hidden rounded-full bg-blush">
         <motion.div
-          className="h-full rounded-full bg-gradient-to-r from-rose-gold to-[#B5785A]"
+          className="h-full rounded-full bg-[var(--copper)]"
           initial={{ width: 0 }}
           animate={{ width: `${percent}%` }}
           transition={{ duration: 0.4, ease: 'easeOut' }}
@@ -162,6 +171,22 @@ function Step1({ onNext }: { onNext: (data: Step1Data) => void }) {
           )
         })}
 
+        <label className="flex items-start gap-3 text-sm leading-5 text-charcoal/75">
+          <input
+            type="checkbox"
+            className="mt-1 h-4 w-4 rounded border-charcoal/20 text-rose-gold focus:ring-rose-gold"
+            {...register('consent')}
+          />
+          <span>
+            Aceito que meus dados sejam usados para contato sobre os serviços, conforme a{' '}
+            <a href="/privacidade" className="font-medium text-rose-gold underline underline-offset-2">
+              política de privacidade
+            </a>
+            .
+          </span>
+        </label>
+        {errors.consent ? <p className="text-xs text-red-500">{errors.consent.message}</p> : null}
+
         <button type="submit" disabled={isSubmitting} className="btn-primary mt-2 w-full">
           Continuar
           <ChevronRight size={18} />
@@ -210,9 +235,7 @@ function Step2({ onNext, onBack }: { onNext: (data: Step2Data) => void; onBack: 
                 color: selected === option.value ? 'var(--text-primary)' : 'var(--text-secondary)',
               }}
             >
-              <span className="flex h-7 w-7 items-center justify-center rounded bg-cream text-sm font-semibold text-rose-gold">
-                {option.emoji}
-              </span>
+              <span className={`flex h-4 w-4 items-center justify-center rounded-full border ${selected === option.value ? 'border-[var(--copper)] bg-[var(--copper)]' : 'border-[var(--line)]'}`} aria-hidden="true"><span className="h-1.5 w-1.5 rounded-full bg-white" /></span>
               <span className="text-sm font-medium">{option.label}</span>
               {selected === option.value ? <CheckCircle className="ml-auto text-rose-gold" size={18} /> : null}
             </button>
@@ -333,10 +356,11 @@ export function LeadFormSection({ socialProof }: { socialProof?: SocialProofSumm
   const [isSuccess, setIsSuccess] = useState(false)
   const [formData, setFormData] = useState<Partial<Step1Data & Step2Data & Step3Data>>({})
   const sectionRef = useRef<HTMLElement>(null)
-  const proofEnabled = socialProof?.enabled !== false
+  const proofEnabled = socialProof?.enabled === true && ((socialProof?.clientsRegistered ?? 0) > 0 || (socialProof?.publicReviews ?? 0) > 0)
   const clientsRegistered = socialProof?.clientsRegistered ?? 0
   const publicReviews = socialProof?.publicReviews ?? 0
-  const averageRating = socialProof?.averageRating ?? 5
+  const averageRating = socialProof?.averageRating ?? null
+  const [submitError, setSubmitError] = useState('')
 
   const handleStep1 = useCallback((data: Step1Data) => {
     setFormData((previous) => ({ ...previous, ...data }))
@@ -353,6 +377,7 @@ export function LeadFormSection({ socialProof }: { socialProof?: SocialProofSumm
     const utm = getUtmParams()
 
     setIsLoading(true)
+    setSubmitError('')
     try {
       trackLead({
         name: finalData.name ?? '',
@@ -377,7 +402,9 @@ export function LeadFormSection({ socialProof }: { socialProof?: SocialProofSumm
           capturePage: typeof window !== 'undefined' ? window.location.pathname : undefined,
           referrer: typeof document !== 'undefined' ? document.referrer || undefined : undefined,
           sessionId: getAnalyticsSessionId() ?? undefined,
+          sessionProof: getAnalyticsSessionProof() ?? undefined,
           notes: `Serviço: ${finalData.service ?? 'nao_informado'} | Período: ${finalData.period ?? 'nao_informado'}`,
+          consent: finalData.consent,
           website: '',
         }),
       }).then(async (response) => {
@@ -389,8 +416,9 @@ export function LeadFormSection({ socialProof }: { socialProof?: SocialProofSumm
 
       trackConversion()
       setIsSuccess(true)
-    } catch {
-      window.open(WA_LINK, '_blank', 'noopener,noreferrer')
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Não foi possível enviar o formulário.'
+      setSubmitError(`${message} Se preferir, fale diretamente pelo WhatsApp.`)
     } finally {
       setIsLoading(false)
     }
@@ -437,9 +465,7 @@ export function LeadFormSection({ socialProof }: { socialProof?: SocialProofSumm
                     ))}
                   </div>
                   <div>
-                    <div className="text-xs text-yellow-400" aria-label={`${averageRating} estrelas`}>
-                      {'*'.repeat(Math.max(1, Math.round(averageRating)))}
-                    </div>
+                    {averageRating !== null ? <div className="text-sm font-semibold text-[var(--copper)]" aria-label={`Nota média ${averageRating.toFixed(1)} de 5`}>{averageRating.toFixed(1)} / 5</div> : null}
                     <p className="mt-0.5 text-xs text-charcoal/60">
                       Prova social configurada no painel
                     </p>
@@ -486,6 +512,10 @@ export function LeadFormSection({ socialProof }: { socialProof?: SocialProofSumm
                   <Step3 key="step3" onSubmit={handleStep3} onBack={() => setStep(2)} isLoading={isLoading} />
                 )}
               </AnimatePresence>
+
+              {!isSuccess && submitError ? (
+                <p className="mt-5 border-l-2 border-red-400 px-3 text-sm leading-6 text-red-700" role="alert">{submitError} <a href={WA_LINK} target="_blank" rel="noopener noreferrer" className="font-semibold underline underline-offset-2" onClick={() => trackWhatsAppClick('lead_form_error')}>Abrir WhatsApp</a></p>
+              ) : null}
 
               {!isSuccess ? (
                 <p className="mt-6 text-center text-xs text-charcoal/40">

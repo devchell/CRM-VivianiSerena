@@ -20,6 +20,7 @@ import {
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { useAuth } from '@/lib/useAuth'
+import { useRealtimeRefresh } from '@/lib/realtime'
 import { crmPublicEnv } from '@/lib/public-env'
 import {
   crmFieldSelect,
@@ -219,6 +220,8 @@ export default function AdministracaoPage() {
   const [whatsappBusy, setWhatsappBusy] = useState<'connect' | 'disconnect' | null>(null)
   const [metaSdkReady, setMetaSdkReady] = useState(false)
   const [emailSaving, setEmailSaving] = useState(false)
+  const [emailTesting, setEmailTesting] = useState(false)
+  const [emailTestTo, setEmailTestTo] = useState('')
   const [visibility, setVisibility] = useState<VisibilityState>({ google: false, email: false, environment: false, whatsapp: false })
   const whatsappSignupRef = useRef<Record<string, string | undefined> | null>(null)
   const [emailForm, setEmailForm] = useState<EmailFormState>({
@@ -257,6 +260,9 @@ export default function AdministracaoPage() {
       else setRefreshing(false)
     }
   }, [accessToken])
+
+  const refreshRealtime = useCallback(() => loadOverview('refresh'), [loadOverview])
+  useRealtimeRefresh(refreshRealtime, ['admin', 'users', 'whatsapp'])
 
   useEffect(() => {
     void loadOverview('initial')
@@ -497,6 +503,24 @@ export default function AdministracaoPage() {
     }
   }
 
+  async function handleEmailTest() {
+    setEmailTesting(true)
+    try {
+      const response = await fetch(`${API_URL}/admin/email-settings/test`, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({ to: emailTestTo.trim() || undefined }),
+      })
+      const payload = await response.json() as { success: boolean; message?: string }
+      if (!response.ok || !payload.success) throw new Error(payload.message ?? 'Erro ao enviar e-mail de teste')
+      toast.success(payload.message ?? 'E-mail de teste enviado')
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Erro ao enviar e-mail de teste')
+    } finally {
+      setEmailTesting(false)
+    }
+  }
+
   if (!isAdmin) {
     return <div className="flex min-h-[320px] items-center justify-center text-sm text-slate-400">Acesso restrito a administradores.</div>
   }
@@ -638,13 +662,26 @@ export default function AdministracaoPage() {
               </div>
               <label className="space-y-2 text-sm"><span className="font-medium text-slate-900 dark:text-slate-100">E-mail administrativo</span><input value={emailForm.adminEmail} onChange={(event) => updateEmailField('adminEmail', event.target.value)} className="w-full rounded-md border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-blue-400 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100" placeholder={maskValue(overview.integrations.email.adminEmail, visibility.email)} /></label>
             </div>
-            <div className="mt-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-end">
-              <button type="button" onClick={() => void handleEmailSave()} disabled={emailSaving} className="inline-flex items-center gap-2 rounded border border-slate-200 bg-white px-4 py-3 text-sm font-medium text-slate-900 transition-colors hover:bg-slate-100 disabled:opacity-60 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:hover:bg-slate-800">
-                {emailSaving ? <Loader2 size={15} className="animate-spin" /> : <Mail size={15} />}
-                Salvar dados de e-mail
-              </button>
-            </div>
-          </SectionCard>
+             <div className="mt-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-end">
+               <button type="button" onClick={() => void handleEmailSave()} disabled={emailSaving} className="inline-flex items-center gap-2 rounded border border-slate-200 bg-white px-4 py-3 text-sm font-medium text-slate-900 transition-colors hover:bg-slate-100 disabled:opacity-60 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:hover:bg-slate-800">
+                 {emailSaving ? <Loader2 size={15} className="animate-spin" /> : <Mail size={15} />}
+                 Salvar dados de e-mail
+               </button>
+             </div>
+             <div className="mt-5 border-t border-slate-200 pt-5 dark:border-slate-700">
+               <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
+                 <label className="min-w-0 flex-1 space-y-2 text-sm">
+                   <span className="font-medium text-slate-900 dark:text-slate-100">Destinatário do teste</span>
+                   <input type="email" value={emailTestTo} onChange={(event) => setEmailTestTo(event.target.value)} className="w-full rounded-md border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-[var(--primary)] dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100" placeholder={overview.integrations.email.adminEmail ?? 'usa o e-mail administrativo'} />
+                   <p className="text-xs leading-5 text-slate-500 dark:text-slate-400">Deixe vazio para enviar ao e-mail administrativo configurado.</p>
+                 </label>
+                 <button type="button" onClick={() => void handleEmailTest()} disabled={emailTesting || !overview.integrations.email.configured} className="inline-flex items-center justify-center gap-2 rounded border border-[var(--primary)] bg-[var(--primary)] px-4 py-3 text-sm font-medium text-[var(--primary-foreground)] transition-colors hover:bg-[var(--primary-hover)] disabled:opacity-60">
+                   {emailTesting ? <Loader2 size={15} className="animate-spin" /> : <Mail size={15} />}
+                   Enviar e-mail de teste
+                 </button>
+               </div>
+             </div>
+           </SectionCard>
         </div>
 
         <div className="space-y-4">

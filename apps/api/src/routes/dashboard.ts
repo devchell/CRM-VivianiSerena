@@ -2,6 +2,7 @@ import { Router } from 'express'
 import { authenticate, authorizePermission } from '../middleware/authenticate'
 import { getCache, setCache, CACHE_TTL } from '../lib/redis'
 import { getMetricsOverview } from '../domain/metrics/service'
+import { AppError } from '../middleware/errorHandler'
 
 export const dashboardRouter: Router = Router()
 dashboardRouter.use(authenticate)
@@ -37,6 +38,11 @@ dashboardRouter.get('/stats', async (_req, res, next) => {
     await setCache(cacheKey, data, CACHE_TTL.MEDIUM)
     res.json({ success: true, data })
   } catch (error) {
-    next(error)
+    if (error instanceof AppError) {
+      next(error)
+      return
+    }
+
+    next(new AppError(503, 'Dashboard indisponível temporariamente. Tente novamente.'))
   }
 })

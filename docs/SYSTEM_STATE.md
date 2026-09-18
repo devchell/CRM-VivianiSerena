@@ -1,316 +1,177 @@
-# SYSTEM_STATE — VivianiCRM
+# SYSTEM_STATE - VivianiCRM
 
-> **Versão:** 2.0  
-> **Data:** 2026-04-04  
-> **Status:** pronto para produção  
-> **Fase:** homologação ✅ → produção ⏳
+> **Versao:** 2.2
+> **Data:** 2026-09-01
+> **Status:** apresentação/homologação self-hosted na VPS
+> **Fase:** Docker Compose em validação remota
+
+> As seções 1 a 6 preservam o diagnóstico histórico do período cloud-first. O estado vigente é o da seção 7 e dos addenda posteriores.
 
 ---
 
-## 1. ESTADO ATUAL (2026-04-04)
+## 1. Estado Atual
 
-### Build & Deploy
-- ✅ **Monorepo**: 3 apps (api, crm, landing) + 3 packages
-- ✅ **API**: Express buildando verde
-- ✅ **CRM**: Next.js 14 buildando verde
-- ✅ **Landing**: Next.js 14 buildando verde
-- ✅ **CI/CD**: GitHub Actions (lint, testes, deploy-homolog, deploy-prod)
-- ✅ **Staging**: Vercel + Render funcionando em homolog
-- ✅ **Produção**: aguardando primeira confirmação de deploy
+### Build e deploy
 
-### Segurança
-- ✅ **Auth**: NextAuth + Supabase Auth (JWT em cookie HTTP-only)
-- ✅ **2FA**: Email OTP (6 dígitos, 5min), obrigatório para admin
-- ✅ **RLS**: Postgres com row-level security
-- ✅ **Rate limit**: Redis com IP-based (5 login/min, 10 leads/min)
-- ✅ **LGPD**: Consentimento obrigatório, export, soft-delete
-- ✅ **Headers**: CSP, HSTS, X-Frame-Options, SameSite cookies
-- ✅ **Logs**: Estruturados JSON, auditoria em security_events
+- Monorepo mantido: `apps/api`, `apps/crm`, `apps/landing` e pacotes compartilhados.
+- `pnpm-lock.yaml` estava fora de sincronia com `apps/api/package.json`; corrigido em 2026-04-04.
+- Projetos Vercel atuais identificados e religados: `crm` e `landing`.
+- Aliases esperados foram corrigidos: `landing-viviani.vercel.app` e `crm-viviani.vercel.app`.
+- Landing publicada em producao e validada por acesso compartilhavel temporario.
+- CRM publicado em producao; o acesso externo continua dependente de Vercel Authentication / URL compartilhavel.
+- API no Render nao responde nos endpoints de health conhecidos; servico precisa ser recriado.
+- Chave de API Render disponivel no ambiente nao autenticou na API publica do provedor.
 
-### Módulos Funcionais
-| Módulo | Status | Teste | Observação |
-|---|---|---|---|
-| **Leads** | ✅ completo | validado homolog | captura, CRM, export LGPD |
-| **Agenda** | ✅ completo | validado homolog | agendamentos, Google sync |
-| **Financeiro** | ✅ completo | validado homolog | gráficos, consolidação |
-| **CMS** | ✅ completo | validado homolog | conteúdo público, versioning |
-| **Colaboradores** | ✅ completo | validado homolog | perfis, 2FA, permissões |
-| **Dashboard** | ✅ completo | validado homolog | métricas consolidadas |
-| **Segurança** | ✅ completo | validado homolog | event log, checklist, IP block |
+### Infraestrutura
 
-### Integrações
-| Integração | Status | Observação |
-|---|---|---|
-| **Google Calendar** | ✅ implementado | OAuth pronto, teste em homolog |
-| **Google Business Profile** | ✅ implementado | OAuth pronto, sem localizações vinculadas em homolog |
-| **WhatsApp Business** | ✅ implementado | API setup, pode disparar |
-| **SMTP** | ✅ implementado | Email 2FA, notificações |
-| **S3** | ✅ implementado | Uploads (fallback: local) |
-| **Redis** | ✅ implementado | Cache, sessions, rate limit (Upstash) |
-| **PostgreSQL** | ✅ implementado | RLS, backup 7d (Supabase) |
-
-### Infraestrutura (2026-04-04)
-```
+```text
 Frontend:
-- CRM: Vercel (crm-hml.vercel.app)
-- Landing: Vercel (landing-hml.vercel.app)
+- Vercel project `landing`
+- Vercel project `crm`
 
 Backend:
-- API: Render (api-hml-sbk3.onrender.com)
+- Render: servico da API ausente / nao validado
 
 Data:
-- Postgres: Supabase (staging)
-- Redis: Upstash (staging)
+- Supabase: projeto `viviani-crm-prod` ativo e saudavel
+- Upstash: endpoint REST respondeu `PONG`
 
-DNS/WAF:
-- Cloudflare (não configurado)
+DNS:
+- dominio publico ainda nao configurado
 ```
 
-### Validação Remota (2026-03-20)
-```
-✅ GET /health/live → 200
-✅ GET /health/ready → 200
-✅ GET /health/deps → banco: true, redis: true, email: true
-✅ Login admin em homolog → 200
-✅ GET /api/v1/admin/overview → operacional
-✅ Fluxo lead: criar → ler → exportar LGPD → deletar
-✅ Fluxo agendamento: criar → sincronizar Google → cancelar
-✅ Fluxo financeiro: lançamento → gráfico → consolidação
+### Validacao remota
+
+```text
+OK landing responde HTML em producao
+OK alias `landing-viviani.vercel.app` corrigido para a build atual
+OK alias `crm-viviani.vercel.app` corrigido para a build atual
+OK Supabase respondeu consulta remota simples
+OK Upstash respondeu `PONG`
+WARN CRM continua protegido por Vercel Authentication para acesso externo
+FAIL vivianicoaching.com nao resolve DNS
+FAIL /health/live, /health/ready e /health/deps nao respondem nas URLs conhecidas
+FAIL backend indisponivel para lead capture, login e rotas do CRM
 ```
 
 ---
 
-## 2. MÓDULOS DE NEGÓCIO
+## 2. Modulos
 
-### Leads
-- **Status**: ✅ MVP completo
-- **Código**: `apps/api/src/routes/leads.ts`
-- **DB**: tabela `leads`, `consent_logs`
-- **Funcionalidade**:
-  - POST `/api/v1/leads` → captura pública com consentimento obrigatório
-  - GET `/api/v1/leads` → lista no CRM (com filtros, busca)
-  - PATCH `/api/v1/leads/:id` → atualizar categoria/contato
-  - DELETE `/api/v1/leads/:id` → soft-delete (LGPD)
-  - GET `/api/v1/privacy/export?email=` → ZIP com dados pessoais
-- **Teste**: validado em homolog (criar, ler, exportar, deletar)
-- **Pendência**: nenhuma (MVP completo)
-
-### Agenda
-- **Status**: ✅ MVP completo
-- **Código**: `apps/api/src/routes/appointments.ts`
-- **DB**: tabela `appointments`, vinculação com Google via `google_event_id`
-- **Funcionalidade**:
-  - POST `/api/v1/appointments` → criar agendamento local
-  - GET `/api/v1/appointments/available` → slots públicos
-  - GET `/api/v1/appointments` → lista no CRM
-  - PATCH `/api/v1/appointments/:id` → atualizar
-  - DELETE `/api/v1/appointments/:id` → cancelar (sync Google se conectado)
-  - GET `/api/v1/auth/google` → OAuth flow
-- **Integração Google**: OAuth implementado, token em Redis com refresh
-- **Teste**: validado em homolog
-- **Pendência**: Google Business Account ainda não configurado em produção
-
-### Financeiro
-- **Status**: ✅ MVP completo
-- **Código**: `apps/api/src/routes/financials.ts`
-- **DB**: tabela `financials`
-- **Funcionalidade**:
-  - POST `/api/v1/financials` → criar lançamento (receita/despesa)
-  - GET `/api/v1/financials` → lista
-  - GET `/api/v1/financials/summary` → consolidação mensal
-  - GET `/api/v1/financials/charts` → gráficos (rosca geral, receita, despesa)
-  - DELETE `/api/v1/financials/:id` → soft-delete
-- **Imutabilidade**: financeiros nunca são atualizados, apenas soft-deleted
-- **Teste**: validado em homolog
-- **Pendência**: nenhuma
-
-### CMS / Conteúdo
-- **Status**: ✅ MVP completo
-- **Código**: `apps/api/src/routes/content.ts`
-- **DB**: tabelas `contents`, `content_versions`
-- **Funcionalidade**:
-  - PATCH `/api/v1/content/sections` → editar hero, seções, CTA
-  - GET `/api/v1/content/site-summary` → publicar landing
-  - GET `/api/v1/content/site-summary` → exibição de reviews Google (quando integrado)
-- **Versionamento**: cada edição cria versão nova, rollback possível
-- **Teste**: validado em homolog
-- **Pendência**: nenhuma
-
-### Colaboradores
-- **Status**: ✅ MVP completo
-- **Código**: `apps/api/src/routes/users.ts`
-- **DB**: tabela `users` com campos 2FA (`two_factor_enabled`, `two_factor_channel`)
-- **Funcionalidade**:
-  - POST `/api/v1/admin/users` → criar colaborador
-  - GET `/api/v1/admin/users` → lista (ativos e inativos)
-  - PATCH `/api/v1/admin/users/:id` → atualizar perfil, módulos, 2FA
-  - DELETE `/api/v1/admin/users/:id` → soft-delete (inativar)
-- **Perfis**: ADMIN, COLLABORATOR, VIEWER
-- **Permissões**: por módulo (leads, agenda, financeiro, etc)
-- **2FA**: email OTP (SMS via Twilio opcional, não ativado)
-- **Teste**: validado em homolog
-- **Pendência**: migration das colunas de 2FA precisa ser aplicada no Postgres de produção
-
-### Dashboard
-- **Status**: ✅ MVP completo
-- **Código**: `apps/api/src/domain/metrics/service.ts`
-- **Funcionalidade**:
-  - GET `/api/v1/metrics/overview` → cards: leads novos, agendamentos próximos, financeiro mês
-- **Consolidação**: em tempo real (queries no GET)
-- **Teste**: validado em homolog
-- **Pendência**: nenhuma
-
-### Segurança / Auditoria
-- **Status**: ✅ MVP completo
-- **Código**: `apps/api/src/routes/security.ts`
-- **DB**: tabelas `security_events`, `audit_logs`
-- **Funcionalidade**:
-  - GET `/api/v1/security/events` → event log (login, erro, integração, alteração)
-  - GET `/api/v1/security/stats` → estatísticas (login/mês, erro rate, etc)
-  - GET `/api/v1/security/activity` → atividade por usuário
-  - GET `/api/v1/security/checklist` → checklist de segurança (auth, 2FA, logs, backup)
-  - POST `/api/v1/security/block-ip` → bloquear IP (rate limit)
-- **Teste**: validado em homolog
-- **Pendência**: nenhuma
+| Modulo        | Status de codigo | Status operacional                         |
+| ------------- | ---------------- | ------------------------------------------ |
+| Leads         | implementado     | bloqueado pela API ausente                 |
+| Agenda        | implementado     | bloqueado pela API ausente                 |
+| Financeiro    | implementado     | bloqueado pela API ausente                 |
+| CMS           | implementado     | landing sobe, mas sem backend validado     |
+| Colaboradores | implementado     | bloqueado pela API ausente                 |
+| Dashboard     | implementado     | bloqueado pela API ausente                 |
+| Seguranca     | implementado     | healthchecks e auditoria sem backend ativo |
 
 ---
 
-## 3. INFRAESTRUTURA
+## 3. Infra Impactada
 
-### Staging (Homolog)
-```
-Frontend:
-  Landing: https://landing-hml.vercel.app
-  CRM: https://crm-hml.vercel.app
-
-Backend:
-  API: https://api-hml-sbk3.onrender.com
-  Health: GET /health/live, /health/ready, /health/deps
-
-Database:
-  Supabase Staging Project
-  Postgres managed, backup 7d
-
-Cache:
-  Upstash Redis Staging
-  Serverless, pub/sub
-
-DNS/WAF:
-  Cloudflare (não configurado, usar Vercel DNS)
-```
-
-### Produção (Pronto para deploy)
-```
-Frontend:
-  Landing: vercel (projeto criado, pronto)
-  CRM: vercel (projeto criado, pronto)
-
-Backend:
-  API: render (projeto criado, pronto)
-
-Database:
-  Supabase Production Project (criado)
-  Postgres managed, backup 7d
-
-Cache:
-  Upstash Redis Production (criado)
-
-DNS/WAF:
-  Cloudflare (setup manual)
-```
-
-**Status**: Infraestrutura criada, aguardando primeira migração de banco de dados e configuração de secrets.
+- Vercel: projetos religados; arquivos `.vercel` devem permanecer fora do git.
+- Render: servico web da API precisa ser recriado a partir de `render.yaml`.
+- Supabase: projeto validado; falta apenas consumo pela API publicada.
+- Upstash: Redis serverless validado; falta apenas consumo pela API publicada.
 
 ---
 
-## 4. PENDÊNCIAS E DÍVIDA TÉCNICA
+## 4. Riscos
 
-### Bloqueantes para produção
-- ⏳ **Primeiro deploy em produção**: aplicar migrations (2FA, consentimento)
-- ⏳ **Configurar secrets**: GitHub Secrets para prod (DATABASE_URL, REDIS_URL, etc)
-- ⏳ **Cloudflare**: apontar DNS para Vercel/Render (ou usar DNS automático)
-- ⏳ **Google OAuth em prod**: configurar credenciais Google para domínio produção
-
-### Não bloqueantes (P2/P3)
-- **Testes E2E**: Playwright cobrindo fluxos principais (lead → financeiro)
-- **SEO na landing**: meta tags dinâmicas, sitemap, robots.txt
-- **Observabilidade**: Datadog/Sentry para RUM e error tracking
-- **Backup offline**: S3 copy de backups Supabase (não apenas Supabase)
-- **Integração Google Business**: setup completo (localidades vinculadas, reviews)
-- **Integração WhatsApp**: setup completo (Business Account, webhook)
-- **SMS 2FA**: Twilio ativado (atualmente apenas email)
+- API fora do ar bloqueia lead capture, login e consultas do CRM.
+- CRM ainda depende de URL compartilhavel temporaria enquanto a Vercel Authentication estiver ativa.
+- CRM nao pode ser demonstrado funcionalmente enquanto a API nao existir.
+- Dominio publico e SEO ficam incoerentes enquanto DNS nao estiver configurado.
+- CI pode falhar se secrets novos nao forem alinhados com os projetos recriados.
+- Render segue sem automacao funcional ate regularizar credencial/workspace.
 
 ---
 
-## 5. RISCOS OPERACIONAIS
+## 5. Divida Tecnica
 
-| Risco | Probabilidade | Impacto | Status |
-|---|---|---|---|
-| Google OAuth indisponível | baixa | médio | fallback: agendamento local |
-| Banco offline 1 hora | muito baixa | crítico | backup automático, RTO 1h |
-| Redis timeout | muito baixa | médio | fallback: in-memory, performance degradada |
-| Perda de leads (consentimento não registrado) | muito baixa | alto | validação server-side obrigatória |
-| Escalada de privilégio | muito baixa | crítico | RLS + JWT + backend validation |
-| Email não entregue (2FA) | baixa | alto | resend automático, SMS backup |
-
-**Plano de mitigação**: monitored, alertas configurados, runbooks em operação
+- Limpeza definitiva de arquivos `.vercel` rastreados pelo git.
+- Normalizacao completa da documentacao de deploy para a nova infra.
+- Validacao local ainda limitada pelo ambiente atual estar em Node 24, fora do range exigido pelo projeto.
 
 ---
 
-## 6. MÉTRICAS OBSERVADAS (Homolog)
+## 6. Proximas Acoes
 
-### Disponibilidade
-- API: 100% (desde 2026-03-20)
-- Banco: 100%
-- Cache: 100%
-- Email: 100%
-
-### Performance (P95)
-- Dashboard load: ~1.2s
-- Leads list: ~600ms
-- Financeiro charts: ~800ms
-- Login: ~1s
-
-### Volume
-- Leads testados: 10+ (criação, leitura, export, deleção)
-- Agendamentos testados: 5+
-- Financeiros testados: 20+
-- Usuários: 1 admin + 2 collaborators
+1. Recriar a API no Render a partir de `render.yaml` com credencial valida.
+2. Aplicar as secrets da API e executar migrations/seed em producao.
+3. Revalidar `/health/live`, `/health/ready` e `/health/deps`.
+4. Revalidar login do CRM e captura de lead na landing.
+5. Configurar DNS publico e revisar canonical/SEO com dominio definitivo.
 
 ---
 
-## 7. PRÓXIMAS AÇÕES
+## 7. Estado vigente — Docker self-hosted na VPS (2026-08-31)
 
-### Imediato (produção)
-- [ ] Validar secreis GitHub para produção
-- [ ] Deploy inicial em produção (staging branch → main)
-- [ ] Verificar health checks em produção
-- [ ] Configurar Cloudflare DNS (ou usar automático Vercel)
-- [ ] Confirmar Google OAuth em domínio produção
+- O estado cloud-first acima foi superseded pelo pedido vigente: tudo roda na VPS, sem Vercel, Supabase, Render ou Upstash.
+- Compose implantado em `/opt/viviani-crm` com Nginx, Landing, CRM, API, PostgreSQL 16 e Redis 7; PostgreSQL/Redis sem portas publicas.
+- Banco novo criado do zero, sem migracao de dados. O schema Prisma foi aplicado e as quatro migrations de feature foram registradas como baseline por ausencia de migration inicial no repositorio.
+- Confirmado: API `/health` 200 com database/redis/uploads; landing, CRM, paginas legais e manifest 200; login, troca de senha e leitura de lead verificados no navegador; lead com consentimento persistido.
+- Instancias localhost encerradas; listeners locais 3000/3001/4000 confirmados ausentes.
+- Pendencias reais: TLS por dominio/certificado, backup externo, firewall/cloud rules, RLS, integrações SMTP/Google/WhatsApp e decisão sobre exclusão física/cascade.
 
-### Curto prazo (semana 1)
-- [ ] Teste de fluxo completo em produção (lead → CRM → financeiro)
-- [ ] Validar 2FA em produção
-- [ ] Conferir logs em produção
-- [ ] Treinar usuário (Viviani) no CRM
+### Addendum — redesign e verificação final da apresentação (2026-08-31)
 
-### Médio prazo (semana 2-4)
-- [ ] Testes E2E com Playwright
-- [ ] Observabilidade (Datadog ou equivalente)
-- [ ] Integração Google Business (completa)
-- [ ] Integração WhatsApp (completa)
+- DNA visual documentado em `docs/23_DESIGN_DNA_AND_AUDIT.md` e aplicado à landing pública e ao CRM.
+- Landing sem linguagem visual genérica de IA: sem estrelas/Sparkles, emojis decorativos, partículas, 3D, blur ornamental ou gradientes decorativos; parallax restrito ao background do HERO.
+- CRM validado em desktop e mobile com rotas autenticadas, menu mobile, modal de novo lead e modal de novo agendamento; sem erros de browser observados.
+- Nginx passou a resolver o upstream interno dinamicamente para evitar `502` após recriação do container da landing.
+- Google Calendar, SMTP/e-mail e WhatsApp estão implementados no código e expostos com estado honesto no painel, mas permanecem `pendentes` na VPS por falta de credenciais/autorização externas.
+- Estado atual continua sendo apresentação/homologação: HTTP por IP, sem TLS, sem backup externo automatizado e sem validação RLS.
 
-### Longo prazo (mês 2+)
-- [ ] SMS 2FA via Twilio
-- [ ] Relatórios avançados
-- [ ] Pipeline de vendas customizável
-- [ ] BI (Metabase ou equivalente)
+### Addendum — hardening backend e verificação externa (2026-08-31 / 2026-09-01 UTC)
 
----
+- O webhook WhatsApp agora falha fechado: sem configuração retorna 503 e sem assinatura HMAC válida retorna 403; o challenge GET exige verify token configurado e correspondente.
+- Tokens OAuth do Google Calendar são criptografados antes de persistir no Redis; a leitura legada existe somente para compatibilidade de tokens já gravados.
+- SMS não é mais reportado como enviado quando Twilio está ausente; a operação retorna falha explícita.
+- Templates de e-mail escapam conteúdo interpolado e o endpoint de teste não expõe a senha baseline.
+- Nginx publica `/health/ready` e `/health/deps` para verificação operacional externa; configuração validada com `nginx -t`.
+- Estado remoto final: seis containers healthy; verificações negativas 401/400/503 e sweep CRM 390px/1440px concluídos sem erro de browser.
 
-## 8. CHANGELOG
+### Estado final do runtime — 2026-08-31 / 2026-09-01 UTC
 
-| Data | Versão | Alteração |
-|---|---|---|
-| 2026-03-20 | 1.0 | Estado pós auditoria (homolog validado) |
-| 2026-04-04 | 2.0 | Pronto para produção, documentação completa |
+- O runtime executado na VPS não depende de Vercel, Supabase, Render ou Upstash: Docker Compose usa PostgreSQL, Redis local, API, CRM, Landing e Nginx.
+- A última imagem foi recriada sem os adapters cloud; os seis containers estão saudáveis e os artefatos temporários de deploy foram removidos.
+- A validação pública pós-redeploy repetiu health/readiness, login, rotas legais, site-summary e contratos de falha de autenticação/consentimento/WhatsApp.
+
+### Addendum — restauração e upgrade da landing (2026-09-01)
+
+- A estrutura anterior foi restaurada, incluindo HERO em imagem inteira, headline com sublinhado, CTAs, credenciais e carrossel.
+- O parallax pedido foi mantido somente no background do HERO (`12%`); texto, CTAs e demais elementos da frente permanecem no fluxo normal.
+- Removidos partículas, `Sparkles`, estrelas Unicode, emojis/símbolos decorativos, FOMO padrão, depoimentos artificiais, RandomUser e referências Wix do HTML público.
+- HERO, selo de certificação e imagem do JSON-LD usam assets locais; seis containers continuam `healthy` e a landing respondeu HTTP 200 após o redeploy.
+- Browser local bloqueia a porta 80 com `ERR_BLOCKED_BY_CLIENT`; a landing não foi declarada visualmente validada por interação browser nesse ambiente.
+
+### Addendum — contrato de perfis e roles (2026-09-01)
+
+- O perfil público é `COLLABORATOR`; `MANAGER` permanece documentado como valor legado do enum Prisma persistido.
+- API, JWT e CRM normalizam os dois nomes para o mesmo comportamento e não expõem uma permissão diferente por causa do vocabulário.
+- A troca do enum não foi feita: exige migration reversível e aprovação de schema; nenhum dado foi migrado.
+
+### Addendum — preservação do histórico operacional (2026-09-01)
+
+- O código local deixou de excluir fisicamente leads e lançamentos em operações normais; ambos são arquivados com `deleted_at` e saem das consultas operacionais.
+- Correções financeiras usam substituição versionada; agendamentos são cancelados e mantêm histórico após a remoção do evento Google.
+- Testes da API passaram com 33 testes.
+- A migration reversível foi aplicada na VPS autorizada: `20260901090000_preserve_operational_history`; `deleted_at` existe em `leads` e `financials`, e o registro consta em `_prisma_migrations`.
+- Pós-deploy confirmado: seis containers `healthy`, health/readiness/deps públicos em 200, seed idempotente preservando os registros existentes e contagens operacionais verificadas (`leads_active=1`, `financials_active=0`, `appointments=0`).
+
+### Addendum — performance de imagens da landing (2026-09-01)
+
+- O HERO foi convertido de JPEG original de 6 MB para WebP local de 44 KB, com placeholder blur imediato.
+- O `next/image` agora prioriza WebP e limita variantes a 1920 px; request frio medido na VPS em aproximadamente 0,4 s, com `Content-Type: image/webp`.
+- A landing foi recriada sem tocar em banco, Redis, API ou CRM; os seis containers permanecem `healthy`.
+
+### Addendum — autenticação por username da Viviani (2026-09-01)
+
+- O schema agora suporta `users.username` nullable/unique por meio da migration reversível `20260901110000_add_usernames`.
+- A conta ADMIN existente de Viviani Serena recebeu o username normalizado `viviani`; o e-mail técnico foi preservado para 2FA, convites e compatibilidade.
+- API e CRM aceitam o identificador sem diferenciar maiúsculas/minúsculas e a senha inicial exige troca antes do dashboard.
+- Evidência remota: `prisma migrate status` sem pendências; login com `ViViaNI` e com o e-mail retornou 200, `username=viviani` e `mustChangePassword=true`; seis containers permaneceram saudáveis.

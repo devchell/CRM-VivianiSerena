@@ -2,6 +2,7 @@ import crypto from 'crypto'
 import type { Prisma } from '@prisma/client'
 import { prisma } from '../lib/prisma'
 import { apiEnv } from '../lib/env'
+import { redis } from '../lib/redis'
 import { AppError } from '../middleware/errorHandler'
 import { EncryptionService } from './security/EncryptionService'
 
@@ -62,6 +63,9 @@ type WhatsAppGraphError = {
     fbtrace_id?: string
   }
 }
+
+const WHATSAPP_REQUEST_TIMEOUT_MS = 15_000
+const WEBHOOK_RECEIPT_TTL_SECONDS = 24 * 60 * 60
 
 function asJsonObject(value: unknown): Record<string, unknown> {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return {}
@@ -154,6 +158,7 @@ async function graphRequest<T>(path: string, params: {
       'Content-Type': 'application/json',
     },
     body: method === 'POST' ? JSON.stringify(params.body ?? {}) : undefined,
+    signal: AbortSignal.timeout(WHATSAPP_REQUEST_TIMEOUT_MS),
   })
 
   const payload = await response.json() as T & WhatsAppGraphError
@@ -176,7 +181,9 @@ async function exchangeCodeForAccessToken(code: string) {
   url.searchParams.set('client_secret', appSecret)
   url.searchParams.set('code', code)
 
-  const response = await fetch(url)
+  const response = await fetch(url, {
+    signal: AbortSignal.timeout(WHATSAPP_REQUEST_TIMEOUT_MS),
+  })
   const payload = await response.json() as { access_token?: string } & WhatsAppGraphError
   if (!response.ok || !payload.access_token) {
     throw new AppError(response.status || 400, payload.error?.message ?? 'Nao foi possivel concluir a conexao com o WhatsApp Business')
@@ -253,12 +260,17 @@ export function isWhatsAppBusinessConfigured() {
   return getMissingConfiguration().length === 0
 }
 
+export function isWhatsAppWebhookConfigured() {
+  return Boolean(apiEnv.whatsappAppSecret && apiEnv.whatsappWebhookVerifyToken)
+}
+
 export async function getWhatsAppChannelStatus(): Promise<WhatsAppChannelStatus> {
   const stored = await getStoredConfig()
   const missingConfiguration = getMissingConfiguration()
+  const connected = missingConfiguration.length === 0 && Boolean(stored?.connected && stored.phoneNumberId && stored.accessTokenEncrypted)
   return {
     configured: missingConfiguration.length === 0,
-    connected: Boolean(stored?.connected && stored.phoneNumberId && stored.accessTokenEncrypted),
+    connected,
     missingConfiguration,
     graphApiVersion: apiEnv.whatsappGraphApiVersion,
     webhookPath: getWebhookPath(),
@@ -382,9 +394,12 @@ export async function sendWhatsAppBusinessMessage(input: {
     },
   })
 
-  return {
-    providerMessageId: response.messages?.[0]?.id ?? null,
+  const providerMessageId = response.messages?.[0]?.id
+  if (!providerMessageId) {
+    throw new AppError(502, 'WhatsApp provider nao retornou o identificador da mensagem')
   }
+
+  return { providerMessageId }
 }
 
 export function verifyWhatsAppWebhookSignature(signatureHeader: string | undefined, rawBody: Buffer | undefined) {
@@ -401,7 +416,7 @@ export function verifyWhatsAppWebhookSignature(signatureHeader: string | undefin
 }
 
 export function verifyWhatsAppWebhookChallenge(input: { mode?: string; verifyToken?: string; challenge?: string }) {
-  if (input.mode !== 'subscribe' || input.verifyToken !== apiEnv.whatsappWebhookVerifyToken) {
+  if (!apiEnv.whatsappWebhookVerifyToken || input.mode !== 'subscribe' || input.verifyToken !== apiEnv.whatsappWebhookVerifyToken) {
     throw new AppError(403, 'WhatsApp webhook verification failed')
   }
 
@@ -436,25 +451,34 @@ export async function ingestWhatsAppWebhook(payload: unknown) {
 
       for (const statusEntry of statuses) {
         const statusObject = asJsonObject(statusEntry)
-        await prisma.auditLog.create({
-          data: {
-            userId: stored.connectedByUserId,
-            action: 'WEBHOOK',
-            resource: 'DispatchReceipt',
-            details: {
-              resourceType: 'receipt',
-              channel: 'whatsapp',
-              providerMessageId: asOptionalString(statusObject.id),
-              recipient: asOptionalString(statusObject.recipient_id),
-              status: mapWebhookStatus(String(statusObject.status ?? 'sent')),
-              rawStatus: asOptionalString(statusObject.status),
-              conversationId: asOptionalString(asJsonObject(statusObject.conversation).id),
-              timestamp: asOptionalString(statusObject.timestamp),
-              pricingCategory: asOptionalString(asJsonObject(statusObject.pricing).category),
-              errorMessage: asOptionalString(asJsonObject((Array.isArray(statusObject.errors) ? statusObject.errors[0] : null)).message),
-            } as Prisma.JsonObject,
-          },
-        })
+        const receiptKey = `whatsapp:webhook:${crypto.createHash('sha256').update(JSON.stringify(statusObject)).digest('hex')}`
+        const reserved = await redis.set(receiptKey, '1', { ex: WEBHOOK_RECEIPT_TTL_SECONDS, nx: true })
+        if (reserved !== 'OK') continue
+
+        try {
+          await prisma.auditLog.create({
+            data: {
+              userId: stored.connectedByUserId,
+              action: 'WEBHOOK',
+              resource: 'DispatchReceipt',
+              details: {
+                resourceType: 'receipt',
+                channel: 'whatsapp',
+                providerMessageId: asOptionalString(statusObject.id),
+                recipient: asOptionalString(statusObject.recipient_id),
+                status: mapWebhookStatus(String(statusObject.status ?? 'sent')),
+                rawStatus: asOptionalString(statusObject.status),
+                conversationId: asOptionalString(asJsonObject(statusObject.conversation).id),
+                timestamp: asOptionalString(statusObject.timestamp),
+                pricingCategory: asOptionalString(asJsonObject(statusObject.pricing).category),
+                errorMessage: asOptionalString(asJsonObject((Array.isArray(statusObject.errors) ? statusObject.errors[0] : null)).message),
+              } as Prisma.JsonObject,
+            },
+          })
+        } catch (error) {
+          await redis.del(receiptKey)
+          throw error
+        }
         processed += 1
       }
     }

@@ -52,6 +52,9 @@ export interface Financial {
   date: Date
   recurring: boolean
   tags: string[]
+  createdAt?: Date
+  updatedAt?: Date
+  deletedAt?: Date | null
 }
 
 export interface CreateFinancialDto {

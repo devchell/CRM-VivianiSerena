@@ -9,7 +9,6 @@ import {
   Info,
   Loader2,
   Mail,
-  MessageCircle,
   RefreshCw,
   Save,
   ShieldAlert,
@@ -17,11 +16,14 @@ import {
   Zap,
 } from 'lucide-react'
 import { apiFetchJson, buildApiUrl, buildAuthHeaders } from '@/lib/api-client'
+import { useRealtimeRefresh } from '@/lib/realtime'
 import { LeadDispatchEditor } from '@/components/disparos/LeadDispatchEditor'
 import { useAuth } from '@/lib/useAuth'
 import {
+  crmFieldNumberInput,
   crmListBody,
   crmListCell,
+  crmListDateInput,
   crmListHeaderCell,
   crmListRow,
   crmListSearchInput,
@@ -179,11 +181,11 @@ const EMAIL_VARIABLES = [
 ]
 
 const AUTO_TEMPLATES = [
-  { id: 'appointment_confirmation', label: 'Confirmação de agendamento', trigger: 'Quando um agendamento é criado', channels: ['email', 'whatsapp'] as string[] },
-  { id: 'appointment_reminder_24h', label: 'Lembrete 24h antes', trigger: 'Automático: 24h antes do agendamento', channels: ['email', 'whatsapp'] as string[] },
-  { id: 'appointment_reminder_1h', label: 'Lembrete 1h antes', trigger: 'Automático: 1h antes do agendamento', channels: ['whatsapp'] as string[] },
-  { id: 'appointment_cancellation', label: 'Cancelamento de agendamento', trigger: 'Quando um agendamento é cancelado', channels: ['email', 'whatsapp'] as string[] },
-  { id: 'lead_welcome', label: 'Boas-vindas ao novo lead', trigger: 'Quando um lead preenche o formulário', channels: ['email', 'whatsapp'] as string[] },
+  { id: 'appointment_confirmation', label: 'Confirmação de agendamento', trigger: 'Quando um agendamento é criado', channels: ['email'] as string[] },
+  { id: 'appointment_reminder_24h', label: 'Lembrete 24h antes', trigger: 'Automático: 24h antes do agendamento', channels: ['email'] as string[] },
+  { id: 'appointment_reminder_1h', label: 'Lembrete 1h antes', trigger: 'Automático: 1h antes do agendamento', channels: ['email'] as string[] },
+  { id: 'appointment_cancellation', label: 'Cancelamento de agendamento', trigger: 'Quando um agendamento é cancelado', channels: ['email'] as string[] },
+  { id: 'lead_welcome', label: 'Boas-vindas ao novo lead', trigger: 'Quando um lead preenche o formulário', channels: ['email'] as string[] },
   { id: 'auth_2fa', label: 'Código de verificação (2FA)', trigger: 'Login com 2FA ativado', channels: ['email'] as string[] },
 ]
 
@@ -242,9 +244,7 @@ export function DispatchesPanel() {
   // Auto-templates state
   const [autoTemplates, setAutoTemplates] = useState<AutoTemplateRecord[]>([])
   const [selectedAutoTemplate, setSelectedAutoTemplate] = useState<string | null>(AUTO_TEMPLATES[0]?.id ?? null)
-  const [autoTemplateChannel, setAutoTemplateChannel] = useState<'email' | 'whatsapp'>('email')
   const [autoEmailBody, setAutoEmailBody] = useState('')
-  const [autoWhatsappBody, setAutoWhatsappBody] = useState('')
   const [loadingAutoTemplates, setLoadingAutoTemplates] = useState(false)
   const [savingAutoTemplate, setSavingAutoTemplate] = useState(false)
 
@@ -282,7 +282,12 @@ export function DispatchesPanel() {
     const response = await apiFetchJson<{ success: true; data: DraftConfig }>(`/api/v1/dispatches/drafts/${activeStatus}`, {
       headers: buildAuthHeaders(accessToken),
     })
-    setDraft(response.data)
+    setDraft({
+      ...response.data,
+      emailEnabled: true,
+      whatsappEnabled: false,
+      whatsappBody: '',
+    })
   }, [accessToken, activeStatus])
 
   const loadAudience = useCallback(async () => {
@@ -319,20 +324,27 @@ export function DispatchesPanel() {
         headers: buildAuthHeaders(accessToken),
       })
       setAutoTemplates(response.data)
-    } catch {
-      // non-fatal
+    } catch (error) {
+      console.warn('[dispatches] Não foi possível carregar os modelos automáticos.', error)
     } finally {
       setLoadingAutoTemplates(false)
     }
   }, [accessToken])
 
+  const refreshRealtime = useCallback(async () => {
+    await Promise.all([loadAudience(), loadTabCounts(), loadHistory(), loadDraft()])
+    if (activeTab === 'auto') await loadAutoTemplates()
+  }, [activeTab, loadAudience, loadTabCounts, loadHistory, loadDraft, loadAutoTemplates])
+
+  useRealtimeRefresh(refreshRealtime, ['leads', 'dispatches', 'content'])
+
   useEffect(() => {
     if (status === 'loading' || !accessToken) return
     setLoading(true)
-    Promise.all([loadDraft(), loadAudience(), loadHistory(), loadTabCounts()])
-      .catch(() => toast.error('Erro ao carregar módulo de disparos'))
+    loadHistory()
+      .catch(() => toast.error('Erro ao carregar histórico de disparos'))
       .finally(() => setLoading(false))
-  }, [accessToken, loadAudience, loadDraft, loadHistory, loadTabCounts, status])
+  }, [accessToken, loadHistory, status])
 
   useEffect(() => {
     if (status === 'loading' || !accessToken) return
@@ -346,7 +358,7 @@ export function DispatchesPanel() {
 
   useEffect(() => {
     if (status === 'loading' || !accessToken) return
-    loadTabCounts().catch(() => {})
+    loadTabCounts().catch(() => toast.error('Erro ao atualizar contagem de leads'))
   }, [accessToken, loadTabCounts, status])
 
   useEffect(() => {
@@ -360,20 +372,7 @@ export function DispatchesPanel() {
     if (!selectedAutoTemplate) return
     const saved = autoTemplates.find((t) => t.templateId === selectedAutoTemplate)
     setAutoEmailBody(saved?.emailHtml ?? '')
-    setAutoWhatsappBody(saved?.whatsappText ?? '')
   }, [selectedAutoTemplate, autoTemplates])
-
-  // Initialize channel tab based on template channels
-  useEffect(() => {
-    if (!selectedAutoTemplate) return
-    const tpl = AUTO_TEMPLATES.find((t) => t.id === selectedAutoTemplate)
-    if (!tpl) return
-    if (tpl.channels[0] === 'email' || tpl.channels.includes('email')) {
-      setAutoTemplateChannel('email')
-    } else {
-      setAutoTemplateChannel('whatsapp')
-    }
-  }, [selectedAutoTemplate])
 
   const handleSaveSettings = async () => {
     if (!accessToken || !settings || !canBroadcast) return
@@ -441,14 +440,14 @@ export function DispatchesPanel() {
       anchor.href = url
       anchor.download = `dispatch-audience-${activeStatus}.csv`
       anchor.click()
-      URL.revokeObjectURL(url)
+      window.setTimeout(() => URL.revokeObjectURL(url), 1000)
       toast.success('CSV exportado')
     } catch {
       toast.error('Erro ao exportar audiência')
     }
   }
 
-  const handleDispatchFromEditor = async (channel: 'email' | 'whatsapp', subject: string, body: string) => {
+  const handleDispatchFromEditor = async (subject: string, body: string) => {
     if (!accessToken || !canBroadcast) return
     setSending(true)
     try {
@@ -471,11 +470,11 @@ export function DispatchesPanel() {
           },
           draft: {
             status: activeStatus,
-            emailEnabled: channel === 'email',
-            emailSubject: channel === 'email' ? subject : '',
-            emailBody: channel === 'email' ? body : '',
-            whatsappEnabled: channel === 'whatsapp',
-            whatsappBody: channel === 'whatsapp' ? body : '',
+            emailEnabled: true,
+            emailSubject: subject,
+            emailBody: body,
+            whatsappEnabled: false,
+            whatsappBody: '',
           },
         }),
       })
@@ -498,7 +497,7 @@ export function DispatchesPanel() {
         headers: buildAuthHeaders(accessToken, 'application/json'),
         body: JSON.stringify({
           emailHtml: autoEmailBody || null,
-          whatsappText: autoWhatsappBody || null,
+          whatsappText: autoTemplates.find((template) => template.templateId === selectedAutoTemplate)?.whatsappText ?? null,
         }),
       })
       toast.success('Mensagem automática salva')
@@ -538,7 +537,7 @@ export function DispatchesPanel() {
             onClick={() => setActiveTab(tab.key)}
             className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
               activeTab === tab.key
-                ? 'bg-blue-600 text-white'
+                ? 'bg-blue-600 text-[var(--primary-foreground)]'
                 : 'text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
             }`}
           >
@@ -618,72 +617,29 @@ export function DispatchesPanel() {
                   <p className="mt-0.5 text-xs text-slate-400 dark:text-slate-500">{selectedAutoTpl.trigger}</p>
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', flex: 1, gap: 12, padding: '20px' }}>
-                  {/* Channel tabs (only shown if template has both channels) */}
-                  {selectedAutoTpl.channels.length > 1 && (
-                    <div className="flex gap-2 border-b border-slate-100 pb-3 dark:border-slate-700/50">
-                      {selectedAutoTpl.channels.map((ch) => (
-                        <button
-                          key={ch}
-                          type="button"
-                          onClick={() => setAutoTemplateChannel(ch as 'email' | 'whatsapp')}
-                          className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
-                            autoTemplateChannel === ch
-                              ? 'bg-blue-600 text-white'
-                              : 'text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
-                          }`}
-                        >
-                          {ch === 'email' ? 'E-mail' : 'WhatsApp'}
-                        </button>
-                      ))}
-                    </div>
-                  )}
-
                   {/* Editor */}
                   <div style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
-                    {autoTemplateChannel === 'email' && selectedAutoTpl.channels.includes('email') ? (
-                      <div style={{ display: 'flex', flexDirection: 'column', flex: 1, gap: 8 }}>
-                        <textarea
-                          value={autoEmailBody}
-                          onChange={(e) => setAutoEmailBody(e.target.value)}
-                          placeholder={`<p>Olá {nome},</p>\n<p>Sua mensagem aqui...</p>`}
-                          style={{
-                            width: '100%',
-                            flex: 1,
-                            minHeight: 320,
-                            fontFamily: '"Fira Code", "Consolas", "Monaco", monospace',
-                            fontSize: 13,
-                            lineHeight: 1.6,
-                            padding: '12px 14px',
-                            borderRadius: 8,
-                            border: '1px solid var(--border)',
-                            background: 'var(--bg-input)',
-                            color: 'var(--foreground)',
-                            resize: 'vertical',
-                          }}
-                        />
-                      </div>
-                    ) : (
-                      <div style={{ display: 'flex', flexDirection: 'column', flex: 1, gap: 8 }}>
-                        <textarea
-                          value={autoWhatsappBody}
-                          onChange={(e) => setAutoWhatsappBody(e.target.value)}
-                          placeholder="Olá {nome}! Sua mensagem aqui."
-                          style={{
-                            width: '100%',
-                            flex: 1,
-                            minHeight: 200,
-                            fontSize: 13,
-                            lineHeight: 1.6,
-                            padding: '12px 14px',
-                            borderRadius: 8,
-                            border: '1px solid var(--border)',
-                            background: 'var(--bg-input)',
-                            color: 'var(--foreground)',
-                            resize: 'vertical',
-                          }}
-                        />
-                      </div>
-                    )}
+                    <div style={{ display: 'flex', flexDirection: 'column', flex: 1, gap: 8 }}>
+                      <textarea
+                        value={autoEmailBody}
+                        onChange={(e) => setAutoEmailBody(e.target.value)}
+                        placeholder={`<p>Olá {nome},</p>\n<p>Sua mensagem aqui...</p>`}
+                        style={{
+                          width: '100%',
+                          flex: 1,
+                          minHeight: 320,
+                          fontFamily: '"Fira Code", "Consolas", "Monaco", monospace',
+                          fontSize: 13,
+                          lineHeight: 1.6,
+                          padding: '12px 14px',
+                          borderRadius: 8,
+                          border: '1px solid var(--border)',
+                          background: 'var(--bg-input)',
+                          color: 'var(--foreground)',
+                          resize: 'vertical',
+                        }}
+                      />
+                    </div>
 
                     <EmailVariablesLegend />
 
@@ -720,11 +676,10 @@ export function DispatchesPanel() {
       ) : (
         <>
           {/* ── Status-based dispatch panel ─────────────────────────────────── */}
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
             {[
               { label: 'Audiência', value: audience?.totalAudience ?? 0, icon: Users, tone: 'text-blue-600 bg-blue-500/10' },
               { label: 'E-mail apto', value: audience?.email.eligible ?? 0, icon: Mail, tone: 'text-blue-500 bg-blue-500/10' },
-              { label: 'WhatsApp apto', value: audience?.whatsapp.eligible ?? 0, icon: MessageCircle, tone: 'text-emerald-500 bg-emerald-500/10' },
               { label: 'Inelegíveis', value: audience?.fullyIneligible ?? 0, icon: ShieldAlert, tone: 'text-amber-500 bg-amber-500/10' },
             ].map((card) => (
               <div key={card.label} className="card-dark p-5 shadow-sm">
@@ -774,23 +729,15 @@ export function DispatchesPanel() {
                 </select>
                 <ChevronDown size={16} className={crmListSelectIcon} />
               </div>
-              <div className={crmListSelectWrapper}>
-                <select value={filters.whatsappEligibility} onChange={(event) => setFilters((current) => ({ ...current, whatsappEligibility: event.target.value as ToggleFilter }))} className={crmListSelect}>
-                  <option value="all">WhatsApp: todos</option>
-                  <option value="yes">Com WhatsApp apto</option>
-                  <option value="no">Sem WhatsApp apto</option>
-                </select>
-                <ChevronDown size={16} className={crmListSelectIcon} />
-              </div>
-              <input type="date" value={filters.from} onChange={(event) => setFilters((current) => ({ ...current, from: event.target.value }))} className="h-12 min-w-[170px] rounded-md border border-slate-200 bg-white/95 px-4 text-sm text-slate-900 shadow-sm outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100" />
-              <input type="date" value={filters.to} onChange={(event) => setFilters((current) => ({ ...current, to: event.target.value }))} className="h-12 min-w-[170px] rounded-md border border-slate-200 bg-white/95 px-4 text-sm text-slate-900 shadow-sm outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100" />
+              <input type="date" aria-label="Data inicial" value={filters.from} onChange={(event) => setFilters((current) => ({ ...current, from: event.target.value }))} className={crmListDateInput} />
+              <input type="date" aria-label="Data final" value={filters.to} onChange={(event) => setFilters((current) => ({ ...current, to: event.target.value }))} className={crmListDateInput} />
               <div className={crmListSearchWrapper}>
-                <input value={filters.search} onChange={(event) => setFilters((current) => ({ ...current, search: event.target.value }))} placeholder="Buscar nome, e-mail ou observação" className={crmListSearchInput} />
+                <input value={filters.search} onChange={(event) => setFilters((current) => ({ ...current, search: event.target.value }))} placeholder="Buscar nome ou e-mail" className={crmListSearchInput} />
               </div>
-              <button type="button" onClick={() => void loadAudience()} className="rounded border border-slate-200 p-3 text-slate-400 transition-colors hover:text-blue-600 dark:border-slate-700" title="Atualizar">
+              <button type="button" onClick={() => void loadAudience()} className="rounded border border-slate-200 p-3 text-slate-400 transition-colors hover:border-blue-400/60 hover:text-blue-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/30 active:translate-y-px dark:border-slate-700" title="Atualizar" aria-label="Atualizar audiência">
                 <RefreshCw size={16} className={loading ? 'animate-spin' : ''} />
               </button>
-              <button type="button" onClick={handleExport} disabled={!canExport} className="inline-flex items-center gap-2 rounded bg-blue-600 px-4 py-3 text-sm font-medium text-white shadow-sm transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50">
+              <button type="button" onClick={handleExport} disabled={!canExport} className="inline-flex items-center gap-2 rounded bg-blue-600 px-4 py-3 text-sm font-medium text-[var(--primary-foreground)] shadow-sm transition-[background-color,box-shadow,transform] hover:bg-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40 active:translate-y-px disabled:cursor-not-allowed disabled:opacity-50">
                 <Download size={14} />
                 Exportar audiência
               </button>
@@ -800,7 +747,7 @@ export function DispatchesPanel() {
           <div className="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
             <div className={crmListShell}>
               <div className="border-b border-slate-200/90 px-5 py-4 dark:border-slate-700">
-                <h2 className="font-heading text-xl font-semibold text-slate-900 dark:text-slate-100">Canais e mensagem</h2>
+                <h2 className="font-heading text-xl font-semibold text-slate-900 dark:text-slate-100">Mensagem por e-mail</h2>
               </div>
               <div style={{ padding: '20px' }}>
                 <LeadDispatchEditor
@@ -812,41 +759,37 @@ export function DispatchesPanel() {
               </div>
             </div>
 
-            <div className={crmListShell}>
-              <div className="border-b border-slate-200/90 px-5 py-4 dark:border-slate-700">
-                <h2 className="font-heading text-xl font-semibold text-slate-900 dark:text-slate-100">Limites operacionais</h2>
-              </div>
+            <details className={crmListShell}>
+              <summary className="cursor-pointer list-none border-b border-slate-200/90 px-5 py-4 font-heading text-xl font-semibold text-slate-900 outline-none transition-colors hover:bg-slate-50 focus-visible:ring-2 focus-visible:ring-blue-500/30 dark:border-slate-700 dark:text-slate-100 dark:hover:bg-slate-900 [&::-webkit-details-marker]:hidden">
+                Limites operacionais
+              </summary>
               {settings ? (
                 <div className="space-y-4 p-5">
                   <div>
                     <label className="mb-1 block text-xs font-medium text-slate-400">Limite diário de e-mail</label>
-                    <input type="number" min={1} value={settings.emailDailyLimit} onChange={(event) => setSettings((current) => current ? { ...current, emailDailyLimit: Number(event.target.value) } : current)} className="w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100" />
-                  </div>
-                  <div>
-                    <label className="mb-1 block text-xs font-medium text-slate-400">Limite diário de WhatsApp</label>
-                    <input type="number" min={1} value={settings.whatsappDailyLimit} onChange={(event) => setSettings((current) => current ? { ...current, whatsappDailyLimit: Number(event.target.value) } : current)} className="w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100" />
+                    <input type="number" min={1} value={settings.emailDailyLimit} onChange={(event) => setSettings((current) => current ? { ...current, emailDailyLimit: Number(event.target.value) } : current)} className={crmFieldNumberInput} />
                   </div>
                   <div className="grid gap-4 md:grid-cols-2">
                     <div>
                       <label className="mb-1 block text-xs font-medium text-slate-400">Lote</label>
-                      <input type="number" min={1} value={settings.batchSize} onChange={(event) => setSettings((current) => current ? { ...current, batchSize: Number(event.target.value) } : current)} className="w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100" />
+                      <input type="number" min={1} value={settings.batchSize} onChange={(event) => setSettings((current) => current ? { ...current, batchSize: Number(event.target.value) } : current)} className={crmFieldNumberInput} />
                     </div>
                     <div>
                       <label className="mb-1 block text-xs font-medium text-slate-400">Pacing (ms)</label>
-                      <input type="number" min={0} value={settings.pacingMs} onChange={(event) => setSettings((current) => current ? { ...current, pacingMs: Number(event.target.value) } : current)} className="w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100" />
+                      <input type="number" min={0} value={settings.pacingMs} onChange={(event) => setSettings((current) => current ? { ...current, pacingMs: Number(event.target.value) } : current)} className={crmFieldNumberInput} />
                     </div>
                   </div>
                   <div>
                     <label className="mb-1 block text-xs font-medium text-slate-400">Dias para marcar como inativo</label>
-                    <input type="number" min={7} value={settings.inactiveAfterDays} onChange={(event) => setSettings((current) => current ? { ...current, inactiveAfterDays: Number(event.target.value) } : current)} className="w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100" />
+                    <input type="number" min={7} value={settings.inactiveAfterDays} onChange={(event) => setSettings((current) => current ? { ...current, inactiveAfterDays: Number(event.target.value) } : current)} className={crmFieldNumberInput} />
                   </div>
-                  <button type="button" onClick={handleSaveSettings} disabled={!canBroadcast || savingSettings} className="inline-flex items-center gap-2 rounded border border-slate-200 px-4 py-3 text-sm font-medium text-slate-500 transition-colors hover:border-blue-400/60 hover:text-blue-600 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-700 dark:text-slate-400">
+                  <button type="button" onClick={handleSaveSettings} disabled={!canBroadcast || savingSettings} className="inline-flex items-center gap-2 rounded border border-slate-200 px-4 py-3 text-sm font-medium text-slate-500 transition-[background-color,border-color,box-shadow,transform] hover:border-blue-400/60 hover:bg-slate-50 hover:text-blue-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/30 active:translate-y-px disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-700 dark:text-slate-400 dark:hover:bg-slate-900">
                     {savingSettings ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />}
                     Salvar limites
                   </button>
                 </div>
               ) : null}
-            </div>
+            </details>
           </div>
 
           <div className="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
@@ -854,21 +797,11 @@ export function DispatchesPanel() {
               <div className="border-b border-slate-200/90 px-5 py-4 dark:border-slate-700">
                 <h2 className="font-heading text-xl font-semibold text-slate-900 dark:text-slate-100">Prévia da audiência</h2>
               </div>
-              <div className="grid gap-3 border-b border-slate-100 px-5 py-4 text-sm text-slate-500 dark:border-slate-700 dark:text-slate-400 md:grid-cols-2">
+              <div className="border-b border-slate-100 px-5 py-4 text-sm text-slate-500 dark:border-slate-700 dark:text-slate-400">
                 <div>
                   <p className="font-medium text-slate-900 dark:text-slate-100">E-mail</p>
                   <div className="mt-2 flex flex-wrap gap-2">
                     {Object.entries(audience?.email.reasons ?? {}).map(([reason, count]) => (
-                      <span key={reason} className="inline-flex items-center rounded-full border border-slate-200 bg-white/80 px-3 py-1 text-[11px] dark:border-slate-700 dark:bg-slate-900">
-                        {REASON_LABELS[reason] ?? reason}: {count}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-                <div>
-                  <p className="font-medium text-slate-900 dark:text-slate-100">WhatsApp</p>
-                  <div className="mt-2 flex flex-wrap gap-2">
-                    {Object.entries(audience?.whatsapp.reasons ?? {}).map(([reason, count]) => (
                       <span key={reason} className="inline-flex items-center rounded-full border border-slate-200 bg-white/80 px-3 py-1 text-[11px] dark:border-slate-700 dark:bg-slate-900">
                         {REASON_LABELS[reason] ?? reason}: {count}
                       </span>
@@ -880,16 +813,16 @@ export function DispatchesPanel() {
                 <table className="w-full text-sm">
                   <thead className={crmListTableHead}>
                     <tr>
-                      {['Lead', 'Origem', 'Status', 'E-mail', 'WhatsApp'].map((header) => (
+                      {['Lead', 'Origem', 'Status', 'E-mail'].map((header) => (
                         <th key={header} className={crmListHeaderCell}>{header}</th>
                       ))}
                     </tr>
                   </thead>
                   <tbody className={crmListBody}>
                     {loading ? (
-                      <tr><td colSpan={5} className="px-4 py-12 text-center"><Loader2 size={20} className="mx-auto animate-spin text-blue-600" /></td></tr>
+                      <tr><td colSpan={4} className="px-4 py-12 text-center"><Loader2 size={20} className="mx-auto animate-spin text-blue-600" /></td></tr>
                     ) : sample.length === 0 ? (
-                      <tr><td colSpan={5} className="p-4"><EmptyState message="Nenhum lead encontrado para os filtros atuais." /></td></tr>
+                      <tr><td colSpan={4} className="p-4"><EmptyState message="Nenhum lead encontrado para os filtros atuais." /></td></tr>
                     ) : sample.map((lead) => (
                       <tr key={lead.id} className={crmListRow}>
                         <td className={crmListCell}>
@@ -899,7 +832,6 @@ export function DispatchesPanel() {
                         <td className={crmListCell}>{SOURCE_LABELS[lead.source]}</td>
                         <td className={crmListCell}>{STATUS_LABELS[lead.status] ?? lead.status}</td>
                         <td className={crmListCell}>{REASON_LABELS[lead.emailReason] ?? lead.emailReason}</td>
-                        <td className={crmListCell}>{REASON_LABELS[lead.whatsappReason] ?? lead.whatsappReason}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -907,10 +839,10 @@ export function DispatchesPanel() {
               </div>
             </div>
 
-            <div className={crmListShell}>
-              <div className="border-b border-slate-200/90 px-5 py-4 dark:border-slate-700">
-                <h2 className="font-heading text-xl font-semibold text-slate-900 dark:text-slate-100">Histórico e relatórios</h2>
-              </div>
+            <details className={crmListShell}>
+              <summary className="cursor-pointer list-none border-b border-slate-200/90 px-5 py-4 font-heading text-xl font-semibold text-slate-900 outline-none transition-colors hover:bg-slate-50 focus-visible:ring-2 focus-visible:ring-blue-500/30 dark:border-slate-700 dark:text-slate-100 dark:hover:bg-slate-900 [&::-webkit-details-marker]:hidden">
+                Histórico e relatórios
+              </summary>
               <div className="space-y-4 p-5">
                 <div className="grid gap-3 md:grid-cols-2">
                   <div className="rounded-lg border border-slate-200 bg-white/80 p-4 text-sm dark:border-slate-700 dark:bg-slate-900/70">
@@ -969,7 +901,7 @@ export function DispatchesPanel() {
                   </div>
                 </div>
               </div>
-            </div>
+            </details>
           </div>
         </>
       )}
@@ -985,15 +917,14 @@ export function DispatchesPanel() {
             </div>
             <div className="space-y-3 px-6 py-5 text-sm text-slate-500 dark:text-slate-400">
               <p>{draft.emailEnabled ? audience.email.eligible : 0} disparos de e-mail aptos</p>
-              <p>{draft.whatsappEnabled ? audience.whatsapp.eligible : 0} disparos de WhatsApp aptos</p>
               <p>{audience.fullyIneligible} leads sem nenhum canal apto</p>
-              <p>Limites restantes hoje: e-mail {audience.email.remainingToday} · WhatsApp {audience.whatsapp.remainingToday}</p>
+              <p>Limite restante hoje: e-mail {audience.email.remainingToday}</p>
             </div>
             <div className="flex gap-3 px-6 pb-6">
               <button type="button" onClick={() => setShowConfirm(false)} className="flex-1 rounded-md border border-slate-200 px-4 py-2 text-sm text-slate-400 transition-colors hover:bg-slate-100 dark:border-slate-700 dark:hover:bg-slate-800">
                 Cancelar
               </button>
-              <button type="button" onClick={() => void handleSend()} disabled={sending} className="flex-1 rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700 disabled:opacity-60">
+              <button type="button" onClick={() => void handleSend()} disabled={sending} className="flex-1 rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-[var(--primary-foreground)] transition-colors hover:bg-blue-700 disabled:opacity-60">
                 {sending ? 'Processando...' : 'Continuar'}
               </button>
             </div>

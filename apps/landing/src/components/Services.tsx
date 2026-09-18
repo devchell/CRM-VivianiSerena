@@ -1,15 +1,16 @@
 'use client'
 
-import { useRef, useCallback } from 'react'
+import { useRef } from 'react'
 import { motion, useInView } from 'framer-motion'
 import { trackCTAClick, trackWhatsAppClick } from '@/lib/analytics'
+import { CircleDot, Eye, ScanFace, Shapes } from 'lucide-react'
 
 const WA_BASE = 'https://wa.me/5511915751770?text='
 
 const SERVICES = [
   {
     id: 'sobrancelhas',
-    emoji: '✦',
+    icon: ScanFace,
     title: 'Sobrancelhas',
     subtitle: 'Micropigmentação & Microblading',
     description:
@@ -26,7 +27,7 @@ const SERVICES = [
   },
   {
     id: 'labios',
-    emoji: '◆',
+    icon: Eye,
     title: 'Lábios & Eyeliner',
     subtitle: 'Micropigmentação labial e eyeliner',
     description:
@@ -43,7 +44,7 @@ const SERVICES = [
   },
   {
     id: 'capilar',
-    emoji: '◉',
+    icon: CircleDot,
     title: 'Capilar',
     subtitle: 'Micropigmentação capilar (MSC)',
     description:
@@ -60,7 +61,7 @@ const SERVICES = [
   },
   {
     id: 'tatuagens',
-    emoji: '★',
+    icon: Shapes,
     title: 'Tatuagens',
     subtitle: 'Remoção total ou parcial',
     description:
@@ -77,27 +78,6 @@ const SERVICES = [
   },
 ]
 
-// Hook 3D hover effect
-function use3DHover() {
-  const handleMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
-    const card = e.currentTarget
-    const rect = card.getBoundingClientRect()
-    const x = e.clientX - rect.left
-    const y = e.clientY - rect.top
-    const centerX = rect.width / 2
-    const centerY = rect.height / 2
-    const rotateX = ((y - centerY) / centerY) * -6
-    const rotateY = ((x - centerX) / centerX) * 6
-    card.style.transform = `perspective(1200px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) translateZ(4px)`
-  }, [])
-
-  const handleMouseLeave = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
-    e.currentTarget.style.transform = 'perspective(1200px) rotateX(0deg) rotateY(0deg) translateZ(0px)'
-  }, [])
-
-  return { handleMouseMove, handleMouseLeave }
-}
-
 const containerVariants = {
   hidden: {},
   visible: { transition: { staggerChildren: 0.12 } },
@@ -109,7 +89,7 @@ const cardVariants = {
 }
 
 function ServiceCard({ service }: { service: typeof SERVICES[0] }) {
-  const { handleMouseMove, handleMouseLeave } = use3DHover()
+  const ServiceIcon = service.icon
 
   const handleCTA = () => {
     trackWhatsAppClick(`services_${service.id}`)
@@ -121,18 +101,15 @@ function ServiceCard({ service }: { service: typeof SERVICES[0] }) {
   return (
     <motion.div
       variants={cardVariants}
-      className="perspective"
+      className="h-full"
     >
       <div
-        onMouseMove={handleMouseMove}
-        onMouseLeave={handleMouseLeave}
-        className="card preserve-3d p-7 h-full flex flex-col will-change-transform"
-        style={{ transition: 'box-shadow 0.3s ease, transform 0.3s ease' }}
+        className="card h-full p-7 flex flex-col transition-shadow duration-300 hover:shadow-lg"
       >
         {/* Header do card */}
         <div className="flex items-start justify-between mb-5">
           <div className={`w-14 h-14 rounded-md ${service.accentBg} flex items-center justify-center flex-shrink-0`}>
-            <span className="text-rose-gold text-2xl font-bold" aria-hidden="true">{service.emoji}</span>
+            <ServiceIcon className="h-6 w-6 text-rose-gold" strokeWidth={1.7} aria-hidden="true" />
           </div>
           <span className="badge bg-blush text-rose-gold border border-rose-gold/20 text-xs">
             {service.badge}

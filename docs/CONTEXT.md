@@ -162,7 +162,7 @@
 ### LGPD (Lei Geral de Proteção de Dados)
 - ✅ Consentimento: obrigatório em lead form
 - ✅ Exportação: endpoint `/api/v1/privacy/export?email=`
-- ✅ Deleção: soft-delete permanente, auditado
+- ✅ Deleção: arquivamento por `deleted_at`, permanente na operação e auditado
 - ✅ Retenção: 3 anos (leads), indefinido (operacional)
 - ✅ Base legal: consentimento (leads), contrato (operação)
 

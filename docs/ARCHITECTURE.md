@@ -6,6 +6,8 @@
 > **PRD:** /docs/PRD.md  
 > **Status:** aprovado
 
+> **Nota de vigência — 2026-08-31:** as seções cloud-first abaixo são históricas e não descrevem o ambiente ativo. A arquitetura vigente é Docker Compose na VPS com Nginx, Next.js (landing/CRM), API Express, PostgreSQL 16, Redis 7 e uploads locais persistentes. A fonte operacional é `docs/22_VPS_DOCKER_ARCHITECTURE.md` e `PRODUCTION_SETUP.md`; não usar Vercel, Render, Supabase ou Upstash.
+
 ---
 
 ## 1. VISÃO GERAL
@@ -177,9 +179,9 @@ viviani-crm/
 | Entidade | Finalidade | Sensível | RLS | Observações |
 |---|---|---|---|---|
 | **users** | autenticação, perfil, permissões | ⭐⭐⭐ | sim | hash de senha, 2FA storage |
-| **leads** | captura comercial | ⭐⭐ | sim | email, telefone, categoria, consentimento |
+| **leads** | captura comercial | ⭐⭐ | sim | email, telefone, categoria, consentimento, `deleted_at` de arquivamento |
 | **appointments** | agenda de compromissos | ⭐ | sim | vinculação opcional com Google event |
-| **financials** | lançamentos (receita/despesa) | ⭐⭐⭐ | sim | auditado, imutável post-criação (apenas soft-delete) |
+| **financials** | lançamentos (receita/despesa) | ⭐⭐⭐ | sim | auditado, imutável post-criação; correção cria substituição e arquiva com `deleted_at` |
 | **contents** | páginas públicas (CMS) | ⭐ | não | hero, seções, CTA, versionado |
 | **content_versions** | histórico de versões | ⭐ | não | backup de edições anteriores |
 | **consent_logs** | trilha LGPD de leads | ⭐⭐⭐ | sim | IP anonimizado, timestamp, channel |
@@ -238,6 +240,7 @@ CREATE POLICY leads_user_own ON leads
 | **DELETE** | `/api/v1/appointments/:id` | admin, collaborator | cancelar (Google sync) |
 | **GET** | `/api/v1/appointments/available` | nenhuma (landing) | slots disponíveis |
 | **POST** | `/api/v1/financials` | admin, collaborator | registrar lançamento |
+| **PATCH** | `/api/v1/financials/:id` | admin, collaborator | corrigir criando substituição e arquivando a versão anterior |
 | **GET** | `/api/v1/financials` | admin, collaborator | lista |
 | **GET** | `/api/v1/financials/summary` | admin, collaborator | consolidação mensal |
 | **GET** | `/api/v1/financials/charts` | admin, collaborator | gráficos |
@@ -283,7 +286,8 @@ Fluxo:
 {
   sub: "user-uuid",      // user ID
   email: "user@...",
-  role: "ADMIN",         // ADMIN | COLLABORATOR | VIEWER
+  role: "ADMIN",         // role persistida: ADMIN | MANAGER | VIEWER
+  profile: "ADMIN",      // perfil de produto: ADMIN | COLLABORATOR | VIEWER
   modules: ["leads", "agenda", "financeiro"],  // permissões por módulo
   iat: timestamp,
   exp: timestamp + 24h
@@ -300,7 +304,10 @@ Fluxo:
 
 *RW = read + write; R = read only; - = sem acesso; * = sujeito a permissão de módulo (admin pode desativar)
 
+**Histórico operacional:** arquivamento é filtrado das listas, métricas, disparos e relatórios; o registro original não é removido.
+
 **Regras críticas:**
+- `COLLABORATOR` é o nome de produto; `MANAGER` permanece apenas como compatibilidade do enum persistido atual. A borda de entrada normaliza ambos para o mesmo comportamento.
 - Autenticação: NextAuth verifica JWT + session em Redis
 - Autorização: backend valida `role` + `modules` antes de qualquer ação
 - **Menor privilégio**: padrão é `COLLABORATOR` com módulos desativados

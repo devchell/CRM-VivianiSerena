@@ -22,12 +22,29 @@ export function buildAuthHeaders(accessToken?: string, contentType?: string): He
   return headers
 }
 
-// In-memory GET cache: avoids re-fetching same read-only endpoints on navigation.
-// Keyed by URL. Entries expire after TTL_MS (default 60s).
-// Only caches GET requests (no body). Mutations always bypass.
-const TTL_MS = 60_000
+// Mutations are broadcast over Socket.IO and invalidate every read cache.
+// Reads are intentionally uncached by default so a reconnect or a navigation
+// never exposes a stale audience, lead, appointment, or financial result.
+const TTL_MS = 0
 type CacheEntry = { data: unknown; expiresAt: number }
 const _cache = new Map<string, CacheEntry>()
+
+function extractErrorMessage(payload: string): string | undefined {
+  if (!payload.trim()) return undefined
+
+  try {
+    const parsed: unknown = JSON.parse(payload)
+    if (!parsed || typeof parsed !== 'object') return undefined
+
+    const record = parsed as Record<string, unknown>
+    if (typeof record.error === 'string' && record.error.trim()) return record.error
+    if (typeof record.message === 'string' && record.message.trim()) return record.message
+  } catch (error) {
+    if (!(error instanceof SyntaxError)) throw error
+  }
+
+  return undefined
+}
 
 export function invalidateApiCache(pathPrefix?: string) {
   if (!pathPrefix) { _cache.clear(); return }
@@ -55,7 +72,9 @@ export async function apiFetchJson<T>(
 
   const response = await fetch(url, init)
   if (!response.ok) {
-    throw new Error(`HTTP ${response.status}`)
+    const payload = await response.text()
+    const detail = extractErrorMessage(payload)
+    throw new Error(detail ?? `HTTP ${response.status}`)
   }
 
   const data = await response.json() as T

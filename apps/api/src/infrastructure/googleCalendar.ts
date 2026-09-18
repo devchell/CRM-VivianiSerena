@@ -1,6 +1,7 @@
 import { google, calendar_v3 } from 'googleapis'
 import { logger } from '../lib/logger'
 import { redis } from '../lib/redis'
+import { EncryptionService } from './security/EncryptionService'
 
 export const GOOGLE_OAUTH_TOKEN_KEY = 'google:oauth:tokens'
 export const GOOGLE_CALENDAR_SCOPE = 'https://www.googleapis.com/auth/calendar'
@@ -28,7 +29,27 @@ function createOAuth2Client(): InstanceType<typeof google.auth.OAuth2> {
 }
 
 async function persistGoogleTokens(tokens: Record<string, unknown>) {
-  await redis.set(GOOGLE_OAUTH_TOKEN_KEY, tokens, { ex: 365 * 24 * 60 * 60 })
+  const encrypted = EncryptionService.encrypt(JSON.stringify(tokens))
+  await redis.set(GOOGLE_OAUTH_TOKEN_KEY, encrypted, { ex: 365 * 24 * 60 * 60 })
+}
+
+async function readGoogleTokens(): Promise<GoogleOAuthTokens | null> {
+  const stored = await redis.get<GoogleOAuthTokens | string>(GOOGLE_OAUTH_TOKEN_KEY)
+  if (!stored) return null
+
+  if (typeof stored !== 'string') {
+    // Compatibilidade temporária com tokens gravados antes da criptografia.
+    return stored
+  }
+
+  try {
+    return JSON.parse(EncryptionService.decrypt(stored)) as GoogleOAuthTokens
+  } catch (error) {
+    logger.warn('Google OAuth token could not be decrypted', {
+      error: error instanceof Error ? error.message : 'unknown error',
+    })
+    return null
+  }
 }
 
 function getMissingGoogleCalendarEnv() {
@@ -49,7 +70,7 @@ export async function getAuthenticatedGoogleClient(): Promise<InstanceType<typeo
   }
 
   const oauth2Client = createOAuth2Client()
-  const tokens = await redis.get<GoogleOAuthTokens>(GOOGLE_OAUTH_TOKEN_KEY)
+  const tokens = await readGoogleTokens()
   if (!tokens) {
     throw new Error('Google Calendar not connected. Please authorize via OAuth.')
   }
@@ -85,12 +106,12 @@ export function isGoogleCalendarConfigured() {
 }
 
 export async function getGoogleCalendarConnectionStatus() {
-  const tokens = await redis.get<GoogleOAuthTokens>(GOOGLE_OAUTH_TOKEN_KEY)
+  const tokens = await readGoogleTokens()
   const missingConfiguration = getMissingGoogleCalendarEnv()
   const redirectUri = process.env.GOOGLE_REDIRECT_URI?.trim() ?? null
   const configured = missingConfiguration.length === 0
 
-  if (!tokens) {
+  if (!configured || !tokens || !(tokens.access_token || tokens.refresh_token)) {
     return {
       configured,
       connected: false,

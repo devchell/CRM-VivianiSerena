@@ -25,7 +25,7 @@ function resolveApiBaseUrl(): string | null {
 
   try {
     const parsed = new URL(value)
-    if (['localhost', '127.0.0.1', '0.0.0.0'].includes(parsed.hostname)) {
+    if (process.env.NODE_ENV === 'production' && ['localhost', '127.0.0.1', '0.0.0.0'].includes(parsed.hostname)) {
       return null
     }
 

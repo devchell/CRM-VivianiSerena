@@ -37,7 +37,7 @@ export default function Footer({ whatsappNumber }: FooterProps = {}) {
   }
 
   return (
-    <footer className="bg-charcoal text-white/80" aria-label="Rodapé">
+    <footer className="bg-charcoal text-white/90" aria-label="Rodapé">
       <div className="container-main py-16">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10">
           {/* Brand column */}
@@ -54,11 +54,11 @@ export default function Footer({ whatsappNumber }: FooterProps = {}) {
               />
               <div>
                 <span className="font-heading font-bold text-white text-base leading-none block">Viviani</span>
-                <span className="text-rose-gold text-xs tracking-widest uppercase leading-none">Serena</span>
+                <span className="text-[#d6a082] text-xs tracking-widest uppercase leading-none">Serena</span>
               </div>
             </div>
 
-            <p className="text-sm leading-relaxed text-white/60 mb-5">
+            <p className="text-sm leading-relaxed text-white/75 mb-5">
               Especialista em despigmentação a laser. Devolvendo à pele a liberdade de ser original.
             </p>
 
@@ -84,7 +84,7 @@ export default function Footer({ whatsappNumber }: FooterProps = {}) {
                 target="_blank"
                 rel="noopener noreferrer"
                 onClick={() => trackCTAClick('footer_instagram', 'footer')}
-                className="w-9 h-9 bg-white/10 hover:bg-gradient-to-br hover:from-purple-600 hover:to-pink-500 rounded flex items-center justify-center transition-all"
+                className="w-9 h-9 bg-white/10 hover:bg-white/20 rounded flex items-center justify-center transition-colors"
                 aria-label="Instagram @vivini.serena"
               >
                 <svg viewBox="0 0 24 24" className="w-4 h-4 fill-current" aria-hidden="true">
@@ -116,7 +116,7 @@ export default function Footer({ whatsappNumber }: FooterProps = {}) {
           {/* Locations */}
           <div>
             <h3 className="text-white font-semibold text-sm uppercase tracking-wider mb-4">Espaços</h3>
-            <div className="space-y-4 text-sm text-white/60">
+            <div className="space-y-4 text-sm text-white/75">
               <div>
                 <div className="flex items-start gap-2">
                   <MapPin className="w-4 h-4 text-rose-gold flex-shrink-0 mt-0.5" aria-hidden="true" />
@@ -152,7 +152,7 @@ export default function Footer({ whatsappNumber }: FooterProps = {}) {
                 href="https://wa.me/5511915751770"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-2 text-white/60 hover:text-rose-gold transition-colors"
+                className="flex items-center gap-2 text-white/75 hover:text-rose-gold transition-colors"
                 onClick={() => trackCTAClick('footer_phone', 'footer')}
               >
                 <Phone className="w-4 h-4 flex-shrink-0" aria-hidden="true" />
@@ -160,7 +160,7 @@ export default function Footer({ whatsappNumber }: FooterProps = {}) {
               </a>
               <a
                 href="mailto:contato@vivianiserena.com"
-                className="flex items-center gap-2 text-white/60 hover:text-rose-gold transition-colors"
+                className="flex items-center gap-2 text-white/75 hover:text-rose-gold transition-colors"
                 onClick={() => trackCTAClick('footer_email', 'footer')}
               >
                 <Mail className="w-4 h-4 flex-shrink-0" aria-hidden="true" />
@@ -171,7 +171,7 @@ export default function Footer({ whatsappNumber }: FooterProps = {}) {
             {/* Back to top */}
             <button
               onClick={scrollToTop}
-              className="mt-6 inline-flex items-center gap-2 text-xs text-white/40 hover:text-white/80 transition-colors group"
+              className="mt-6 inline-flex items-center gap-2 text-xs text-white/70 hover:text-white transition-colors group"
               aria-label="Voltar ao topo da página"
             >
               <div className="w-7 h-7 border border-white/20 rounded flex items-center justify-center group-hover:border-white/60 transition-colors">
@@ -183,7 +183,7 @@ export default function Footer({ whatsappNumber }: FooterProps = {}) {
         </div>
 
         {/* Bottom bar */}
-        <div className="border-t border-white/10 mt-12 pt-8 flex flex-col md:flex-row items-center justify-between gap-4 text-xs text-white/40">
+        <div className="border-t border-white/10 mt-12 pt-8 flex flex-col md:flex-row items-center justify-between gap-4 text-xs text-white/70">
           <div>
             <p>© {new Date().getFullYear()} Viviani Serena. Todos os direitos reservados.</p>
           </div>
@@ -192,7 +192,7 @@ export default function Footer({ whatsappNumber }: FooterProps = {}) {
               <a
                 key={link.label}
                 href={link.href}
-                className="hover:text-white/70 transition-colors"
+                className="hover:text-white transition-colors"
               >
                 {link.label}
               </a>

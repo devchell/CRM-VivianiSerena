@@ -7,10 +7,10 @@ import { Calendar, DollarSign, Shield, Users } from 'lucide-react'
 import { crmSoftListItem } from '@/components/ui/listStyles'
 
 const ICONS = {
-  lead: { icon: Users, color: 'text-blue-400 bg-blue-500/10' },
-  appointment: { icon: Calendar, color: 'text-blue-600 bg-blue-500/10' },
-  financial: { icon: DollarSign, color: 'text-green-500 bg-green-500/10' },
-  security: { icon: Shield, color: 'text-red-400 bg-red-500/10' },
+  lead: { icon: Users, color: 'text-[var(--primary)] bg-[var(--accent)]' },
+  appointment: { icon: Calendar, color: 'text-[var(--primary)] bg-[var(--accent)]' },
+  financial: { icon: DollarSign, color: 'text-[var(--success)] bg-[var(--success-bg)]' },
+  security: { icon: Shield, color: 'text-[var(--destructive)] bg-[var(--warning-bg)]' },
 } as const
 
 interface RecentActivityProps {

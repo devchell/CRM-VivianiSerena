@@ -1,8 +1,11 @@
-import NextAuth from 'next-auth'
+import NextAuth, { type NextAuthConfig } from 'next-auth'
 import Credentials from 'next-auth/providers/credentials'
 import { z } from 'zod'
 import {
   inferUserProfile,
+  isAppPermission,
+  isUserProfile,
+  normalizeUserRole,
   resolveAllowedModules,
   type AppPermission,
   type UserProfile,
@@ -17,12 +20,28 @@ type ApiAuthUser = {
   id: string
   name?: string | null
   email: string
+  username?: string | null
   role: string
   profile?: UserProfile
   permissions?: AppPermission[]
   allowedModules?: string[]
   mustChangePassword?: boolean
   photoUrl?: string | null
+}
+
+type JwtCallbackParams = Parameters<NonNullable<NonNullable<NextAuthConfig['callbacks']>['jwt']>>[0]
+type SessionCallbackParams = Parameters<
+  NonNullable<NonNullable<NextAuthConfig['callbacks']>['session']>
+>[0]
+
+function readStringArray(value: unknown): string[] {
+  return Array.isArray(value)
+    ? value.filter((item): item is string => typeof item === 'string')
+    : []
+}
+
+function readPermissions(value: unknown): AppPermission[] {
+  return readStringArray(value).filter(isAppPermission)
 }
 
 function getApiBaseUrl(): string {
@@ -39,7 +58,10 @@ function getApiBaseUrl(): string {
     throw new Error(`[auth] Invalid API URL: ${value}`)
   }
 
-  if (['localhost', '127.0.0.1', '0.0.0.0'].includes(parsed.hostname)) {
+  if (
+    process.env.NODE_ENV === 'production' &&
+    ['localhost', '127.0.0.1', '0.0.0.0'].includes(parsed.hostname)
+  ) {
     throw new Error('[env] API_BASE_URL must not point to localhost in this deployment model')
   }
 
@@ -47,9 +69,11 @@ function getApiBaseUrl(): string {
 }
 
 function toKnownRole(value: string | undefined): KnownRole {
-  return value === 'ADMIN' || value === 'MANAGER' || value === 'VIEWER'
-    ? value
-    : 'VIEWER'
+  return normalizeUserRole(value)
+}
+
+function toKnownProfile(value: unknown): UserProfile | undefined {
+  return typeof value === 'string' && isUserProfile(value) ? value : undefined
 }
 
 function normalizeAuthUser(user: ApiAuthUser) {
@@ -58,12 +82,14 @@ function normalizeAuthUser(user: ApiAuthUser) {
   const allowedModules = Array.isArray(user.allowedModules)
     ? user.allowedModules
     : resolveAllowedModules(role, permissions)
-  const profile = user.profile ?? inferUserProfile(role, permissions.length > 0 ? permissions : allowedModules)
+  const profile =
+    user.profile ?? inferUserProfile(role, permissions.length > 0 ? permissions : allowedModules)
 
   return {
     id: user.id,
     name: user.name ?? null,
     email: user.email,
+    username: user.username ?? null,
     role,
     profile,
     permissions,
@@ -73,7 +99,9 @@ function normalizeAuthUser(user: ApiAuthUser) {
   }
 }
 
-async function refreshAccessToken(refreshToken: string): Promise<{ accessToken: string; refreshToken: string } | null> {
+async function refreshAccessToken(
+  refreshToken: string
+): Promise<{ accessToken: string; refreshToken: string } | null> {
   try {
     const apiBaseUrl = getApiBaseUrl()
     const res = await fetch(`${apiBaseUrl}/api/v1/auth/refresh`, {
@@ -82,8 +110,11 @@ async function refreshAccessToken(refreshToken: string): Promise<{ accessToken: 
       body: JSON.stringify({ refreshToken }),
     })
     if (!res.ok) return null
-    const data = await res.json() as { data: { accessToken: string; refreshToken?: string } }
-    return { accessToken: data.data.accessToken, refreshToken: data.data.refreshToken ?? refreshToken }
+    const data = (await res.json()) as { data: { accessToken: string; refreshToken?: string } }
+    return {
+      accessToken: data.data.accessToken,
+      refreshToken: data.data.refreshToken ?? refreshToken,
+    }
   } catch {
     return null
   }
@@ -95,7 +126,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     Credentials({
       name: 'credentials',
       credentials: {
-        email: { label: 'Email', type: 'email' },
+        identifier: { label: 'Usuário ou e-mail', type: 'text' },
         password: { label: 'Password', type: 'password' },
         twoFactorSessionToken: { label: '2FA Session Token', type: 'text' },
       },
@@ -110,7 +141,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-              email: credentials.email ?? '',
+              identifier: credentials.identifier ?? '',
               password: credentials.password ?? '',
               twoFactorSessionToken: parsed.data.twoFactorSessionToken,
             }),
@@ -122,7 +153,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             return null
           }
 
-          const data = await res.json() as {
+          const data = (await res.json()) as {
             data: {
               user: ApiAuthUser
               accessToken: string
@@ -138,10 +169,12 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           }
         }
 
-        const parsed = z.object({
-          email: z.string().email(),
-          password: z.string().min(8),
-        }).safeParse(credentials)
+        const parsed = z
+          .object({
+            identifier: z.string().trim().min(1).max(254),
+            password: z.string().min(8),
+          })
+          .safeParse(credentials)
 
         if (!parsed.success) {
           console.error('[auth] Zod validation failed:', parsed.error.flatten())
@@ -160,7 +193,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           return null
         }
 
-        const data = await res.json() as {
+        const data = (await res.json()) as {
           data: {
             requiresTwoFactor?: boolean
             user?: ApiAuthUser
@@ -169,7 +202,12 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           }
         }
 
-        if (data.data?.requiresTwoFactor || !data.data.user || !data.data.accessToken || !data.data.refreshToken) {
+        if (
+          data.data?.requiresTwoFactor ||
+          !data.data.user ||
+          !data.data.accessToken ||
+          !data.data.refreshToken
+        ) {
           return null
         }
 
@@ -187,15 +225,15 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     error: '/login',
   },
   callbacks: {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    async jwt({ token, user, trigger, session }: any) {
+    async jwt({ token, user, trigger, session }: JwtCallbackParams) {
       if (trigger === 'update' && session?.user) {
         if (session.user.name) token.name = session.user.name
         if (session.user.image !== undefined) token.photoUrl = session.user.image ?? null
         if (typeof session.user.role === 'string') token.role = session.user.role
         if (typeof session.user.profile === 'string') token.profile = session.user.profile
         if (Array.isArray(session.user.permissions)) token.permissions = session.user.permissions
-        if (Array.isArray(session.user.allowedModules)) token.allowedModules = session.user.allowedModules
+        if (Array.isArray(session.user.allowedModules))
+          token.allowedModules = session.user.allowedModules
       }
 
       if (user) {
@@ -219,35 +257,35 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         return token
       }
 
-      token.name = typeof token.name === 'string' && token.name.length > 0
-        ? token.name
-        : (typeof token.email === 'string' ? token.email.split('@')[0] : 'Usuário')
+      token.name =
+        typeof token.name === 'string' && token.name.length > 0
+          ? token.name
+          : typeof token.email === 'string'
+            ? token.email.split('@')[0]
+            : 'Usuário'
 
       const role = toKnownRole(typeof token.role === 'string' ? token.role : undefined)
       token.role = role
 
-      token.permissions = Array.isArray(token.permissions)
-        ? token.permissions
-        : []
+      const permissions = readPermissions(token.permissions)
+      token.permissions = permissions
 
-      token.allowedModules = Array.isArray(token.allowedModules)
-        ? token.allowedModules
-        : resolveAllowedModules(role, token.permissions)
+      const allowedModules = readStringArray(token.allowedModules)
+      token.allowedModules =
+        allowedModules.length > 0 ? allowedModules : resolveAllowedModules(role, permissions)
 
-      token.profile = typeof token.profile === 'string'
-        ? token.profile
-        : inferUserProfile(role, token.permissions.length > 0 ? token.permissions : token.allowedModules)
+      token.profile =
+        toKnownProfile(token.profile) ??
+        inferUserProfile(role, permissions.length > 0 ? permissions : allowedModules)
 
-      token.mustChangePassword = typeof token.mustChangePassword === 'boolean'
-        ? token.mustChangePassword
-        : false
+      token.mustChangePassword =
+        typeof token.mustChangePassword === 'boolean' ? token.mustChangePassword : false
 
       token.photoUrl = token.photoUrl ?? null
 
       if (Date.now() < ((token.expiresAt as number) ?? 0)) {
         return token
       }
-
 
       const refreshed = await refreshAccessToken(token.refreshToken as string)
       if (!refreshed) {
@@ -256,19 +294,12 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
       let updatedName = token.name as string
       let updatedRole = role
-      let updatedProfile = token.profile as UserProfile | undefined
-      let updatedPermissions: AppPermission[] = Array.isArray(token.permissions)
-        ? [...token.permissions]
-        : []
-      let updatedModules: string[] = Array.isArray(token.allowedModules)
-        ? [...token.allowedModules]
-        : []
-      let updatedPhoto: string | null = typeof token.photoUrl === 'string'
-        ? token.photoUrl
-        : null
-      let updatedMustChange = typeof token.mustChangePassword === 'boolean'
-        ? token.mustChangePassword
-        : false
+      let updatedProfile = toKnownProfile(token.profile)
+      let updatedPermissions: AppPermission[] = [...readPermissions(token.permissions)]
+      let updatedModules: string[] = [...readStringArray(token.allowedModules)]
+      let updatedPhoto: string | null = typeof token.photoUrl === 'string' ? token.photoUrl : null
+      let updatedMustChange =
+        typeof token.mustChangePassword === 'boolean' ? token.mustChangePassword : false
 
       try {
         const apiBaseUrl = getApiBaseUrl()
@@ -287,8 +318,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           updatedPhoto = currentUser.photoUrl
           updatedMustChange = currentUser.mustChangePassword
         }
-      } catch {
+      } catch (error) {
         // Keep the token values when the refresh companion request fails.
+        console.warn('[auth] Refresh companion request failed.', error)
       }
 
       return {
@@ -307,51 +339,51 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       }
     },
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    async session({ session, token }: any) {
-      if (!session) session = { user: {} }
-      if (!session.user) session.user = {}
+    async session({ session, token }: SessionCallbackParams) {
+      session.user.name =
+        typeof token.name === 'string' && token.name.length > 0
+          ? token.name
+          : typeof session.user.email === 'string'
+            ? session.user.email.split('@')[0]
+            : 'Usuário'
 
-      session.user.name = typeof token.name === 'string' && token.name.length > 0
-        ? token.name
-        : (typeof session.user.email === 'string' ? session.user.email.split('@')[0] : 'Usuário')
+      session.user.id =
+        typeof token.userId === 'string' && token.userId.length > 0
+          ? token.userId
+          : typeof token.sub === 'string'
+            ? token.sub
+            : ''
 
-      session.user.id = typeof token.userId === 'string' && token.userId.length > 0
-        ? token.userId
-        : (typeof token.sub === 'string' ? token.sub : '')
+      session.user.role =
+        typeof token.role === 'string' && token.role.length > 0 ? token.role : 'VIEWER'
 
-      session.user.role = typeof token.role === 'string' && token.role.length > 0
-        ? token.role
-        : 'VIEWER'
+      session.user.profile =
+        toKnownProfile(token.profile) ??
+        inferUserProfile(
+          toKnownRole(session.user.role),
+          readPermissions(token.permissions).length > 0
+            ? readPermissions(token.permissions)
+            : readStringArray(token.allowedModules)
+        )
 
-      session.user.profile = typeof token.profile === 'string'
-        ? token.profile
-        : inferUserProfile(
-            toKnownRole(session.user.role),
-            Array.isArray(token.permissions) ? token.permissions : (Array.isArray(token.allowedModules) ? token.allowedModules : [])
-          )
+      session.user.permissions = [...readPermissions(token.permissions)]
 
-      session.user.permissions = Array.isArray(token.permissions)
-        ? [...token.permissions]
-        : []
+      session.user.allowedModules = readStringArray(token.allowedModules)
+      if (session.user.allowedModules.length === 0) {
+        session.user.allowedModules = resolveAllowedModules(
+          toKnownRole(session.user.role),
+          session.user.permissions
+        )
+      }
 
-      session.user.allowedModules = Array.isArray(token.allowedModules)
-        ? [...token.allowedModules]
-        : resolveAllowedModules(toKnownRole(session.user.role), session.user.permissions)
+      session.user.mustChangePassword =
+        typeof token.mustChangePassword === 'boolean' ? token.mustChangePassword : false
 
-      session.user.mustChangePassword = typeof token.mustChangePassword === 'boolean'
-        ? token.mustChangePassword
-        : false
+      session.user.photoUrl = typeof token.photoUrl === 'string' ? token.photoUrl : null
 
-      session.user.photoUrl = typeof token.photoUrl === 'string'
-        ? token.photoUrl
-        : null
+      session.accessToken = typeof token.accessToken === 'string' ? token.accessToken : ''
 
-      session.accessToken = typeof token.accessToken === 'string'
-        ? token.accessToken
-        : ''
-
-      if (token.error) session.error = token.error
+      if (typeof token.error === 'string') session.error = token.error
 
       return session
     },

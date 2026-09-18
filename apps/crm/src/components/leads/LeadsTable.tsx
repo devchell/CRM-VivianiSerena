@@ -9,19 +9,21 @@ import {
 import { toast } from 'sonner'
 import { formatDistanceToNow } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
-import { Search, Download, RefreshCw, ArrowUpDown, ChevronUp, ChevronDown, CircleDot, CheckCircle2, Phone, Star, Users, XCircle, Plus, Pencil, Loader2, FilterX, ChevronRight, CalendarClock, ShieldCheck, Trash2 } from 'lucide-react'
+import { Search, Download, RefreshCw, ArrowUpDown, ChevronUp, ChevronDown, CircleDot, CheckCircle2, Phone, Target, Users, XCircle, Plus, Pencil, Loader2, FilterX, ChevronRight, CalendarClock, ShieldCheck, Archive } from 'lucide-react'
 import { apiFetchJson, buildApiUrl, buildAuthHeaders, invalidateApiCache } from '@/lib/api-client'
+import { useRealtimeRefresh } from '@/lib/realtime'
 import {
   crmFieldSelect,
   crmFieldSelectIcon,
   crmFieldSelectWrapper,
   crmListBody,
   crmListCell,
-  crmListEmpty,
   crmListFooter,
   crmListHeaderCell,
   crmListRow,
   crmListSearchInput,
+  crmListStickyActionCell,
+  crmListStickyActionHeader,
   crmListSearchWrapper,
   crmListSelect,
   crmListSelectIcon,
@@ -187,11 +189,11 @@ function parseObservation(notes: string | null | undefined) {
 }
 
 const STATUS_CONFIG: Record<string, { label: string; color: string; icon: typeof CircleDot }> = {
-  new: { label: 'Novo', color: 'text-blue-400 bg-blue-500/10 dark:bg-blue-500/20', icon: CircleDot },
-  contacted: { label: 'Contatado', color: 'text-yellow-500 bg-yellow-500/10 dark:bg-yellow-500/20', icon: Phone },
-  qualified: { label: 'Qualificado', color: 'text-purple-400 bg-purple-500/10 dark:bg-purple-500/20', icon: Star },
-  converted: { label: 'Convertido', color: 'text-green-400 bg-green-500/10 dark:bg-green-500/20', icon: CheckCircle2 },
-  lost: { label: 'Perdido', color: 'text-red-400 bg-red-500/10 dark:bg-red-500/20', icon: XCircle },
+  new: { label: 'Novo', color: 'text-[var(--primary)] bg-[var(--accent-subtle)]', icon: CircleDot },
+  contacted: { label: 'Contatado', color: 'text-[var(--warning)] bg-[var(--warning-bg)]', icon: Phone },
+  qualified: { label: 'Qualificado', color: 'text-[var(--accent-foreground)] bg-[var(--accent)]', icon: Target },
+  converted: { label: 'Convertido', color: 'text-[var(--success)] bg-[var(--success-bg)]', icon: CheckCircle2 },
+  lost: { label: 'Perdido', color: 'text-[var(--destructive)] bg-[var(--muted)]', icon: XCircle },
 }
 
 const SOURCE_LABELS: Record<string, string> = {
@@ -392,6 +394,8 @@ export function LeadsTable() {
     }
   }, [accessToken, buildLeadParams, updateSession])
 
+  useRealtimeRefresh(fetchLeads, ['leads', 'appointments'])
+
   useEffect(() => {
     if (status !== 'authenticated') return
     fetchLeads()
@@ -452,25 +456,25 @@ export function LeadsTable() {
       {
         label: 'Leads ativos',
         value: leadStats?.total ?? 0,
-        tone: 'bg-rose-50 text-rose-700 ring-rose-100',
+        tone: 'bg-[var(--accent-subtle)] text-[var(--primary)] ring-[var(--border-subtle)]',
         icon: Users,
       },
       {
         label: 'Em contato',
         value: getStatusCount(leadStats, 'contacted'),
-        tone: 'bg-amber-50 text-amber-700 ring-amber-100',
+        tone: 'bg-[var(--warning-bg)] text-[var(--warning)] ring-[var(--border-subtle)]',
         icon: Phone,
       },
       {
         label: 'Qualificados',
         value: getStatusCount(leadStats, 'qualified'),
-        tone: 'bg-violet-50 text-violet-700 ring-violet-100',
-        icon: Star,
+        tone: 'bg-[var(--accent)] text-[var(--accent-foreground)] ring-[var(--border-subtle)]',
+        icon: Target,
       },
       {
         label: 'Convertidos',
         value: getStatusCount(leadStats, 'converted'),
-        tone: 'bg-emerald-50 text-emerald-700 ring-emerald-100',
+        tone: 'bg-[var(--success-bg)] text-[var(--success)] ring-[var(--border-subtle)]',
         icon: CheckCircle2,
       },
     ]
@@ -505,7 +509,7 @@ export function LeadsTable() {
       a.href = url
       a.download = `leads-${new Date().toISOString().slice(0, 10)}.csv`
       a.click()
-      URL.revokeObjectURL(url)
+      window.setTimeout(() => URL.revokeObjectURL(url), 1000)
       toast.success('CSV exportado com sucesso')
     } catch {
       toast.error('Erro ao exportar')
@@ -568,17 +572,17 @@ export function LeadsTable() {
     {
       id: 'select',
       header: ({ table }) => (
-        <input type="checkbox" checked={table.getIsAllPageRowsSelected()} onChange={table.getToggleAllPageRowsSelectedHandler()} className="rounded accent-blue-600" />
+        <input type="checkbox" checked={table.getIsAllPageRowsSelected()} onChange={table.getToggleAllPageRowsSelectedHandler()} className="rounded accent-[var(--primary)]" />
       ),
       cell: ({ row }) => (
-        <input type="checkbox" checked={row.getIsSelected()} onChange={row.getToggleSelectedHandler()} className="rounded accent-blue-600" />
+        <input type="checkbox" checked={row.getIsSelected()} onChange={row.getToggleSelectedHandler()} className="rounded accent-[var(--primary)]" />
       ),
       size: 40,
     },
     {
       accessorKey: 'name',
       header: ({ column }) => (
-        <button onClick={() => column.toggleSorting()} className="flex items-center gap-1 hover:text-blue-600 transition-colors">
+        <button onClick={() => column.toggleSorting()} className="flex items-center gap-1 hover:text-[var(--primary)] transition-colors">
           Nome {column.getIsSorted() === 'asc' ? <ChevronUp size={13} /> : column.getIsSorted() === 'desc' ? <ChevronDown size={13} /> : <ArrowUpDown size={13} className="opacity-40" />}
         </button>
       ),
@@ -596,7 +600,7 @@ export function LeadsTable() {
         const phone = info.getValue() as string | null
         if (!phone) return <span className="text-sm text-slate-400 dark:text-slate-400">-</span>
         return (
-          <a href={`https://wa.me/55${phone.replace(/\D/g, '')}`} target="_blank" rel="noopener noreferrer" className="text-sm text-blue-600 hover:underline">
+          <a href={`https://wa.me/55${phone.replace(/\D/g, '')}`} target="_blank" rel="noopener noreferrer" className="text-sm text-[var(--primary)] hover:underline">
             {phone}
           </a>
         )
@@ -635,7 +639,7 @@ export function LeadsTable() {
     {
       accessorKey: 'createdAt',
       header: ({ column }) => (
-        <button onClick={() => column.toggleSorting()} className="flex items-center gap-1 hover:text-blue-600 transition-colors">
+        <button onClick={() => column.toggleSorting()} className="flex items-center gap-1 hover:text-[var(--primary)] transition-colors">
           Criado {column.getIsSorted() === 'asc' ? <ChevronUp size={13} /> : column.getIsSorted() === 'desc' ? <ChevronDown size={13} /> : <ArrowUpDown size={13} className="opacity-40" />}
         </button>
       ),
@@ -657,7 +661,7 @@ export function LeadsTable() {
             <button
               type="button"
               onClick={() => void handleExpandLead(row.original.id)}
-              className="inline-flex items-center gap-1 rounded border border-slate-200 px-3 py-2 text-xs font-medium text-slate-500 transition-colors hover:border-blue-400/60 hover:text-blue-600 dark:border-slate-700 dark:text-slate-400"
+              className="inline-flex items-center gap-1 rounded border border-[var(--border)] px-3 py-2 text-xs font-medium text-[var(--text-secondary)] transition-colors hover:border-[var(--ring)] hover:text-[var(--primary)]"
             >
               <ChevronRight size={14} className={isExpanded ? 'rotate-90 transition-transform' : 'transition-transform'} />
               Detalhes
@@ -666,7 +670,7 @@ export function LeadsTable() {
               type="button"
               onClick={() => openEditModal(row.original)}
               disabled={!canUpdateLeads}
-              className="inline-flex items-center gap-1 rounded border border-slate-200 px-3 py-2 text-xs font-medium text-slate-500 transition-colors hover:border-blue-400/60 hover:text-blue-600 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-700 dark:text-slate-400"
+              className="inline-flex items-center gap-1 rounded border border-[var(--border)] px-3 py-2 text-xs font-medium text-[var(--text-secondary)] transition-colors hover:border-[var(--ring)] hover:text-[var(--primary)] disabled:cursor-not-allowed disabled:opacity-50"
             >
               <Pencil size={14} />
               Editar
@@ -753,7 +757,7 @@ export function LeadsTable() {
     a.href = url
     a.download = `leads-selecionados-${new Date().toISOString().slice(0, 10)}.csv`
     a.click()
-    URL.revokeObjectURL(url)
+    window.setTimeout(() => URL.revokeObjectURL(url), 1000)
     toast.success(`${selectedLeads.length} lead${selectedLeads.length > 1 ? 's' : ''} exportado${selectedLeads.length > 1 ? 's' : ''}`)
   }, [table])
 
@@ -768,13 +772,13 @@ export function LeadsTable() {
         headers: buildAuthHeaders(accessToken, 'application/json'),
         body: JSON.stringify({ ids }),
       })
-      toast.success(`${ids.length} lead${ids.length > 1 ? 's' : ''} excluído${ids.length > 1 ? 's' : ''}`)
+      toast.success(`${ids.length} lead${ids.length > 1 ? 's' : ''} arquivado${ids.length > 1 ? 's' : ''}`)
       setBulkDeleteConfirm(false)
       setRowSelection({})
       invalidateApiCache('/leads')
       await fetchLeads()
     } catch {
-      toast.error('Erro ao excluir leads em massa')
+      toast.error('Erro ao arquivar leads em massa')
     } finally {
       setBulkSubmitting(false)
     }
@@ -813,7 +817,7 @@ export function LeadsTable() {
             <input
               value={searchFilter}
               onChange={e => setSearchFilter(e.target.value)}
-              placeholder="Buscar por nome, email, telefone ou observação"
+              placeholder="Buscar nome ou e-mail"
               className={crmListSearchInput}
             />
           </div>
@@ -855,36 +859,36 @@ export function LeadsTable() {
             value={sourceDetailFilter}
             onChange={e => setSourceDetailFilter(e.target.value)}
             placeholder="Origem detalhada / campanha"
-            className="h-12 min-w-[220px] rounded-lg border border-slate-200 bg-white/95 px-4 text-sm text-slate-900 shadow-sm outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+            className="h-12 min-w-[220px] rounded-lg border border-[var(--input-border)] bg-[var(--bg-input)] px-4 text-sm text-[var(--text-primary)] outline-none transition focus:border-[var(--ring)] focus:ring-2 focus:ring-[var(--ring)]/20"
           />
           <input
             type="date"
             value={fromFilter}
             onChange={e => setFromFilter(e.target.value)}
-            className="h-12 min-w-[170px] rounded-lg border border-slate-200 bg-white/95 px-4 text-sm text-slate-900 shadow-sm outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+            className="h-12 min-w-[170px] rounded-lg border border-[var(--input-border)] bg-[var(--bg-input)] px-4 text-sm text-[var(--text-primary)] outline-none transition focus:border-[var(--ring)] focus:ring-2 focus:ring-[var(--ring)]/20"
           />
           <input
             type="date"
             value={toFilter}
             onChange={e => setToFilter(e.target.value)}
-            className="h-12 min-w-[170px] rounded-lg border border-slate-200 bg-white/95 px-4 text-sm text-slate-900 shadow-sm outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-500/20 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+            className="h-12 min-w-[170px] rounded-lg border border-[var(--input-border)] bg-[var(--bg-input)] px-4 text-sm text-[var(--text-primary)] outline-none transition focus:border-[var(--ring)] focus:ring-2 focus:ring-[var(--ring)]/20"
           />
           <button
             type="button"
             onClick={handleResetFilters}
-            className="inline-flex items-center gap-2 rounded border border-slate-200 px-4 py-3 text-sm font-medium text-slate-500 transition-colors hover:border-blue-400/60 hover:text-blue-600 dark:border-slate-700 dark:text-slate-400"
+            className="inline-flex items-center gap-2 rounded border border-[var(--border)] px-4 py-3 text-sm font-medium text-[var(--text-secondary)] transition-colors hover:border-[var(--ring)] hover:text-[var(--primary)]"
           >
             <FilterX size={14} />
             Limpar
           </button>
-          <button onClick={fetchLeads} className="rounded-lg border border-slate-200 p-3 text-slate-400 transition-colors hover:text-blue-600 dark:border-slate-700" title="Atualizar">
+          <button onClick={fetchLeads} className="rounded-lg border border-[var(--border)] p-3 text-[var(--text-tertiary)] transition-colors hover:text-[var(--primary)]" title="Atualizar">
             <RefreshCw size={16} className={loading ? 'animate-spin' : ''} />
           </button>
           <button
             type="button"
             onClick={openCreateModal}
             disabled={!canCreateLeads}
-            className="inline-flex items-center gap-2 rounded border border-slate-200 px-4 py-3 text-sm font-medium text-slate-500 transition-colors hover:border-blue-400/60 hover:text-blue-600 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-700 dark:text-slate-400"
+            className="inline-flex items-center gap-2 rounded border border-[var(--border)] px-4 py-3 text-sm font-medium text-[var(--text-secondary)] transition-colors hover:border-[var(--ring)] hover:text-[var(--primary)] disabled:cursor-not-allowed disabled:opacity-50"
           >
             <Plus size={14} />
             Novo lead
@@ -892,7 +896,7 @@ export function LeadsTable() {
           <button
             onClick={handleExport}
             disabled={!canExportLeads}
-            className="inline-flex items-center gap-2 rounded bg-blue-600 px-4 py-3 text-sm font-medium text-white shadow-sm transition-colors hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="inline-flex items-center gap-2 rounded bg-[var(--primary)] px-4 py-3 text-sm font-medium text-[var(--primary-foreground)] transition-colors hover:bg-[var(--primary-hover)] disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <Download size={14} />
             Exportar CSV
@@ -910,7 +914,7 @@ export function LeadsTable() {
             type="button"
             onClick={() => setBulkStatusModal(true)}
             disabled={!canUpdateLeads}
-            className="inline-flex items-center gap-1.5 rounded border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-500 transition-colors hover:border-blue-400/60 hover:text-blue-600 disabled:opacity-50 dark:border-slate-700 dark:text-slate-400"
+            className="inline-flex items-center gap-1.5 rounded border border-[var(--border)] px-3 py-1.5 text-xs font-medium text-[var(--text-secondary)] transition-colors hover:border-[var(--ring)] hover:text-[var(--primary)] disabled:opacity-50"
           >
             Alterar status
           </button>
@@ -918,7 +922,7 @@ export function LeadsTable() {
             type="button"
             onClick={() => setBulkOriginModal(true)}
             disabled={!canUpdateLeads}
-            className="inline-flex items-center gap-1.5 rounded border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-500 transition-colors hover:border-blue-400/60 hover:text-blue-600 disabled:opacity-50 dark:border-slate-700 dark:text-slate-400"
+            className="inline-flex items-center gap-1.5 rounded border border-[var(--border)] px-3 py-1.5 text-xs font-medium text-[var(--text-secondary)] transition-colors hover:border-[var(--ring)] hover:text-[var(--primary)] disabled:opacity-50"
           >
             Alterar origem
           </button>
@@ -926,7 +930,7 @@ export function LeadsTable() {
             type="button"
             onClick={handleBulkExportSelected}
             disabled={!canExportLeads}
-            className="inline-flex items-center gap-1.5 rounded border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-500 transition-colors hover:border-blue-400/60 hover:text-blue-600 disabled:opacity-50 dark:border-slate-700 dark:text-slate-400"
+            className="inline-flex items-center gap-1.5 rounded border border-[var(--border)] px-3 py-1.5 text-xs font-medium text-[var(--text-secondary)] transition-colors hover:border-[var(--ring)] hover:text-[var(--primary)] disabled:opacity-50"
           >
             <Download size={12} />
             Exportar selecionados
@@ -937,8 +941,8 @@ export function LeadsTable() {
             disabled={!canDeleteLeads}
             className="inline-flex items-center gap-1.5 rounded border border-red-200 px-3 py-1.5 text-xs font-medium text-red-600 transition-colors hover:border-red-400 hover:text-red-700 disabled:opacity-50 dark:border-red-900/40 dark:text-red-400"
           >
-            <Trash2 size={12} />
-            Excluir selecionados
+            <Archive size={12} />
+            Arquivar selecionados
           </button>
           <button
             type="button"
@@ -957,7 +961,7 @@ export function LeadsTable() {
               {table.getHeaderGroups().map(hg => (
                 <tr key={hg.id}>
                   {hg.headers.map(h => (
-                    <th key={h.id} className={crmListHeaderCell}>
+                    <th key={h.id} className={`${crmListHeaderCell} ${h.id === 'actions' ? crmListStickyActionHeader : ''}`}>
                       {flexRender(h.column.columnDef.header, h.getContext())}
                     </th>
                   ))}
@@ -968,7 +972,7 @@ export function LeadsTable() {
               {loading ? (
                 <tr>
                   <td colSpan={columns.length} className="px-4 py-12 text-center">
-                    <div className="flex justify-center"><div className="w-6 h-6 border-2 border-blue-400 border-t-transparent rounded-full animate-spin" /></div>
+                    <div className="flex justify-center"><div className="w-6 h-6 border-2 border-[var(--ring)] border-t-transparent rounded-full animate-spin" /></div>
                   </td>
                 </tr>
               ) : table.getRowModel().rows.length === 0 ? (
@@ -987,7 +991,7 @@ export function LeadsTable() {
                     <Fragment key={row.id}>
                       <tr className={crmListRow}>
                         {row.getVisibleCells().map(cell => (
-                          <td key={cell.id} className={crmListCell}>
+                          <td key={cell.id} className={`${crmListCell} ${cell.column.id === 'actions' ? crmListStickyActionCell : ''}`}>
                             {flexRender(cell.column.columnDef.cell, cell.getContext())}
                           </td>
                         ))}
@@ -1088,7 +1092,7 @@ export function LeadsTable() {
                     required
                     value={form.name}
                     onChange={(event) => setForm((current) => ({ ...current, name: event.target.value }))}
-                    className="w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
+                    className="w-full rounded-md border border-[var(--input-border)] bg-[var(--bg-input)] px-3 py-2 text-sm text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--ring)]/20"
                   />
                 </div>
                 <div>
@@ -1098,7 +1102,7 @@ export function LeadsTable() {
                     type="email"
                     value={form.email}
                     onChange={(event) => setForm((current) => ({ ...current, email: event.target.value }))}
-                    className="w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
+                    className="w-full rounded-md border border-[var(--input-border)] bg-[var(--bg-input)] px-3 py-2 text-sm text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--ring)]/20"
                   />
                 </div>
               </div>
@@ -1110,7 +1114,7 @@ export function LeadsTable() {
                     type="tel"
                     value={form.phone}
                     onChange={(event) => setForm((current) => ({ ...current, phone: event.target.value }))}
-                    className="w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
+                    className="w-full rounded-md border border-[var(--input-border)] bg-[var(--bg-input)] px-3 py-2 text-sm text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--ring)]/20"
                   />
                 </div>
                 <div>
@@ -1201,7 +1205,7 @@ export function LeadsTable() {
                   value={form.notesExtra}
                   onChange={(event) => setForm((current) => ({ ...current, notesExtra: event.target.value }))}
                   placeholder="Alguma informação extra sobre o lead..."
-                  className="w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
+                  className="w-full rounded-md border border-[var(--input-border)] bg-[var(--bg-input)] px-3 py-2 text-sm text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--ring)]/20"
                 />
               </div>
 
@@ -1218,7 +1222,7 @@ export function LeadsTable() {
                 <button type="button" onClick={() => setShowModal(false)} className="flex-1 rounded border border-slate-200 px-4 py-2 text-sm text-slate-400 transition-colors hover:bg-slate-100 dark:border-slate-700 dark:hover:bg-slate-800">
                   Cancelar
                 </button>
-                <button type="submit" disabled={submitting} className="flex-1 rounded bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700 disabled:opacity-60">
+                <button type="submit" disabled={submitting || !form.name.trim() || !form.email.trim()} className="flex-1 rounded bg-[var(--primary)] px-4 py-2 text-sm font-medium text-[var(--primary-foreground)] transition-colors hover:bg-[var(--primary-hover)] disabled:opacity-60">
                   {submitting ? 'Salvando...' : editingLead ? 'Salvar alterações' : 'Criar lead'}
                 </button>
               </div>
@@ -1244,7 +1248,7 @@ export function LeadsTable() {
               </div>
               <div className="flex gap-3">
                 <button type="button" onClick={() => setBulkStatusModal(false)} className="flex-1 rounded border border-slate-200 px-4 py-2 text-sm text-slate-400 hover:bg-slate-100 dark:border-slate-700 dark:hover:bg-slate-800">Cancelar</button>
-                <button type="button" onClick={() => void handleBulkStatus()} disabled={bulkSubmitting} className="flex-1 rounded bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-60">
+                <button type="button" onClick={() => void handleBulkStatus()} disabled={bulkSubmitting} className="flex-1 rounded bg-[var(--primary)] px-4 py-2 text-sm font-medium text-[var(--primary-foreground)] hover:bg-[var(--primary-hover)] disabled:opacity-60">
                   {bulkSubmitting ? 'Salvando...' : 'Confirmar'}
                 </button>
               </div>
@@ -1271,7 +1275,7 @@ export function LeadsTable() {
               </div>
               <div className="flex gap-3">
                 <button type="button" onClick={() => setBulkOriginModal(false)} className="flex-1 rounded border border-slate-200 px-4 py-2 text-sm text-slate-400 hover:bg-slate-100 dark:border-slate-700 dark:hover:bg-slate-800">Cancelar</button>
-                <button type="button" onClick={() => void handleBulkOrigin()} disabled={bulkSubmitting || !bulkOrigin} className="flex-1 rounded bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-60">
+                <button type="button" onClick={() => void handleBulkOrigin()} disabled={bulkSubmitting || !bulkOrigin} className="flex-1 rounded bg-[var(--primary)] px-4 py-2 text-sm font-medium text-[var(--primary-foreground)] hover:bg-[var(--primary-hover)] disabled:opacity-60">
                   {bulkSubmitting ? 'Salvando...' : 'Confirmar'}
                 </button>
               </div>
@@ -1284,17 +1288,17 @@ export function LeadsTable() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm" onClick={(e) => e.target === e.currentTarget && setBulkDeleteConfirm(false)}>
           <div className="card-dark w-full max-w-sm shadow-2xl">
             <div className="flex items-center justify-between border-b border-slate-200 p-5 dark:border-slate-700">
-              <h2 className="font-heading text-base font-semibold text-slate-900 dark:text-slate-100">Confirmar exclusão</h2>
+              <h2 className="font-heading text-base font-semibold text-slate-900 dark:text-slate-100">Confirmar arquivamento</h2>
               <button type="button" onClick={() => setBulkDeleteConfirm(false)} className="text-slate-400 hover:text-slate-900 dark:hover:text-slate-100"><XCircle size={18} /></button>
             </div>
             <div className="space-y-4 p-5">
               <p className="text-sm text-slate-500 dark:text-slate-400">
-                Tem certeza que deseja excluir <strong className="text-slate-900 dark:text-slate-100">{selectedCount} lead{selectedCount > 1 ? 's' : ''}</strong>? Esta ação é irreversível.
+                Arquivar <strong className="text-slate-900 dark:text-slate-100">{selectedCount} lead{selectedCount > 1 ? 's' : ''}</strong>? O histórico será preservado, mas esses registros sairão das listas e indicadores operacionais.
               </p>
               <div className="flex gap-3">
                 <button type="button" onClick={() => setBulkDeleteConfirm(false)} className="flex-1 rounded border border-slate-200 px-4 py-2 text-sm text-slate-400 hover:bg-slate-100 dark:border-slate-700 dark:hover:bg-slate-800">Cancelar</button>
                 <button type="button" onClick={() => void handleBulkDelete()} disabled={bulkSubmitting} className="flex-1 rounded bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 disabled:opacity-60">
-                  {bulkSubmitting ? 'Excluindo...' : `Excluir ${selectedCount} lead${selectedCount > 1 ? 's' : ''}`}
+                  {bulkSubmitting ? 'Arquivando...' : `Arquivar ${selectedCount} lead${selectedCount > 1 ? 's' : ''}`}
                 </button>
               </div>
             </div>

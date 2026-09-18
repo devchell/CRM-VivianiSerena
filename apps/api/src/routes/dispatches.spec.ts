@@ -7,10 +7,13 @@ import { AppError } from '../middleware/errorHandler'
 const auditLogFindMany = vi.fn()
 const auditLogCreate = vi.fn()
 const leadFindMany = vi.fn()
+const leadStatusTemplateFindUnique = vi.fn()
 const getActiveEmailSettings = vi.fn()
 const sendCampaignMessage = vi.fn()
 const getWhatsAppChannelStatus = vi.fn()
 const sendWhatsAppBusinessMessage = vi.fn()
+const redisSet = vi.fn()
+const redisDel = vi.fn()
 
 let settingsLogs: Array<Record<string, unknown>> = []
 let draftLogs: Array<Record<string, unknown>> = []
@@ -26,6 +29,16 @@ vi.mock('../lib/prisma', () => ({
     lead: {
       findMany: leadFindMany,
     },
+    leadStatusTemplate: {
+      findUnique: leadStatusTemplateFindUnique,
+    },
+  },
+}))
+
+vi.mock('../lib/redis', () => ({
+  redis: {
+    set: redisSet,
+    del: redisDel,
   },
 }))
 
@@ -65,6 +78,7 @@ beforeAll(async () => {
 
 beforeEach(() => {
   vi.clearAllMocks()
+  process.env.WHATSAPP_DISPATCH_ENABLED = 'false'
   settingsLogs = []
   draftLogs = []
   campaignLogs = []
@@ -82,8 +96,11 @@ beforeEach(() => {
   })
 
   auditLogCreate.mockResolvedValue({ id: 'audit_1' })
+  leadStatusTemplateFindUnique.mockResolvedValue(null)
   getActiveEmailSettings.mockResolvedValue({ configured: false })
   sendCampaignMessage.mockResolvedValue(true)
+  redisSet.mockResolvedValue('OK')
+  redisDel.mockResolvedValue(1)
   getWhatsAppChannelStatus.mockResolvedValue({ connected: false })
   sendWhatsAppBusinessMessage.mockRejectedValue(new AppError(409, 'Canal oficial do WhatsApp nao esta conectado'))
 })
@@ -187,6 +204,7 @@ describe('GET /dispatches/audience', () => {
 
 describe('POST /dispatches/send', () => {
   it('respects batch size, preserves unique ineligible count and logs blocked recipients', async () => {
+    process.env.WHATSAPP_DISPATCH_ENABLED = 'true'
     settingsLogs = [
       {
         id: 'settings_1',
@@ -266,6 +284,7 @@ describe('POST /dispatches/send', () => {
   })
 
   it('uses the official WhatsApp channel when connected', async () => {
+    process.env.WHATSAPP_DISPATCH_ENABLED = 'true'
     settingsLogs = [
       {
         id: 'settings_1',
@@ -327,6 +346,28 @@ describe('POST /dispatches/send', () => {
       whatsappSent: 1,
       whatsappFailed: 0,
     })
+  })
+
+  it('blocks WhatsApp dispatches while the channel is disabled', async () => {
+    const response = await request(createApp())
+      .post('/send')
+      .send({
+        idempotencyKey: 'dispatch-whatsapp-disabled',
+        confirm: true,
+        filters: { status: 'new' },
+        draft: {
+          status: 'new',
+          emailEnabled: false,
+          emailSubject: '',
+          emailBody: '',
+          whatsappEnabled: true,
+          whatsappBody: 'Oi!',
+        },
+      })
+
+    expect(response.status).toBe(403)
+    expect(response.body.error).toContain('temporariamente desativados')
+    expect(sendWhatsAppBusinessMessage).not.toHaveBeenCalled()
   })
 
   it('returns the previous payload when the idempotency key already exists', async () => {
