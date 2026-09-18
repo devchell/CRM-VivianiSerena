@@ -42,3 +42,5 @@ Para operação na VPS, consulte [PRODUCTION_SETUP.md](PRODUCTION_SETUP.md). Nã
 - Health: `http://87.76.215.134/health/ready`
 
 O acesso atual é HTTP por IP. Domínio, TLS, backup externo, RLS validada e credenciais das integrações são necessários antes de uso com dados reais.
+
+DevChell — [devchell.vercel.app](https://devchell.vercel.app/)
