@@ -156,9 +156,9 @@ function Sidebar(props: SidebarProps = {}) {
             aria-hidden={!collapsed}
             style={{
               position: 'absolute',
-              left: collapsed ? '50%' : 0,
+              left: '50%',
               top: '50%',
-              transform: collapsed ? 'translate(-50%, -50%) scale(1)' : 'translate(-8px, -50%) scale(.92)',
+              transform: 'translate(-50%, -50%)',
               display: 'inline-flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -170,11 +170,11 @@ function Sidebar(props: SidebarProps = {}) {
               cursor: collapsed ? 'pointer' : 'default',
               opacity: collapsed ? 1 : 0,
               pointerEvents: collapsed ? 'auto' : 'none',
-              transition: 'opacity 150ms ease, transform 220ms cubic-bezier(.2,.8,.2,1), left 220ms cubic-bezier(.2,.8,.2,1)',
+              transition: 'opacity 180ms ease 80ms',
             }}
             aria-label="Expandir menu"
           >
-            <img src="/brand/logo-icon.png?v=6" alt="" width={34} height={30} style={{ display: 'block', width: 34, height: 30, objectFit: 'contain' }} />
+            <img src="/brand/logo-icon.png?v=7" alt="" width={34} height={30} style={{ display: 'block', width: 34, height: 30, objectFit: 'contain' }} />
           </button>
           <img
             src="/brand/logo-horizontal.png?v=6"
@@ -184,17 +184,17 @@ function Sidebar(props: SidebarProps = {}) {
             className="crm-brand-light"
             style={{
               position: 'absolute',
-              inset: 0,
+              left: 0,
+              top: 0,
               display: 'block',
-              width: '100%',
-              maxWidth: 216,
+              width: 216,
               height: 42,
               objectFit: 'contain',
               objectPosition: 'left center',
               opacity: collapsed ? 0 : 1,
-              transform: collapsed ? 'translateX(-8px) scale(.96)' : 'translateX(0) scale(1)',
+              transform: collapsed ? 'translateX(-10px)' : 'translateX(0)',
               pointerEvents: collapsed ? 'none' : 'auto',
-              transition: 'opacity 160ms ease, transform 220ms cubic-bezier(.2,.8,.2,1)',
+              transition: 'opacity 180ms ease, transform 240ms cubic-bezier(.22,1,.36,1)',
             }}
           />
           <img
@@ -205,16 +205,16 @@ function Sidebar(props: SidebarProps = {}) {
             className="crm-brand-dark"
             style={{
               position: 'absolute',
-              inset: 0,
-              width: '100%',
-              maxWidth: 216,
+              left: 0,
+              top: 0,
+              width: 216,
               height: 42,
               objectFit: 'contain',
               objectPosition: 'left center',
               opacity: collapsed ? 0 : 1,
-              transform: collapsed ? 'translateX(-8px) scale(.96)' : 'translateX(0) scale(1)',
+              transform: collapsed ? 'translateX(-10px)' : 'translateX(0)',
               pointerEvents: 'none',
-              transition: 'opacity 160ms ease, transform 220ms cubic-bezier(.2,.8,.2,1)',
+              transition: 'opacity 180ms ease, transform 240ms cubic-bezier(.22,1,.36,1)',
             }}
           />
         </div>
@@ -368,7 +368,7 @@ function Sidebar(props: SidebarProps = {}) {
   return (
     <>
       <aside
-        style={{ ...sidebarStyle, width, minWidth: width, transition: 'width 220ms cubic-bezier(.2,.8,.2,1)' }}
+        style={{ ...sidebarStyle, width, minWidth: width, flex: '0 0 auto', transition: 'width 260ms cubic-bezier(.22,1,.36,1)' }}
         className="crm-sidebar-desktop h-screen hidden lg:flex flex-col"
       >
         {navContent}
