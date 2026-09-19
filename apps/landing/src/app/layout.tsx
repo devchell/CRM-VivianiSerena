@@ -80,6 +80,21 @@ export const metadata: Metadata = {
     },
   },
   manifest: '/manifest.json',
+  icons: {
+    icon: [
+      {
+        url: '/images/brand/logo-icon-192.png?v=7',
+        type: 'image/png',
+        sizes: '192x192',
+      },
+      {
+        url: '/images/brand/logo-icon-512.png?v=7',
+        type: 'image/png',
+        sizes: '512x512',
+      },
+    ],
+    apple: '/images/brand/logo-icon-192.png?v=7',
+  },
   verification: googleSiteVerification ? { google: googleSiteVerification } : undefined,
 }
 
