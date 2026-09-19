@@ -3,9 +3,9 @@ Atualizado: 2026-09-19
 
 ## Estado atual
 
-Pastas de clientes estão implementadas na API, CRM e landing: ligação opcional a lead, notas privadas, timeline de imagens, compressão WebP, storage privado e publicação seletiva com consentimento.
+Clientes agora são a unidade principal na API/CRM: cadastro manual ou ligado a lead, edição em modal, pastas de atendimento datadas e reordenáveis, notas privadas, timeline de imagens, compressão WebP, storage privado e publicação seletiva com consentimento.
 TyviaTalk permanece somente preparado por contrato/placeholders; nenhum domínio, e-mail ou segredo real foi inventado. A stack oficial é Docker Compose self-hosted na VPS.
-Testes e builds locais passaram; o scan padrão/diff do plugin foi iniciado, mas ainda não foi selado. O commit `434a300` foi publicado na VPS de homologação com backup prévio, migration aplicada e smoke público aprovado.
+Testes e builds locais passaram; o scan padrão/diff do plugin foi iniciado, mas ainda não foi selado. O commit `f1c6fb8` foi publicado na VPS de homologação com backup prévio, migration `20260919110000_clients_and_folder_order` aplicada e smoke público aprovado.
 
 ## Decisões travadas
 
@@ -14,6 +14,7 @@ Testes e builds locais passaram; o scan padrão/diff do plugin foi iniciado, mas
 | 2026-09-18 | Originais e derivados de pastas ficam fora de `/uploads` | Evitar exposição de PII e acesso sem autorização | Sim |
 | 2026-09-18 | Publicação exige `editar-site.publish`, imagem e consentimento; retirar consentimento despublica | LGPD e separação entre operação de leads e editor público | Sim |
 | 2026-09-18 | Limite de 100 mídias por pasta com lock de linha | Evitar crescimento acidental e corrida concorrente | Sim |
+| 2026-09-19 | Cliente separado de pastas; ordem usa posição persistida e arraste nativo | Organizar retornos sem transformar cada atendimento em um novo cliente | Sim |
 | 2026-09-18 | TyviaTalk só será habilitada após contrato de API, assinatura, retry e payload | Evitar integração falsa ou envio sem rastreabilidade | Sim |
 | 2026-09-18 | Deploy mantém volumes Docker e usa preflight/smoke | PostgreSQL, Redis e uploads são persistentes | Sim |
 
@@ -35,4 +36,4 @@ Testes e builds locais passaram; o scan padrão/diff do plugin foi iniciado, mas
 
 ## Próximo passo
 
-Receber o contrato real da TyviaTalk, rotacionar credenciais compartilhadas e selar o scan formal quando o worker estiver disponível. A homologação atual já tem migration, preflight e smoke validados.
+Receber o contrato real da TyviaTalk, rotacionar credenciais compartilhadas e selar o scan formal quando o worker estiver disponível. A homologação atual já tem a nova migration, preflight, smoke e proteção de `/clientes` validados.
