@@ -11,15 +11,15 @@
   "categories": ["health", "beauty"],
   "icons": [
     {
-      "src": "/images/brand/logo.png",
+      "src": "/images/brand/logo-icon.svg",
       "sizes": "192x192",
-      "type": "image/png",
+      "type": "image/svg+xml",
       "purpose": "maskable any"
     },
     {
-      "src": "/images/brand/logo.png",
+      "src": "/images/brand/logo-icon.svg",
       "sizes": "512x512",
-      "type": "image/png",
+      "type": "image/svg+xml",
       "purpose": "maskable any"
     }
   ]

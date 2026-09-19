@@ -14,25 +14,13 @@ export default function manifest(): MetadataRoute.Manifest {
     categories: ['business', 'productivity'],
     icons: [
       {
-        src: '/icons/icon-192.png?v=3',
-        sizes: '192x192',
-        type: 'image/png',
-        purpose: 'maskable',
-      },
-      {
-        src: '/icons/icon-512.png?v=3',
-        sizes: '512x512',
-        type: 'image/png',
-        purpose: 'maskable',
-      },
-      {
-        src: '/icons/icon-192.svg?v=3',
+        src: '/icons/icon-192.svg?v=4',
         sizes: '192x192',
         type: 'image/svg+xml',
         purpose: 'maskable',
       },
       {
-        src: '/icons/icon-512.svg?v=3',
+        src: '/icons/icon-512.svg?v=4',
         sizes: '512x512',
         type: 'image/svg+xml',
         purpose: 'maskable',
@@ -42,17 +30,17 @@ export default function manifest(): MetadataRoute.Manifest {
       {
         name: 'Dashboard',
         url: '/dashboard',
-        icons: [{ src: '/icons/icon-192.svg', sizes: '192x192' }],
+        icons: [{ src: '/icons/icon-192.svg?v=4', sizes: '192x192', type: 'image/svg+xml' }],
       },
       {
         name: 'Leads',
         url: '/leads',
-        icons: [{ src: '/icons/icon-192.svg', sizes: '192x192' }],
+        icons: [{ src: '/icons/icon-192.svg?v=4', sizes: '192x192', type: 'image/svg+xml' }],
       },
       {
         name: 'Financeiro',
         url: '/financeiro',
-        icons: [{ src: '/icons/icon-192.svg', sizes: '192x192' }],
+        icons: [{ src: '/icons/icon-192.svg?v=4', sizes: '192x192', type: 'image/svg+xml' }],
       },
     ],
   }

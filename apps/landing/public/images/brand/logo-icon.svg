@@ -1,7 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title desc">
-  <title id="title">Viviani Serena CRM</title>
-  <desc id="desc">Ícone da marca Viviani Serena</desc>
-  <rect width="512" height="512" rx="120" fill="#FAF7F2"/>
+  <title id="title">Ícone Viviani Serena</title>
+  <desc id="desc">Símbolo orgânico de três curvas da marca Viviani Serena</desc>
   <path d="M256 48C170 76 112 130 92 216C72 302 118 384 256 460C394 384 440 302 420 216C400 130 342 76 256 48Z" fill="#B86A49"/>
   <path d="M256 164C228 198 196 238 196 276C196 322 224 350 256 350C288 350 316 322 316 276C316 238 284 198 256 164Z" fill="#DCA07D"/>
 </svg>

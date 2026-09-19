@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 820" role="img" aria-labelledby="title desc">
+  <title id="title">Viviani Serena</title>
+  <desc id="desc">Logo vertical Viviani Serena</desc>
+  <g transform="translate(98 24) scale(.95)">
+    <path d="M256 48C170 76 112 130 92 216C72 302 118 384 256 460C394 384 440 302 420 216C400 130 342 76 256 48Z" fill="#B86A49"/>
+    <path d="M256 164C228 198 196 238 196 276C196 322 224 350 256 350C288 350 316 322 316 276C316 238 284 198 256 164Z" fill="#DCA07D"/>
+  </g>
+  <text x="340" y="610" text-anchor="middle" fill="#252321" font-family="Arial, Helvetica, sans-serif" font-size="65" font-weight="700" letter-spacing="-1.5">Viviani</text>
+  <text x="340" y="690" text-anchor="middle" fill="#B86A49" font-family="Arial, Helvetica, sans-serif" font-size="65" font-weight="700" letter-spacing="-1.5">Serena</text>
+</svg>
