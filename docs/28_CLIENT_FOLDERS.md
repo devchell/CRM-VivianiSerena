@@ -6,6 +6,7 @@
 - `PATCH /api/v1/client-folders/clients/:id` edita os dados principais do cliente; `GET /api/v1/client-folders/clients/:id` devolve o cliente com todas as pastas e timelines.
 - `POST /api/v1/client-folders/clients/:clientId/folders` cria uma pasta de atendimento com nome, data, serviço e notas. O endpoint legado `POST /api/v1/client-folders` continua aceito e cria a estrutura equivalente.
 - `PATCH /api/v1/client-folders/clients/:clientId/folders/reorder` persiste a ordem definida pelo arraste nativo do CRM.
+- `DELETE /api/v1/client-folders/:id` exclui a pasta, suas notas e mídias privadas, mantendo o cliente cadastrado.
 - `POST /api/v1/client-folders/:id/media` recebe JPEG/PNG/WebP, valida o conteúdo com `sharp`, preserva o original em storage privado e cria um WebP de leitura com qualidade 90, rotação EXIF e limite de 2400 px.
 - `GET /api/v1/client-folders/:id/media/:mediaId` serve o derivado somente com autenticação. O CRM acessa essa rota pelo proxy autenticado `/api/client-folders/media/...`.
 - `GET /api/v1/client-folders/public` e `/public/:id/media/:mediaId` retornam somente pastas publicadas com consentimento registrado; notas internas e chaves de storage nunca são públicas.

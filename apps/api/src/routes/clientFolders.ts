@@ -90,6 +90,7 @@ type FolderWithRelations = NonNullable<Awaited<ReturnType<typeof prisma.clientFo
     capturedAt: Date
     note: string | null
     originalFilename: string
+    originalStorageKey: string
     optimizedStorageKey: string
     width: number
     height: number
@@ -674,6 +675,20 @@ clientFoldersRouter.post('/:id/media', authorizePermission('leads.update'), uplo
     })
   } catch (error) {
     if (storedKeys.length > 0) await removeMediaFiles(storedKeys)
+    next(error)
+  }
+})
+
+clientFoldersRouter.delete('/:id', authorizePermission('leads.update'), async (req, res, next) => {
+  try {
+    if (!req.user) throw new AppError(401, 'Authentication required')
+    const id = folderIdSchema.parse(req.params.id)
+    const folder = await findFolder(id)
+    await prisma.clientFolder.delete({ where: { id } })
+    await removeMediaFiles(folder.media.flatMap((media) => [media.originalStorageKey, media.optimizedStorageKey]))
+    await audit({ userId: req.user.sub, ip: req.ip }, 'DELETE', id, { mediaCount: folder.media.length })
+    res.json({ success: true })
+  } catch (error) {
     next(error)
   }
 })

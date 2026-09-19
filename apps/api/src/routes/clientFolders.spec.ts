@@ -18,6 +18,7 @@ const clientFolderFindMany = vi.fn()
 const clientFolderFindUnique = vi.fn()
 const clientFolderCreate = vi.fn()
 const clientFolderUpdate = vi.fn()
+const clientFolderDelete = vi.fn()
 const clientFolderMediaFindFirst = vi.fn()
 const clientFolderMediaCreate = vi.fn()
 const clientFolderMediaDelete = vi.fn()
@@ -46,6 +47,7 @@ vi.mock('../lib/prisma', () => ({
       findUnique: clientFolderFindUnique,
       create: clientFolderCreate,
       update: clientFolderUpdate,
+      delete: clientFolderDelete,
       count: clientFolderCount,
     },
     clientFolderMedia: {
@@ -116,6 +118,7 @@ beforeEach(() => {
   clientFolderFindUnique.mockResolvedValue(baseFolder)
   clientFolderCreate.mockResolvedValue(baseFolder)
   clientFolderUpdate.mockResolvedValue({ ...baseFolder, isPublished: true })
+  clientFolderDelete.mockResolvedValue({ id: 'folder_1' })
   clientFolderMediaFindFirst.mockResolvedValue(null)
   clientFolderMediaCreate.mockResolvedValue({
     id: 'media_1',
@@ -262,6 +265,33 @@ describe('client folder management', () => {
       where: { id: 'folder_1' },
       data: expect.objectContaining({ isPublished: true, publicTitle: 'Caso publicado' }),
     }))
+  })
+
+  it('deletes a folder and its private media without deleting the client', async () => {
+    clientFolderFindUnique.mockResolvedValueOnce({
+      ...baseFolder,
+      media: [{
+        id: 'media_1',
+        folderId: 'folder_1',
+        stage: 'before',
+        capturedAt: new Date('2026-09-18T12:00:00.000Z'),
+        note: null,
+        originalFilename: 'before.jpg',
+        originalStorageKey: 'original.jpg',
+        optimizedStorageKey: 'optimized.webp',
+        width: 800,
+        height: 600,
+        createdAt: new Date('2026-09-18T12:00:00.000Z'),
+      }],
+    })
+
+    const response = await request(makeApp()).delete('/folder_1')
+
+    expect(response.status).toBe(200)
+    expect(clientFolderDelete).toHaveBeenCalledWith({ where: { id: 'folder_1' } })
+    expect(deletePrivateFile).toHaveBeenCalledWith('original.jpg')
+    expect(deletePrivateFile).toHaveBeenCalledWith('optimized.webp')
+    expect(clientUpdate).not.toHaveBeenCalled()
   })
 
   it('does not let a leads-only collaborator publish a folder', async () => {
