@@ -182,8 +182,8 @@ services:
         exec nginx -g "daemon off;"
     ports:
       - "80:80"
-      - "127.0.0.1:3001:3001"
-      - "127.0.0.1:4000:4000"
+      - "3001:3001"
+      - "4000:4000"
     depends_on:
       landing:
         condition: service_healthy
