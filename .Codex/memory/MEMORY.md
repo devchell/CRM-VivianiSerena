@@ -5,7 +5,7 @@ Atualizado: 2026-09-19
 
 Clientes agora são a unidade principal na API/CRM: cadastro manual ou ligado a lead, edição em modal, pastas de atendimento datadas e reordenáveis, notas privadas, timeline de imagens, compressão WebP, storage privado e publicação seletiva com consentimento.
 TyviaTalk permanece somente preparado por contrato/placeholders; nenhum domínio, e-mail ou segredo real foi inventado. A stack oficial é Docker Compose self-hosted na VPS.
-Testes e builds locais passaram; o scan padrão/diff do plugin foi iniciado, mas ainda não foi selado. Os commits `2506e97` e `9e1c447` foram publicados na VPS com os assets exatos da logo aprovada, favicon da landing declarado e smoke visual no Brave aprovado.
+Testes e builds locais passaram; o scan padrão/diff do plugin foi iniciado, mas ainda não foi selado. O commit `9c61757` foi publicado na VPS com os assets corrigidos da logo, favicon da landing e crossfade suave da sidebar; smoke visual no Brave aprovado.
 
 ## Decisões travadas
 
