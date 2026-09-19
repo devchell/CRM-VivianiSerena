@@ -1,11 +1,11 @@
 # Memória — VivianiCRM
-Atualizado: 2026-09-18
+Atualizado: 2026-09-19
 
 ## Estado atual
 
 Pastas de clientes estão implementadas na API, CRM e landing: ligação opcional a lead, notas privadas, timeline de imagens, compressão WebP, storage privado e publicação seletiva com consentimento.
 TyviaTalk permanece somente preparado por contrato/placeholders; nenhum domínio, e-mail ou segredo real foi inventado. A stack oficial é Docker Compose self-hosted na VPS.
-Testes e builds locais passaram; o scan padrão/diff do plugin foi iniciado, mas ainda não foi selado.
+Testes e builds locais passaram; o scan padrão/diff do plugin foi iniciado, mas ainda não foi selado. O commit `434a300` foi publicado na VPS de homologação com backup prévio, migration aplicada e smoke público aprovado.
 
 ## Decisões travadas
 
@@ -30,9 +30,9 @@ Testes e builds locais passaram; o scan padrão/diff do plugin foi iniciado, mas
 
 - O projeto fixa pnpm 8.15.4; o runtime expõe pnpm 11. Use `pnpm dlx pnpm@8.15.4` para não invalidar o lockfile.
 - Next 15 exige `params` como `Promise` em route handlers; o proxy CRM já segue esse contrato.
-- `deploy/vps/.env` não pertence ao Git. Sem ele não é possível provar preflight, credenciais ou deploy remoto.
+- `deploy/vps/.env` não pertence ao Git. O ambiente de homologação foi validado sem registrar seus segredos; produção ainda depende de domínio/TLS, rotação de credenciais e demais gates.
 - O Deep Scan exige perfil de filesystem gerenciado; o host atual expõe filesystem irrestrito e recusou o worker read-only.
 
 ## Próximo passo
 
-Selar o scan formal quando o worker estiver disponível; depois validar migration na VPS, sincronizar o commit e executar preflight/smoke sem remover volumes.
+Receber o contrato real da TyviaTalk, rotacionar credenciais compartilhadas e selar o scan formal quando o worker estiver disponível. A homologação atual já tem migration, preflight e smoke validados.

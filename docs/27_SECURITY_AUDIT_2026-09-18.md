@@ -37,14 +37,26 @@ Escopo: checkout atual do VivianiCRM, API Express/Prisma, CRM/Landing Next.js, S
 - API: TypeScript `tsc --noEmit` aprovado.
 - CRM: ESLint direcionado e build Next.js aprovados; 21 rotas geradas.
 - Landing: ESLint direcionado e build Next.js aprovados; 10 rotas geradas.
-- Navegador: smoke visual no Codex In-app Browser; CTA de resultados, validação do formulário, login vazio e mostrar/ocultar senha verificados. O Brave não está exposto ao ambiente.
+- Navegador: smoke visual no Brave; landing pública, CTA de resultados, login vazio, validação e mostrar/ocultar senha verificados. Nenhum login real foi usado.
 - Dependências: `pnpm@8.15.4 audit --prod` sem vulnerabilidades conhecidas.
 - Scan formal: o Standard Scan foi iniciado, mas permaneceu em `preflight` nesta execução e ainda não foi selado; o Deep Scan foi recusado pelo host por exigir perfil de filesystem gerenciado. Isso não equivale a um resultado sem achados.
 - Não testei fluxos autenticados com credenciais reais, produção, invasão externa, restore de backup, RLS no PostgreSQL remoto ou envio real por WhatsApp/e-mail.
+
+## Deploy de homologação validado
+
+- Snapshot publicado: `434a300` (`origin/main`), com preservação de line endings Unix nos scripts VPS.
+- Backup pré-deploy: `20260919T004618Z`; volumes Docker não foram removidos.
+- `preflight.sh`, configuração Compose e `operational-smoke.sh`: aprovados em `stage=homologacao`.
+- Migration `20260918100000_client_folders`: aplicada no PostgreSQL remoto.
+- Health público: `GET /health/ready` respondeu `200`.
+- Endpoint público de pastas: `GET /api/v1/client-folders/public` respondeu `200` com lista vazia; não houve leitura de dados de clientes.
+- Brave confirmou a landing e o login públicos. API/CRM continuam sem exposição direta; o Nginx atende as portas públicas do cenário de homologação.
 
 ## Próximas verificações obrigatórias
 
 1. Com secrets reais em ambiente controlado: `docker compose config` deve falhar quando qualquer secret/flag obrigatório faltar.
 2. Testar usuário sem `leads.view`, `dashboard.view` e `leads.broadcast` nos endpoints/socket correspondentes.
 3. Repetir analytics com `sessionId` de outra sessão e prova inválida; nenhuma sessão alheia deve ser alterada.
-4. Rotacionar credenciais históricas antes de qualquer deploy de produção.
+4. Rotacionar credenciais históricas e a credencial de acesso compartilhada antes de qualquer deploy de produção.
+5. Receber o contrato real da TyviaTalk e só então implementar o adapter, assinatura, retry e teste de envio.
+6. Selar Standard/Deep Scan quando o worker de segurança estiver disponível.
