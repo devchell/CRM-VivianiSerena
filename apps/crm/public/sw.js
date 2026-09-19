@@ -1,6 +1,6 @@
 // Viviani Serena CRM — Service Worker
 // Incrementar CACHE_VERSION quando fizer deploy com mudanças visuais
-const CACHE_VERSION = 'vs-crm-v4'
+const CACHE_VERSION = 'vs-crm-v5'
 const STATIC_CACHE = `${CACHE_VERSION}-static`
 const DYNAMIC_CACHE = `${CACHE_VERSION}-dynamic`
 
@@ -9,9 +9,9 @@ const STATIC_ASSETS = [
   '/',
   '/dashboard',
   '/offline',
-  '/icons/icon.svg?v=4',
-  '/icons/icon-192.svg?v=4',
-  '/icons/icon-512.svg?v=4',
+  '/icons/icon.svg?v=5',
+  '/icons/icon-192.svg?v=5',
+  '/icons/icon-512.svg?v=5',
 ]
 
 // ── Install: pré-cache do shell ───────────────────────────────────────────────
