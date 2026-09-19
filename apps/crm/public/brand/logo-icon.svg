@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 440 330" role="img" aria-labelledby="title desc">
+  <title id="title">Monograma VS</title>
+  <desc id="desc">Monograma VS terracota da Viviani Serena</desc>
+  <g fill="#B86A49">
+    <path d="M16 20C43 16 68 17 88 25l152 245c11 17 8 33-8 43-18 11-38 4-49-13L16 20Z"/>
+    <path d="M205 16h203c7 0 11 6 8 13-8 20-22 32-43 32H213c-10 0-18-4-23-11-6-9-1-22 8-29 2-2 4-4 7-5Z"/>
+    <path d="M199 31c-25 7-41 25-45 45-5 26 10 44 39 61l72 43c35 21 55 43 52 72-3 30-23 51-50 60-30 9-60 2-82-19-9-8-16-18-23-30l28-23c11 14 22 24 36 30 14 7 27 5 35-3 11-10 6-23-11-34l-73-44c-38-23-54-51-51-83 3-33 22-59 51-76 8-5 16-8 24-10Z"/>
+  </g>
+</svg>

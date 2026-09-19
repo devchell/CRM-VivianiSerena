@@ -81,12 +81,7 @@ export function Navbar({ hasTestimonials = true, hasClientResults = false }: { h
               className="flex items-center gap-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-gold focus-visible:ring-offset-2 rounded-md"
               aria-label="Viviani Serena - Ir ao topo"
             >
-              {/* Logo SVG inline */}
-              <svg width="36" height="36" viewBox="0 0 36 36" fill="none" aria-hidden="true">
-                <circle cx="18" cy="18" r="18" fill="#C9967A" fillOpacity="0.12" />
-                <path d="M18 8C18 8 10 13 10 19.5C10 23.642 13.582 27 18 27C22.418 27 26 23.642 26 19.5C26 13 18 8 18 8Z" fill="#C9967A" fillOpacity="0.6"/>
-                <path d="M18 12C18 12 13 16 13 20C13 22.761 15.239 25 18 25C20.761 25 23 22.761 23 20C23 16 18 12 18 12Z" fill="#C9967A"/>
-              </svg>
+              <img src="/images/brand/logo-icon.svg?v=2" alt="" width={48} height={36} className="h-9 w-12 shrink-0 object-contain" />
               <span className={`font-heading font-bold text-xl transition-colors duration-300 ${
                 isScrolled ? 'text-charcoal' : 'text-white'
               }`}>

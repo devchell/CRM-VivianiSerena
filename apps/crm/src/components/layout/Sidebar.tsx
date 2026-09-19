@@ -8,7 +8,7 @@ import type { AppPermission, CrmModule } from '@viviani/types'
 import {
   LayoutDashboard, Users, Calendar, DollarSign,
   Paintbrush, Shield, Settings, UserCheck, LogOut,
-  PanelLeftClose, Menu, Circle, UserRound,
+  PanelLeftClose, Menu, UserRound,
   Send, Building2,
 } from 'lucide-react'
 import { useSidebar } from '@/hooks/useSidebar'
@@ -73,7 +73,7 @@ function NavItemRow({
           padding: '9px 10px',
           borderRadius: 8,
           cursor: 'pointer',
-          transition: 'background 150ms ease, color 150ms ease',
+          transition: 'background 150ms ease, color 150ms ease, gap 220ms cubic-bezier(.2,.8,.2,1)',
           color: active ? 'var(--sidebar-text-active)' : hovered ? 'var(--sidebar-text-active)' : 'var(--sidebar-text)',
           background: active
             ? 'var(--sidebar-active-bg)'
@@ -87,9 +87,14 @@ function NavItemRow({
         }}
       >
         <Icon size={17} style={{ flexShrink: 0, opacity: active ? 1 : hovered ? 0.9 : 0.65 }} />
-        {!collapsed && (
-          <span style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>{label}</span>
-        )}
+        <span style={{
+          maxWidth: collapsed ? 0 : 180,
+          opacity: collapsed ? 0 : 1,
+          transform: collapsed ? 'translateX(-6px)' : 'translateX(0)',
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
+          transition: 'max-width 220ms cubic-bezier(.2,.8,.2,1), opacity 130ms ease, transform 220ms cubic-bezier(.2,.8,.2,1)',
+        }}>{label}</span>
       </div>
     </Link>
   )
@@ -140,74 +145,91 @@ function Sidebar(props: SidebarProps = {}) {
           padding: collapsed ? '0 12px' : '0 12px 0 14px',
           flexShrink: 0,
           borderBottom: '1px solid var(--sidebar-border)',
+          overflow: 'hidden',
+          transition: 'padding 220ms cubic-bezier(.2,.8,.2,1)',
         }}
       >
-        {collapsed ? (
+        <div style={{ position: 'relative', display: 'flex', alignItems: 'center', flex: 1, minWidth: 0, height: 42 }}>
           <button
             onClick={toggle}
+            tabIndex={collapsed ? 0 : -1}
+            aria-hidden={!collapsed}
             style={{
+              position: 'absolute',
+              left: collapsed ? '50%' : 0,
+              top: '50%',
+              transform: collapsed ? 'translate(-50%, -50%) scale(1)' : 'translate(-8px, -50%) scale(.92)',
               display: 'inline-flex',
               alignItems: 'center',
               justifyContent: 'center',
               width: 36,
               height: 36,
               borderRadius: 8,
-              background: 'rgba(255,255,255,0.06)',
-              color: 'var(--sidebar-logo)',
+              background: 'transparent',
               border: 'none',
-              cursor: 'pointer',
-              transition: 'background 150ms ease',
+              cursor: collapsed ? 'pointer' : 'default',
+              opacity: collapsed ? 1 : 0,
+              pointerEvents: collapsed ? 'auto' : 'none',
+              transition: 'opacity 150ms ease, transform 220ms cubic-bezier(.2,.8,.2,1), left 220ms cubic-bezier(.2,.8,.2,1)',
             }}
             aria-label="Expandir menu"
           >
-            <Circle size={18} strokeWidth={2.5} />
+            <img src="/brand/logo-icon.svg?v=2" alt="" width={34} height={30} style={{ display: 'block', width: 34, height: 30, objectFit: 'contain' }} />
           </button>
-        ) : (
-          <>
-            <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
-              <Circle size={18} strokeWidth={2.5} style={{ color: 'var(--sidebar-logo)', flexShrink: 0 }} />
-              <span style={{
-                color: 'var(--sidebar-logo)',
-                fontWeight: 600,
-                fontSize: 16,
-                whiteSpace: 'nowrap',
-                overflow: 'hidden',
-                letterSpacing: '-0.01em',
-              }}>
-                Viviani Serena
-              </span>
-            </div>
-            <button
-              onClick={toggle}
-              style={{
-                marginLeft: 'auto',
-                width: 32,
-                height: 32,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                borderRadius: 6,
-                background: 'transparent',
-                color: 'var(--sidebar-text)',
-                border: 'none',
-                cursor: 'pointer',
-                transition: 'background 150ms ease, color 150ms ease',
-                flexShrink: 0,
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.background = 'rgba(255,255,255,0.08)'
-                e.currentTarget.style.color = '#fff'
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.background = 'transparent'
-                e.currentTarget.style.color = 'var(--sidebar-text)'
-              }}
-              aria-label="Recolher menu"
-            >
-              <PanelLeftClose size={16} />
-            </button>
-          </>
-        )}
+          <img
+            src="/brand/logo-horizontal.svg?v=2"
+            alt="Viviani Serena"
+            width={216}
+            height={46}
+            style={{
+              display: 'block',
+              width: '100%',
+              maxWidth: 216,
+              height: 42,
+              objectFit: 'contain',
+              objectPosition: 'left center',
+              opacity: collapsed ? 0 : 1,
+              transform: collapsed ? 'translateX(-8px) scale(.96)' : 'translateX(0) scale(1)',
+              pointerEvents: collapsed ? 'none' : 'auto',
+              transition: 'opacity 160ms ease, transform 220ms cubic-bezier(.2,.8,.2,1)',
+            }}
+          />
+        </div>
+        <button
+          onClick={toggle}
+          tabIndex={collapsed ? -1 : 0}
+          aria-hidden={collapsed}
+          style={{
+            marginLeft: collapsed ? 0 : 8,
+            width: collapsed ? 0 : 32,
+            height: 32,
+            padding: 0,
+            overflow: 'hidden',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            borderRadius: 6,
+            background: 'transparent',
+            color: 'var(--sidebar-text)',
+            border: 'none',
+            cursor: collapsed ? 'default' : 'pointer',
+            opacity: collapsed ? 0 : 1,
+            pointerEvents: collapsed ? 'none' : 'auto',
+            flexShrink: 0,
+            transition: 'width 220ms cubic-bezier(.2,.8,.2,1), margin-left 220ms cubic-bezier(.2,.8,.2,1), opacity 150ms ease, background 150ms ease, color 150ms ease',
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.background = 'rgba(255,255,255,0.08)'
+            e.currentTarget.style.color = 'var(--sidebar-text-active)'
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.background = 'transparent'
+            e.currentTarget.style.color = 'var(--sidebar-text)'
+          }}
+          aria-label="Recolher menu"
+        >
+          <PanelLeftClose size={16} />
+        </button>
       </div>
 
       {/* Nav items */}
@@ -323,8 +345,8 @@ function Sidebar(props: SidebarProps = {}) {
   return (
     <>
       <aside
-        style={{ ...sidebarStyle, width, minWidth: width }}
-        className="crm-sidebar-desktop h-screen hidden lg:flex flex-col transition-[width] duration-300 ease-in-out"
+        style={{ ...sidebarStyle, width, minWidth: width, transition: 'width 220ms cubic-bezier(.2,.8,.2,1)' }}
+        className="crm-sidebar-desktop h-screen hidden lg:flex flex-col"
       >
         {navContent}
       </aside>

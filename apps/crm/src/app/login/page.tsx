@@ -13,7 +13,6 @@ import {
   Lock,
   Mail,
   Smartphone,
-  Circle,
 } from 'lucide-react'
 import { crmPublicEnv } from '@/lib/public-env'
 
@@ -302,7 +301,7 @@ export default function LoginPage() {
       >
         <div className="mb-8 text-center">
           <div className="crm-auth-mark mb-4 inline-flex h-14 w-14 items-center justify-center rounded-xl">
-            <Circle size={24} strokeWidth={2.5} />
+            <img src="/brand/logo-icon.svg?v=2" alt="" width={44} height={34} className="h-9 w-12 object-contain" />
           </div>
           <h1 className="font-heading text-2xl font-bold text-[var(--text-primary)]">
             Viviani <span className="text-[var(--accent-rose)]">Serena</span>

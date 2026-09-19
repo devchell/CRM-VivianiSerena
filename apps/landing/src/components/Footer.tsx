@@ -44,14 +44,7 @@ export default function Footer({ whatsappNumber }: FooterProps = {}) {
           <div className="lg:col-span-1">
             {/* Logo */}
             <div className="flex items-center gap-2 mb-4">
-              <div
-                className="w-8 h-8 flex-shrink-0"
-                style={{
-                  background: 'linear-gradient(135deg, #C9967A, #7D4833)',
-                  clipPath: 'polygon(50% 0%, 80% 20%, 100% 50%, 80% 80%, 50% 100%, 20% 80%, 0% 50%, 20% 20%)',
-                }}
-                aria-hidden="true"
-              />
+              <img src="/images/brand/logo-icon.svg?v=2" alt="" width={42} height={32} className="h-8 w-10 shrink-0 object-contain" />
               <div>
                 <span className="font-heading font-bold text-white text-base leading-none block">Viviani</span>
                 <span className="text-[#d6a082] text-xs tracking-widest uppercase leading-none">Serena</span>

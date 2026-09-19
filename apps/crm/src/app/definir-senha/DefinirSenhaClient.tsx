@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { signOut, useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
-import { Lock, Eye, EyeOff, Circle, Loader2, CheckCircle } from 'lucide-react'
+import { Lock, Eye, EyeOff, Loader2, CheckCircle } from 'lucide-react'
 import { crmPublicEnv } from '@/lib/public-env'
 
 const API_URL = crmPublicEnv.apiBaseUrl
@@ -111,7 +111,7 @@ export function DefinirSenhaClient() {
       <div className="w-full max-w-md">
         <div className="mb-8 text-center">
           <div className="mb-4 inline-flex h-14 w-14 items-center justify-center rounded-lg border border-[var(--border)] bg-[var(--accent-subtle)]">
-            <Circle size={24} className="text-[var(--accent-rose)]" />
+            <img src="/brand/logo-icon.svg?v=2" alt="" width={44} height={34} className="h-9 w-12 object-contain" />
           </div>
           <h1 className="font-heading text-2xl font-bold text-[var(--text-primary)]">
             Criar sua senha
