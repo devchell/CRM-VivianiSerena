@@ -3,6 +3,7 @@ import { z } from 'zod'
 import multer from 'multer'
 import sharp from 'sharp'
 import { randomUUID } from 'crypto'
+import type { Prisma } from '@prisma/client'
 import { hasPermission } from '@viviani/types'
 import { prisma } from '../lib/prisma'
 import { apiEnv } from '../lib/env'
@@ -18,6 +19,10 @@ export const clientFoldersRouter: Router = Router()
 const folderIdSchema = z.string().regex(/^[A-Za-z0-9_-]{1,64}$/)
 const stageSchema = z.enum(['before', 'progress', 'after'])
 const folderBodySchema = z.object({
+  clientId: folderIdSchema.optional(),
+  name: z.string().trim().min(1).max(120).optional(),
+  occurredAt: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+  position: z.number().int().min(0).max(100).optional(),
   leadId: folderIdSchema.nullable().optional(),
   clientName: z.string().trim().min(2).max(120).optional(),
   clientEmail: z.string().trim().email().max(255).nullable().optional(),
@@ -30,6 +35,17 @@ const folderBodySchema = z.object({
   publicConsent: z.boolean().optional(),
 })
 const updateBodySchema = folderBodySchema.omit({ leadId: true }).partial()
+const clientBodySchema = z.object({
+  leadId: folderIdSchema.nullable().optional(),
+  name: z.string().trim().min(2).max(120).optional(),
+  email: z.string().trim().email().max(255).nullable().optional(),
+  phone: z.string().trim().max(40).nullable().optional(),
+  notes: z.string().max(5_000).nullable().optional(),
+})
+const clientUpdateSchema = clientBodySchema.partial()
+const reorderBodySchema = z.object({
+  folderIds: z.array(folderIdSchema).max(100),
+})
 const mediaBodySchema = z.object({
   stage: stageSchema,
   capturedAt: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
@@ -50,11 +66,23 @@ const upload = multer({
 
 const folderInclude = {
   lead: { select: { id: true, name: true, email: true, phone: true } },
+  client: { select: { id: true, leadId: true, name: true, email: true, phone: true, notes: true } },
   media: { orderBy: { capturedAt: 'asc' as const } },
 } as const
 
+const clientListInclude = {
+  lead: { select: { id: true, name: true, email: true, phone: true } },
+  _count: { select: { folders: true } },
+} as const
+
+const clientDetailInclude = {
+  lead: { select: { id: true, name: true, email: true, phone: true } },
+  folders: { orderBy: [{ position: 'asc' }, { occurredAt: 'asc' }], include: folderInclude },
+} satisfies Prisma.ClientInclude
+
 type FolderWithRelations = NonNullable<Awaited<ReturnType<typeof prisma.clientFolder.findUnique>>> & {
   lead: { id: string; name: string; email: string; phone: string | null } | null
+  client?: { id: string; leadId: string | null; name: string; email: string | null; phone: string | null; notes: string | null } | null
   media: Array<{
     id: string
     folderId: string
@@ -69,6 +97,21 @@ type FolderWithRelations = NonNullable<Awaited<ReturnType<typeof prisma.clientFo
   }>
 }
 
+type ClientRecord = {
+  id: string
+  leadId: string | null
+  name: string
+  email: string | null
+  phone: string | null
+  notes: string | null
+  createdBy: string
+  createdAt: Date
+  updatedAt: Date
+  lead: { id: string; name: string; email: string; phone: string | null } | null
+  folders?: FolderWithRelations[]
+  _count?: { folders: number }
+}
+
 function normalizeNullable(value: string | null | undefined) {
   const trimmed = value?.trim()
   return trimmed ? trimmed : null
@@ -78,6 +121,10 @@ function dateAtNoonUtc(value: string) {
   const date = new Date(`${value}T12:00:00.000Z`)
   if (Number.isNaN(date.getTime())) throw new AppError(400, 'Data da imagem inválida')
   return date
+}
+
+function dateOrNow(value: string | undefined) {
+  return value ? dateAtNoonUtc(value) : new Date()
 }
 
 function mediaUrl(folderId: string, mediaId: string) {
@@ -102,8 +149,20 @@ function mapMedia(folderId: string, media: FolderWithRelations['media'][number])
 }
 
 function mapFolder(folder: FolderWithRelations) {
+  const client = folder.client ?? {
+    id: folder.clientId,
+    leadId: folder.leadId,
+    name: folder.clientName,
+    email: folder.clientEmail,
+    phone: folder.clientPhone,
+    notes: folder.notes,
+  }
   return {
     id: folder.id,
+    clientId: folder.clientId,
+    name: folder.name,
+    occurredAt: folder.occurredAt.toISOString().slice(0, 10),
+    position: folder.position,
     leadId: folder.leadId,
     clientName: folder.clientName,
     clientEmail: folder.clientEmail,
@@ -117,7 +176,24 @@ function mapFolder(folder: FolderWithRelations) {
     createdAt: folder.createdAt.toISOString(),
     updatedAt: folder.updatedAt.toISOString(),
     lead: folder.lead,
+    client,
     media: folder.media.map((item) => mapMedia(folder.id, item)),
+  }
+}
+
+function mapClient(client: ClientRecord) {
+  return {
+    id: client.id,
+    leadId: client.leadId,
+    name: client.name,
+    email: client.email,
+    phone: client.phone,
+    notes: client.notes,
+    createdAt: client.createdAt.toISOString(),
+    updatedAt: client.updatedAt.toISOString(),
+    lead: client.lead,
+    folderCount: client._count?.folders ?? client.folders?.length ?? 0,
+    folders: client.folders?.map((folder) => mapFolder(folder)) ?? [],
   }
 }
 
@@ -141,11 +217,12 @@ async function audit(
   action: string,
   folderId: string,
   extra?: Record<string, unknown>,
+  resource = 'ClientFolder',
 ) {
   await AuditLogger.log({
     ...base,
     action,
-    resource: 'ClientFolder',
+    resource,
     details: { folderId, ...extra },
   })
 }
@@ -206,6 +283,140 @@ clientFoldersRouter.get('/public/:id/media/:mediaId', async (req, res, next) => 
 
 clientFoldersRouter.use(authenticate)
 
+async function findClientSummary(id: string) {
+  const client = await prisma.client.findUnique({ where: { id }, include: clientListInclude })
+  if (!client) throw new AppError(404, 'Cliente não encontrado')
+  return client as unknown as ClientRecord
+}
+
+async function findClientDetail(id: string) {
+  const client = await prisma.client.findUnique({ where: { id }, include: clientDetailInclude })
+  if (!client) throw new AppError(404, 'Cliente não encontrado')
+  return client as unknown as ClientRecord
+}
+
+async function findLead(leadId: string | null | undefined) {
+  if (!leadId) return null
+  const lead = await prisma.lead.findFirst({
+    where: { id: leadId, deletedAt: null, anonymized: false },
+    select: { id: true, name: true, email: true, phone: true },
+  })
+  if (!lead) throw new AppError(404, 'Lead não encontrado')
+  return lead
+}
+
+clientFoldersRouter.get('/clients', authorizePermission('leads.view'), async (req, res, next) => {
+  try {
+    const query = listQuerySchema.parse(req.query)
+    const search = query.search?.trim()
+    const clients = await prisma.client.findMany({
+      where: search ? {
+        OR: [
+          { name: { contains: search, mode: 'insensitive' } },
+          { email: { contains: search, mode: 'insensitive' } },
+          { phone: { contains: search, mode: 'insensitive' } },
+        ],
+      } : undefined,
+      orderBy: { updatedAt: 'desc' },
+      take: query.limit,
+      include: clientListInclude,
+    })
+    res.json({ success: true, data: clients.map((client) => mapClient(client as unknown as ClientRecord)) })
+  } catch (error) {
+    next(error)
+  }
+})
+
+clientFoldersRouter.get('/clients/:id', authorizePermission('leads.view'), async (req, res, next) => {
+  try {
+    const client = await findClientDetail(folderIdSchema.parse(req.params.id))
+    res.json({ success: true, data: mapClient(client) })
+  } catch (error) {
+    next(error)
+  }
+})
+
+clientFoldersRouter.post('/clients', authorizePermission('leads.create'), async (req, res, next) => {
+  try {
+    if (!req.user) throw new AppError(401, 'Authentication required')
+    const input = clientBodySchema.parse(req.body)
+    const name = normalizeNullable(input.name)
+    if (!name) throw new AppError(400, 'Informe o nome do cliente')
+    const lead = await findLead(input.leadId)
+    const client = await prisma.client.create({
+      data: {
+        leadId: lead?.id ?? null,
+        name,
+        email: normalizeNullable(input.email) ?? lead?.email ?? null,
+        phone: normalizeNullable(input.phone) ?? lead?.phone ?? null,
+        notes: normalizeNullable(input.notes),
+        createdBy: req.user.sub,
+      },
+      include: clientListInclude,
+    })
+    await audit({ userId: req.user.sub, ip: req.ip }, 'CREATE', client.id, { linkedLead: Boolean(lead) }, 'Client')
+    res.status(201).json({ success: true, data: mapClient(client as unknown as ClientRecord) })
+  } catch (error) {
+    next(error)
+  }
+})
+
+clientFoldersRouter.patch('/clients/:id', authorizePermission('leads.update'), async (req, res, next) => {
+  try {
+    if (!req.user) throw new AppError(401, 'Authentication required')
+    const id = folderIdSchema.parse(req.params.id)
+    await findClientSummary(id)
+    const input = clientUpdateSchema.parse(req.body)
+    const lead = input.leadId === undefined ? null : await findLead(input.leadId)
+    const client = await prisma.client.update({
+      where: { id },
+      data: {
+        leadId: input.leadId === undefined ? undefined : lead?.id ?? null,
+        name: input.name === undefined ? undefined : input.name.trim(),
+        email: input.email === undefined ? undefined : normalizeNullable(input.email),
+        phone: input.phone === undefined ? undefined : normalizeNullable(input.phone),
+        notes: input.notes === undefined ? undefined : normalizeNullable(input.notes),
+      },
+      include: clientDetailInclude,
+    })
+    await prisma.clientFolder.updateMany({
+      where: { clientId: id },
+      data: {
+        clientName: client.name,
+        clientEmail: client.email,
+        clientPhone: client.phone,
+        leadId: client.leadId,
+      },
+    })
+    await audit({ userId: req.user.sub, ip: req.ip }, 'UPDATE', id, undefined, 'Client')
+    res.json({ success: true, data: mapClient(client as unknown as ClientRecord) })
+  } catch (error) {
+    next(error)
+  }
+})
+
+clientFoldersRouter.patch('/clients/:clientId/folders/reorder', authorizePermission('leads.update'), async (req, res, next) => {
+  try {
+    if (!req.user) throw new AppError(401, 'Authentication required')
+    const clientId = folderIdSchema.parse(req.params.clientId)
+    await findClientSummary(clientId)
+    const { folderIds } = reorderBodySchema.parse(req.body)
+    const current = await prisma.clientFolder.findMany({ where: { clientId }, select: { id: true } })
+    const currentIds = new Set(current.map((folder) => folder.id))
+    if (currentIds.size !== folderIds.length || folderIds.some((id) => !currentIds.has(id))) {
+      throw new AppError(400, 'A ordem de pastas não corresponde a este cliente')
+    }
+    await prisma.$transaction(folderIds.map((id, position) => prisma.clientFolder.update({
+      where: { id },
+      data: { position },
+    })))
+    await audit({ userId: req.user.sub, ip: req.ip }, 'REORDER_FOLDERS', clientId, { count: folderIds.length }, 'Client')
+    res.json({ success: true })
+  } catch (error) {
+    next(error)
+  }
+})
+
 clientFoldersRouter.get('/', authorizePermission('leads.view'), async (req, res, next) => {
   try {
     const query = listQuerySchema.parse(req.query)
@@ -237,22 +448,68 @@ clientFoldersRouter.get('/:id', authorizePermission('leads.view'), async (req, r
   }
 })
 
+clientFoldersRouter.post('/clients/:clientId/folders', authorizePermission('leads.create'), async (req, res, next) => {
+  try {
+    if (!req.user) throw new AppError(401, 'Authentication required')
+    const clientId = folderIdSchema.parse(req.params.clientId)
+    const client = await findClientSummary(clientId)
+    const input = folderBodySchema.parse(req.body)
+    if (input.isPublished) throw new AppError(400, 'Adicione ao menos uma imagem antes de publicar a pasta')
+    if (input.publicConsent === true && !hasPermission(req.user.role, req.user.permissions ?? req.user.allowedModules, 'editar-site.publish')) {
+      throw new AppError(403, 'Apenas usuários autorizados podem autorizar a publicação de imagens')
+    }
+    const count = await prisma.clientFolder.count({ where: { clientId } })
+    const folder = await prisma.clientFolder.create({
+      data: {
+        clientId,
+        name: normalizeNullable(input.name) ?? 'Pasta sem título',
+        occurredAt: dateOrNow(input.occurredAt),
+        position: input.position ?? count,
+        leadId: client.leadId,
+        clientName: client.name,
+        clientEmail: client.email,
+        clientPhone: client.phone,
+        serviceLabel: normalizeNullable(input.serviceLabel),
+        notes: normalizeNullable(input.notes),
+        publicTitle: normalizeNullable(input.publicTitle),
+        publicDescription: normalizeNullable(input.publicDescription),
+        isPublished: input.isPublished ?? false,
+        publicConsentAt: input.publicConsent ? new Date() : null,
+        createdBy: req.user.sub,
+      },
+      include: folderInclude,
+    })
+    await audit({ userId: req.user.sub, ip: req.ip }, 'CREATE', folder.id, { clientId }, 'ClientFolder')
+    res.status(201).json({ success: true, data: mapFolder(folder as FolderWithRelations) })
+  } catch (error) {
+    next(error)
+  }
+})
+
 clientFoldersRouter.post('/', authorizePermission('leads.create'), async (req, res, next) => {
   try {
     if (!req.user) throw new AppError(401, 'Authentication required')
+    const userId = req.user.sub
     const input = folderBodySchema.parse(req.body)
-    let lead: { id: string; name: string; email: string; phone: string | null } | null = null
-
-    if (input.leadId) {
-      lead = await prisma.lead.findFirst({
-        where: { id: input.leadId, deletedAt: null, anonymized: false },
-        select: { id: true, name: true, email: true, phone: true },
-      })
-      if (!lead) throw new AppError(404, 'Lead não encontrado')
-    }
-
-    const clientName = normalizeNullable(input.clientName) ?? lead?.name
-    if (!clientName) throw new AppError(400, 'Informe o nome do cliente ou selecione um lead')
+    const client = input.clientId
+      ? await findClientSummary(input.clientId)
+      : await (async () => {
+          const lead = await findLead(input.leadId)
+          const clientName = normalizeNullable(input.clientName) ?? lead?.name
+          if (!clientName) throw new AppError(400, 'Informe o nome do cliente ou selecione um lead')
+          const created = await prisma.client.create({
+            data: {
+              leadId: lead?.id ?? null,
+              name: clientName,
+              email: normalizeNullable(input.clientEmail) ?? lead?.email ?? null,
+              phone: normalizeNullable(input.clientPhone) ?? lead?.phone ?? null,
+              notes: normalizeNullable(input.notes),
+              createdBy: userId,
+            },
+            include: clientListInclude,
+          })
+          return created as unknown as ClientRecord
+        })()
     if (input.isPublished) throw new AppError(400, 'Adicione ao menos uma imagem antes de publicar a pasta')
     if (input.publicConsent === true && !hasPermission(req.user.role, req.user.permissions ?? req.user.allowedModules, 'editar-site.publish')) {
       throw new AppError(403, 'Apenas usuários autorizados podem autorizar a publicação de imagens')
@@ -260,10 +517,14 @@ clientFoldersRouter.post('/', authorizePermission('leads.create'), async (req, r
 
     const folder = await prisma.clientFolder.create({
       data: {
-        leadId: lead?.id ?? null,
-        clientName,
-        clientEmail: normalizeNullable(input.clientEmail) ?? lead?.email ?? null,
-        clientPhone: normalizeNullable(input.clientPhone) ?? lead?.phone ?? null,
+        clientId: client.id,
+        name: normalizeNullable(input.name) ?? 'Pasta inicial',
+        occurredAt: dateOrNow(input.occurredAt),
+        position: input.position ?? 0,
+        leadId: client.leadId,
+        clientName: client.name,
+        clientEmail: client.email,
+        clientPhone: client.phone,
         serviceLabel: normalizeNullable(input.serviceLabel),
         notes: normalizeNullable(input.notes),
         publicTitle: normalizeNullable(input.publicTitle),
@@ -275,7 +536,7 @@ clientFoldersRouter.post('/', authorizePermission('leads.create'), async (req, r
       include: folderInclude,
     })
 
-    await audit({ userId: req.user.sub, ip: req.ip }, 'CREATE', folder.id, { linkedLead: Boolean(lead) })
+    await audit({ userId: req.user.sub, ip: req.ip }, 'CREATE', folder.id, { clientId: client.id, linkedLead: Boolean(client.leadId) })
     res.status(201).json({ success: true, data: mapFolder(folder as FolderWithRelations) })
   } catch (error) {
     next(error)
@@ -305,6 +566,9 @@ clientFoldersRouter.patch('/:id', authorizePermission('leads.update'), async (re
     const folder = await prisma.clientFolder.update({
       where: { id },
       data: {
+        name: input.name === undefined ? undefined : input.name.trim(),
+        occurredAt: input.occurredAt === undefined ? undefined : dateAtNoonUtc(input.occurredAt),
+        position: input.position,
         clientName: input.clientName === undefined ? undefined : input.clientName.trim(),
         clientEmail: input.clientEmail === undefined ? undefined : normalizeNullable(input.clientEmail),
         clientPhone: input.clientPhone === undefined ? undefined : normalizeNullable(input.clientPhone),

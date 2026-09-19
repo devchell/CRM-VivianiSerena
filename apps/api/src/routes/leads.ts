@@ -724,6 +724,15 @@ leadsRouter.patch('/:id/gdpr', authorizePermission('leads.gdpr'), async (req, re
             publicConsentAt: null,
           },
         }),
+        tx.client.updateMany({
+          where: { leadId },
+          data: {
+            name: 'Anonimo',
+            email: anonymizedEmail,
+            phone: null,
+            notes: null,
+          },
+        }),
         tx.clientFolderMedia.deleteMany({ where: { folder: { leadId } } }),
         ...(sessionIds.length > 0
           ? [

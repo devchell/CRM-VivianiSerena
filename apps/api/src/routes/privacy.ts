@@ -39,6 +39,31 @@ privacyRouter.get('/export', async (req, res, next) => {
               },
             },
           },
+          clients: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+              phone: true,
+              notes: true,
+              createdAt: true,
+              folders: {
+                select: {
+                  id: true,
+                  name: true,
+                  occurredAt: true,
+                  notes: true,
+                  serviceLabel: true,
+                  isPublished: true,
+                  media: {
+                    select: { id: true, stage: true, capturedAt: true, note: true, width: true, height: true },
+                    orderBy: { capturedAt: 'asc' },
+                  },
+                },
+                orderBy: [{ position: 'asc' }, { occurredAt: 'asc' }],
+              },
+            },
+          },
         },
       }),
       prisma.consentLog.findMany({
@@ -81,6 +106,7 @@ privacyRouter.get('/export', async (req, res, next) => {
       })),
       appointments: lead.appointments,
       clientFolders: lead.clientFolders,
+      clients: lead.clients,
     }
 
     // Log this access

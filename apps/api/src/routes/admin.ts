@@ -275,6 +275,7 @@ adminRouter.post('/reset-baseline', async (req, res, next) => {
       await tx.appointment.deleteMany()
       await tx.clientFolderMedia.deleteMany()
       await tx.clientFolder.deleteMany()
+      await tx.client.deleteMany()
       await tx.financial.deleteMany()
       await tx.consentLog.deleteMany()
       await tx.lead.deleteMany()

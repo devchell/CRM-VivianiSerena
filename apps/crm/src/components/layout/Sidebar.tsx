@@ -8,7 +8,7 @@ import type { AppPermission, CrmModule } from '@viviani/types'
 import {
   LayoutDashboard, Users, Calendar, DollarSign,
   Paintbrush, Shield, Settings, UserCheck, LogOut,
-  PanelLeftClose, Menu, Circle, FolderOpen,
+  PanelLeftClose, Menu, Circle, UserRound,
   Send, Building2,
 } from 'lucide-react'
 import { useSidebar } from '@/hooks/useSidebar'
@@ -26,7 +26,7 @@ type NavItem = {
 const NAV_ITEMS: NavItem[] = [
   { href: '/dashboard',    label: 'Dashboard',    icon: LayoutDashboard, module: 'dashboard',   exact: true },
   { href: '/leads',        label: 'Leads',        icon: Users,           module: 'leads',        exact: true },
-  { href: '/clientes',     label: 'Clientes',     icon: FolderOpen,      module: 'leads',        exact: true },
+  { href: '/clientes',     label: 'Clientes',     icon: UserRound,       module: 'leads',        exact: true },
   { href: '/leads/disparos', label: 'Disparos',   icon: Send,            permission: 'leads.broadcast', exact: true },
   { href: '/agenda',       label: 'Agenda',       icon: Calendar,        module: 'agenda',       exact: true },
   { href: '/financeiro',   label: 'Financeiro',   icon: DollarSign,      module: 'financeiro',   exact: true },

@@ -21,6 +21,13 @@ const clientFolderUpdate = vi.fn()
 const clientFolderMediaFindFirst = vi.fn()
 const clientFolderMediaCreate = vi.fn()
 const clientFolderMediaDelete = vi.fn()
+const clientFolderCount = vi.fn()
+const clientFindUnique = vi.fn()
+const clientFindMany = vi.fn()
+const clientCreate = vi.fn()
+const clientUpdate = vi.fn()
+const clientUpdateMany = vi.fn()
+const transaction = vi.fn()
 const leadFindFirst = vi.fn()
 const auditLog = vi.fn()
 const readPrivateUploadFile = vi.fn()
@@ -39,13 +46,22 @@ vi.mock('../lib/prisma', () => ({
       findUnique: clientFolderFindUnique,
       create: clientFolderCreate,
       update: clientFolderUpdate,
+      count: clientFolderCount,
     },
     clientFolderMedia: {
       findFirst: clientFolderMediaFindFirst,
       create: clientFolderMediaCreate,
       delete: clientFolderMediaDelete,
     },
+    client: {
+      findUnique: clientFindUnique,
+      findMany: clientFindMany,
+      create: clientCreate,
+      update: clientUpdate,
+      updateMany: clientUpdateMany,
+    },
     lead: { findFirst: leadFindFirst },
+    $transaction: transaction,
   },
 }))
 
@@ -65,6 +81,10 @@ let clientFoldersRouter: typeof import('./clientFolders').clientFoldersRouter
 
 const baseFolder = {
   id: 'folder_1',
+  clientId: 'client_1',
+  name: 'Pasta inicial',
+  occurredAt: new Date('2026-09-18T12:00:00.000Z'),
+  position: 0,
   leadId: 'lead_1',
   clientName: 'Ana',
   clientEmail: 'ana@example.com',
@@ -79,6 +99,7 @@ const baseFolder = {
   createdAt: new Date('2026-09-18T12:00:00.000Z'),
   updatedAt: new Date('2026-09-18T12:00:00.000Z'),
   lead: { id: 'lead_1', name: 'Ana', email: 'ana@example.com', phone: null },
+  client: { id: 'client_1', leadId: 'lead_1', name: 'Ana', email: 'ana@example.com', phone: null, notes: null },
   media: [],
 }
 
@@ -109,6 +130,13 @@ beforeEach(() => {
     height: 600,
   })
   clientFolderMediaDelete.mockResolvedValue({ id: 'media_1' })
+  clientFolderCount.mockResolvedValue(0)
+  clientFindUnique.mockResolvedValue({ id: 'client_1', leadId: 'lead_1', name: 'Ana', email: 'ana@example.com', phone: null, notes: null, createdBy: 'user_1', createdAt: baseFolder.createdAt, updatedAt: baseFolder.updatedAt, lead: baseFolder.lead, _count: { folders: 1 } })
+  clientFindMany.mockResolvedValue([])
+  clientCreate.mockResolvedValue({ id: 'client_1', leadId: 'lead_1', name: 'Ana', email: 'ana@example.com', phone: null, notes: 'Acompanhar evolução', createdBy: 'user_1', createdAt: baseFolder.createdAt, updatedAt: baseFolder.updatedAt, lead: baseFolder.lead, _count: { folders: 0 } })
+  clientUpdate.mockResolvedValue({ id: 'client_1', leadId: 'lead_1', name: 'Ana', email: 'ana@example.com', phone: null, notes: null, createdBy: 'user_1', createdAt: baseFolder.createdAt, updatedAt: baseFolder.updatedAt, lead: baseFolder.lead, folders: [] })
+  clientUpdateMany.mockResolvedValue({ count: 0 })
+  transaction.mockResolvedValue([])
   leadFindFirst.mockResolvedValue({ id: 'lead_1', name: 'Ana', email: 'ana@example.com', phone: null })
   auditLog.mockResolvedValue(undefined)
   readPrivateUploadFile.mockResolvedValue(Buffer.from('image'))
@@ -171,6 +199,28 @@ describe('public client folders', () => {
 })
 
 describe('client folder management', () => {
+  it('creates a client without forcing an initial folder', async () => {
+    const response = await request(makeApp())
+      .post('/clients')
+      .send({ name: 'Ana Cliente', email: 'ana@example.com' })
+
+    expect(response.status).toBe(201)
+    expect(clientCreate).toHaveBeenCalledWith(expect.objectContaining({
+      data: expect.objectContaining({ name: 'Ana Cliente', email: 'ana@example.com' }),
+    }))
+  })
+
+  it('persists a drag-and-drop folder order only for the selected client', async () => {
+    clientFolderFindMany.mockResolvedValueOnce([{ id: 'folder_1' }])
+
+    const response = await request(makeApp())
+      .patch('/clients/client_1/folders/reorder')
+      .send({ folderIds: ['folder_1'] })
+
+    expect(response.status).toBe(200)
+    expect(transaction).toHaveBeenCalledOnce()
+  })
+
   it('creates a folder from an existing lead without requiring duplicated contact fields', async () => {
     const response = await request(makeApp())
       .post('/')
