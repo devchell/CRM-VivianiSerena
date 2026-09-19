@@ -5,7 +5,7 @@ Atualizado: 2026-09-19
 
 Clientes agora são a unidade principal na API/CRM: cadastro manual ou ligado a lead, edição em modal, pastas de atendimento datadas e reordenáveis, notas privadas, timeline de imagens, compressão WebP, storage privado e publicação seletiva com consentimento.
 TyviaTalk permanece somente preparado por contrato/placeholders; nenhum domínio, e-mail ou segredo real foi inventado. A stack oficial é Docker Compose self-hosted na VPS.
-Testes e builds locais passaram; o scan padrão/diff do plugin foi iniciado, mas ainda não foi selado. O commit `f1c6fb8` foi publicado na VPS de homologação com backup prévio, migration `20260919110000_clients_and_folder_order` aplicada e smoke público aprovado.
+Testes e builds locais passaram; o scan padrão/diff do plugin foi iniciado, mas ainda não foi selado. O commit `2506e97` foi publicado na VPS com os assets exatos da logo aprovada, containers saudáveis e smoke visual no Brave aprovado.
 
 ## Decisões travadas
 
@@ -17,6 +17,7 @@ Testes e builds locais passaram; o scan padrão/diff do plugin foi iniciado, mas
 | 2026-09-19 | Cliente separado de pastas; ordem usa posição persistida e arraste nativo | Organizar retornos sem transformar cada atendimento em um novo cliente | Sim |
 | 2026-09-18 | TyviaTalk só será habilitada após contrato de API, assinatura, retry e payload | Evitar integração falsa ou envio sem rastreabilidade | Sim |
 | 2026-09-18 | Deploy mantém volumes Docker e usa preflight/smoke | PostgreSQL, Redis e uploads são persistentes | Sim |
+| 2026-09-19 | Logo aprovada é preservada como PNG recortado, com variantes clara/escura e ícone | Regenerar tipografia/monograma alterava a marca; o PNG fonte mantém proporção e espaçamento | Sim |
 
 ## Descartado (não sugerir de novo)
 
@@ -26,6 +27,7 @@ Testes e builds locais passaram; o scan padrão/diff do plugin foi iniciado, mas
 | Servir mídia de cliente por `/uploads` público | Permite vazamento de originais e bypass do CRM |
 | Permitir publicação a qualquer colaborador com acesso a leads | Permissão editorial é separada e precisa de consentimento |
 | Adicionar biblioteca de galeria/picker só para esta feature | HTML, CSS, `sharp` e dependências já instaladas cobrem o fluxo |
+| Regenerar a logo com IA para obter fidelidade tipográfica | Geradores não garantem a mesma tipografia, contorno e espaçamento da referência aprovada |
 
 ## Armadilhas conhecidas
 
