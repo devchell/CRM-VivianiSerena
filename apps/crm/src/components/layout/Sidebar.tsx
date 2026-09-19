@@ -174,14 +174,17 @@ function Sidebar(props: SidebarProps = {}) {
             }}
             aria-label="Expandir menu"
           >
-            <img src="/brand/logo-icon.svg?v=2" alt="" width={34} height={30} style={{ display: 'block', width: 34, height: 30, objectFit: 'contain' }} />
+            <img src="/brand/logo-icon.png?v=6" alt="" width={34} height={30} style={{ display: 'block', width: 34, height: 30, objectFit: 'contain' }} />
           </button>
           <img
-            src="/brand/logo-horizontal.svg?v=2"
+            src="/brand/logo-horizontal.png?v=6"
             alt="Viviani Serena"
             width={216}
             height={46}
+            className="crm-brand-light"
             style={{
+              position: 'absolute',
+              inset: 0,
               display: 'block',
               width: '100%',
               maxWidth: 216,
@@ -191,6 +194,26 @@ function Sidebar(props: SidebarProps = {}) {
               opacity: collapsed ? 0 : 1,
               transform: collapsed ? 'translateX(-8px) scale(.96)' : 'translateX(0) scale(1)',
               pointerEvents: collapsed ? 'none' : 'auto',
+              transition: 'opacity 160ms ease, transform 220ms cubic-bezier(.2,.8,.2,1)',
+            }}
+          />
+          <img
+            src="/brand/logo-horizontal-dark.png?v=6"
+            alt=""
+            width={216}
+            height={46}
+            className="crm-brand-dark"
+            style={{
+              position: 'absolute',
+              inset: 0,
+              width: '100%',
+              maxWidth: 216,
+              height: 42,
+              objectFit: 'contain',
+              objectPosition: 'left center',
+              opacity: collapsed ? 0 : 1,
+              transform: collapsed ? 'translateX(-8px) scale(.96)' : 'translateX(0) scale(1)',
+              pointerEvents: 'none',
               transition: 'opacity 160ms ease, transform 220ms cubic-bezier(.2,.8,.2,1)',
             }}
           />

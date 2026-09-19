@@ -301,7 +301,7 @@ export default function LoginPage() {
       >
         <div className="mb-8 text-center">
           <div className="crm-auth-mark mb-4 inline-flex h-14 w-14 items-center justify-center rounded-xl">
-            <img src="/brand/logo-icon.svg?v=2" alt="" width={44} height={34} className="h-9 w-12 object-contain" />
+            <img src="/brand/logo-icon.png?v=6" alt="" width={44} height={34} className="h-9 w-12 object-contain" />
           </div>
           <h1 className="font-heading text-2xl font-bold text-[var(--text-primary)]">
             Viviani <span className="text-[var(--accent-rose)]">Serena</span>

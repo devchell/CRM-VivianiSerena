@@ -111,7 +111,7 @@ export function DefinirSenhaClient() {
       <div className="w-full max-w-md">
         <div className="mb-8 text-center">
           <div className="mb-4 inline-flex h-14 w-14 items-center justify-center rounded-lg border border-[var(--border)] bg-[var(--accent-subtle)]">
-            <img src="/brand/logo-icon.svg?v=2" alt="" width={44} height={34} className="h-9 w-12 object-contain" />
+            <img src="/brand/logo-icon.png?v=6" alt="" width={44} height={34} className="h-9 w-12 object-contain" />
           </div>
           <h1 className="font-heading text-2xl font-bold text-[var(--text-primary)]">
             Criar sua senha

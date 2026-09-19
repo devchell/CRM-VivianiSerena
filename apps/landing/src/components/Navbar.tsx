@@ -81,12 +81,13 @@ export function Navbar({ hasTestimonials = true, hasClientResults = false }: { h
               className="flex items-center gap-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-gold focus-visible:ring-offset-2 rounded-md"
               aria-label="Viviani Serena - Ir ao topo"
             >
-              <img src="/images/brand/logo-icon.svg?v=2" alt="" width={48} height={36} className="h-9 w-12 shrink-0 object-contain" />
-              <span className={`font-heading font-bold text-xl transition-colors duration-300 ${
-                isScrolled ? 'text-charcoal' : 'text-white'
-              }`}>
-                Viviani <span className="text-rose-gold">Serena</span>
-              </span>
+              <img
+                src={isScrolled ? '/images/brand/logo-horizontal.png?v=6' : '/images/brand/logo-horizontal-dark.png?v=6'}
+                alt="Viviani Serena"
+                width={180}
+                height={32}
+                className="h-8 w-[180px] object-contain object-left"
+              />
             </a>
 
             {/* Desktop nav */}
@@ -182,9 +183,7 @@ export function Navbar({ hasTestimonials = true, hasClientResults = false }: { h
             >
               {/* Drawer header */}
               <div className="flex items-center justify-between p-6" style={{ boxShadow: '0 1px 0 var(--border-subtle)' }}>
-                <span className="font-heading font-bold text-lg text-charcoal">
-                  Viviani <span className="text-rose-gold">Serena</span>
-                </span>
+                <img src="/images/brand/logo-horizontal.png?v=6" alt="Viviani Serena" width={180} height={32} className="h-8 w-[180px] object-contain object-left" />
                 <button
                   onClick={() => setIsMenuOpen(false)}
                   className="p-2 rounded-lg text-charcoal hover:bg-blush"

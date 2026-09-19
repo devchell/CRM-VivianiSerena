@@ -336,6 +336,10 @@ tbody tr:hover { background: var(--bg-hover); }
 .crm-auth-mark { background: var(--sidebar-bg); color: #fff; box-shadow: var(--shadow-md); }
 :root:not(.dark) .crm-auth-mark { background: #272522; color: #fff; }
 .crm-auth-card { background: var(--bg-card); border: 1px solid var(--border); box-shadow: var(--shadow-xl); }
+.crm-brand-dark { display: none !important; }
+.dark .crm-brand-light { display: block !important; }
+.dark .crm-brand-dark { display: block !important; }
+.dark .crm-brand-light { display: none !important; }
 
 .crm-calendar .fc { color: var(--foreground); }
 .crm-calendar .fc-toolbar { gap: .75rem; margin-bottom: .75rem !important; padding: .4rem .35rem .75rem; }

@@ -44,11 +44,7 @@ export default function Footer({ whatsappNumber }: FooterProps = {}) {
           <div className="lg:col-span-1">
             {/* Logo */}
             <div className="flex items-center gap-2 mb-4">
-              <img src="/images/brand/logo-icon.svg?v=2" alt="" width={42} height={32} className="h-8 w-10 shrink-0 object-contain" />
-              <div>
-                <span className="font-heading font-bold text-white text-base leading-none block">Viviani</span>
-                <span className="text-[#d6a082] text-xs tracking-widest uppercase leading-none">Serena</span>
-              </div>
+              <img src="/images/brand/logo-horizontal-dark.png?v=6" alt="Viviani Serena" width={180} height={32} className="h-8 w-[180px] object-contain object-left" />
             </div>
 
             <p className="text-sm leading-relaxed text-white/75 mb-5">
